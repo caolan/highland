@@ -1,0 +1,110 @@
+body {
+    /*
+    font-family: 'Source Sans Pro', sans-serif;
+    font-weight: 300;
+    font-size: 19px;
+     */
+    font-family: 'FreeSans', 'Arial', sans-serif;
+    font-size: 16px;
+    word-spacing: 0.1em;
+    line-height: 1.618;
+    background-image: url('../img/texturetastic_gray_light.png');
+    margin: 0;
+    padding: 0;
+}
+#heading {
+    text-align: center;
+    border-bottom: 1px dashed #ccc;
+    border-top: 1px dashed #ccc;
+    background: #fff;
+    margin-top: 1.628em;
+    margin-bottom: 1.618em;
+}
+h1 {
+    font-family: 'Megrim', serif;
+    font-size: 262%;
+    font-weight: normal;
+    background-image: url(../img/mountain.png);
+    background-repeat: no-repeat;
+    padding-left: 160px;
+    padding-top: 7px;
+    min-height: 60px;
+    display: inline-block;
+    margin-left: -80px;
+}
+h2, h3, h4, h5, h6 {
+    margin-top: 1.618em;
+    margin-bottom: 1em;
+}
+strong, b, h3, h4, h5, h6 {
+    font-weight: 600;
+}
+#content {
+    width: 680px;
+    margin: 1.618em auto 2.618em auto;
+}
+
+
+/*
+Green strings from monokai theme
+pre .tag .value, pre .string, pre .ruby .subst, pre .title, pre .haskell .type, pre .preprocessor, pre .ruby .class .parent, pre .built_in, pre .sql .aggregate, pre .django .template_tag, pre .django .variable, pre .smalltalk .class, pre .javadoc, pre .django .filter .argument, pre .smalltalk .localvars, pre .smalltalk .array, pre .attr_selector, pre .pseudo, pre .addition, pre .stream, pre .envvar, pre .apache .tag, pre .apache .cbracket, pre .tex .command, pre .input_number {
+color: #A6E22E;
+}
+ */
+
+/* The console container element */
+#console {
+    position: relative;
+    width: 680px;
+    height: 400px;
+    background-color: black;
+    color: white;
+}
+/* The inner console element. */
+.jqconsole {
+    padding: 10px;
+}
+/* The cursor. */
+.jqconsole-cursor {
+    background-color: gray;
+}
+/* The cursor color when the console looses focus. */
+.jqconsole-blurred .jqconsole-cursor {
+    background-color: #666;
+}
+/* The current prompt text color */
+.jqconsole-prompt {
+    color: white;
+}
+/* The command history */
+.jqconsole-old-prompt {
+    color: #ccc;
+    font-weight: normal;
+}
+/* The text color when in input mode. */
+.jqconsole-input {
+    color: #dd0;
+}
+/* Previously entered input. */
+.jqconsole-old-input {
+    color: #bb0;
+    font-weight: normal;
+}
+/* The text color of the output. */
+.jqconsole-output {
+    color: white;
+}
+
+/* custome class for displaying errors */
+.jqconsole-error {
+    color: red;
+}
+
+.jqconsole-message {
+    padding: 5px 20px;
+    border: 2px dotted #666;
+    margin-bottom: 10px;
+    background-color: #333;
+    width: 600px;
+    display: block;
+}
