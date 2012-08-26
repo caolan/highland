@@ -763,6 +763,9 @@ L.type = function (obj) {
 
 L.max = L.curry(function (x, y) { return L.ge(x, y) ? x: y; });
 L.min = L.curry(function (x, y) { return L.le(x, y) ? x: y; });
+L.compare = L.curry(function (x, y) {
+    return L.lt(x, y) ? -1: (L.gt(x, y) ? 1: 0);
+});
 // compare
 // <
 // <=

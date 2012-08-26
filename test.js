@@ -455,6 +455,9 @@ exports['mod'] = function (test) {
     test.done();
 };
 
+
+/***** Types *****/
+
 exports['isArray'] = function (test) {
     function testTrue(x) {
         test.strictEqual(L.isArray(x), true);
@@ -868,6 +871,66 @@ exports['type'] = function (test) {
     test.equal(L.type(new Date()), 'object');
     test.equal(L.type(new RegExp('asdf')), 'object');
     test.equal(L.type(arguments), 'object');
+    test.done();
+};
+
+
+/***** Numbers *****/
+
+exports['max'] = function (test) {
+    test.equal(L.max(1,2), 2);
+    test.equal(L.max(2,2), 2);
+    test.equal(L.max(2,1), 2);
+    test.equal(L.max('abc','def'), 'def');
+    test.same(L.max([1,2],[3,4]), [3,4]);
+    test.throws(function () { L.max(1, {}); });
+    test.throws(function () { L.max('asdf', 1); });
+    test.throws(function () { L.max([], 1); });
+    test.throws(function () { L.max(true, 1); });
+    test.throws(function () { L.max(null, 1); });
+    test.throws(function () { L.max(undefined, 1); });
+    // partial application
+    test.equal(L.max(1)(2), 2);
+    test.equal(L.max(2)(2), 2);
+    test.equal(L.max(2)(1), 2);
+    test.done();
+};
+
+exports['min'] = function (test) {
+    test.equal(L.min(1,2), 1);
+    test.equal(L.min(2,2), 2);
+    test.equal(L.min(2,1), 1);
+    test.equal(L.min('abc','def'), 'abc');
+    test.same(L.min([1,2],[3,4]), [1,2]);
+    test.throws(function () { L.min(1, {}); });
+    test.throws(function () { L.min('asdf', 1); });
+    test.throws(function () { L.min([], 1); });
+    test.throws(function () { L.min(true, 1); });
+    test.throws(function () { L.min(null, 1); });
+    test.throws(function () { L.min(undefined, 1); });
+    // partial application
+    test.equal(L.min(1)(2), 1);
+    test.equal(L.min(2)(2), 2);
+    test.equal(L.min(2)(1), 1);
+    test.done();
+};
+
+exports['compare'] = function (test) {
+    test.equal(L.compare(1,2), -1);
+    test.equal(L.compare(2,2), 0);
+    test.equal(L.compare(2,1), 1);
+    test.equal(L.compare('abc','def'), -1);
+    test.same(L.compare([1,2],[3,4]), -1);
+    test.throws(function () { L.compare(1, {}); });
+    test.throws(function () { L.compare('asdf', 1); });
+    test.throws(function () { L.compare([], 1); });
+    test.throws(function () { L.compare(true, 1); });
+    test.throws(function () { L.compare(null, 1); });
+    test.throws(function () { L.compare(undefined, 1); });
+    // partial application
+    test.equal(L.compare(1)(2), -1);
+    test.equal(L.compare(2)(2), 0);
+    test.equal(L.compare(2)(1), 1);
     test.done();
 };
 
@@ -1354,22 +1417,6 @@ exports['length'] = function (test) {
     test.done();
 };
 
-exports['max'] = function (test) {
-    test.equal(L.max(1,2), 2);
-    test.equal(L.max(2,2), 2);
-    test.equal(L.max(2,1), 2);
-    test.throws(function () { L.max(1, {}); });
-    test.throws(function () { L.max('asdf', 1); });
-    test.throws(function () { L.max([], 1); });
-    test.throws(function () { L.max(true, 1); });
-    test.throws(function () { L.max(null, 1); });
-    test.throws(function () { L.max(undefined, 1); });
-    // partial application
-    test.equal(L.max(1)(2), 2);
-    test.equal(L.max(2)(2), 2);
-    test.equal(L.max(2)(1), 2);
-    test.done();
-};
 
 exports['maximum'] = function (test) {
     test.equal(L.maximum([1,2,3,4]), 4);
@@ -1377,22 +1424,6 @@ exports['maximum'] = function (test) {
     test.done();
 };
 
-exports['min'] = function (test) {
-    test.equal(L.min(1,2), 1);
-    test.equal(L.min(2,2), 2);
-    test.equal(L.min(2,1), 1);
-    test.throws(function () { L.min(1, {}); });
-    test.throws(function () { L.min('asdf', 1); });
-    test.throws(function () { L.min([], 1); });
-    test.throws(function () { L.min(true, 1); });
-    test.throws(function () { L.min(null, 1); });
-    test.throws(function () { L.min(undefined, 1); });
-    // partial application
-    test.equal(L.min(1)(2), 1);
-    test.equal(L.min(2)(2), 2);
-    test.equal(L.min(2)(1), 1);
-    test.done();
-};
 
 exports['minimum'] = function (test) {
     test.equal(L.minimum([1,2,3,4]), 1);
