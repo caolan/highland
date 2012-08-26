@@ -455,6 +455,421 @@ exports['mod'] = function (test) {
     test.done();
 };
 
+exports['isArray'] = function (test) {
+    function testTrue(x) {
+        test.strictEqual(L.isArray(x), true);
+    }
+    function testFalse(x) {
+        test.strictEqual(L.isArray(x), false);
+    }
+
+    var fails = [
+        null,
+        undefined,
+        'asdf',
+        new String('asdf'),
+        123,
+        {},
+        new Date(),
+        new RegExp('asdf'),
+        true,
+        function () {},
+        arguments,
+        NaN,
+        Infinity
+    ];
+    fails.forEach(testFalse);
+
+    var passes = [
+        []
+    ];
+    passes.forEach(testTrue);
+
+    test.done();
+};
+
+exports['isObject'] = function (test) {
+    function testTrue(x) {
+        test.strictEqual(L.isObject(x), true, x);
+    }
+    function testFalse(x) {
+        test.strictEqual(L.isObject(x), false, x);
+    }
+
+    var fails = [
+        null,
+        undefined,
+        'asdf',
+        new String('asdf'),
+        123,
+        [],
+        true,
+        function () {},
+        NaN,
+        Infinity
+    ];
+    fails.forEach(testFalse);
+
+    var passes = [
+        {},
+        new Date(),
+        new RegExp('asdf'),
+        arguments
+    ];
+    passes.forEach(testTrue);
+
+    test.done();
+};
+
+exports['isFunction'] = function (test) {
+    function testTrue(x) {
+        test.strictEqual(L.isFunction(x), true, x);
+    }
+    function testFalse(x) {
+        test.strictEqual(L.isFunction(x), false, x);
+    }
+
+    var fails = [
+        null,
+        undefined,
+        'asdf',
+        new String('asdf'),
+        123,
+        {},
+        [],
+        true,
+        NaN,
+        Infinity,
+        new Date(),
+        new RegExp('asdf'),
+        arguments
+    ];
+    fails.forEach(testFalse);
+
+    var passes = [
+        function () {}
+    ];
+    passes.forEach(testTrue);
+
+    test.done();
+};
+
+exports['isString'] = function (test) {
+    function testTrue(x) {
+        test.strictEqual(L.isString(x), true, x);
+    }
+    function testFalse(x) {
+        test.strictEqual(L.isString(x), false, x);
+    }
+
+    var fails = [
+        null,
+        undefined,
+        123,
+        {},
+        [],
+        true,
+        NaN,
+        Infinity,
+        new Date(),
+        new RegExp('asdf'),
+        arguments,
+        function () {}
+    ];
+    fails.forEach(testFalse);
+
+    var passes = [
+        'asdf',
+        new String('asdf')
+    ];
+    passes.forEach(testTrue);
+
+    test.done();
+};
+
+exports['isNumber'] = function (test) {
+    function testTrue(x) {
+        test.strictEqual(L.isNumber(x), true, x);
+    }
+    function testFalse(x) {
+        test.strictEqual(L.isNumber(x), false, x);
+    }
+
+    var fails = [
+        null,
+        undefined,
+        {},
+        [],
+        true,
+        new Date(),
+        new RegExp('asdf'),
+        arguments,
+        function () {},
+        'asdf',
+        new String('asdf')
+    ];
+    fails.forEach(testFalse);
+
+    var passes = [
+        123,
+        Infinity,
+        NaN // yes, really. it's part of the IEEE standard
+    ];
+    passes.forEach(testTrue);
+
+    test.done();
+};
+
+exports['isBoolean'] = function (test) {
+    function testTrue(x) {
+        test.strictEqual(L.isBoolean(x), true, x);
+    }
+    function testFalse(x) {
+        test.strictEqual(L.isBoolean(x), false, x);
+    }
+
+    var fails = [
+        null,
+        undefined,
+        {},
+        [],
+        new Date(),
+        new RegExp('asdf'),
+        arguments,
+        function () {},
+        'asdf',
+        new String('asdf'),
+        123,
+        Infinity,
+        NaN
+    ];
+    fails.forEach(testFalse);
+
+    var passes = [
+        true,
+        false
+    ];
+    passes.forEach(testTrue);
+
+    test.done();
+};
+
+exports['isNull'] = function (test) {
+    function testTrue(x) {
+        test.strictEqual(L.isNull(x), true, x);
+    }
+    function testFalse(x) {
+        test.strictEqual(L.isNull(x), false, x);
+    }
+
+    var fails = [
+        undefined,
+        {},
+        [],
+        new Date(),
+        new RegExp('asdf'),
+        arguments,
+        function () {},
+        'asdf',
+        new String('asdf'),
+        123,
+        Infinity,
+        NaN,
+        true
+    ];
+    fails.forEach(testFalse);
+
+    var passes = [
+        null
+    ];
+    passes.forEach(testTrue);
+
+    test.done();
+};
+
+exports['isUndefined'] = function (test) {
+    function testTrue(x) {
+        test.strictEqual(L.isUndefined(x), true, x);
+    }
+    function testFalse(x) {
+        test.strictEqual(L.isUndefined(x), false, x);
+    }
+
+    var fails = [
+        {},
+        [],
+        new Date(),
+        new RegExp('asdf'),
+        arguments,
+        function () {},
+        'asdf',
+        new String('asdf'),
+        123,
+        Infinity,
+        NaN,
+        true,
+        null
+    ];
+    fails.forEach(testFalse);
+
+    var passes = [
+        undefined
+    ];
+    passes.forEach(testTrue);
+
+    test.done();
+};
+
+exports['isNaN'] = function (test) {
+    function testTrue(x) {
+        test.strictEqual(L.isNaN(x), true, x);
+    }
+    function testFalse(x) {
+        test.strictEqual(L.isNaN(x), false, x);
+    }
+
+    var fails = [
+        {},
+        [],
+        new Date(),
+        new RegExp('asdf'),
+        arguments,
+        function () {},
+        'asdf',
+        new String('asdf'),
+        123,
+        Infinity,
+        true,
+        null,
+        undefined
+    ];
+    fails.forEach(testFalse);
+
+    var passes = [
+        NaN
+    ];
+    passes.forEach(testTrue);
+
+    test.done();
+};
+
+exports['isDateObject'] = function (test) {
+    function testTrue(x) {
+        test.strictEqual(L.isDateObject(x), true, x);
+    }
+    function testFalse(x) {
+        test.strictEqual(L.isDateObject(x), false, x);
+    }
+
+    var fails = [
+        {},
+        [],
+        new RegExp('asdf'),
+        arguments,
+        function () {},
+        'asdf',
+        new String('asdf'),
+        123,
+        Infinity,
+        true,
+        null,
+        undefined,
+        NaN
+    ];
+    fails.forEach(testFalse);
+
+    var passes = [
+        new Date()
+    ];
+    passes.forEach(testTrue);
+
+    test.done();
+};
+
+exports['isRegExpObject'] = function (test) {
+    function testTrue(x) {
+        test.strictEqual(L.isRegExpObject(x), true, x);
+    }
+    function testFalse(x) {
+        test.strictEqual(L.isRegExpObject(x), false, x);
+    }
+
+    var fails = [
+        {},
+        [],
+        arguments,
+        function () {},
+        'asdf',
+        new String('asdf'),
+        123,
+        Infinity,
+        true,
+        null,
+        undefined,
+        NaN,
+        new Date()
+    ];
+    fails.forEach(testFalse);
+
+    var passes = [
+        new RegExp('asdf'),
+        /foo/
+    ];
+    passes.forEach(testTrue);
+
+    test.done();
+};
+
+exports['isArgumentsObject'] = function (test) {
+    function testTrue(x) {
+        test.strictEqual(L.isArgumentsObject(x), true, x);
+    }
+    function testFalse(x) {
+        test.strictEqual(L.isArgumentsObject(x), false, x);
+    }
+
+    var fails = [
+        {},
+        [],
+        function () {},
+        'asdf',
+        new String('asdf'),
+        123,
+        Infinity,
+        true,
+        null,
+        undefined,
+        NaN,
+        new Date(),
+        new RegExp('asdf')
+    ];
+    fails.forEach(testFalse);
+
+    var passes = [
+        arguments
+    ];
+    passes.forEach(testTrue);
+
+    test.done();
+};
+
+exports['type'] = function (test) {
+    test.equal(L.type({}), 'object');
+    test.equal(L.type([]), 'array');
+    test.equal(L.type(function () {}), 'function');
+    test.equal(L.type('asdf'), 'string');
+    test.equal(L.type(new String('asdf')), 'string');
+    test.equal(L.type(123), 'number');
+    test.equal(L.type(Infinity), 'number');
+    test.equal(L.type(true), 'boolean');
+    test.equal(L.type(null), 'null');
+    test.equal(L.type(undefined), 'undefined');
+    test.equal(L.type(NaN), 'number'); // yes, really
+    test.equal(L.type(new Date()), 'object');
+    test.equal(L.type(new RegExp('asdf')), 'object');
+    test.equal(L.type(arguments), 'object');
+    test.done();
+};
 
 
 

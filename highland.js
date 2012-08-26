@@ -32,7 +32,17 @@
 var L = {};
 
 var root = this;
-var slice = Array.prototype.slice;
+
+// Save bytes in the minified (but not gzipped) version:
+var ArrayProto  = Array.prototype,
+    FuncProto   = Function.prototype,
+    ObjProto    = Object.prototype;
+
+// Create quick reference variables for speed access to core prototypes.
+var slice            = ArrayProto.slice,
+    unshift          = ArrayProto.unshift,
+    toString         = ObjProto.toString,
+    hasOwnProperty   = ObjProto.hasOwnProperty;
 
 
 /***** Functions *****/
@@ -220,10 +230,6 @@ L.eqv = L.curry(function (a, b) {
     }
 });
 
-function isArguments(object) {
-    return Object.prototype.toString.call(object) == '[object Arguments]';
-}
-
 function objEquiv(a, b) {
     if ((a === null || a === undefined) || (b === null || b === undefined)) {
         return false;
@@ -232,8 +238,8 @@ function objEquiv(a, b) {
     if (a.prototype !== b.prototype) return false;
     //~~~I've managed to break Object.keys through screwy arguments passing.
     //   Converting to array solves the problem.
-    if (isArguments(a)) {
-        if (!isArguments(b)) {
+    if (L.isArgumentsObject(a)) {
+        if (!L.isArgumentsObject(b)) {
             return false;
         }
         a = pSlice.call(a);
@@ -580,32 +586,162 @@ L.mod = L.curry(function (a, b) {
 
 /***** Types *****/
 
+
+/**
+ * Thanks for underscore.js for many of these type tests. Some
+ * functions may have been modified.
+ *
+ * Underscore.js 1.3.3
+ * (c) 2009-2012 Jeremy Ashkenas, DocumentCloud Inc.
+ * Underscore is freely distributable under the MIT license.
+ * Portions of Underscore are inspired or borrowed from Prototype,
+ * Oliver Steele's Functional, and John Resig's Micro-Templating.
+ * For all details and documentation:
+ * http://documentcloud.github.com/underscore
+ */
+
+
+/**
+ * isArray obj -> Boolean
+ *
+ * Tests if obj is an array.
+ */
+
 L.isArray = Array.isArray || function (obj) {
     return toString.call(obj) === '[object Array]';
 };
+
+/**
+ * isObject obj -> Boolean
+ *
+ * Tests if obj is an Object. This differs from other isObject
+ * implementations in that it does NOT return true for Arrays,
+ * Functions or Strings created using the String() constructor function.
+ */
+
 L.isObject = function (obj) {
-    return obj === Object(obj);
-    // also check not an array and not function
+    return obj === Object(obj) &&
+        !L.isArray(obj) &&
+        !L.isFunction(obj) &&
+        !L.isString(obj);
 };
+
+/**
+ * isFunction obj -> Boolean
+ *
+ * Tests if obj is a Function.
+ */
+
 L.isFunction = function (obj) {
     return toString.call(obj) == '[object Function]';
 };
+
+/**
+ * isString obj -> Boolean
+ *
+ * Tests if obj is a String.
+ */
+
 L.isString = function (obj) {
     return toString.call(obj) == '[object String]';
 };
+
+/**
+ * isNumber obj -> Boolean
+ *
+ * Tests if obj is a Number (including Infinity).
+ */
+
 L.isNumber = function (obj) {
     return toString.call(obj) == '[object Number]';
 };
+
+/**
+ * isBoolean obj -> Boolean
+ *
+ * Tests if obj is a Boolean.
+ */
+
 L.isBoolean = function (obj) {
     return obj === true || obj === false ||
         toString.call(obj) == '[object Boolean]';
 };
+
+/**
+ * isNull obj -> Boolean
+ *
+ * Tests if obj is null.
+ */
+
 L.isNull = function (obj) {
     return obj === null;
 };
+
+/**
+ * isUndefined obj -> Boolean
+ *
+ * Tests if obj is undefined.
+ */
+
 L.isUndefined = function (obj) {
     return obj === void 0;
 };
+
+/**
+ * isNaN obj -> Boolean
+ *
+ * Tests if obj is NaN. This is not the same as the native isNaN function,
+ * which will also return true if the variable is undefined.
+ */
+
+L.isNaN = function (obj) {
+    // `NaN` is the only value for which `===` is not reflexive.
+    return obj !== obj;
+};
+
+/**
+ * isDateObject obj -> Boolean
+ *
+ * Tests if obj is a Date object (also passes isObject test).
+ */
+
+L.isDateObject = function (obj) {
+  return toString.call(obj) == '[object Date]';
+};
+
+/**
+ * isRegExpObject obj -> Boolean
+ *
+ * Tests if obj is a RegExp (also passes isObject test).
+ */
+
+// Is the given value a regular expression?
+L.isRegExpObject = function(obj) {
+    return toString.call(obj) == '[object RegExp]';
+};
+
+/**
+ * isArgumentsObject obj -> Boolean
+ *
+ * Tests if obj is an arguments list (also passes isObject test).
+ */
+
+// Is a given variable an arguments object?
+L.isArgumentsObject = function(obj) {
+    return toString.call(obj) == '[object Arguments]';
+};
+if (!L.isArgumentsObject(arguments)) {
+    L.isArgumentsObject = function(obj) {
+        return !!(obj && L.has(obj, 'callee'));
+    };
+}
+
+/**
+ * type obj -> String
+ *
+ * Returns a string describing the type of obj. Possible values: array,
+ * function, object, string, boolean, null, undefined.
+ */
 
 L.type = function (obj) {
     return (
@@ -658,11 +794,21 @@ L.init = function (arr) {
 };
 
 L.empty  = function (arr) { return arr.length === 0; };
+/*
+// Is a given array, string, or object empty?
+// An "empty" object has no enumerable own-properties.
+_.isEmpty = function(obj) {
+  if (obj == null) return true;
+  if (_.isArray(obj) || _.isString(obj)) return obj.length === 0;
+  for (var key in obj) if (_.has(obj, key)) return false;
+  return true;
+};
+*/
 L.length = function (arr) { return arr.length; };
 
 L.concat = L.curry(function (a, b) {
     if (L.isArray(a)) {
-        return Array.prototype.concat.apply(a, b);
+        return ArrayProto.concat.apply(a, b);
     }
     if (L.isString(a)) {
         return a + b;
@@ -927,7 +1073,7 @@ L.sort = function (xs) { return slice.call(xs).sort(); };
 // startswith :: Eq a => [a] -> [a] -> Bool // alias for isPrefixOf
 // endswith :: Eq a => [a] -> [a] -> Bool   // alias for isSuffixOf
 L.join = L.curry(function (sep, xs) {
-    return Array.prototype.join.call(xs, sep);
+    return ArrayProto.join.call(xs, sep);
 });
 // split :: Eq a => [a] -> [a] -> [[a]]
 // splitWs :: String -> [String]
@@ -940,6 +1086,10 @@ L.join = L.curry(function (sep, xs) {
 
 
 /***** Objects *****/
+
+L.has = L.curry(function (obj, key) {
+    return hasOwnProperty.call(obj, key);
+});
 
 L.shallowClone = function (obj) {
     if (L.isArray(obj)) {
