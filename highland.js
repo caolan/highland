@@ -187,7 +187,7 @@ var hasBuffer = (typeof Buffer !== 'undefined');
 // https://github.com/joyent/node/blob/master/LICENSE
 
 
-L.eqv = function (a, b) {
+L.eqv = L.curry(function (a, b) {
     if (a === b) {
         return true;
     }
@@ -218,7 +218,7 @@ L.eqv = function (a, b) {
     else {
         return objEquiv(a, b);
     }
-};
+});
 
 function isArguments(object) {
     return Object.prototype.toString.call(object) == '[object Arguments]';
@@ -317,7 +317,7 @@ L.not = function (a) { return !a; };
  *     lt(3,3) == false
  */
 
-L.lt = function (a, b) {
+L.lt = L.curry(function (a, b) {
     var ta = L.type(a),
         tb = L.type(b);
 
@@ -340,7 +340,7 @@ L.lt = function (a, b) {
         return a.length < b.length;
     }
     throw new TypeError('Cannot order values of type ' + ta);
-};
+});
 
 /**
  * gt a -> b -> Boolean
@@ -359,7 +359,7 @@ L.lt = function (a, b) {
  *     gt(3,3) == false
  */
 
-L.gt = function (a, b) {
+L.gt = L.curry(function (a, b) {
     var ta = L.type(a),
         tb = L.type(b);
 
@@ -382,7 +382,7 @@ L.gt = function (a, b) {
         return a.length > b.length;
     }
     throw new TypeError('Cannot order values of type ' + ta);
-};
+});
 
 /**
  * le a -> b -> Boolean
@@ -396,7 +396,7 @@ L.gt = function (a, b) {
  *     le(3,3) == true
  */
 
-L.le = L.compose(L.not, L.gt);
+L.le = L.curry(function (a, b) { return L.not(L.gt(a, b)); });
 
 /**
  * ge a -> b -> Boolean
@@ -410,7 +410,7 @@ L.le = L.compose(L.not, L.gt);
  *     gt(3,3) == true
  */
 
-L.ge = L.compose(L.not, L.lt);
+L.ge = L.curry(function (a, b) { return L.not(L.lt(a, b)); });
 
 /**
  * and a -> b -> Boolean
@@ -462,7 +462,7 @@ L.or = L.curry(function (a, b) {
 
 
 /**
- * add a -> b -> ?
+ * add a -> b -> Number
  *
  * Adds a and b using `+`. This only works with Numbers, it does not
  * also perform string concatenation. For that, use the `concat` function.
@@ -483,7 +483,7 @@ L.add = L.curry(function (a, b) {
 });
 
 /**
- * sub a -> b -> ?
+ * sub a -> b -> Number
  *
  * Subtracts b from a using `-`. This only works with Numbers.
  *
@@ -502,12 +502,80 @@ L.sub = L.curry(function (a, b) {
     );
 });
 
-L.mul = operator('*');
-L.div = operator('/');
-L.rem = operator('%'); // it's not actually modulus in js, but remainder:
-                       // -1 % 5 === -1 (should be 4)
+/**
+ * mul a -> b -> Number
+ *
+ * Multiplies a and b using `*`. This only works with Numbers.
+ *
+ * Example:
+ *
+ *     mul(2,1) == 2
+ *     mul(5,5) == 25
+ */
 
-// TODO: add eqv for 'equivalent' -- like test.same in nodeunit
+L.mul = L.curry(function (a, b) {
+    if (L.isNumber(a) && L.isNumber(b)) {
+        return a * b;
+    }
+    throw new TypeError(
+        'Expecting two Number arguments, got: ' + L.type(a) + ', ' + L.type(b)
+    );
+});
+
+/**
+ * div a -> b -> Number
+ *
+ * Divides a by b using `/`. This only works with Numbers.
+ *
+ * Example:
+ *
+ *     div(4,2) == 2
+ *     div(15,5) == 3
+ */
+
+L.div = L.curry(function (a, b) {
+    if (L.isNumber(a) && L.isNumber(b)) {
+        return a / b;
+    }
+    throw new TypeError(
+        'Expecting two Number arguments, got: ' + L.type(a) + ', ' + L.type(b)
+    );
+});
+
+/**
+ * rem a -> b -> Number
+ *
+ * Returns the amount left over after dividing integer a by integer b.
+ * This is the same as the `%` operator, which is in fact the remainder
+ * not modulus. However, this function will only work with Number arguments.
+ */
+
+L.rem = L.curry(function (a, b) {
+    if (L.isNumber(a) && L.isNumber(b)) {
+        return a % b;
+    }
+    throw new TypeError(
+        'Expecting two Number arguments, got: ' + L.type(a) + ', ' + L.type(b)
+    );
+});
+
+/**
+ * mod a -> b -> Number
+ *
+ * The modulus of a and b, this is NOT the same as the `%` operator in
+ * JavaScript, which actually returns the remainder. See the `rem` function
+ * if you want compatible behaviour with `%`.
+ */
+
+L.mod = L.curry(function (a, b) {
+    if (L.isNumber(a) && L.isNumber(b)) {
+        return ((a % b) + b) % b;
+    }
+    throw new TypeError(
+        'Expecting two Number arguments, got: ' + L.type(a) + ', ' + L.type(b)
+    );
+});
+
 
 
 /***** Types *****/

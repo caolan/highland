@@ -93,6 +93,10 @@ exports['eq'] = function (test) {
     ];
     fails.forEach(testFalse);
 
+    // partial application
+    test.equal(L.eq(123)(123), true);
+    test.equal(L.eq(123)(321), false);
+
     test.done();
 };
 
@@ -120,6 +124,10 @@ exports['ne'] = function (test) {
         [' \t\r\n ',0], [a, [1,2,3,4]], [b, {foo: 'bar'}]
     ];
     passes.forEach(testTrue);
+
+    // partial application
+    test.equal(L.ne(123)(123), false);
+    test.equal(L.ne(123)(321), true);
 
     test.done();
 };
@@ -151,6 +159,10 @@ exports['eqv'] = function (test) {
         [{a:1, b:{c:2}}, {a:1, b:{c:3}}]
     ];
     fails.forEach(testFalse);
+
+    // partial application
+    test.equal(L.eqv({a:1})({b:2}), false);
+    test.equal(L.eqv({a:1})({a:1}), true);
 
     test.done();
 };
@@ -188,6 +200,10 @@ exports['lt'] = function (test) {
     ];
     throwers.forEach(testThrows);
 
+    // partial application
+    test.equal(L.lt('abc')('def'), true);
+    test.equal(L.lt(456)(123), false);
+
     test.done();
 };
 
@@ -223,6 +239,10 @@ exports['gt'] = function (test) {
         [[1,2,{a:1}],[1,3,{a:1}]], [[null,null],[null,undefined]]
     ];
     throwers.forEach(testThrows);
+
+    // partial application
+    test.equal(L.gt('abc')('def'), false);
+    test.equal(L.gt(456)(123), true);
 
     test.done();
 };
@@ -260,6 +280,11 @@ exports['le'] = function (test) {
     ];
     throwers.forEach(testThrows);
 
+    // partial application
+    test.equal(L.le('abc')('def'), true);
+    test.equal(L.le(456)(123), false);
+    test.equal(L.le(123)(123), true);
+
     test.done();
 };
 
@@ -295,6 +320,11 @@ exports['ge'] = function (test) {
         [[1,2,{a:1}],[1,3,{a:1}]], [[null,null],[null,undefined]]
     ];
     throwers.forEach(testThrows);
+
+    // partial application
+    test.equal(L.ge('abc')('def'), false);
+    test.equal(L.ge(456)(123), true);
+    test.equal(L.ge(123)(123), true);
 
     test.done();
 };
@@ -362,6 +392,66 @@ exports['sub'] = function (test) {
     // partial application
     test.equal(L.sub(1)(1), L.sub(1,1));
     test.equal(L.sub(5)(2), L.sub(5,2));
+    test.done();
+};
+
+exports['mul'] = function (test) {
+    test.strictEqual(L.mul(2,1), 2);
+    test.strictEqual(L.mul(2,2), 4);
+    test.strictEqual(L.mul(2,5), 10);
+    test.throws(function () { L.mul('123', true); });
+    test.throws(function () { L.mul('123', 123); });
+    test.throws(function () { L.mul(123, {}); });
+    test.throws(function () { L.mul([], undefined); });
+    test.throws(function () { L.mul(undefined, null); });
+    // partial application
+    test.equal(L.mul(1)(1), L.mul(1,1));
+    test.equal(L.mul(5)(2), L.mul(5,2));
+    test.done();
+};
+
+exports['div'] = function (test) {
+    test.strictEqual(L.div(2,1), 2);
+    test.strictEqual(L.div(2,2), 1);
+    test.strictEqual(L.div(10,2), 5);
+    test.throws(function () { L.div('123', true); });
+    test.throws(function () { L.div('123', 123); });
+    test.throws(function () { L.div(123, {}); });
+    test.throws(function () { L.div([], undefined); });
+    test.throws(function () { L.div(undefined, null); });
+    // partial application
+    test.equal(L.div(1)(1), L.div(1,1));
+    test.equal(L.div(5)(2), L.div(5,2));
+    test.done();
+};
+
+exports['rem'] = function (test) {
+    test.strictEqual(L.rem(1,2), 1);
+    test.strictEqual(L.rem(2,2), 0);
+    test.strictEqual(L.rem(-1,5), -1);
+    test.throws(function () { L.rem('123', true); });
+    test.throws(function () { L.rem('123', 123); });
+    test.throws(function () { L.rem(123, {}); });
+    test.throws(function () { L.rem([], undefined); });
+    test.throws(function () { L.rem(undefined, null); });
+    // partial application
+    test.equal(L.rem(1)(1), L.rem(1,1));
+    test.equal(L.rem(5)(2), L.rem(5,2));
+    test.done();
+};
+
+exports['mod'] = function (test) {
+    test.strictEqual(L.mod(1,2), 1);
+    test.strictEqual(L.mod(2,2), 0);
+    test.strictEqual(L.mod(-1,5), 4);
+    test.throws(function () { L.mod('123', true); });
+    test.throws(function () { L.mod('123', 123); });
+    test.throws(function () { L.mod(123, {}); });
+    test.throws(function () { L.mod([], undefined); });
+    test.throws(function () { L.mod(undefined, null); });
+    // partial application
+    test.equal(L.mod(1)(1), L.mod(1,1));
+    test.equal(L.mod(5)(2), L.mod(5,2));
     test.done();
 };
 
