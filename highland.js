@@ -288,9 +288,27 @@ function objEquiv(a, b) {
 L.ne = operator('!==');
 
 /**
+ * not a -> Boolean
+ *
+ * Tests if a is not truthy using `!`.
+ *
+ * Example:
+ *
+ *     not(true) == false
+ *     not(false) == true
+ */
+
+L.not = function (a) { return !a; };
+
+/**
  * lt a -> b -> Boolean
  *
- * Tests if a is less than b using `<`
+ * Tests if a is less than b. This is not a simple wrapper for the '<'
+ * operator, and will only work with Numbers, Strings and Arrays (containing
+ * any of these three types). Both a and b must be of the same data type,
+ * you cannot compare a Number with a String, for example. However, you
+ * can compare two arrays which both have a Number as the first argument
+ * and a String as the second, and so on.
  *
  * Example
  *
@@ -304,7 +322,7 @@ L.lt = function (a, b) {
         tb = L.type(b);
 
     if (ta !== tb) {
-        throw new Error('Cannot compare type ' + ta + ' with type ' + tb);
+        throw new TypeError('Cannot compare type ' + ta + ' with type ' + tb);
     }
     if (ta === 'string' || ta === 'number') {
         return a < b;
@@ -321,13 +339,18 @@ L.lt = function (a, b) {
         }
         return a.length < b.length;
     }
-    throw new Error('Cannot order values of type ' + ta);
+    throw new TypeError('Cannot order values of type ' + ta);
 };
 
 /**
  * gt a -> b -> Boolean
  *
- * Tests if a is greater than b using `>`
+ * Tests if a is greater than b. This is not a simple wrapper for the '>'
+ * operator, and will only work with Numbers, Strings and Arrays (containing
+ * any of these three types). Both a and b must be of the same data type,
+ * you cannot compare a Number with a String, for example. However, you
+ * can compare two arrays which both have a Number as the first argument
+ * and a String as the second, and so on.
  *
  * Example
  *
@@ -336,26 +359,49 @@ L.lt = function (a, b) {
  *     gt(3,3) == false
  */
 
-L.gt = operator('>');
+L.gt = function (a, b) {
+    var ta = L.type(a),
+        tb = L.type(b);
+
+    if (ta !== tb) {
+        throw new TypeError('Cannot compare type ' + ta + ' with type ' + tb);
+    }
+    if (ta === 'string' || ta === 'number') {
+        return a > b;
+    }
+    if (ta === 'array') {
+        var len = L.min(a.length, b.length);
+        for (var i = 0; i < len; i++) {
+            if (L.gt(a[i], b[i])) {
+                return true;
+            }
+            else if (!L.eqv(a[i], b[i])) {
+                return false;
+            }
+        }
+        return a.length > b.length;
+    }
+    throw new TypeError('Cannot order values of type ' + ta);
+};
 
 /**
  * le a -> b -> Boolean
  *
- * Tests if a is less than or equal to b using `<=`
+ * Tests if a is less than or equivalent to b.
  *
  * Example
  *
- *     lt(2,4) == true
- *     lt(5,1) == false
- *     lt(3,3) == true
+ *     le(2,4) == true
+ *     le(5,1) == false
+ *     le(3,3) == true
  */
 
-L.le = operator('<=');
+L.le = L.compose(L.not, L.gt);
 
 /**
  * ge a -> b -> Boolean
  *
- * Tests if a is greater than or equal to b using `>=`
+ * Tests if a is greater than or equivalent to b.
  *
  * Example
  *
@@ -364,12 +410,14 @@ L.le = operator('<=');
  *     gt(3,3) == true
  */
 
-L.ge = operator('>=');
+L.ge = L.compose(L.not, L.lt);
 
 /**
  * and a -> b -> Boolean
  *
- * Tests if both a and b are truthy using `&&`.
+ * Tests if both a and b are `true` using `&&`. However, unlike the
+ * `&&` operator, this will only work with Boolean arguments. It has
+ * no concept of 'truthy' and 'falsey'.
  *
  * Example:
  *
@@ -379,40 +427,45 @@ L.ge = operator('>=');
  *
  */
 
-L.and = operator('&&');
+L.and = L.curry(function (a, b) {
+    if (L.isBoolean(a) &&  L.isBoolean(b)) {
+        return a && b;
+    }
+    throw new TypeError(
+        'Expecting two Boolean arguments, got: ' + L.type(a) + ', ' + L.type(b)
+    );
+});
 
 /**
  * or a -> b -> Boolean
  *
- * Tests if either a or b are truthy using `||`.
+ * Tests if either a or b are `true` using `||`. However, unlike the
+ * `||` operator, this will only work with Boolean arguments. It has
+ * no concept of 'truthy' and 'falsey'.
  *
  * Example:
  *
- *     and(true, true) == true
- *     and(false, true) == true
- *     and(false, false) == false
+ *     or(true, true) == true
+ *     or(false, true) == true
+ *     or(false, false) == false
  *
  */
 
-L.or  = operator('||');
+L.or = L.curry(function (a, b) {
+    if (L.isBoolean(a) &&  L.isBoolean(b)) {
+        return a || b;
+    }
+    throw new TypeError(
+        'Expecting two Boolean arguments, got: ' + L.type(a) + ', ' + L.type(b)
+    );
+});
 
-/**
- * not a -> Boolean
- *
- * Tests if a is not truthy using `!`.
- *
- * Example:
- *
- *     not(true) == false
- *     not(false) == true
- */
-
-L.not = function (a) { return !a; };
 
 /**
  * add a -> b -> ?
  *
- * Adds a and b using `+`
+ * Adds a and b using `+`. This only works with Numbers, it does not
+ * also perform string concatenation. For that, use the `concat` function.
  *
  * Example:
  *
@@ -420,13 +473,35 @@ L.not = function (a) { return !a; };
  *     add(5,5) == 10
  */
 
-L.add = operator('+');
+L.add = L.curry(function (a, b) {
+    if (L.isNumber(a) && L.isNumber(b)) {
+        return a + b;
+    }
+    throw new TypeError(
+        'Expecting two Number arguments, got: ' + L.type(a) + ', ' + L.type(b)
+    );
+});
 
 /**
+ * sub a -> b -> ?
  *
+ * Subtracts b from a using `-`. This only works with Numbers.
+ *
+ * Example:
+ *
+ *     sub(2,1) == 1
+ *     sub(5,5) == 0
  */
 
-L.sub = operator('-');
+L.sub = L.curry(function (a, b) {
+    if (L.isNumber(a) && L.isNumber(b)) {
+        return a - b;
+    }
+    throw new TypeError(
+        'Expecting two Number arguments, got: ' + L.type(a) + ', ' + L.type(b)
+    );
+});
+
 L.mul = operator('*');
 L.div = operator('/');
 L.rem = operator('%'); // it's not actually modulus in js, but remainder:
@@ -480,8 +555,15 @@ L.type = function (obj) {
 
 /***** Numbers *****/
 
-L.max = L.curry(function (x, y) { return x >= y ? x: y; });
-L.min = L.curry(function (x, y) { return x <= y ? x: y; });
+/** Ordered data methods **/
+
+L.max = L.curry(function (x, y) { return L.ge(x, y) ? x: y; });
+L.min = L.curry(function (x, y) { return L.le(x, y) ? x: y; });
+// compare
+// <
+// <=
+// >
+// >=
 
 
 /***** Lists *****/
@@ -910,16 +992,18 @@ L.installGlobal = function () {
     var keys = L.keys(L);
     for (var i = 0; i < keys.length; i++) {
         (function (k) {
-            root.__defineGetter__(k, function () {
-                return L[k];
-            });
-            root.__defineSetter__(k, function () {
-                throw new Error(k + ' is read-only');
+            if (root[k] === L[k]) {
+                return; // skip if already installed
+            }
+            Object.defineProperty(root, k, {
+                get: function () { return L[k]; },
+                set: function () { throw new Error(k + ' is read-only'); },
+                configurable: false
             });
         }(keys[i]));
     }
 };
 
-return L;
+return Object.freeze(L);
 
 }));

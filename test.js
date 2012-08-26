@@ -124,6 +124,12 @@ exports['ne'] = function (test) {
     test.done();
 };
 
+exports['not'] = function (test) {
+    test.equal(!true, L.not(true));
+    test.equal(!false, L.not(false));
+    test.done();
+};
+
 exports['eqv'] = function (test) {
     function testTrue(args) {
         test.strictEqual(L.eqv(args[0], args[1]), true);
@@ -184,6 +190,182 @@ exports['lt'] = function (test) {
 
     test.done();
 };
+
+exports['gt'] = function (test) {
+    function testTrue(args) {
+        test.strictEqual(L.gt(args[0], args[1]), true);
+    }
+    function testFalse(args) {
+        test.strictEqual(L.gt(args[0], args[1]), false);
+    }
+    function testThrows(args) {
+        test.throws(function () {
+            L.gt(args[0], args[1]);
+        });
+    }
+    var fails = [
+        ['abc','abc'], [123,123], [[1,2],[1,2]],
+        ['abc','def'], [123,456], [[1,2,3],[4,5,6]],
+        [[1,2],[1,2,3]], [[1,1],[1,1,1]], [[1,2,3],[5]]
+    ];
+    fails.forEach(testFalse);
+
+    var passes = [
+        ['def','abc'], [456,123], [[4,5,6],[1,2,3]],
+        [[1,2,3],[1,2]], [[1,1,1],[1,1]], [[5],[1,2,3]]
+    ];
+    passes.forEach(testTrue);
+
+    var throwers = [
+        [{a:1},{a:1}], [{a:1},[1,2,3]], ['asdf',123], [[1,2,3],123],
+        [[1,2,3],'1,2,3'], [true,false], [null,123], [undefined,123],
+        ['asdf',false], [123,false], [[1,2,3],false]
+        [[1,2,{a:1}],[1,3,{a:1}]], [[null,null],[null,undefined]]
+    ];
+    throwers.forEach(testThrows);
+
+    test.done();
+};
+
+exports['le'] = function (test) {
+    function testTrue(args) {
+        test.strictEqual(L.le(args[0], args[1]), true);
+    }
+    function testFalse(args) {
+        test.strictEqual(L.le(args[0], args[1]), false);
+    }
+    function testThrows(args) {
+        test.throws(function () {
+            L.le(args[0], args[1]);
+        });
+    }
+    var passes = [
+        ['abc','abc'], [123,123], [[1,2],[1,2]],
+        ['abc','def'], [123,456], [[1,2,3],[4,5,6]],
+        [[1,2],[1,2,3]], [[1,1],[1,1,1]], [[1,2,3],[5]]
+    ];
+    passes.forEach(testTrue);
+
+    var fails = [
+        ['def','abc'], [456,123], [[4,5,6],[1,2,3]],
+        [[1,2,3],[1,2]], [[1,1,1],[1,1]], [[5],[1,2,3]]
+    ];
+    fails.forEach(testFalse);
+
+    var throwers = [
+        [{a:1},{a:1}], [{a:1},[1,2,3]], ['asdf',123], [[1,2,3],123],
+        [[1,2,3],'1,2,3'], [true,false], [null,123], [undefined,123],
+        ['asdf',false], [123,false], [[1,2,3],false]
+        [[1,2,{a:1}],[1,3,{a:1}]], [[null,null],[null,undefined]]
+    ];
+    throwers.forEach(testThrows);
+
+    test.done();
+};
+
+exports['ge'] = function (test) {
+    function testTrue(args) {
+        test.strictEqual(L.ge(args[0], args[1]), true);
+    }
+    function testFalse(args) {
+        test.strictEqual(L.ge(args[0], args[1]), false);
+    }
+    function testThrows(args) {
+        test.throws(function () {
+            L.ge(args[0], args[1]);
+        });
+    }
+    var fails = [
+        ['abc','def'], [123,456], [[1,2,3],[4,5,6]],
+        [[1,2],[1,2,3]], [[1,1],[1,1,1]], [[1,2,3],[5]]
+    ];
+    fails.forEach(testFalse);
+
+    var passes = [
+        ['abc','abc'], [123,123], [[1,2],[1,2]],
+        ['def','abc'], [456,123], [[4,5,6],[1,2,3]],
+        [[1,2,3],[1,2]], [[1,1,1],[1,1]], [[5],[1,2,3]]
+    ];
+    passes.forEach(testTrue);
+
+    var throwers = [
+        [{a:1},{a:1}], [{a:1},[1,2,3]], ['asdf',123], [[1,2,3],123],
+        [[1,2,3],'1,2,3'], [true,false], [null,123], [undefined,123],
+        ['asdf',false], [123,false], [[1,2,3],false]
+        [[1,2,{a:1}],[1,3,{a:1}]], [[null,null],[null,undefined]]
+    ];
+    throwers.forEach(testThrows);
+
+    test.done();
+};
+
+exports['and'] = function (test) {
+    test.strictEqual(L.and(true, true), true);
+    test.strictEqual(L.and(false, true), false);
+    test.strictEqual(L.and(true, false), false);
+    test.strictEqual(L.and(false, false), false);
+    test.throws(function () { L.and('asdf', true); });
+    test.throws(function () { L.and('asdf', 123); });
+    test.throws(function () { L.and(123, {}); });
+    test.throws(function () { L.and([], undefined); });
+    test.throws(function () { L.and(undefined, null); });
+    // partial application
+    test.equal(true && true, L.and(true)(true));
+    test.equal(true && false, L.and(true)(false));
+    test.equal(false && true, L.and(false)(true));
+    test.equal(false && false, L.and(false)(false));
+    test.done();
+};
+
+exports['or'] = function (test) {
+    test.strictEqual(L.or(true, true), true);
+    test.strictEqual(L.or(false, true), true);
+    test.strictEqual(L.or(true, false), true);
+    test.strictEqual(L.or(false, false), false);
+    test.throws(function () { L.or('asdf', true); });
+    test.throws(function () { L.or('asdf', 123); });
+    test.throws(function () { L.or(123, {}); });
+    test.throws(function () { L.or([], undefined); });
+    test.throws(function () { L.or(undefined, null); });
+    // partial application
+    test.equal(true || true, L.or(true)(true));
+    test.equal(true || false, L.or(true)(false));
+    test.equal(false || true, L.or(false)(true));
+    test.equal(false || false, L.or(false)(false));
+    test.done();
+};
+
+exports['add'] = function (test) {
+    test.strictEqual(L.add(1,2), 3);
+    test.strictEqual(L.add(2,2), 4);
+    test.strictEqual(L.add(2.3,2.12), 4.42);
+    test.throws(function () { L.add('123', true); });
+    test.throws(function () { L.add('123', 123); });
+    test.throws(function () { L.add(123, {}); });
+    test.throws(function () { L.add([], undefined); });
+    test.throws(function () { L.add(undefined, null); });
+    // partial application
+    test.equal(L.add(1)(1), L.add(1,1));
+    test.equal(L.add(2)(5), L.add(2,5));
+    test.done();
+};
+
+exports['sub'] = function (test) {
+    test.strictEqual(L.sub(2,1), 1);
+    test.strictEqual(L.sub(2,2), 0);
+    test.strictEqual(L.sub(2,5), -3);
+    test.throws(function () { L.sub('123', true); });
+    test.throws(function () { L.sub('123', 123); });
+    test.throws(function () { L.sub(123, {}); });
+    test.throws(function () { L.sub([], undefined); });
+    test.throws(function () { L.sub(undefined, null); });
+    // partial application
+    test.equal(L.sub(1)(1), L.sub(1,1));
+    test.equal(L.sub(5)(2), L.sub(5,2));
+    test.done();
+};
+
+
 
 
 
@@ -587,37 +769,7 @@ exports['join'] = function (test) {
     test.done();
 };
 
-exports['and'] = function (test) {
-    test.equal(true && true, L.and(true, true));
-    test.equal(true && false, L.and(true, false));
-    test.equal(false && true, L.and(false, true));
-    test.equal(false && false, L.and(false, false));
-    // partial application
-    test.equal(true && true, L.and(true)(true));
-    test.equal(true && false, L.and(true)(false));
-    test.equal(false && true, L.and(false)(true));
-    test.equal(false && false, L.and(false)(false));
-    test.done();
-};
 
-exports['or'] = function (test) {
-    test.equal(true || true, L.or(true, true));
-    test.equal(true || false, L.or(true, false));
-    test.equal(false || true, L.or(false, true));
-    test.equal(false || false, L.or(false, false));
-    // partial application
-    test.equal(true || true, L.or(true)(true));
-    test.equal(true || false, L.or(true)(false));
-    test.equal(false || true, L.or(false)(true));
-    test.equal(false || false, L.or(false)(false));
-    test.done();
-};
-
-exports['not'] = function (test) {
-    test.equal(!true, L.not(true));
-    test.equal(!false, L.not(false));
-    test.done();
-};
 
 exports['all'] = function (test) {
     test.equal(L.all(L.not, [false, false, false]), true);
@@ -701,6 +853,12 @@ exports['max'] = function (test) {
     test.equal(L.max(1,2), 2);
     test.equal(L.max(2,2), 2);
     test.equal(L.max(2,1), 2);
+    test.throws(function () { L.max(1, {}); });
+    test.throws(function () { L.max('asdf', 1); });
+    test.throws(function () { L.max([], 1); });
+    test.throws(function () { L.max(true, 1); });
+    test.throws(function () { L.max(null, 1); });
+    test.throws(function () { L.max(undefined, 1); });
     // partial application
     test.equal(L.max(1)(2), 2);
     test.equal(L.max(2)(2), 2);
@@ -718,6 +876,12 @@ exports['min'] = function (test) {
     test.equal(L.min(1,2), 1);
     test.equal(L.min(2,2), 2);
     test.equal(L.min(2,1), 1);
+    test.throws(function () { L.min(1, {}); });
+    test.throws(function () { L.min('asdf', 1); });
+    test.throws(function () { L.min([], 1); });
+    test.throws(function () { L.min(true, 1); });
+    test.throws(function () { L.min(null, 1); });
+    test.throws(function () { L.min(undefined, 1); });
     // partial application
     test.equal(L.min(1)(2), 1);
     test.equal(L.min(2)(2), 2);
