@@ -344,7 +344,7 @@ L.ne = operator('!==');
  * Tests if a is not truthy using `!`, this only works with Boolean values.
  *
  * @name not a -> Boolean
- * @param a {Boolean} - the boolean value to return the inverse of
+ * @param {Boolean} a - the boolean value to return the inverse of
  * @api public
  *
  * not(true) == false

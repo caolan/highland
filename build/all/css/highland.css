@@ -5,7 +5,8 @@ body {
     font-size: 19px;
      */
     font-family: 'FreeSans', 'Arial', sans-serif;
-    font-size: 16px;
+    /*font-size: 16px;*/
+    font-size: 15px;
     word-spacing: 0.1em;
     line-height: 1.618;
     background-image: url('../img/texturetastic_gray_light.png');
@@ -51,6 +52,32 @@ strong, b, h3, h4, h5, h6 {
     margin: 1.618em auto 2.618em auto;
 }
 
+.function-list {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+.function-list li {
+    display: inline;
+}
+.function-list li a {
+    padding: 1px 2px;
+}
+
+/*
+h5,
+.functiondoc .description,
+.functiondoc .params,
+.functiondoc .example {
+    font-size: 15px;
+}
+*/
+
+.functiondoc {
+    border-top: 1px solid white;
+    border-bottom: 1px solid #ddd;
+    padding: 0 0 1.618em 0;
+}
 
 /*
 Green strings from monokai theme

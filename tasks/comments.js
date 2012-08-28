@@ -10,8 +10,6 @@ module.exports = function (tea, context, config, callback) {
         if (err) {
             return callback(err);
         }
-        //console.log(comments);
-
         var module_description = null;
         var sections = [];
         var curr = null;

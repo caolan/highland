@@ -26,10 +26,9 @@ to it's sometimes unpredictable results.</p>
 collection of many small functions to help you write expressive, more
 functional code with fewer side-effects.</p>
 
-      <h3>Contents</h3>
       
         <h4>Functions</h4>
-        <ul>
+        <ul class="function-list">
           
           <li><a href="#curry">curry</a></li>
           
@@ -44,7 +43,7 @@ functional code with fewer side-effects.</p>
         </ul>
       
         <h4>Operators</h4>
-        <ul>
+        <ul class="function-list">
           
           <li><a href="#eq">eq</a></li>
           
@@ -81,7 +80,7 @@ functional code with fewer side-effects.</p>
         </ul>
       
         <h4>Types</h4>
-        <ul>
+        <ul class="function-list">
           
           <li><a href="#isArray">isArray</a></li>
           
@@ -112,7 +111,7 @@ functional code with fewer side-effects.</p>
         </ul>
       
         <h4>Numbers</h4>
-        <ul>
+        <ul class="function-list">
           
           <li><a href="#max">max</a></li>
           
@@ -123,7 +122,7 @@ functional code with fewer side-effects.</p>
         </ul>
       
         <h4>Lists</h4>
-        <ul>
+        <ul class="function-list">
           
           <li><a href="#cons">cons</a></li>
           
@@ -154,455 +153,1331 @@ functional code with fewer side-effects.</p>
         </ul>
       
         <h4>Strings</h4>
-        <ul>
+        <ul class="function-list">
           
         </ul>
       
         <h4>Objects</h4>
-        <ul>
+        <ul class="function-list">
           
         </ul>
       
         <h4>Utilities</h4>
-        <ul>
+        <ul class="function-list">
           
         </ul>
       
 
       
-      <h3>Functions</h3>
+        <h2>Functions</h2>
+
         
-          <h4 id="curry"><a href="#curry">curry f args... -&gt; Function(...)</a></h4>
-          <p>Transforms a function with specific arity (all arguments must be
+          <div class="functiondoc">
+            <h3 id="curry"><a href="#curry">curry f args... -&gt; Function(...)</a></h3>
+
+            <div class="description">
+              <p>Transforms a function with specific arity (all arguments must be
 defined) in a way that it can be called as a chain of functions until
 the arguments list is saturated.</p>
 
 <p>This function is not itself curryable.</p>
-          
-          <pre><code class="javascript">fn = curry(function (a, b, c) {
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>f</strong> <em>Function</em> - the function to curry
+                
+                  <li><strong>args..</strong> - any number of arguments to pre-apply to the function
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">fn = curry(function (a, b, c) {
     return a + b + c;
 });
 
 fn(1)(2)(3) == fn(1, 2, 3)
 fn(1, 2)(3) == fn(1, 2, 3)
 fn(1)(2, 3) == fn(1, 2, 3)</code></pre>
-          
+            
+          </div>
         
-          <h4 id="ncurry"><a href="#ncurry">ncurry n fn args... -&gt; Function(...)</a></h4>
-          <p>Same as <code>curry</code> but with a specific number of arguments. This can be
+          <div class="functiondoc">
+            <h3 id="ncurry"><a href="#ncurry">ncurry n fn args... -&gt; Function(...)</a></h3>
+
+            <div class="description">
+              <p>Same as <code>curry</code> but with a specific number of arguments. This can be
 useful when functions do not explicitly define all its parameters.</p>
 
 <p>This function is not itself curryable.</p>
-          
-          <pre><code class="javascript">fn = ncurry(3, function () {
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>n</strong> <em>Number</em> - the number of arguments to wait for before apply fn
+                
+                  <li><strong>fn</strong> <em>Function</em> - the function to curry
+                
+                  <li><strong>args...</strong> - any number of arguments to pre-apply to the function
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">fn = ncurry(3, function () {
     return Array.prototype.join.call(arguments, &#x27;.&#x27;);
 });
 
 fn(1, 2, 3) == &#x27;1.2.3&#x27;;
 fn(1, 2)(3) == &#x27;1.2.3&#x27;;
 fn(1)(2)(3) == &#x27;1.2.3&#x27;;</code></pre>
-          
+            
+          </div>
         
-          <h4 id="compose"><a href="#compose">compose a -&gt; b -&gt; Function(x)</a></h4>
-          <p>Creates a composite function, which is the application of function 'a' to
+          <div class="functiondoc">
+            <h3 id="compose"><a href="#compose">compose a -&gt; b -&gt; Function(x)</a></h3>
+
+            <div class="description">
+              <p>Creates a composite function, which is the application of function 'a' to
 the results of function 'b'.</p>
-          
-          <pre><code class="javascript">var add1 = add(1);
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>a</strong> <em>Function</em> - the function to apply to the result of b(x)
+                
+                  <li><strong>b</strong> <em>Function</em> - the function to apply to x
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">var add1 = add(1);
 var mul3 = mul(3);
 
 var add1mul3 = compose(mul3, add1);
 add1mul3(2) == 9</code></pre>
-          
+            
+          </div>
         
-          <h4 id="apply"><a href="#apply">apply f -&gt; args -&gt; result</a></h4>
-          <p>Applies function <code>f</code> with arguments array <code>args</code>. Same as doing
+          <div class="functiondoc">
+            <h3 id="apply"><a href="#apply">apply f -&gt; args -&gt; result</a></h3>
+
+            <div class="description">
+              <p>Applies function <code>f</code> with arguments array <code>args</code>. Same as doing
 <code>fn.apply(this, args)</code></p>
-          
-          <pre><code class="javascript">apply(add, [1,2]) == 3
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>f</strong> <em>Function</em> - the function to apply the arguments to
+                
+                  <li><strong>args</strong> <em>Array</em> - an array of arguments to apply
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">apply(add, [1,2]) == 3
 apply(mul)([3,3]) == 9</code></pre>
-          
+            
+          </div>
         
-          <h4 id="flip"><a href="#flip">flip f -&gt; x -&gt; y -&gt; result</a></h4>
-          <p>Evaluates the function <code>f</code> with the argument positions swapped. Only
+          <div class="functiondoc">
+            <h3 id="flip"><a href="#flip">flip f -&gt; x -&gt; y -&gt; result</a></h3>
+
+            <div class="description">
+              <p>Evaluates the function <code>f</code> with the argument positions swapped. Only
 works with functions that accept two arguments.</p>
-          
-          <pre><code class="javascript">div(2, 4) == 0.5
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>f</strong> <em>Function</em> - function to flip argument application for
+                
+                  <li><strong>x</strong> - parameter to apply to the right hand side of f
+                
+                  <li><strong>y</strong> - parameter to apply to the left hand side of f
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">div(2, 4) == 0.5
 flip(div)(2, 4) == 2</code></pre>
-          
+            
+          </div>
         
       
-      <h3>Operators</h3>
+        <h2>Operators</h2>
+
         
-          <h4 id="eq"><a href="#eq">eq a -&gt; b -&gt; Boolean</a></h4>
-          <p>Tests for equality using <code>===</code></p>
-          
-          <pre><code class="javascript">eq(1,1) == true
+          <div class="functiondoc">
+            <h3 id="eq"><a href="#eq">eq a -&gt; b -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Tests for equality using <code>===</code></p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>a</strong> <em>Number</em>
+                
+                  <li><strong>b</strong> <em>Number</em>
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">eq(1,1) == true
 eq(1,2) == false</code></pre>
-          
+            
+          </div>
         
-          <h4 id="eqv"><a href="#eqv">eqv a -&gt; b -&gt; Boolean</a></h4>
-          <p>Tests if the values of a and b are equivalent. With objects and arrays
+          <div class="functiondoc">
+            <h3 id="eqv"><a href="#eqv">eqv a -&gt; b -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Tests if the values of a and b are equivalent. With objects and arrays
 this function will recursively test sub-properties in order to determine
 equivalence. The <code>eq</code> function when applied to two instances of the same
 prototype will return false, this function will return true.</p>
-          
-          <pre><code class="javascript">eqv({a: 1}, {a: 1}) == true
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>a</strong> - any value
+                
+                  <li><strong>b</strong> - any value
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">eqv({a: 1}, {a: 1}) == true
 eqv({a: 1, b: {c: 2}}, {a: 1, b: {c: 3}}) == false</code></pre>
-          
+            
+          </div>
         
-          <h4 id="ne"><a href="#ne">ne a -&gt; b -&gt; Boolean</a></h4>
-          <p>Tests for inequality using <code>!==</code></p>
-          
-          <pre><code class="javascript">ne(1,1) == false
+          <div class="functiondoc">
+            <h3 id="ne"><a href="#ne">ne a -&gt; b -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Tests for inequality using <code>!==</code></p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>a</strong> - any value
+                
+                  <li><strong>b</strong> - any value
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">ne(1,1) == false
 ne(1,2) == true</code></pre>
-          
+            
+          </div>
         
-          <h4 id="not"><a href="#not">not a -&gt; Boolean</a></h4>
-          <p>Tests if a is not truthy using <code>!</code>, this only works with Boolean values.</p>
-          
-          <pre><code class="javascript">not(true) == false
+          <div class="functiondoc">
+            <h3 id="not"><a href="#not">not a -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Tests if a is not truthy using <code>!</code>, this only works with Boolean values.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>a</strong> <em>Boolean</em> - the boolean value to return the inverse of
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">not(true) == false
 not(false) == true</code></pre>
-          
+            
+          </div>
         
-          <h4 id="lt"><a href="#lt">lt a -&gt; b -&gt; Boolean</a></h4>
-          <p>Tests if a is less than b. This is not a simple wrapper for the '&lt;'
+          <div class="functiondoc">
+            <h3 id="lt"><a href="#lt">lt a -&gt; b -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Tests if a is less than b. This is not a simple wrapper for the '&lt;'
 operator, and will only work with Numbers, Strings and Arrays (containing
 any of these three types). Both a and b must be of the same data type,
 you cannot compare a Number with a String, for example. However, you
 can compare two arrays which both have a Number as the first argument
 and a String as the second, and so on.</p>
-          
-          <pre><code class="javascript">lt(2,4) == true
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>a</strong> <em>Number|String|Array</em>
+                
+                  <li><strong>b</strong> <em>Number|String|Array</em>
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">lt(2,4) == true
 lt(5,1) == false
 lt(3,3) == false</code></pre>
-          
+            
+          </div>
         
-          <h4 id="gt"><a href="#gt">gt a -&gt; b -&gt; Boolean</a></h4>
-          <p>Tests if a is greater than b. This is not a simple wrapper for the '>'
+          <div class="functiondoc">
+            <h3 id="gt"><a href="#gt">gt a -&gt; b -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Tests if a is greater than b. This is not a simple wrapper for the '>'
 operator, and will only work with Numbers, Strings and Arrays (containing
 any of these three types). Both a and b must be of the same data type,
 you cannot compare a Number with a String, for example. However, you
 can compare two arrays which both have a Number as the first argument
 and a String as the second, and so on.</p>
-          
-          <pre><code class="javascript">gt(2,4) == false
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>a</strong> <em>Number|String|Array</em>
+                
+                  <li><strong>b</strong> <em>Number|String|Array</em>
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">gt(2,4) == false
 gt(5,1) == true
 gt(3,3) == false</code></pre>
-          
+            
+          </div>
         
-          <h4 id="le"><a href="#le">le a -&gt; b -&gt; Boolean</a></h4>
-          <p>Tests if a is less than or equivalent to b.</p>
-          
-          <pre><code class="javascript">le(2,4) == true
+          <div class="functiondoc">
+            <h3 id="le"><a href="#le">le a -&gt; b -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Tests if a is less than or equivalent to b.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>a</strong> <em>Number|String|Array</em>
+                
+                  <li><strong>b</strong> <em>Number|String|Array</em>
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">le(2,4) == true
 le(5,1) == false
 le(3,3) == true</code></pre>
-          
+            
+          </div>
         
-          <h4 id="ge"><a href="#ge">ge a -&gt; b -&gt; Boolean</a></h4>
-          <p>Tests if a is greater than or equivalent to b.</p>
-          
-          <pre><code class="javascript">gt(2,4) == false
+          <div class="functiondoc">
+            <h3 id="ge"><a href="#ge">ge a -&gt; b -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Tests if a is greater than or equivalent to b.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>a</strong> <em>Number|String|Array</em>
+                
+                  <li><strong>b</strong> <em>Number|String|Array</em>
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">gt(2,4) == false
 gt(5,1) == true
 gt(3,3) == true</code></pre>
-          
+            
+          </div>
         
-          <h4 id="and"><a href="#and">and a -&gt; b -&gt; Boolean</a></h4>
-          <p>Tests if both a and b are <code>true</code> using <code>&amp;&amp;</code>. However, unlike the
+          <div class="functiondoc">
+            <h3 id="and"><a href="#and">and a -&gt; b -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Tests if both a and b are <code>true</code> using <code>&amp;&amp;</code>. However, unlike the
 <code>&amp;&amp;</code> operator, this will only work with Boolean arguments. It has
 no concept of 'truthy' and 'falsey'.</p>
-          
-          <pre><code class="javascript">and(true, true) == true
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>a</strong> <em>Boolean</em>
+                
+                  <li><strong>b</strong> <em>Boolean</em>
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">and(true, true) == true
 and(false, true) == false
 and(false, false) == false</code></pre>
-          
+            
+          </div>
         
-          <h4 id="or"><a href="#or">or a -&gt; b -&gt; Boolean</a></h4>
-          <p>Tests if either a or b are <code>true</code> using <code>||</code>. However, unlike the
+          <div class="functiondoc">
+            <h3 id="or"><a href="#or">or a -&gt; b -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Tests if either a or b are <code>true</code> using <code>||</code>. However, unlike the
 <code>||</code> operator, this will only work with Boolean arguments. It has
 no concept of 'truthy' and 'falsey'.</p>
-          
-          <pre><code class="javascript">or(true, true) == true
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>a</strong> <em>Boolean</em>
+                
+                  <li><strong>b</strong> <em>Boolean</em>
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">or(true, true) == true
 or(false, true) == true
 or(false, false) == false</code></pre>
-          
+            
+          </div>
         
-          <h4 id="add"><a href="#add">add a -&gt; b -&gt; Number</a></h4>
-          <p>Adds a and b using <code>+</code>. This only works with Numbers, it does not
+          <div class="functiondoc">
+            <h3 id="add"><a href="#add">add a -&gt; b -&gt; Number</a></h3>
+
+            <div class="description">
+              <p>Adds a and b using <code>+</code>. This only works with Numbers, it does not
 also perform string concatenation. For that, use the <code>concat</code> function.</p>
-          
-          <pre><code class="javascript">add(1,2) == 3
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>a</strong> <em>Number</em>
+                
+                  <li><strong>b</strong> <em>Number</em>
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">add(1,2) == 3
 add(5,5) == 10</code></pre>
-          
+            
+          </div>
         
-          <h4 id="sub"><a href="#sub">sub a -&gt; b -&gt; Number</a></h4>
-          <p>Subtracts b from a using <code>-</code>. This only works with Numbers.</p>
-          
-          <pre><code class="javascript">sub(2,1) == 1
+          <div class="functiondoc">
+            <h3 id="sub"><a href="#sub">sub a -&gt; b -&gt; Number</a></h3>
+
+            <div class="description">
+              <p>Subtracts b from a using <code>-</code>. This only works with Numbers.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>a</strong> <em>Number</em>
+                
+                  <li><strong>b</strong> <em>Number</em>
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">sub(2,1) == 1
 sub(5,5) == 0</code></pre>
-          
+            
+          </div>
         
-          <h4 id="mul"><a href="#mul">mul a -&gt; b -&gt; Number</a></h4>
-          <p>Multiplies a and b using <code>*</code>. This only works with Numbers.</p>
-          
-          <pre><code class="javascript">mul(2,1) == 2
+          <div class="functiondoc">
+            <h3 id="mul"><a href="#mul">mul a -&gt; b -&gt; Number</a></h3>
+
+            <div class="description">
+              <p>Multiplies a and b using <code>*</code>. This only works with Numbers.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>a</strong> <em>Number</em>
+                
+                  <li><strong>b</strong> <em>Number</em>
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">mul(2,1) == 2
 mul(5,5) == 25</code></pre>
-          
+            
+          </div>
         
-          <h4 id="div"><a href="#div">div a -&gt; b -&gt; Number</a></h4>
-          <p>Divides a by b using <code>/</code>. This only works with Numbers.</p>
-          
-          <pre><code class="javascript">div(4,2) == 2
+          <div class="functiondoc">
+            <h3 id="div"><a href="#div">div a -&gt; b -&gt; Number</a></h3>
+
+            <div class="description">
+              <p>Divides a by b using <code>/</code>. This only works with Numbers.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>a</strong> <em>Number</em>
+                
+                  <li><strong>b</strong> <em>Number</em>
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">div(4,2) == 2
 div(15,5) == 3</code></pre>
-          
+            
+          </div>
         
-          <h4 id="rem"><a href="#rem">rem a -&gt; b -&gt; Number</a></h4>
-          <p>Returns the amount left over after dividing integer a by integer b.
+          <div class="functiondoc">
+            <h3 id="rem"><a href="#rem">rem a -&gt; b -&gt; Number</a></h3>
+
+            <div class="description">
+              <p>Returns the amount left over after dividing integer a by integer b.
 This is the same as the <code>%</code> operator, which is in fact the remainder
 not modulus. However, this function will only work with Number arguments.</p>
-          
-          <pre><code class="javascript">rem(-1, 5) == -1</code></pre>
-          
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>a</strong> <em>Number</em>
+                
+                  <li><strong>b</strong> <em>Number</em>
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">rem(-1, 5) == -1</code></pre>
+            
+          </div>
         
-          <h4 id="mod"><a href="#mod">mod a -&gt; b -&gt; Number</a></h4>
-          <p>The modulus of a and b, this is NOT the same as the <code>%</code> operator in
+          <div class="functiondoc">
+            <h3 id="mod"><a href="#mod">mod a -&gt; b -&gt; Number</a></h3>
+
+            <div class="description">
+              <p>The modulus of a and b, this is NOT the same as the <code>%</code> operator in
 JavaScript, which actually returns the remainder. See the <code>rem</code> function
 if you want compatible behaviour with <code>%</code>.</p>
-          
-          <pre><code class="javascript">mod(-1, 5) == 4</code></pre>
-          
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>a</strong> <em>Number</em>
+                
+                  <li><strong>b</strong> <em>Number</em>
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">mod(-1, 5) == 4</code></pre>
+            
+          </div>
         
       
-      <h3>Types</h3>
+        <h2>Types</h2>
+
         
-          <h4 id="isArray"><a href="#isArray">isArray obj -&gt; Boolean</a></h4>
-          <p>Tests if obj is an array.</p>
-          
-          <pre><code class="javascript">isArray([1,2,3]) == true
+          <div class="functiondoc">
+            <h3 id="isArray"><a href="#isArray">isArray obj -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Tests if obj is an array.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>x</strong> - the value to test
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">isArray([1,2,3]) == true
 isArray({}) == false</code></pre>
-          
+            
+          </div>
         
-          <h4 id="isObject"><a href="#isObject">isObject x -&gt; Boolean</a></h4>
-          <p>Tests if obj is an Object. This differs from other isObject
+          <div class="functiondoc">
+            <h3 id="isObject"><a href="#isObject">isObject x -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Tests if obj is an Object. This differs from other isObject
 implementations in that it does NOT return true for Arrays,
 Functions or Strings created using the String() constructor function.</p>
-          
-          <pre><code class="javascript">isObject({}) == true
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>x</strong> - the value to test
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">isObject({}) == true
 isObject([]) == false
 isObject(&#x27;abc&#x27;) == false
 isObject(function(){}) == false</code></pre>
-          
+            
+          </div>
         
-          <h4 id="isFunction"><a href="#isFunction">isFunction x -&gt; Boolean</a></h4>
-          <p>Tests if x is a Function.</p>
-          
-          <pre><code class="javascript">isFunction(function(){}) == true
+          <div class="functiondoc">
+            <h3 id="isFunction"><a href="#isFunction">isFunction x -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Tests if x is a Function.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>x</strong> - the value to test
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">isFunction(function(){}) == true
 isFunction(123) == false</code></pre>
-          
+            
+          </div>
         
-          <h4 id="isString"><a href="#isString">isString x -&gt; Boolean</a></h4>
-          <p>Tests if x is a String.</p>
-          
-          <pre><code class="javascript">isString(&#x27;abc&#x27;) == true
+          <div class="functiondoc">
+            <h3 id="isString"><a href="#isString">isString x -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Tests if x is a String.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>x</strong> - the value to test
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">isString(&#x27;abc&#x27;) == true
 isString(123) == false</code></pre>
-          
+            
+          </div>
         
-          <h4 id="isNumber"><a href="#isNumber">isNumber x -&gt; Boolean</a></h4>
-          <p>Tests if x is a Number (including Infinity).</p>
-          
-          <pre><code class="javascript">isNumber(123) == true
+          <div class="functiondoc">
+            <h3 id="isNumber"><a href="#isNumber">isNumber x -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Tests if x is a Number (including Infinity).</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>x</strong> - the value to test
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">isNumber(123) == true
 isNumber(Infinity) == true
 isNumber(&#x27;abc&#x27;) == false</code></pre>
-          
+            
+          </div>
         
-          <h4 id="isBoolean"><a href="#isBoolean">isBoolean x -&gt; Boolean</a></h4>
-          <p>Tests if x is a Boolean.</p>
-          
-          <pre><code class="javascript">isBoolean(true) == true
+          <div class="functiondoc">
+            <h3 id="isBoolean"><a href="#isBoolean">isBoolean x -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Tests if x is a Boolean.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>x</strong> - the value to test
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">isBoolean(true) == true
 isBoolean(&#x27;abc&#x27;) == false</code></pre>
-          
+            
+          </div>
         
-          <h4 id="isNull"><a href="#isNull">isNull x -&gt; Boolean</a></h4>
-          <p>Tests if x is null.</p>
-          
-          <pre><code class="javascript">isNull(null) == true
+          <div class="functiondoc">
+            <h3 id="isNull"><a href="#isNull">isNull x -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Tests if x is null.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>x</strong> - the value to test
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">isNull(null) == true
 isNull(123) == false</code></pre>
-          
+            
+          </div>
         
-          <h4 id="isUndefined"><a href="#isUndefined">isUndefined x -&gt; Boolean</a></h4>
-          <p>Tests if x is undefined.</p>
-          
-          <pre><code class="javascript">isUndefined(undefined) == true
+          <div class="functiondoc">
+            <h3 id="isUndefined"><a href="#isUndefined">isUndefined x -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Tests if x is undefined.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>x</strong> - the value to test
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">isUndefined(undefined) == true
 isUndefined(&#x27;abc&#x27;) == false</code></pre>
-          
+            
+          </div>
         
-          <h4 id="isNaN"><a href="#isNaN">isNaN x -&gt; Boolean</a></h4>
-          <p>Tests if x is NaN. This is not the same as the native isNaN function,
+          <div class="functiondoc">
+            <h3 id="isNaN"><a href="#isNaN">isNaN x -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Tests if x is NaN. This is not the same as the native isNaN function,
 which will also return true if the variable is undefined.</p>
-          
-          <pre><code class="javascript">isNaN(NaN) == true
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>x</strong> - the value to test
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">isNaN(NaN) == true
 isNaN(undefined) == false</code></pre>
-          
+            
+          </div>
         
-          <h4 id="isDateObject"><a href="#isDateObject">isDateObject x -&gt; Boolean</a></h4>
-          <p>Tests if x is a Date object (also passes isObject test).</p>
-          
-          <pre><code class="javascript">isDateObject(new Date()) == true
+          <div class="functiondoc">
+            <h3 id="isDateObject"><a href="#isDateObject">isDateObject x -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Tests if x is a Date object (also passes isObject test).</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>x</strong> - the value to test
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">isDateObject(new Date()) == true
 isDateObject({}) == false</code></pre>
-          
+            
+          </div>
         
-          <h4 id="isRegExpObject"><a href="#isRegExpObject">isRegExpObject x -&gt; Boolean</a></h4>
-          <p>Tests if x is a RegExp (also passes isObject test).</p>
-          
-          <pre><code class="javascript">isRegExpObject(new Date()) == true
+          <div class="functiondoc">
+            <h3 id="isRegExpObject"><a href="#isRegExpObject">isRegExpObject x -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Tests if x is a RegExp (also passes isObject test).</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>x</strong> - the value to test
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">isRegExpObject(new Date()) == true
 isRegExpObject({}) == false</code></pre>
-          
+            
+          </div>
         
-          <h4 id="isArgumentsObject"><a href="#isArgumentsObject">isArgumentsObject x -&gt; Boolean</a></h4>
-          <p>Tests if x is an arguments list (also passes isObject test).</p>
-          
-          <pre><code class="javascript">(function () { isArgumentsObject(arguments) == true }());
+          <div class="functiondoc">
+            <h3 id="isArgumentsObject"><a href="#isArgumentsObject">isArgumentsObject x -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Tests if x is an arguments list (also passes isObject test).</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>x</strong> - the value to test
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">(function () { isArgumentsObject(arguments) == true }());
 isArgumentsObject({}) == false</code></pre>
-          
+            
+          </div>
         
-          <h4 id="type"><a href="#type">type x -&gt; String</a></h4>
-          <p>Returns a string describing the type of x. Possible values: array,
+          <div class="functiondoc">
+            <h3 id="type"><a href="#type">type x -&gt; String</a></h3>
+
+            <div class="description">
+              <p>Returns a string describing the type of x. Possible values: array,
 function, object, string, boolean, null, undefined.</p>
-          
-          <pre><code class="javascript">type({}) == &#x27;object&#x27;
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>x</strong> - the value to test
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">type({}) == &#x27;object&#x27;
 type([]) == &#x27;array&#x27;
 type(&#x27;abc&#x27;) == &#x27;string&#x27;</code></pre>
-          
+            
+          </div>
         
       
-      <h3>Numbers</h3>
+        <h2>Numbers</h2>
+
         
-          <h4 id="max"><a href="#max">max x -&gt; y -&gt; Number</a></h4>
-          <p>Returns the highest of two values. Works with Numbers, Strings or Arrays.</p>
-          
-          <pre><code class="javascript">max(1,5) == 5
+          <div class="functiondoc">
+            <h3 id="max"><a href="#max">max x -&gt; y -&gt; Number</a></h3>
+
+            <div class="description">
+              <p>Returns the highest of two values. Works with Numbers, Strings or Arrays.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>x</strong> <em>Number|String|Array</em>
+                
+                  <li><strong>y</strong> <em>Number|String|Array</em>
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">max(1,5) == 5
 max([1,2,3],[2,3,4]) == [2,3,4]</code></pre>
-          
+            
+          </div>
         
-          <h4 id="min"><a href="#min">min x -&gt; y -&gt; Number</a></h4>
-          <p>Returns the lowest of two values. Works with Numbers, Strings or Arrays.</p>
-          
-          <pre><code class="javascript">min(1,5) == 1
+          <div class="functiondoc">
+            <h3 id="min"><a href="#min">min x -&gt; y -&gt; Number</a></h3>
+
+            <div class="description">
+              <p>Returns the lowest of two values. Works with Numbers, Strings or Arrays.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>x</strong> <em>Number|String|Array</em>
+                
+                  <li><strong>y</strong> <em>Number|String|Array</em>
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">min(1,5) == 1
 min([1,2,3],[2,3,4]) == [1,2,3]</code></pre>
-          
+            
+          </div>
         
-          <h4 id="compare"><a href="#compare">compare x -&gt; y -&gt; -1 | 0 | 1</a></h4>
-          <p>Compares two values, returning -1 if x it less than y, 0 if the values
+          <div class="functiondoc">
+            <h3 id="compare"><a href="#compare">compare x -&gt; y -&gt; -1 | 0 | 1</a></h3>
+
+            <div class="description">
+              <p>Compares two values, returning -1 if x it less than y, 0 if the values
 are equivalent, and 1 if x is greater than y. Works with Numbers, Strings
 or Arrays.</p>
-          
-          <pre><code class="javascript">compare(1,2) == -1
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>x</strong> <em>Number|String|Array</em>
+                
+                  <li><strong>y</strong> <em>Number|String|Array</em>
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">compare(1,2) == -1
 compare([1,2,3],[1,2,3]) == 0
 compare(5,3) == 1</code></pre>
-          
+            
+          </div>
         
       
-      <h3>Lists</h3>
+        <h2>Lists</h2>
+
         
-          <h4 id="cons"><a href="#cons">cons x -&gt; xs -&gt; Array | String</a></h4>
-          <p>Creates a new Array by prepending an element to an existing array.
+          <div class="functiondoc">
+            <h3 id="cons"><a href="#cons">cons x -&gt; xs -&gt; Array | String</a></h3>
+
+            <div class="description">
+              <p>Creates a new Array by prepending an element to an existing array.
 Can also be used with Strings.</p>
-          
-          <pre><code class="javascript">cons(0, [1,2,3]) == [0,1,2,3]</code></pre>
-          
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>x</strong> - the value to prepend to the xs in the new array
+                
+                  <li><strong>xs</strong> <em>Array|String</em> - the tail of the new array
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">cons(0, [1,2,3]) == [0,1,2,3]</code></pre>
+            
+          </div>
         
-          <h4 id="append"><a href="#append">append x -&gt; xs -&gt; Array | String</a></h4>
-          <p>Creates a new Array by appending an element to an existing array.
+          <div class="functiondoc">
+            <h3 id="append"><a href="#append">append x -&gt; xs -&gt; Array | String</a></h3>
+
+            <div class="description">
+              <p>Creates a new Array by appending an element to an existing array.
 Can also be used to append a character to a String.</p>
-          
-          <pre><code class="javascript">append(4, [1,2,3]) == [1,2,3,4]</code></pre>
-          
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>x</strong> - the value to append to the xs in the new array
+                
+                  <li><strong>xs</strong> <em>Array|String</em> - the init of the new array
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">append(4, [1,2,3]) == [1,2,3,4]</code></pre>
+            
+          </div>
         
-          <h4 id="head"><a href="#head">head xs -&gt; x</a></h4>
-          <p>Returns the first element of a non-empty Array.
+          <div class="functiondoc">
+            <h3 id="head"><a href="#head">head xs -&gt; x</a></h3>
+
+            <div class="description">
+              <p>Returns the first element of a non-empty Array.
 Can also be used with Strings.</p>
-          
-          <pre><code class="javascript">head([1,2,3,4]) == 1</code></pre>
-          
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>xs</strong> <em>Array|String</em> - the array to return the first element from
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">head([1,2,3,4]) == 1</code></pre>
+            
+          </div>
         
-          <h4 id="last"><a href="#last">last xs -&gt; x</a></h4>
-          <p>Returns the last element of a non-empty Array.
+          <div class="functiondoc">
+            <h3 id="last"><a href="#last">last xs -&gt; x</a></h3>
+
+            <div class="description">
+              <p>Returns the last element of a non-empty Array.
 Can also be used with Strings.</p>
-          
-          <pre><code class="javascript">last([1,2,3,4]) == 4</code></pre>
-          
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>xs</strong> <em>Array|String</em> - the array to return the last element from
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">last([1,2,3,4]) == 4</code></pre>
+            
+          </div>
         
-          <h4 id="tail"><a href="#tail">tail xs -&gt; Array</a></h4>
-          <p>Returns a new Array without the first element of the original
+          <div class="functiondoc">
+            <h3 id="tail"><a href="#tail">tail xs -&gt; Array</a></h3>
+
+            <div class="description">
+              <p>Returns a new Array without the first element of the original
 non-empty Array. Can also be used with Strings.</p>
-          
-          <pre><code class="javascript">tail([1,2,3,4]) == [2,3,4]</code></pre>
-          
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>xs</strong> <em>Array|String</em> - the array to return the tail of
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">tail([1,2,3,4]) == [2,3,4]</code></pre>
+            
+          </div>
         
-          <h4 id="init"><a href="#init">init xs -&gt; Array</a></h4>
-          <p>Returns a new Array without the last element of the original
+          <div class="functiondoc">
+            <h3 id="init"><a href="#init">init xs -&gt; Array</a></h3>
+
+            <div class="description">
+              <p>Returns a new Array without the last element of the original
 non-empty Array. Can also be used with Strings.</p>
-          
-          <pre><code class="javascript">init([1,2,3,4]) == [1,2,3]</code></pre>
-          
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>xs</strong> <em>Array|String</em> - the array to return the init of
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">init([1,2,3,4]) == [1,2,3]</code></pre>
+            
+          </div>
         
-          <h4 id="empty"><a href="#empty">empty xs -&gt; Boolean</a></h4>
-          <p>Returns true if the Array or String is empty.</p>
-          
-          <pre><code class="javascript">empty([]) == true
+          <div class="functiondoc">
+            <h3 id="empty"><a href="#empty">empty xs -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Returns true if the Array or String is empty.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>xs</strong> <em>Array|String</em> - the array to test
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">empty([]) == true
 empty([1,2,3]) == false</code></pre>
-          
+            
+          </div>
         
-          <h4 id="length"><a href="#length">length xs -&gt; Number</a></h4>
-          <p>Returns the length of an Array or String.</p>
-          
-          <pre><code class="javascript">length([1,2,3]) == 3</code></pre>
-          
+          <div class="functiondoc">
+            <h3 id="length"><a href="#length">length xs -&gt; Number</a></h3>
+
+            <div class="description">
+              <p>Returns the length of an Array or String.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>xs</strong> <em>Array|String</em> - the array to return the length of
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">length([1,2,3]) == 3</code></pre>
+            
+          </div>
         
-          <h4 id="concat"><a href="#concat">concat a -&gt; b -&gt; Array | String</a></h4>
-          <p>Adds the elements of one Array to another, returning a new Array.
+          <div class="functiondoc">
+            <h3 id="concat"><a href="#concat">concat a -&gt; b -&gt; Array | String</a></h3>
+
+            <div class="description">
+              <p>Adds the elements of one Array to another, returning a new Array.
 Also works on strings.</p>
-          
-          <pre><code class="javascript">concat([1,2], [3,4]) == [1,2,3,4]
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>a</strong> <em>Array|String</em>
+                
+                  <li><strong>b</strong> <em>Array|String</em>
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">concat([1,2], [3,4]) == [1,2,3,4]
 concat(&#x27;abc&#x27;, &#x27;def&#x27;) == &#x27;abcdef&#x27;</code></pre>
-          
+            
+          </div>
         
-          <h4 id="foldl"><a href="#foldl">foldl f -&gt; z -&gt; xs -&gt; result</a></h4>
-          <p>Takes a combining function <code>f</code> an Array <code>xs</code> and an initial value <code>z</code>,
+          <div class="functiondoc">
+            <h3 id="foldl"><a href="#foldl">foldl f -&gt; z -&gt; xs -&gt; result</a></h3>
+
+            <div class="description">
+              <p>Takes a combining function <code>f</code> an Array <code>xs</code> and an initial value <code>z</code>,
 and boils down a list of values into a single value. The <code>z</code> arguments is
 the initial state of the reduction, and each successive step of it should
 be returned by iterator.</p>
-          
-          <pre><code class="javascript">foldl(add, 1, [2,3,4]) == 10</code></pre>
-          
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>f</strong> <em>Function</em> - the combining function
+                
+                  <li><strong>z</strong> - the inital value
+                
+                  <li><strong>xs</strong> <em>Array|String</em> - the array to combine
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">foldl(add, 1, [2,3,4]) == 10</code></pre>
+            
+          </div>
         
-          <h4 id="foldl1"><a href="#foldl1">foldl1 f -&gt; xs -&gt; result</a></h4>
-          <p>Same as foldl but uses the first element as the initial value instead of
+          <div class="functiondoc">
+            <h3 id="foldl1"><a href="#foldl1">foldl1 f -&gt; xs -&gt; result</a></h3>
+
+            <div class="description">
+              <p>Same as foldl but uses the first element as the initial value instead of
 the <code>z</code> argument.</p>
-          
-          <pre><code class="javascript">foldl1(add, [1,2,3,4]) == 10</code></pre>
-          
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>f</strong> <em>Function</em> - the combining function
+                
+                  <li><strong>xs</strong> <em>Array|String</em> - the array to combine
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">foldl1(add, [1,2,3,4]) == 10</code></pre>
+            
+          </div>
         
-          <h4 id="foldr"><a href="#foldr">foldr f -&gt; z -&gt; xs -&gt; result</a></h4>
-          <p>A fold starting from the right side, or end of, the Array or String.</p>
-          
-          <pre><code class="javascript">foldr(add, 4, [1,2,3]) == 10</code></pre>
-          
+          <div class="functiondoc">
+            <h3 id="foldr"><a href="#foldr">foldr f -&gt; z -&gt; xs -&gt; result</a></h3>
+
+            <div class="description">
+              <p>A fold starting from the right side, or end of, the Array or String.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>f</strong> <em>Function</em> - the combining function
+                
+                  <li><strong>z</strong> - the initial value
+                
+                  <li><strong>xs</strong> <em>Array|String</em> - the array to combine
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">foldr(add, 4, [1,2,3]) == 10</code></pre>
+            
+          </div>
         
-          <h4 id="foldr1"><a href="#foldr1">foldr1 f -&gt; xs -&gt; result</a></h4>
-          <p>Same as foldr but uses the first element as the initial value instead of
+          <div class="functiondoc">
+            <h3 id="foldr1"><a href="#foldr1">foldr1 f -&gt; xs -&gt; result</a></h3>
+
+            <div class="description">
+              <p>Same as foldr but uses the first element as the initial value instead of
 the <code>z</code> argument.</p>
-          
-          <pre><code class="javascript">foldr1(add, [1,2,3,4]) == 10</code></pre>
-          
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>f</strong> <em>Function</em> - the combining function
+                
+                  <li><strong>xs</strong> <em>Array|String</em> - the array to combine
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">foldr1(add, [1,2,3,4]) == 10</code></pre>
+            
+          </div>
         
       
-      <h3>Strings</h3>
+        <h2>Strings</h2>
+
         
       
-      <h3>Objects</h3>
+        <h2>Objects</h2>
+
         
       
-      <h3>Utilities</h3>
+        <h2>Utilities</h2>
+
         
       
 
