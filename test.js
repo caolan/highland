@@ -946,10 +946,6 @@ exports['compare'] = function (test) {
 exports['cons'] = function (test) {
     test.same(L.cons(1, [2,3,4]), [1,2,3,4]);
     test.same(L.cons(1, []), [1]);
-    test.equal(L.cons('a', 'abc'), 'aabc');
-    test.throws(function () {
-        L.cons(1, 'asdf'); // both args should be strings
-    });
     // partial application
     test.same(L.cons(1)([2,3,4]), [1,2,3,4]);
     test.same(L.cons(1)([]), [1]);
@@ -958,10 +954,6 @@ exports['cons'] = function (test) {
 
 exports['append'] = function (test) {
     test.same(L.append(4, [1,2,3]), [1,2,3,4]);
-    test.equal(L.append('a', 'abc'), 'abca');
-    test.throws(function () {
-        L.append(1, 'asdf'); // both args should be strings
-    });
     test.done();
 };
 
@@ -972,7 +964,6 @@ exports['head'] = function (test) {
     var b = [4,3,2,1];
     test.equal(L.head(b), 4);
     test.same(b, [4,3,2,1]);
-    test.equal(L.head('abc'), 'a');
     // head of an empty list should result in an error
     test.throws(function () {
         L.head([]);
@@ -993,7 +984,6 @@ exports['last'] = function (test) {
     var b = [4,3,2,1];
     test.equal(L.last(b), 1);
     test.same(b, [4,3,2,1]);
-    test.equal(L.last('abc'), 'c');
     // last of an empty list should result in an error
     test.throws(function () {
         L.last([]);
@@ -1008,7 +998,6 @@ exports['tail'] = function (test) {
     var b = [4,3,2,1];
     test.same(L.tail(b), [3,2,1]);
     test.same(b, [4,3,2,1]);
-    test.equal(L.tail('abc'), 'bc');
     // tail of an empty list should result in an error
     test.throws(function () {
         L.tail([]);
@@ -1023,7 +1012,6 @@ exports['init'] = function (test) {
     var b = [4,3,2,1];
     test.same(L.init(b), [4,3,2]);
     test.same(b, [4,3,2,1]);
-    test.equal(L.init('abc'), 'ab');
     // init of an empty list should result in an error
     test.throws(function () {
         L.init([]);

@@ -953,55 +953,35 @@ L.compare = L.curry(function (x, y) {
 
 
 /**
- * @section Lists
+ * @section Arrays
  */
 
 /**
  * Creates a new Array by prepending an element to an existing array.
- * Can also be used with Strings.
  *
- * @name cons x -> xs -> Array | String
+ * @name cons x -> xs -> Array
  * @param x - the value to prepend to the xs in the new array
- * @param {Array|String} xs - the tail of the new array
+ * @param {Array} xs - the tail of the new array
  * @api public
  *
  * cons(0, [1,2,3]) == [0,1,2,3]
  */
 
 L.cons = L.curry(function (x, xs) {
-    if (L.isString(xs)) {
-        if (!L.isString(x)) {
-            throw new TypeError(
-                'When second argument is String, first argument should also' +
-                'be String, got: ' + type(x) + ', ' + type(xs)
-            );
-        }
-        return x + xs;
-    }
     return [x].concat(xs);
 });
 
 /**
  * Creates a new Array by appending an element to an existing array.
- * Can also be used to append a character to a String.
  *
- * @name append x -> xs -> Array | String
+ * @name append x -> xs -> Array
  * @param x - the value to append to the xs in the new array
- * @param {Array|String} xs - the init of the new array
+ * @param {Array} xs - the init of the new array
  *
  * append(4, [1,2,3]) == [1,2,3,4]
  */
 
 L.append = L.curry(function (x, xs) {
-    if (L.isString(xs)) {
-        if (!L.isString(x)) {
-            throw new TypeError(
-                'When second argument is String, first argument should also' +
-                'be String, got: ' + type(x) + ', ' + type(xs)
-            );
-        }
-        return xs + x;
-    }
     return xs.concat([x]);
 });
 
@@ -1010,10 +990,9 @@ L.append = L.curry(function (x, xs) {
 
 /**
  * Returns the first element of a non-empty Array.
- * Can also be used with Strings.
  *
  * @name head xs -> x
- * @param {Array|String} xs - the array to return the first element from
+ * @param {Array} xs - the array to return the first element from
  * @api public
  *
  * head([1,2,3,4]) == 1
@@ -1025,10 +1004,9 @@ L.head = function (xs) {
 
 /**
  * Returns the last element of a non-empty Array.
- * Can also be used with Strings.
  *
  * @name last xs -> x
- * @param {Array|String} xs - the array to return the last element from
+ * @param {Array} xs - the array to return the last element from
  * @api public
  *
  * last([1,2,3,4]) == 4
@@ -1040,10 +1018,10 @@ L.last = function (xs) {
 
 /**
  * Returns a new Array without the first element of the original
- * non-empty Array. Can also be used with Strings.
+ * non-empty Array.
  *
  * @name tail xs -> Array
- * @param {Array|String} xs - the array to return the tail of
+ * @param {Array} xs - the array to return the tail of
  * @api public
  *
  * tail([1,2,3,4]) == [2,3,4]
@@ -1055,10 +1033,10 @@ L.tail = function (xs) {
 
 /**
  * Returns a new Array without the last element of the original
- * non-empty Array. Can also be used with Strings.
+ * non-empty Array.
  *
  * @name init xs -> Array
- * @param {Array|String} xs - the array to return the init of
+ * @param {Array} xs - the array to return the init of
  * @api public
  *
  * init([1,2,3,4]) == [1,2,3]
