@@ -36,9 +36,16 @@ h2, h3, h4, h5, h6 {
     margin-top: 1.618em;
     margin-bottom: 1em;
 }
+h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/*
 strong, b, h3, h4, h5, h6 {
     font-weight: 600;
 }
+*/
 #content {
     width: 680px;
     margin: 1.618em auto 2.618em auto;

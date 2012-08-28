@@ -1,0 +1,7 @@
+{
+    "name": "highland",
+    "version": "0.0.1",
+    "devDependencies": {
+        "scrawl": "0.0.2"
+    }
+}

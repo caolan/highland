@@ -1,4 +1,4 @@
-Highland.installGlobal();
+Highland.install();
 
 $(function () {
     var jqconsole = $('#console').jqconsole('', '> ', '... ');

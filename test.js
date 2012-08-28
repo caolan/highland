@@ -135,6 +135,12 @@ exports['ne'] = function (test) {
 exports['not'] = function (test) {
     test.equal(!true, L.not(true));
     test.equal(!false, L.not(false));
+    test.throws(function () { L.not(123); });
+    test.throws(function () { L.not('asdf'); });
+    test.throws(function () { L.not(null); });
+    test.throws(function () { L.not(undefined); });
+    test.throws(function () { L.not({}); });
+    test.throws(function () { L.not([]); });
     test.done();
 };
 
@@ -935,6 +941,205 @@ exports['compare'] = function (test) {
 };
 
 
+/***** Lists *****/
+
+exports['cons'] = function (test) {
+    test.same(L.cons(1, [2,3,4]), [1,2,3,4]);
+    test.same(L.cons(1, []), [1]);
+    test.equal(L.cons('a', 'abc'), 'aabc');
+    test.throws(function () {
+        L.cons(1, 'asdf'); // both args should be strings
+    });
+    // partial application
+    test.same(L.cons(1)([2,3,4]), [1,2,3,4]);
+    test.same(L.cons(1)([]), [1]);
+    test.done();
+};
+
+exports['append'] = function (test) {
+    test.same(L.append(4, [1,2,3]), [1,2,3,4]);
+    test.equal(L.append('a', 'abc'), 'abca');
+    test.throws(function () {
+        L.append(1, 'asdf'); // both args should be strings
+    });
+    test.done();
+};
+
+exports['head'] = function (test) {
+    var a = [1,2,3,4];
+    test.equal(L.head(a), 1);
+    test.same(a, [1,2,3,4]);
+    var b = [4,3,2,1];
+    test.equal(L.head(b), 4);
+    test.same(b, [4,3,2,1]);
+    test.equal(L.head('abc'), 'a');
+    // head of an empty list should result in an error
+    test.throws(function () {
+        L.head([]);
+    });
+    try {
+        L.head([]);
+    }
+    catch (e) {
+        test.equal(e.message, 'head of empty array');
+    }
+    test.done();
+};
+
+exports['last'] = function (test) {
+    var a = [1,2,3,4];
+    test.equal(L.last(a), 4);
+    test.same(a, [1,2,3,4]);
+    var b = [4,3,2,1];
+    test.equal(L.last(b), 1);
+    test.same(b, [4,3,2,1]);
+    test.equal(L.last('abc'), 'c');
+    // last of an empty list should result in an error
+    test.throws(function () {
+        L.last([]);
+    });
+    test.done();
+};
+
+exports['tail'] = function (test) {
+    var a = [1,2,3,4];
+    test.same(L.tail(a), [2,3,4]);
+    test.same(a, [1,2,3,4]);
+    var b = [4,3,2,1];
+    test.same(L.tail(b), [3,2,1]);
+    test.same(b, [4,3,2,1]);
+    test.equal(L.tail('abc'), 'bc');
+    // tail of an empty list should result in an error
+    test.throws(function () {
+        L.tail([]);
+    });
+    test.done();
+};
+
+exports['init'] = function (test) {
+    var a = [1,2,3,4];
+    test.same(L.init(a), [1,2,3]);
+    test.same(a, [1,2,3,4]);
+    var b = [4,3,2,1];
+    test.same(L.init(b), [4,3,2]);
+    test.same(b, [4,3,2,1]);
+    test.equal(L.init('abc'), 'ab');
+    // init of an empty list should result in an error
+    test.throws(function () {
+        L.init([]);
+    });
+    test.done();
+};
+
+exports['empty'] = function (test) {
+    test.equal(L.empty([1,2,3]), false);
+    test.equal(L.empty([]), true);
+    test.equal(L.empty(''), true);
+    test.equal(L.empty('abc'), false);
+    test.done();
+};
+
+exports['length'] = function (test) {
+    test.equal(L.length([1,2,3,4]), 4);
+    test.equal(L.length([1,2,3]), 3);
+    test.equal(L.length('abc'), 3);
+    test.done();
+};
+
+exports['concat'] = function (test) {
+    var a = [1];
+    var b = [2,3];
+    test.same(L.concat(a, b), [1,2,3]);
+    // test original arrays are unchanged
+    test.same(a, [1]);
+    test.same(b, [2,3]);
+    test.same(L.concat([1,2,3], []), [1,2,3]);
+    // partial application
+    var fn = L.concat([1,2]);
+    test.same(fn([3,4]), [1,2,3,4]);
+    test.same(fn([3,4,5]), [1,2,3,4,5]);
+    test.equal(L.concat('abc', 'def'), 'abcdef');
+    test.throws(function () { L.concat('abc', [1,2]); });
+    test.throws(function () { L.concat([1,2], 'abc'); });
+    test.throws(function () { L.concat(1, [2,3]); });
+    test.throws(function () { L.concat([2,3], null); });
+    test.throws(function () { L.concat(undefined, [2,3]); });
+    test.throws(function () { L.concat([2,3], {}); });
+    test.done();
+};
+
+exports['foldl'] = function (test) {
+    test.equal(L.foldl(L.concat, '', ['1','2','3','4']), '1234');
+    var fn = function (x, y) {
+        return x + y;
+    };
+    test.equal(L.foldl(fn, 0, [1,2,3,4]), 10);
+    // partial application
+    test.equal(L.foldl(fn, 0)([1,2,3,4]), 10);
+    test.equal(L.foldl(fn)(0, [1,2,3,4]), 10);
+    test.equal(L.foldl(fn)(0)([1,2,3,4]), 10);
+    var minus = function (a, b) {
+        return a - b;
+    };
+    test.equal(L.foldl(minus, 1, [1,2,3]), -5);
+    var concatUpper = function (a, b) {
+        return (a + b).toUpperCase();
+    };
+    test.equal(L.foldl(concatUpper, 'a', 'bcd'), 'ABCD');
+    test.equal(L.foldl(L.div, 4, [4, 2]), 0.5);
+    test.done();
+};
+
+exports['foldl1'] = function (test) {
+    var fn = function (x, y) {
+        return x + y;
+    };
+    test.equal(L.foldl1(fn, [1,2,3,4]), 10);
+    // partial application
+    test.equal(L.foldl1(fn)([1,2,3,4]), 10);
+    var minus = function (a, b) {
+        return a - b;
+    };
+    test.equal(L.foldl1(minus, [1,2,3]), -4);
+    var concatUpper = function (a, b) {
+        return (a + b).toUpperCase();
+    };
+    test.equal(L.foldl1(concatUpper, 'abcd'), 'ABCD');
+    test.done();
+};
+
+exports['foldr'] = function (test) {
+    var minus = function (a, b) {
+        return a - b;
+    };
+    test.equal(L.foldr(minus, 1, [1,2,3]), 1);
+    var concatUpper = function (a, b) {
+        return (a + b).toUpperCase();
+    };
+    test.equal(L.foldr(concatUpper, 'd', 'abc'), 'ABCD');
+    test.equal(L.foldr(L.div, 4, [4, 2]), 8);
+    // partial application
+    test.equal(L.foldr(minus, 1)([1,2,3]), 1);
+    test.equal(L.foldr(minus)(1)([1,2,3]), 1);
+    test.done();
+};
+
+exports['foldr1'] = function (test) {
+    var minus = function (a, b) {
+        return a - b;
+    };
+    test.equal(L.foldr1(minus, [1,2,3]), 2);
+    var concatUpper = function (a, b) {
+        return (a + b).toUpperCase();
+    };
+    test.equal(L.foldr1(concatUpper, 'abcd'), 'ABCD');
+    // partial application
+    test.equal(L.foldr1(minus)([1,2,3]), 2);
+    test.done();
+};
+
+
+
 
 
 
@@ -1015,67 +1220,7 @@ exports['get'] = function (test) {
     test.done();
 };
 
-exports['head'] = function (test) {
-    var a = [1,2,3,4];
-    test.equal(L.head(a), 1);
-    test.same(a, [1,2,3,4]);
-    var b = [4,3,2,1];
-    test.equal(L.head(b), 4);
-    test.same(b, [4,3,2,1]);
-    // head of an empty list should result in an error
-    test.throws(function () {
-        L.head([]);
-    });
-    try {
-        L.head([]);
-    }
-    catch (e) {
-        test.equal(e.message, 'head of empty array');
-    }
-    test.done();
-};
 
-exports['tail'] = function (test) {
-    var a = [1,2,3,4];
-    test.same(L.tail(a), [2,3,4]);
-    test.same(a, [1,2,3,4]);
-    var b = [4,3,2,1];
-    test.same(L.tail(b), [3,2,1]);
-    test.same(b, [4,3,2,1]);
-    // tail of an empty list should result in an error
-    test.throws(function () {
-        L.tail([]);
-    });
-    test.done();
-};
-
-exports['last'] = function (test) {
-    var a = [1,2,3,4];
-    test.equal(L.last(a), 4);
-    test.same(a, [1,2,3,4]);
-    var b = [4,3,2,1];
-    test.equal(L.last(b), 1);
-    test.same(b, [4,3,2,1]);
-    // last of an empty list should result in an error
-    test.throws(function () {
-        L.last([]);
-    });
-    test.done();
-};
-
-exports['init'] = function (test) {
-    var a = [1,2,3,4];
-    test.same(L.init(a), [1,2,3]);
-    test.same(a, [1,2,3,4]);
-    var b = [4,3,2,1];
-    test.same(L.init(b), [4,3,2]);
-    test.same(b, [4,3,2,1]);
-    // init of an empty list should result in an error
-    test.throws(function () {
-        L.init([]);
-    });
-    test.done();
-};
 
 exports['take'] = function (test) {
     var a = [1,2,3,4];
@@ -1148,19 +1293,12 @@ exports['dropWhile'] = function (test) {
 
 
 exports['install'] = function (test) {
-    test.expect(8);
-    var fn = function () {
-        eval(L.install);
-        test.strictEqual(init, L.init);
-        test.strictEqual(tail, L.tail);
-        test.strictEqual(head, L.head);
-        test.strictEqual(last, L.last);
-    };
-    fn();
-    test.strictEqual(typeof init, 'undefined');
-    test.strictEqual(typeof tail, 'undefined');
-    test.strictEqual(typeof head, 'undefined');
-    test.strictEqual(typeof last, 'undefined');
+    test.expect(4);
+    L.install();
+    test.strictEqual(init, L.init);
+    test.strictEqual(tail, L.tail);
+    test.strictEqual(head, L.head);
+    test.strictEqual(last, L.last);
     test.done();
 };
 
@@ -1201,63 +1339,11 @@ exports['jsonClone'] = function (test) {
     test.done();
 };
 
-exports['cons'] = function (test) {
-    test.same(L.cons(1, [2,3,4]), [1,2,3,4]);
-    test.same(L.cons(1, []), [1]);
-    // partial application
-    test.same(L.cons(1)([2,3,4]), [1,2,3,4]);
-    test.same(L.cons(1)([]), [1]);
-    test.done();
-};
 
 
 
 
-exports['concat'] = function (test) {
-    var a = [1];
-    var b = [2,3];
-    test.same(L.concat(a, b), [1,2,3]);
-    // test original arrays are unchanged
-    test.same(a, [1]);
-    test.same(b, [2,3]);
-    test.same(L.concat([1,2,3], []), [1,2,3]);
-    // partial application
-    var fn = L.concat([1,2]);
-    test.same(fn([3,4]), [1,2,3,4]);
-    test.same(fn([3,4,5]), [1,2,3,4,5]);
-    test.done();
-};
 
-exports['foldl'] = function (test) {
-    test.equal(L.foldl(L.concat, '', ['1','2','3','4']), '1234');
-    var fn = function (x, y) {
-        return x + y;
-    };
-    test.equal(L.foldl(fn, 0, [1,2,3,4]), 10);
-    // partial application
-    test.equal(L.foldl(fn, 0)([1,2,3,4]), 10);
-    test.equal(L.foldl(fn)(0, [1,2,3,4]), 10);
-    test.equal(L.foldl(fn)(0)([1,2,3,4]), 10);
-    var minus = function (a, b) {
-        return a - b;
-    };
-    test.equal(L.foldl(minus, 1, [1,2,3]), -5);
-    test.done();
-};
-
-exports['foldl1'] = function (test) {
-    var fn = function (x, y) {
-        return x + y;
-    };
-    test.equal(L.foldl1(fn, [1,2,3,4]), 10);
-    // partial application
-    test.equal(L.foldl1(fn)([1,2,3,4]), 10);
-    var minus = function (a, b) {
-        return a - b;
-    };
-    test.equal(L.foldl1(minus, [1,2,3]), -4);
-    test.done();
-};
 
 exports['map'] = function (test) {
     var dbl = function (x) {
@@ -1370,10 +1456,6 @@ exports['elem'] = function (test) {
     test.done();
 };
 
-exports['append'] = function (test) {
-    test.same(L.append(4, [1,2,3]), [1,2,3,4]);
-    test.done();
-};
 
 exports['nub'] = function (test) {
     test.same(L.nub([1,2,1,1,2,3,3,4]), [1,2,3,4]);
@@ -1382,26 +1464,6 @@ exports['nub'] = function (test) {
     test.done();
 };
 
-exports['foldr'] = function (test) {
-    var minus = function (a, b) {
-        return a - b;
-    };
-    test.equal(L.foldr(minus, 1, [1,2,3]), 1);
-    // partial application
-    test.equal(L.foldr(minus, 1)([1,2,3]), 1);
-    test.equal(L.foldr(minus)(1)([1,2,3]), 1);
-    test.done();
-};
-
-exports['foldr1'] = function (test) {
-    var minus = function (a, b) {
-        return a - b;
-    };
-    test.equal(L.foldr1(minus, [1,2,3]), 2);
-    // partial application
-    test.equal(L.foldr1(minus)([1,2,3]), 2);
-    test.done();
-};
 
 exports['id'] = function (test) {
     test.equal(L.id(1), 1);
@@ -1411,11 +1473,6 @@ exports['id'] = function (test) {
     test.done();
 };
 
-exports['length'] = function (test) {
-    test.equal(L.length([1,2,3,4]), 4);
-    test.equal(L.length([1,2,3]), 3);
-    test.done();
-};
 
 
 exports['maximum'] = function (test) {
@@ -1439,12 +1496,6 @@ exports['notElem'] = function (test) {
     test.equal(L.notElem(3)([1,2,3,4]), false);
     test.equal(L.notElem(6)([1,2,3,4]), true);
     test.equal(L.notElem(6)([]), true);
-    test.done();
-};
-
-exports['empty'] = function (test) {
-    test.equal(L.empty([1,2,3]), false);
-    test.equal(L.empty([]), true);
     test.done();
 };
 
