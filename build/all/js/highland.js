@@ -60,6 +60,9 @@ if (typeof window !== 'undefined') {
 else if (typeof global !== 'undefined') {
     root = global; // node.js global object
 }
+else if (typeof self !== 'undefined') {
+    root = self; // web-worker global object
+}
 
 
 // Save bytes in the minified (but not gzipped) version:
@@ -1524,7 +1527,28 @@ L.notElem = L.curry(function (x, xs) { return L.not(L.elem(x, xs)); });
 
 /** Searching with a predicate **/
 
-// find
+/**
+ * Takes a predicate and an Array and returns the first element in the Array
+ * matching the predicate, or undefined if there is no such element.
+ *
+ * @name find p -> xs -> x | undefined
+ * @param {Function} p - the test function to run on each element
+ * @param {Array} xs - the array to search
+ * @api public
+ *
+ * find(eq(2), [1,2,3,4]) == 2
+ * find(eq(10), [1,2,3,4]) == undefined
+ */
+
+L.find = L.curry(function (p, xs) {
+    for (var i = 0, len = xs.length; i < len; i++) {
+        var x = xs[i];
+        if (p(x)) {
+            return x;
+        }
+    }
+    return undefined;
+});
 
 /**
  * Returns an Array of elements from xs that satisfy the predicate `p`.
