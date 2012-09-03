@@ -1323,6 +1323,12 @@ exports['notElem'] = function (test) {
     test.done();
 };
 
+exports['find'] = function (test) {
+    test.strictEqual(L.find(L.eq(2), [1,2,3,4]), 2);
+    test.strictEqual(L.find(L.eq(10), [1,2,3,4]), undefined);
+    test.done();
+};
+
 exports['filter'] = function (test) {
     var odd = function (x) {
         return x % 2;
