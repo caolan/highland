@@ -10,9 +10,9 @@
       <h1>Highland.js</h1>
     </div>
     <div id="content">
-      <div id="console"></div>
+      <!--<div id="console"></div>-->
 
-      <h2>API Documentation</h2>
+      <!--<h2>API Documentation</h2>-->
       <p>Fixing JavaScript with JavaScript.</p>
 
 <p>The <a href="https://github.com/caolan/highland">Highland project</a> is an experiment in replacing some of the most
@@ -121,7 +121,7 @@ functional code with fewer side-effects.</p>
           
         </ul>
       
-        <h4>Lists</h4>
+        <h4>Arrays</h4>
         <ul class="function-list">
           
           <li><a href="#cons">cons</a></li>
@@ -150,20 +150,96 @@ functional code with fewer side-effects.</p>
           
           <li><a href="#foldr1">foldr1</a></li>
           
+          <li><a href="#map">map</a></li>
+          
+          <li><a href="#reverse">reverse</a></li>
+          
+          <li><a href="#concatMap">concatMap</a></li>
+          
+          <li><a href="#all">all</a></li>
+          
+          <li><a href="#any">any</a></li>
+          
+          <li><a href="#maximum">maximum</a></li>
+          
+          <li><a href="#minimum">minimum</a></li>
+          
+          <li><a href="#replicate">replicate</a></li>
+          
+          <li><a href="#range">range</a></li>
+          
+          <li><a href="#take">take</a></li>
+          
+          <li><a href="#drop">drop</a></li>
+          
+          <li><a href="#splitAt">splitAt</a></li>
+          
+          <li><a href="#takeWhile">takeWhile</a></li>
+          
+          <li><a href="#dropWhile">dropWhile</a></li>
+          
+          <li><a href="#span">span</a></li>
+          
+          <li><a href="#elem">elem</a></li>
+          
+          <li><a href="#notElem">notElem</a></li>
+          
+          <li><a href="#filter">filter</a></li>
+          
+          <li><a href="#zip">zip</a></li>
+          
+          <li><a href="#zipWith">zipWith</a></li>
+          
+          <li><a href="#nub">nub</a></li>
+          
+          <li><a href="#sort">sort</a></li>
+          
         </ul>
       
         <h4>Strings</h4>
         <ul class="function-list">
+          
+          <li><a href="#join">join</a></li>
           
         </ul>
       
         <h4>Objects</h4>
         <ul class="function-list">
           
+          <li><a href="#has">has</a></li>
+          
+          <li><a href="#shallowClone">shallowClone</a></li>
+          
+          <li><a href="#deepClone">deepClone</a></li>
+          
+          <li><a href="#jsonClone">jsonClone</a></li>
+          
+          <li><a href="#set">set</a></li>
+          
+          <li><a href="#get">get</a></li>
+          
+          <li><a href="#shallowFreeze">shallowFreeze</a></li>
+          
+          <li><a href="#deepFreeze">deepFreeze</a></li>
+          
+          <li><a href="#keys">keys</a></li>
+          
+          <li><a href="#values">values</a></li>
+          
+          <li><a href="#pairs">pairs</a></li>
+          
         </ul>
       
         <h4>Utilities</h4>
         <ul class="function-list">
+          
+          <li><a href="#id">id</a></li>
+          
+          <li><a href="#until">until</a></li>
+          
+          <li><a href="#error">error</a></li>
+          
+          <li><a href="#install">install</a></li>
           
         </ul>
       
@@ -1146,15 +1222,14 @@ compare(5,3) == 1</code></pre>
           </div>
         
       
-        <h2>Lists</h2>
+        <h2>Arrays</h2>
 
         
           <div class="functiondoc">
-            <h3 id="cons"><a href="#cons">cons x -&gt; xs -&gt; Array | String</a></h3>
+            <h3 id="cons"><a href="#cons">cons x -&gt; xs -&gt; Array</a></h3>
 
             <div class="description">
-              <p>Creates a new Array by prepending an element to an existing array.
-Can also be used with Strings.</p>
+              <p>Creates a new Array by prepending an element to an existing array.</p>
             </div>
 
             
@@ -1163,7 +1238,7 @@ Can also be used with Strings.</p>
                 
                   <li><strong>x</strong> - the value to prepend to the xs in the new array
                 
-                  <li><strong>xs</strong> <em>Array|String</em> - the tail of the new array
+                  <li><strong>xs</strong> <em>Array</em> - the tail of the new array
                 
               </ul>
             
@@ -1175,11 +1250,10 @@ Can also be used with Strings.</p>
           </div>
         
           <div class="functiondoc">
-            <h3 id="append"><a href="#append">append x -&gt; xs -&gt; Array | String</a></h3>
+            <h3 id="append"><a href="#append">append x -&gt; xs -&gt; Array</a></h3>
 
             <div class="description">
-              <p>Creates a new Array by appending an element to an existing array.
-Can also be used to append a character to a String.</p>
+              <p>Creates a new Array by appending an element to an existing array.</p>
             </div>
 
             
@@ -1188,7 +1262,7 @@ Can also be used to append a character to a String.</p>
                 
                   <li><strong>x</strong> - the value to append to the xs in the new array
                 
-                  <li><strong>xs</strong> <em>Array|String</em> - the init of the new array
+                  <li><strong>xs</strong> <em>Array</em> - the init of the new array
                 
               </ul>
             
@@ -1203,15 +1277,14 @@ Can also be used to append a character to a String.</p>
             <h3 id="head"><a href="#head">head xs -&gt; x</a></h3>
 
             <div class="description">
-              <p>Returns the first element of a non-empty Array.
-Can also be used with Strings.</p>
+              <p>Returns the first element of a non-empty Array.</p>
             </div>
 
             
               <h4>Parameters</h4>
               <ul class="params">
                 
-                  <li><strong>xs</strong> <em>Array|String</em> - the array to return the first element from
+                  <li><strong>xs</strong> <em>Array</em> - the array to return the first element from
                 
               </ul>
             
@@ -1226,15 +1299,14 @@ Can also be used with Strings.</p>
             <h3 id="last"><a href="#last">last xs -&gt; x</a></h3>
 
             <div class="description">
-              <p>Returns the last element of a non-empty Array.
-Can also be used with Strings.</p>
+              <p>Returns the last element of a non-empty Array.</p>
             </div>
 
             
               <h4>Parameters</h4>
               <ul class="params">
                 
-                  <li><strong>xs</strong> <em>Array|String</em> - the array to return the last element from
+                  <li><strong>xs</strong> <em>Array</em> - the array to return the last element from
                 
               </ul>
             
@@ -1250,14 +1322,14 @@ Can also be used with Strings.</p>
 
             <div class="description">
               <p>Returns a new Array without the first element of the original
-non-empty Array. Can also be used with Strings.</p>
+non-empty Array.</p>
             </div>
 
             
               <h4>Parameters</h4>
               <ul class="params">
                 
-                  <li><strong>xs</strong> <em>Array|String</em> - the array to return the tail of
+                  <li><strong>xs</strong> <em>Array</em> - the array to return the tail of
                 
               </ul>
             
@@ -1273,14 +1345,14 @@ non-empty Array. Can also be used with Strings.</p>
 
             <div class="description">
               <p>Returns a new Array without the last element of the original
-non-empty Array. Can also be used with Strings.</p>
+non-empty Array.</p>
             </div>
 
             
               <h4>Parameters</h4>
               <ul class="params">
                 
-                  <li><strong>xs</strong> <em>Array|String</em> - the array to return the init of
+                  <li><strong>xs</strong> <em>Array</em> - the array to return the init of
                 
               </ul>
             
@@ -1467,17 +1539,958 @@ the <code>z</code> argument.</p>
             
           </div>
         
+          <div class="functiondoc">
+            <h3 id="map"><a href="#map">map f -&gt; xs -&gt; Array</a></h3>
+
+            <div class="description">
+              <p>Produces a new array of values by mapping each value in list through a
+transformation function (iterator). The only argument to the iterator
+is the element being transformed. This differs from the built-in map
+function, which also gets the index and a reference to the original
+array.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>f</strong> <em>Function</em> - the transformation to apply to each element
+                
+                  <li><strong>xs</strong> <em>Array</em> - the array to iterate over
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">map(add(1), [1,2,3,4]) == [2,3,4,5]</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="reverse"><a href="#reverse">reverse xs -&gt; Array</a></h3>
+
+            <div class="description">
+              <p>Reverses the elements in an Array, returning a new Array.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>xs</strong> <em>Array</em> - the array to reverse
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">reverse([1,2,3,4]) == [4,3,2,1]</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="concatMap"><a href="#concatMap">concatMap f -&gt; xs -&gt; Array | String</a></h3>
+
+            <div class="description">
+              <p>Does a map over the elements of an array and then concatenates the results.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>f</strong> <em>Function</em> - to iterator which performs the transformations
+                
+                  <li><strong>xs</strong> <em>Array</em> - the array to iterate over
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">concatMap(reverse, [[1,2,3], [4,5,6]]) == [3,2,1,6,5,4]</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="all"><a href="#all">all p -&gt; xs -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Returns true if all of the values in the list pass the iterator truth test.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>p</strong> <em>Function</em> - the test function all elements should pass
+                
+                  <li><strong>xs</strong> <em>Array</em> - the array to test
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">all(isNumber, [1,2,3]) == true
+all(isNumber, [1,2,3,&#x27;abc&#x27;]) == false</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="any"><a href="#any">any p -&gt; xs -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Returns true if any of the values in the list pass the iterator truth test.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>p</strong> <em>Function</em> - the test function any element should pass
+                
+                  <li><strong>-</strong> <em>Array</em> - the array to test
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">any(isNumber, [&#x27;abc&#x27;,&#x27;def&#x27;,123]) == true
+any(isNumber, [&#x27;abc&#x27;,&#x27;def&#x27;]) == false</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="maximum"><a href="#maximum">maximum xs -&gt; x</a></h3>
+
+            <div class="description">
+              <p>Returns the maximum value in an Array.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>xs</strong> <em>Array</em> - the array to return the maximum value from
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">maximum([1,2,3,4]) == 4</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="minimum"><a href="#minimum">minimum xs -&gt; x</a></h3>
+
+            <div class="description">
+              <p>Returns the minimum value in an Array.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>xs</strong> <em>Array</em> - the array to return the minimum value from
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">minimum([1,2,3,4]) == 1</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="replicate"><a href="#replicate">replicate n -&gt; x -&gt; Array</a></h3>
+
+            <div class="description">
+              <p>Creates an Array of length <code>n</code> with the items having the value of <code>x</code>.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>n</strong> <em>Number</em> - the length of the new array
+                
+                  <li><strong>x</strong> - the value of each item in the new array
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">replicate(3, &#x27;abc&#x27;) == [&#x27;abc&#x27;,&#x27;abc&#x27;,&#x27;abc&#x27;]</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="range"><a href="#range">range a -&gt; b -&gt; Array</a></h3>
+
+            <div class="description">
+              <p>Create an Array including all values between <code>a</code> and <code>b</code> inclusive.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>a</strong> <em>Number</em> - the start value
+                
+                  <li><strong>b</strong> <em>Number</em> - the end value
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">range(1, 10) == [1,2,3,4,5,6,7,8,9,10]</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="take"><a href="#take">take n -&gt; xs -&gt; Array</a></h3>
+
+            <div class="description">
+              <p>Returns the first n elements of an Array.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>n</strong> <em>Number</em> - the number of elements to take
+                
+                  <li><strong>xs</strong> <em>Array</em> - the array to take elements from
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">take(2, [1,2,3,4]) == [1,2]</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="drop"><a href="#drop">drop n -&gt; xs -&gt; Array</a></h3>
+
+            <div class="description">
+              <p>Returns a new array without the first n elements.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>n</strong> <em>Number</em> - the number of elements to drop
+                
+                  <li><strong>xs</strong> <em>Array</em> - the array to drop elements from
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">drop(2, [1,2,3,4]) == [3,4]</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="splitAt"><a href="#splitAt">splitAt n -&gt; xs -&gt; Array</a></h3>
+
+            <div class="description">
+              <p>Returns an Array of two elements where the first element is the first n
+elements of xs, and the second element is the remainder of the xs array.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>n</strong> <em>Number</em> - the point to split the array at
+                
+                  <li><strong>xs</strong> <em>Array</em> - the array to split
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">splitAt(2, [1,2,3,4,5]) == [[1,2],[3,4,5]]</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="takeWhile"><a href="#takeWhile">takeWhile p -&gt; xs -&gt; Array</a></h3>
+
+            <div class="description">
+              <p>Returns the longest prefix (possibly empty) of xs of elements that satisfy p.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>p</strong> <em>Function</em> - the test to apply to each element
+                
+                  <li><strong>xs</strong> <em>Array</em> - the array to take elements from
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">takeWhile(function (x) { return x &lt;= 2; }, [1,2,3,2,1]) == [1,2]</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="dropWhile"><a href="#dropWhile">dropWhile p -&gt; xs -&gt; Array</a></h3>
+
+            <div class="description">
+              <p>Returns the suffix remaining after takeWhile(p, xs).</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>p</strong> <em>Function</em> - the test to apply to each element
+                
+                  <li><strong>xs</strong> <em>Array</em> - the array to drop elements from
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">dropWhile(function (x) { return x &lt;= 2; }, [1,2,3,2,1]) == [3,2,1]</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="span"><a href="#span">span p -&gt; xs -&gt; Array</a></h3>
+
+            <div class="description">
+              <p>Returns an Array of two elements where first element is the longest prefix
+(possibly empty) of elements from xs that satisfy p and the second element
+is the remainder of the xs Array.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>p</strong> <em>Function</em> - the test to apply to each element
+                
+                  <li><strong>xs</strong> <em>Array</em> - the array to span
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">span(function (x) { return x &lt;= 2; }, [1,2,3,2,1]) == [[1,2],[3,2,1]]</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="elem"><a href="#elem">elem x -&gt; xs -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Tests if element x exists in the Array xs.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>x</strong> - the element to test for
+                
+                  <li><strong>xs</strong> <em>Array</em> - the array to check for the existence of x
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">elem(1, [1,2,3]) == true
+elem(5, [1,2,3]) == false</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="notElem"><a href="#notElem">notElem x -&gt; xs -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Tests if element x does not exist in the Array xs.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>x</strong> - the element to test for
+                
+                  <li><strong>xs</strong> <em>Array</em> - the array to check for the existence of x
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">notElem(1, [1,2,3]) == false
+notElem(5, [1,2,3]) == true</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="filter"><a href="#filter">filter p -&gt; xs -&gt; Array</a></h3>
+
+            <div class="description">
+              <p>Returns an Array of elements from xs that satisfy the predicate <code>p</code>.
+Unlike the normal JavaScript filter, the function <code>p</code> does not get the
+index and a reference to the original array as arguments.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>p</strong> <em>Function</em> - the truth test to apply to each element
+                
+                  <li><strong>xs</strong> <em>Array</em> - the array to filter
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">filter(eq(2), [1,2,3,2,1]) == [2,2]</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="zip"><a href="#zip">zip xs -&gt; ys -&gt; Array</a></h3>
+
+            <div class="description">
+              <p>Takes two Arrays and returns an Array of corresponding pairs. If one input
+array is shorter, excess elements of the longer array are discarded.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>xs</strong> <em>Array</em>
+                
+                  <li><strong>ys</strong> <em>Array</em>
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">zip([1,2,3], [&#x27;a&#x27;,&#x27;b&#x27;,&#x27;c&#x27;]) == [[1,&#x27;a&#x27;],[2,&#x27;b&#x27;],[3,&#x27;c&#x27;]]</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="zipWith"><a href="#zipWith">zipWith f -&gt; xs -&gt; ys -&gt; Array</a></h3>
+
+            <div class="description">
+              <p>Generalises zip by zipping with the function given as the first argument,
+instead of a function which just returns the pair. For example, zipWith(add)
+is applied to two arrays to produce the list of corresponding sums.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>f</strong> <em>Function</em>
+                
+                  <li><strong>xs</strong> <em>Array</em>
+                
+                  <li><strong>ys</strong> <em>Array</em>
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">zipWith(add, [1,2,3], [4,5,6]) == [5,7,9]</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="nub"><a href="#nub">nub xs -&gt; x -&gt; Array</a></h3>
+
+            <div class="description">
+              <p>Removes duplicate elements from an Array to produce an Array of
+unique elements (the name nub means `essence').</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>xs</strong> <em>Array</em> - the array to remove duplicates from
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">nub([1,2,3,2,1]) == [1,2,3]</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="sort"><a href="#sort">sort xs -&gt; Array</a></h3>
+
+            <div class="description">
+              <p>Returns a new Array containing the sorted elements of xs.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>xs</strong> <em>Array</em> - the array to sort
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">sort([1,2,21,14,3]) == [1,2,3,14,21]</code></pre>
+            
+          </div>
+        
       
         <h2>Strings</h2>
 
+        
+          <div class="functiondoc">
+            <h3 id="join"><a href="#join">join sep -&gt; xs -&gt; String</a></h3>
+
+            <div class="description">
+              <p>Concatenates an Array of Strings, interspersed with the <code>sep</code> String.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>sep</strong> <em>String</em> - the value to insert between each element in xs
+                
+                  <li><strong>xs</strong> <em>Array</em> - the array of strings to join
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">join(&#x27;-&#x27;, [&#x27;abc&#x27;,&#x27;def&#x27;]) == &#x27;abc-def&#x27;</code></pre>
+            
+          </div>
         
       
         <h2>Objects</h2>
 
         
+          <div class="functiondoc">
+            <h3 id="has"><a href="#has">has key -&gt; obj -&gt; Boolean</a></h3>
+
+            <div class="description">
+              <p>Tests if property exists on object using hasOwnProperty method.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>key</strong> <em>String</em> - the property to test for
+                
+                  <li><strong>obj</strong> <em>Object</em> - the object to test
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">has(&#x27;a&#x27;, {a: 1}) == true
+has(&#x27;b&#x27;, {a: 1}) == false</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="shallowClone"><a href="#shallowClone">shallowClone obj -&gt; Object</a></h3>
+
+            <div class="description">
+              <p>Shallow clones an object's properties, returning a new object.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>obj</strong> <em>Object</em> - the object to shallow clone
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">var a = {a: 1, b: {c: 2}};
+var b = shallowClone(a);
+
+b.a = 2;
+b.b.c = 3;
+
+a.a == 1;    // a.a remains unchanged
+a.b.c == 3   // a.b.c is a deeply nested object and not cloned</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="deepClone"><a href="#deepClone">deepClone obj -&gt; Object</a></h3>
+
+            <div class="description">
+              <p>Deep clones an object's properties, returning a new object.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>obj</strong> <em>Object</em> - the object to deep clone
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">var a = {a: 1, b: {c: 2}};
+var b = deepClone(a);
+
+b.a = 2;
+b.b.c = 3;
+
+a.a == 1;    // a.a remains unchanged
+a.b.c == 2   // a.b.c is deeply nested but still unchanged</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="jsonClone"><a href="#jsonClone">jsonClone obj -&gt; Object</a></h3>
+
+            <div class="description">
+              <p>Does a deep clone, creating a brand new object by doing JSON.stringify
+followed by JSON.parse. This only works with JSON-compatible values.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>obj</strong> <em>Object</em> - the object to clone
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">var a = {a: 1, b: {c: 2}};
+var b = jsonClone(a);
+
+b.a = 2;
+b.b.c = 3;
+
+a.a == 1;    // a.a remains unchanged
+a.b.c == 2   // a.b.c is deeply nested but still unchanged</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="set"><a href="#set">set path -&gt; val -&gt; obj -&gt; Object</a></h3>
+
+            <div class="description">
+              <p>Sets a property on an Object, doing a selective deep-clone to return
+a new object which shares as much memory with the old object as possible
+without actually changing the values of any of it's properties.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>path</strong> <em>String|Array</em> - the property or array of nested properties
+                
+                  <li><strong>val</strong> - the value to set the property to
+                
+                  <li><strong>obj</strong> <em>Object</em> - the original object
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">var a = {a: 1, b: {c: 2}, d: {e: 3}};
+var b = set([&#x27;b&#x27;,&#x27;c&#x27;], 3, a);
+
+a.b.c == 2; // original property remains unchanged
+b.b.c == 3; // new object has correct value set
+
+b.d.e = &#x27;foo&#x27;; // setting another property manually might change original
+
+a.d.e == &#x27;foo&#x27;; // original object changed</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="get"><a href="#get">get path -&gt; obj -&gt; result</a></h3>
+
+            <div class="description">
+              <p>Gets a property or set of nested properties from an Object. If any part
+of the property path does not exist, simply returns undefined instead
+of throwing an error.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>path</strong> <em>String|Array</em> - the property or array of nested properties
+                
+                  <li><strong>{Object]</strong> - obj - the object to get the properties from
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">var a = {a: 1, b: {c: 2}};
+
+get(&#x27;a&#x27;, a) == 1
+get([&#x27;b&#x27;,&#x27;c&#x27;], a) == 2
+get([&#x27;foo&#x27;,&#x27;bar&#x27;], a) == undefined</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="shallowFreeze"><a href="#shallowFreeze">shallowFreeze obj -&gt; obj</a></h3>
+
+            <div class="description">
+              <p>Shallow freezes an Object so it's properties cannot be modified and no new
+properties can be added to the object. Calls Object.freeze.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>obj</strong> <em>Object</em> - the object to freeze
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">var a = shallowFreeze({foo: &#x27;bar&#x27;, b: {c: 2}});
+// we can no longer do: a.foo = &#x27;baz&#x27;;
+a.b.c = 3; // changing deeply nested properties still works</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="deepFreeze"><a href="#deepFreeze">deepFreeze obj -&gt; obj</a></h3>
+
+            <div class="description">
+              <p>Freeze an object so it cannot be modified or extended with new properties,
+but unlike shallowFreeze, it will also recurse through sub-properties and
+freeze those too.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>obj</strong> <em>Object</em> - the object to freeze
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">var a = deepFreeze({foo: &#x27;bar&#x27;, b: {c: 2}});
+// we can no longer do: a.foo = &#x27;baz&#x27;;
+// a.b.c = 3 - changing deeply nested properties does NOT work</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="keys"><a href="#keys">keys obj -&gt; Array</a></h3>
+
+            <div class="description">
+              <p>Returns the own property names for an Object. Uses Object.keys.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>obj</strong> <em>Object</em> - the object to return they property names for
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">var obj = {a: 1, b: 2}
+keys(obj) == [&#x27;a&#x27;,&#x27;b&#x27;]</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="values"><a href="#values">values obj -&gt; Array</a></h3>
+
+            <div class="description">
+              <p>Returns the values for each property in an object.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>obj</strong> <em>Object</em> - the object to return values from
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">values({a: 1, b: 2}) == [1,2]</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="pairs"><a href="#pairs">pairs obj -&gt; Array</a></h3>
+
+            <div class="description">
+              <p>Returns an array of key value pairs for each property in an Object.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>obj</strong> <em>Object</em> - the object to return pairs from
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">pairs({a: 1, b: 2}) == [[&#x27;a&#x27;,1],[&#x27;b&#x27;,2]]</code></pre>
+            
+          </div>
+        
       
         <h2>Utilities</h2>
 
+        
+          <div class="functiondoc">
+            <h3 id="id"><a href="#id">id x -&gt; x</a></h3>
+
+            <div class="description">
+              <p>The ID function, simply returns the value <code>x</code> passed in as an argument.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>x</strong> - the value to return from the function
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">id(123) == 123
+id(&#x27;abc&#x27;) == &#x27;abc&#x27;</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="until"><a href="#until">until p -&gt; f -&gt; x -&gt; result</a></h3>
+
+            <div class="description">
+              <p>Yields the result of applying f until p holds.</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>p</strong> <em>Function</em> - the test function
+                
+                  <li><strong>f</strong> <em>Function</em> - the function to apply until p passes
+                
+                  <li><strong>x</strong> - the initial value to apply f to
+                
+              </ul>
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">until(eq(5), add(1), 1) == 5</code></pre>
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="error"><a href="#error">error msg -&gt; throws new Error</a></h3>
+
+            <div class="description">
+              <p>Convenience function for throwing an exception</p>
+            </div>
+
+            
+              <h4>Parameters</h4>
+              <ul class="params">
+                
+                  <li><strong>msg</strong> <em>String</em> - error message
+                
+              </ul>
+            
+
+            
+          </div>
+        
+          <div class="functiondoc">
+            <h3 id="install"><a href="#install">install</a></h3>
+
+            <div class="description">
+              <p>Installs all functions to the global object.</p>
+            </div>
+
+            
+
+            
+              <h4>Example</h4>
+              <pre class="example"><code class="javascript">Highland.install();</code></pre>
+            
+          </div>
         
       
 

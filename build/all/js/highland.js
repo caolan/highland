@@ -867,7 +867,7 @@ L.isArgumentsObject = function (x) {
 };
 if (!L.isArgumentsObject(arguments)) {
     L.isArgumentsObject = function (x) {
-        return !!(x && L.has(x, 'callee'));
+        return !!(x && L.has('callee', x));
     };
 }
 
@@ -953,55 +953,35 @@ L.compare = L.curry(function (x, y) {
 
 
 /**
- * @section Lists
+ * @section Arrays
  */
 
 /**
  * Creates a new Array by prepending an element to an existing array.
- * Can also be used with Strings.
  *
- * @name cons x -> xs -> Array | String
+ * @name cons x -> xs -> Array
  * @param x - the value to prepend to the xs in the new array
- * @param {Array|String} xs - the tail of the new array
+ * @param {Array} xs - the tail of the new array
  * @api public
  *
  * cons(0, [1,2,3]) == [0,1,2,3]
  */
 
 L.cons = L.curry(function (x, xs) {
-    if (L.isString(xs)) {
-        if (!L.isString(x)) {
-            throw new TypeError(
-                'When second argument is String, first argument should also' +
-                'be String, got: ' + type(x) + ', ' + type(xs)
-            );
-        }
-        return x + xs;
-    }
     return [x].concat(xs);
 });
 
 /**
  * Creates a new Array by appending an element to an existing array.
- * Can also be used to append a character to a String.
  *
- * @name append x -> xs -> Array | String
+ * @name append x -> xs -> Array
  * @param x - the value to append to the xs in the new array
- * @param {Array|String} xs - the init of the new array
+ * @param {Array} xs - the init of the new array
  *
  * append(4, [1,2,3]) == [1,2,3,4]
  */
 
 L.append = L.curry(function (x, xs) {
-    if (L.isString(xs)) {
-        if (!L.isString(x)) {
-            throw new TypeError(
-                'When second argument is String, first argument should also' +
-                'be String, got: ' + type(x) + ', ' + type(xs)
-            );
-        }
-        return xs + x;
-    }
     return xs.concat([x]);
 });
 
@@ -1010,10 +990,9 @@ L.append = L.curry(function (x, xs) {
 
 /**
  * Returns the first element of a non-empty Array.
- * Can also be used with Strings.
  *
  * @name head xs -> x
- * @param {Array|String} xs - the array to return the first element from
+ * @param {Array} xs - the array to return the first element from
  * @api public
  *
  * head([1,2,3,4]) == 1
@@ -1025,10 +1004,9 @@ L.head = function (xs) {
 
 /**
  * Returns the last element of a non-empty Array.
- * Can also be used with Strings.
  *
  * @name last xs -> x
- * @param {Array|String} xs - the array to return the last element from
+ * @param {Array} xs - the array to return the last element from
  * @api public
  *
  * last([1,2,3,4]) == 4
@@ -1040,10 +1018,10 @@ L.last = function (xs) {
 
 /**
  * Returns a new Array without the first element of the original
- * non-empty Array. Can also be used with Strings.
+ * non-empty Array.
  *
  * @name tail xs -> Array
- * @param {Array|String} xs - the array to return the tail of
+ * @param {Array} xs - the array to return the tail of
  * @api public
  *
  * tail([1,2,3,4]) == [2,3,4]
@@ -1055,10 +1033,10 @@ L.tail = function (xs) {
 
 /**
  * Returns a new Array without the last element of the original
- * non-empty Array. Can also be used with Strings.
+ * non-empty Array.
  *
  * @name init xs -> Array
- * @param {Array|String} xs - the array to return the init of
+ * @param {Array} xs - the array to return the init of
  * @api public
  *
  * init([1,2,3,4]) == [1,2,3]
@@ -1196,7 +1174,39 @@ L.foldr1 = L.curry(function (f, xs) {
 
 /** List transformations **/
 
-L.map = L.curry(function (f, xs) { return xs.map(f); });
+/**
+ * Produces a new array of values by mapping each value in list through a
+ * transformation function (iterator). The only argument to the iterator
+ * is the element being transformed. This differs from the built-in map
+ * function, which also gets the index and a reference to the original
+ * array.
+ *
+ * @name map f -> xs -> Array
+ * @param {Function} f - the transformation to apply to each element
+ * @param {Array} xs - the array to iterate over
+ * @api public
+ *
+ * map(add(1), [1,2,3,4]) == [2,3,4,5]
+ */
+
+L.map = L.curry(function (f, xs) {
+    var r = [];
+    for (var i = 0, len = xs.length; i < len; i++) {
+        r[i] = f(xs[i]);
+    }
+    return r;
+});
+
+/**
+ * Reverses the elements in an Array, returning a new Array.
+ *
+ * @name reverse xs -> Array
+ * @param {Array} xs - the array to reverse
+ * @api public
+ *
+ * reverse([1,2,3,4]) == [4,3,2,1]
+ */
+
 L.reverse = L.foldl(L.flip(L.cons), []);
 
 // intersperse
@@ -1208,19 +1218,75 @@ L.reverse = L.foldl(L.flip(L.cons), []);
 
 /** Special folds **/
 
+/**
+ * Does a map over the elements of an array and then concatenates the results.
+ *
+ * @name concatMap f -> xs -> Array | String
+ * @param {Function} f - to iterator which performs the transformations
+ * @param {Array} xs - the array to iterate over
+ * @api public
+ *
+ * concatMap(reverse, [[1,2,3], [4,5,6]]) == [3,2,1,6,5,4]
+ */
+
 L.concatMap = L.curry(function (f, xs) {
     return L.foldl1(L.concat, L.map(f, xs));
 });
+
+/**
+ * Returns true if all of the values in the list pass the iterator truth test.
+ *
+ * @name all p -> xs -> Boolean
+ * @param {Function} p - the test function all elements should pass
+ * @param {Array} xs - the array to test
+ * @api public
+ *
+ * all(isNumber, [1,2,3]) == true
+ * all(isNumber, [1,2,3,'abc']) == false
+ */
 
 L.all = L.curry(function (p, xs) {
     return L.foldl(L.and, true, L.map(p, xs));
 });
 
+/**
+ * Returns true if any of the values in the list pass the iterator truth test.
+ *
+ * @name any p -> xs -> Boolean
+ * @param {Function} p - the test function any element should pass
+ * @param {Array} - the array to test
+ * @api public
+ *
+ * any(isNumber, ['abc','def',123]) == true
+ * any(isNumber, ['abc','def']) == false
+ */
+
 L.any = L.curry(function (p, xs) {
     return L.foldl(L.or, false, L.map(p, xs));
 });
 
+/**
+ * Returns the maximum value in an Array.
+ *
+ * @name maximum xs -> x
+ * @param {Array} xs - the array to return the maximum value from
+ * @api public
+ *
+ * maximum([1,2,3,4]) == 4
+ */
+
 L.maximum = L.foldl1(L.max);
+
+/**
+ * Returns the minimum value in an Array.
+ *
+ * @name minimum xs -> x
+ * @param {Array} xs - the array to return the minimum value from
+ * @api public
+ *
+ * minimum([1,2,3,4]) == 1
+ */
+
 L.minimum = L.foldl1(L.min);
 
 // sum
@@ -1250,6 +1316,18 @@ L.minimum = L.foldl1(L.min);
 
 // iterate
 // repeat
+
+/**
+ * Creates an Array of length `n` with the items having the value of `x`.
+ *
+ * @name replicate n -> x -> Array
+ * @param {Number} n - the length of the new array
+ * @param x - the value of each item in the new array
+ * @api public
+ *
+ * replicate(3, 'abc') == ['abc','abc','abc']
+ */
+
 L.replicate = L.curry(function (n, x) {
     var r = [];
     for (var i = 0; i < n; i++) {
@@ -1257,7 +1335,19 @@ L.replicate = L.curry(function (n, x) {
     }
     return r;
 });
+
 // cycle
+
+/**
+ * Create an Array including all values between `a` and `b` inclusive.
+ *
+ * @name range a -> b -> Array
+ * @param {Number} a - the start value
+ * @param {Number} b - the end value
+ * @api public
+ *
+ * range(1, 10) == [1,2,3,4,5,6,7,8,9,10]
+ */
 
 // custom addition to replace [1..10] etc
 L.range = function (a, b) {
@@ -1278,11 +1368,58 @@ L.range = function (a, b) {
 
 /** Extracting sublists **/
 
-L.take = L.curry(function (i, xs) { return slice.call(xs, 0, i); });
-L.drop = L.curry(function (i, xs) { return slice.call(xs, i); });
+/**
+ * Returns the first n elements of an Array.
+ *
+ * @name take n -> xs -> Array
+ * @param {Number} n - the number of elements to take
+ * @param {Array} xs - the array to take elements from
+ * @api public
+ *
+ * take(2, [1,2,3,4]) == [1,2]
+ */
+
+L.take = L.curry(function (n, xs) { return slice.call(xs, 0, n); });
+
+/**
+ * Returns a new array without the first n elements.
+ *
+ * @name drop n -> xs -> Array
+ * @param {Number} n - the number of elements to drop
+ * @param {Array} xs - the array to drop elements from
+ * @api public
+ *
+ * drop(2, [1,2,3,4]) == [3,4]
+ */
+
+L.drop = L.curry(function (n, xs) { return slice.call(xs, n); });
+
+/**
+ * Returns an Array of two elements where the first element is the first n
+ * elements of xs, and the second element is the remainder of the xs array.
+ *
+ * @name splitAt n -> xs -> Array
+ * @param {Number} n - the point to split the array at
+ * @param {Array} xs - the array to split
+ * @api public
+ *
+ * splitAt(2, [1,2,3,4,5]) == [[1,2],[3,4,5]]
+ */
+
 L.splitAt = L.curry(function (n, xs) {
     return [L.take(n, xs), L.drop(n, xs)];
 });
+
+/**
+ * Returns the longest prefix (possibly empty) of xs of elements that satisfy p.
+ *
+ * @name takeWhile p -> xs -> Array
+ * @param {Function} p - the test to apply to each element
+ * @param {Array} xs - the array to take elements from
+ * @api public
+ *
+ * takeWhile(function (x) { return x <= 2; }, [1,2,3,2,1]) == [1,2]
+ */
 
 L.takeWhile = L.curry(function (p, xs) {
     var len = xs.length, i = 0;
@@ -1292,6 +1429,17 @@ L.takeWhile = L.curry(function (p, xs) {
     return L.take(i, xs);
 });
 
+/**
+ * Returns the suffix remaining after takeWhile(p, xs).
+ *
+ * @name dropWhile p -> xs -> Array
+ * @param {Function} p - the test to apply to each element
+ * @param {Array} xs - the array to drop elements from
+ * @api public
+ *
+ * dropWhile(function (x) { return x <= 2; }, [1,2,3,2,1]) == [3,2,1]
+ */
+
 L.dropWhile = L.curry(function (p, xs) {
     var len = xs.length, i = 0;
     while (i < len && p(xs[i])) {
@@ -1299,6 +1447,20 @@ L.dropWhile = L.curry(function (p, xs) {
     }
     return L.drop(i, xs);
 });
+
+/**
+ * Returns an Array of two elements where first element is the longest prefix
+ * (possibly empty) of elements from xs that satisfy p and the second element
+ * is the remainder of the xs Array.
+ *
+ * @name span p -> xs -> Array
+ * @param {Function} p - the test to apply to each element
+ * @param {Array} xs - the array to span
+ * @api public
+ *
+ * span(function (x) { return x <= 2; }, [1,2,3,2,1]) == [[1,2],[3,2,1]]
+ */
+
 L.span = L.curry(function (p, xs) {
     var left = [];
     var len = xs.length, i = 0;
@@ -1308,6 +1470,7 @@ L.span = L.curry(function (p, xs) {
     }
     return [left, slice.call(xs, i)];
 });
+
 // break
 
 // stripPrefix
@@ -1329,14 +1492,64 @@ L.span = L.curry(function (p, xs) {
 
 /** Searching by equality **/
 
+/**
+ * Tests if element x exists in the Array xs.
+ *
+ * @name elem x -> xs -> Boolean
+ * @param x - the element to test for
+ * @param {Array} xs - the array to check for the existence of x
+ * @api public
+ *
+ * elem(1, [1,2,3]) == true
+ * elem(5, [1,2,3]) == false
+ */
+
 L.elem    = L.curry(function (x, xs) { return L.any(L.eq(x), xs); });
+
+/**
+ * Tests if element x does not exist in the Array xs.
+ *
+ * @name notElem x -> xs -> Boolean
+ * @param x - the element to test for
+ * @param {Array} xs - the array to check for the existence of x
+ * @api public
+ *
+ * notElem(1, [1,2,3]) == false
+ * notElem(5, [1,2,3]) == true
+ */
+
 L.notElem = L.curry(function (x, xs) { return L.not(L.elem(x, xs)); });
+
 // lookup
 
 /** Searching with a predicate **/
 
 // find
-L.filter = L.curry(function (f, xs) { return xs.filter(f); });
+
+/**
+ * Returns an Array of elements from xs that satisfy the predicate `p`.
+ * Unlike the normal JavaScript filter, the function `p` does not get the
+ * index and a reference to the original array as arguments.
+ *
+ * @name filter p -> xs -> Array
+ * @param {Function} p - the truth test to apply to each element
+ * @param {Array} xs - the array to filter
+ * @api public
+ *
+ * filter(eq(2), [1,2,3,2,1]) == [2,2]
+ */
+
+L.filter = L.curry(function (p, xs) {
+    var r = [];
+    for (var i = 0, len = xs.length; i < len; i++) {
+        var x = xs[i];
+        if (p(x)) {
+            r.push(x);
+        }
+    }
+    return r;
+});
+
 // partition
 
 
@@ -1351,11 +1564,39 @@ L.filter = L.curry(function (f, xs) { return xs.filter(f); });
 
 /*** Zipping and unzipping lists ***/
 
+/**
+ * Takes two Arrays and returns an Array of corresponding pairs. If one input
+ * array is shorter, excess elements of the longer array are discarded.
+ *
+ * @name zip xs -> ys -> Array
+ * @param {Array} xs
+ * @param {Array} ys
+ * @api public
+ *
+ * zip([1,2,3], ['a','b','c']) == [[1,'a'],[2,'b'],[3,'c']]
+ */
+
 L.zip = L.curry(function (xs, ys) {
     return L.zipWith(function (x, y) { return [x, y]; }, xs, ys);
 });
+
 // zip3
 // zip4, zip5, zip6, zip7
+
+/**
+ * Generalises zip by zipping with the function given as the first argument,
+ * instead of a function which just returns the pair. For example, zipWith(add)
+ * is applied to two arrays to produce the list of corresponding sums.
+ *
+ * @name zipWith f -> xs -> ys -> Array
+ * @param {Function} f
+ * @param {Array} xs
+ * @param {Array} ys
+ * @api public
+ *
+ * zipWith(add, [1,2,3], [4,5,6]) == [5,7,9]
+ */
+
 L.zipWith = L.curry(function (f, xs, ys) {
     var r = [];
     var len = L.min(L.length(xs), L.length(ys));
@@ -1364,6 +1605,7 @@ L.zipWith = L.curry(function (f, xs, ys) {
     }
     return r;
 });
+
 // zipWith3
 // zipWith4, zipWith5, zipWith6, zipWith7
 // unzip
@@ -1383,6 +1625,17 @@ L.zipWith = L.curry(function (f, xs, ys) {
 
 /*** "Set" operations ***/
 
+/**
+ * Removes duplicate elements from an Array to produce an Array of
+ * unique elements (the name nub means `essence').
+ *
+ * @name nub xs -> x -> Array
+ * @param {Array} xs - the array to remove duplicates from
+ * @api public
+ *
+ * nub([1,2,3,2,1]) == [1,2,3]
+ */
+
 L.nub = L.foldl(function (ys, x) {
     return L.elem(x, ys) ? ys: L.append(x, ys);
 }, []);
@@ -1395,7 +1648,18 @@ L.nub = L.foldl(function (ys, x) {
 
 /*** Ordered lists ***/
 
-L.sort = function (xs) { return slice.call(xs).sort(); };
+/**
+ * Returns a new Array containing the sorted elements of xs.
+ *
+ * @name sort xs -> Array
+ * @param {Array} xs - the array to sort
+ * @api public
+ *
+ * sort([1,2,21,14,3]) == [1,2,3,14,21]
+ */
+
+L.sort = function (xs) { return slice.call(xs).sort(L.compare); };
+
 // insert
 
 
@@ -1432,9 +1696,22 @@ L.sort = function (xs) { return slice.call(xs).sort(); };
 // rstrip :: String -> String
 // startswith :: Eq a => [a] -> [a] -> Bool // alias for isPrefixOf
 // endswith :: Eq a => [a] -> [a] -> Bool   // alias for isSuffixOf
+
+/**
+ * Concatenates an Array of Strings, interspersed with the `sep` String.
+ *
+ * @name join sep -> xs -> String
+ * @param {String} sep - the value to insert between each element in xs
+ * @param {Array} xs - the array of strings to join
+ * @api public
+ *
+ * join('-', ['abc','def']) == 'abc-def'
+ */
+
 L.join = L.curry(function (sep, xs) {
     return ArrayProto.join.call(xs, sep);
 });
+
 // split :: Eq a => [a] -> [a] -> [[a]]
 // splitWs :: String -> [String]
 // replace :: Eq a => [a] -> [a] -> [a] -> [a]
@@ -1449,9 +1726,38 @@ L.join = L.curry(function (sep, xs) {
  * @section Objects
  */
 
-L.has = L.curry(function (obj, key) {
+/**
+ * Tests if property exists on object using hasOwnProperty method.
+ *
+ * @name has key -> obj -> Boolean
+ * @param {String} key - the property to test for
+ * @param {Object} obj - the object to test
+ * @api public
+ *
+ * has('a', {a: 1}) == true
+ * has('b', {a: 1}) == false
+ */
+
+L.has = L.curry(function (key, obj) {
     return hasOwnProperty.call(obj, key);
 });
+
+/**
+ * Shallow clones an object's properties, returning a new object.
+ *
+ * @name shallowClone obj -> Object
+ * @param {Object} obj - the object to shallow clone
+ * @api public
+ *
+ * var a = {a: 1, b: {c: 2}};
+ * var b = shallowClone(a);
+ *
+ * b.a = 2;
+ * b.b.c = 3;
+ *
+ * a.a == 1;    // a.a remains unchanged
+ * a.b.c == 3   // a.b.c is a deeply nested object and not cloned
+ */
 
 L.shallowClone = function (obj) {
     if (L.isArray(obj)) {
@@ -1463,6 +1769,23 @@ L.shallowClone = function (obj) {
     }
     return newobj;
 };
+
+/**
+ * Deep clones an object's properties, returning a new object.
+ *
+ * @name deepClone obj -> Object
+ * @param {Object} obj - the object to deep clone
+ * @api public
+ *
+ * var a = {a: 1, b: {c: 2}};
+ * var b = deepClone(a);
+ *
+ * b.a = 2;
+ * b.b.c = 3;
+ *
+ * a.a == 1;    // a.a remains unchanged
+ * a.b.c == 2   // a.b.c is deeply nested but still unchanged
+ */
 
 L.deepClone = function (obj) {
     if (L.isArray(obj)) {
@@ -1478,11 +1801,51 @@ L.deepClone = function (obj) {
     return obj;
 };
 
+/**
+ * Does a deep clone, creating a brand new object by doing JSON.stringify
+ * followed by JSON.parse. This only works with JSON-compatible values.
+ *
+ * @name jsonClone obj -> Object
+ * @param {Object} obj - the object to clone
+ * @api public
+ *
+ * var a = {a: 1, b: {c: 2}};
+ * var b = jsonClone(a);
+ *
+ * b.a = 2;
+ * b.b.c = 3;
+ *
+ * a.a == 1;    // a.a remains unchanged
+ * a.b.c == 2   // a.b.c is deeply nested but still unchanged
+ */
+
 L.jsonClone = function (obj) {
     return JSON.parse( JSON.stringify(obj) );
 };
 
-L.set = L.curry(function (obj, path, val) {
+/**
+ * Sets a property on an Object, doing a selective deep-clone to return
+ * a new object which shares as much memory with the old object as possible
+ * without actually changing the values of any of it's properties.
+ *
+ * @name set path -> val -> obj -> Object
+ * @param {String|Array} path - the property or array of nested properties
+ * @param val - the value to set the property to
+ * @param {Object} obj - the original object
+ * @api public
+ *
+ * var a = {a: 1, b: {c: 2}, d: {e: 3}};
+ * var b = set(['b','c'], 3, a);
+ *
+ * a.b.c == 2; // original property remains unchanged
+ * b.b.c == 3; // new object has correct value set
+ *
+ * b.d.e = 'foo'; // setting another property manually might change original
+ *
+ * a.d.e == 'foo'; // original object changed
+ */
+
+L.set = L.curry(function (path, val, obj) {
     if (!L.isArray(path)) {
         path = [path];
     }
@@ -1494,15 +1857,32 @@ L.set = L.curry(function (obj, path, val) {
         ps = L.tail(path);
 
     if (L.isObject(obj[p])) {
-        newobj[p] = L.set(L.shallowClone(obj[p]), ps, val);
+        newobj[p] = L.set(ps, val, L.shallowClone(obj[p]));
     }
     else {
-        newobj[p] = L.set({}, ps, val);
+        newobj[p] = L.set(ps, val, {});
     }
     return newobj;
 });
 
-L.get = L.curry(function (obj, path) {
+/**
+ * Gets a property or set of nested properties from an Object. If any part
+ * of the property path does not exist, simply returns undefined instead
+ * of throwing an error.
+ *
+ * @name get path -> obj -> result
+ * @param {String|Array} path - the property or array of nested properties
+ * @param {Object] obj - the object to get the properties from
+ * @api public
+ *
+ * var a = {a: 1, b: {c: 2}};
+ *
+ * get('a', a) == 1
+ * get(['b','c'], a) == 2
+ * get(['foo','bar'], a) == undefined
+ */
+
+L.get = L.curry(function (path, obj) {
     if (!L.isArray(path)) {
         path = [path];
     }
@@ -1513,12 +1893,39 @@ L.get = L.curry(function (obj, path) {
         ps = L.tail(path);
 
     if (obj.hasOwnProperty(p)) {
-        return L.get(obj[p], ps);
+        return L.get(ps, obj[p]);
     }
     return undefined;
 });
 
-L.freeze = Object.freeze;
+/**
+ * Shallow freezes an Object so it's properties cannot be modified and no new
+ * properties can be added to the object. Calls Object.freeze.
+ *
+ * @name shallowFreeze obj -> obj
+ * @param {Object} obj - the object to freeze
+ * @api public
+ *
+ * var a = shallowFreeze({foo: 'bar', b: {c: 2}});
+ * // we can no longer do: a.foo = 'baz';
+ * a.b.c = 3; // changing deeply nested properties still works
+ */
+
+L.shallowFreeze = Object.freeze;
+
+/**
+ * Freeze an object so it cannot be modified or extended with new properties,
+ * but unlike shallowFreeze, it will also recurse through sub-properties and
+ * freeze those too.
+ *
+ * @name deepFreeze obj -> obj
+ * @param {Object} obj - the object to freeze
+ * @api public
+ *
+ * var a = deepFreeze({foo: 'bar', b: {c: 2}});
+ * // we can no longer do: a.foo = 'baz';
+ * // a.b.c = 3 - changing deeply nested properties does NOT work
+ */
 
 L.deepFreeze = function (obj) {
     if (typeof obj === 'object') {
@@ -1535,11 +1942,42 @@ L.deepFreeze = function (obj) {
     return obj;
 };
 
+/**
+ * Returns the own property names for an Object. Uses Object.keys.
+ *
+ * @name keys obj -> Array
+ * @param {Object} obj - the object to return they property names for
+ * @api public
+ *
+ * var obj = {a: 1, b: 2}
+ * keys(obj) == ['a','b']
+ */
+
 L.keys = Object.keys;
 
+/**
+ * Returns the values for each property in an object.
+ *
+ * @name values obj -> Array
+ * @param {Object} obj - the object to return values from
+ * @api public
+ *
+ * values({a: 1, b: 2}) == [1,2]
+ */
+
 L.values = function (obj) {
-    return L.map(L.get(obj), L.keys(obj));
+    return L.map(function (k) { return obj[k]; }, L.keys(obj));
 };
+
+/**
+ * Returns an array of key value pairs for each property in an Object.
+ *
+ * @name pairs obj -> Array
+ * @param {Object} obj - the object to return pairs from
+ * @api public
+ *
+ * pairs({a: 1, b: 2}) == [['a',1],['b',2]]
+ */
 
 L.pairs = function (obj) {
     return L.map(function (k) { return [k, obj[k]]; }, L.keys(obj));
@@ -1550,9 +1988,30 @@ L.pairs = function (obj) {
  * @section Utilities
  */
 
-L.id = function (x) {
-    return x;
-};
+/**
+ * The ID function, simply returns the value `x` passed in as an argument.
+ *
+ * @name id x -> x
+ * @param x - the value to return from the function
+ * @api public
+ *
+ * id(123) == 123
+ * id('abc') == 'abc'
+ */
+
+L.id = function (x) { return x; };
+
+/**
+ * Yields the result of applying f until p holds.
+ *
+ * @name until p -> f -> x -> result
+ * @param {Function} p - the test function
+ * @param {Function} f - the function to apply until p passes
+ * @param x - the initial value to apply f to
+ * @api public
+ *
+ * until(eq(5), add(1), 1) == 5
+ */
 
 L.until = L.curry(function (p, f, x) {
     var r = x;
@@ -1562,15 +2021,26 @@ L.until = L.curry(function (p, f, x) {
     return r;
 });
 
+/**
+ * Convenience function for throwing an exception
+ *
+ * @name error msg -> throws new Error
+ * @param {String} msg - error message
+ * @api public
+ */
+
 L.error = function (msg) {
     throw new Error(msg);
 };
 
-/* this won't work in strict mode, and people *should* be using strict mode!
-L.evalInstall = L.foldl(function (src, prop) {
-    return src + 'var ' + prop + '=L.' + prop + '; ';
-}, '', L.keys(L));
-*/
+/**
+ * Installs all functions to the global object.
+ *
+ * @name install
+ * @api public
+ *
+ * Highland.install();
+ */
 
 L.install = function () {
     var keys = L.keys(L);

@@ -1126,6 +1126,256 @@ exports['foldr1'] = function (test) {
     test.done();
 };
 
+exports['map'] = function (test) {
+    var dbl = function (x) {
+        test.equal(arguments.length, 1);
+        return x * 2;
+    };
+    var a = [1,2,3,4];
+    test.same(L.map(dbl, a), [2,4,6,8]);
+    // test original array is unchanged
+    test.same(a, [1,2,3,4]);
+    // partial application
+    test.same(L.map(dbl)(a), [2,4,6,8]);
+    test.done();
+};
+
+exports['reverse'] = function (test) {
+    test.same(L.reverse([1,2,3,4]), [4,3,2,1]);
+    test.same(L.reverse([4,3,2,1]), [1,2,3,4]);
+    test.same(L.reverse([1]), [1]);
+    test.same(L.reverse([]), []);
+    // make sure original array is unchanged
+    var a = [1,2];
+    test.same(L.reverse(a), [2,1]);
+    test.same(a, [1,2]);
+    test.done();
+};
+
+exports['concatMap'] = function (test) {
+    var fn = function (c) {
+        return c.toUpperCase();
+    };
+    test.equal(L.concatMap(fn, ['a','b','c']), 'ABC');
+    test.done();
+};
+
+exports['all'] = function (test) {
+    test.equal(L.all(L.not, [false, false, false]), true);
+    test.equal(L.all(L.not, [true, false, false]), false);
+    // partial applicatoin
+    test.equal(L.all(L.not)([false, false, false]), true);
+    test.equal(L.all(L.not)([true, false, false]), false);
+    test.done();
+};
+
+exports['any'] = function (test) {
+    test.equal(L.any(L.not, [false, false, false]), true);
+    test.equal(L.any(L.not, [true, false, false]), true);
+    test.equal(L.any(L.not, [true, true, true]), false);
+    // partial applicatoin
+    test.equal(L.any(L.not)([false, false, false]), true);
+    test.equal(L.any(L.not)([true, false, false]), true);
+    test.equal(L.any(L.not)([true, true, true]), false);
+    test.done();
+};
+
+exports['maximum'] = function (test) {
+    test.equal(L.maximum([1,2,3,4]), 4);
+    test.equal(L.maximum([1,4,2,3]), 4);
+    test.done();
+};
+
+exports['minimum'] = function (test) {
+    test.equal(L.minimum([1,2,3,4]), 1);
+    test.equal(L.minimum([3,2,4,1]), 1);
+    test.done();
+};
+
+exports['replicate'] = function (test) {
+    test.same(L.replicate(3, "ho"), ["ho","ho","ho"]);
+    test.same(L.replicate(5, 1), [1,1,1,1,1]);
+    test.same(L.replicate(1, 2), [2]);
+    test.same(L.replicate(0, 2), []);
+    // partial application
+    test.same(L.replicate(3)("ho"), ["ho","ho","ho"]);
+    test.same(L.replicate(5)(1), [1,1,1,1,1]);
+    test.same(L.replicate(1)(2), [2]);
+    test.same(L.replicate(0)(2), []);
+    test.done();
+};
+
+exports['range'] = function (test) {
+    test.same(L.range(1, 10), [1,2,3,4,5,6,7,8,9,10]);
+    test.done();
+};
+
+exports['take'] = function (test) {
+    var a = [1,2,3,4];
+    test.same(L.take(1, a), [1]);
+    test.same(a, [1,2,3,4]);
+    test.same(L.take(2, a), [1,2]);
+    test.same(a, [1,2,3,4]);
+    test.same(L.take(3, a), [1,2,3]);
+    test.same(a, [1,2,3,4]);
+    test.same(L.take(4, a), [1,2,3,4]);
+    test.same(a, [1,2,3,4]);
+    test.same(L.take(5, a), [1,2,3,4]);
+    test.same(a, [1,2,3,4]);
+    // partial application
+    test.same(L.take(1)(a), [1]);
+    test.same(a, [1,2,3,4]);
+    test.same(L.take(2)(a), [1,2]);
+    test.same(a, [1,2,3,4]);
+    test.done();
+};
+
+exports['drop'] = function (test) {
+    var a = [1,2,3,4];
+    test.same(L.drop(1, a), [2,3,4]);
+    test.same(a, [1,2,3,4]);
+    test.same(L.drop(2, a), [3,4]);
+    test.same(a, [1,2,3,4]);
+    test.same(L.drop(3, a), [4]);
+    test.same(a, [1,2,3,4]);
+    test.same(L.drop(4, a), []);
+    test.same(a, [1,2,3,4]);
+    test.same(L.drop(5, a), []);
+    test.same(a, [1,2,3,4]);
+    // partial application
+    test.same(L.drop(1)(a), [2,3,4]);
+    test.same(a, [1,2,3,4]);
+    test.same(L.drop(2)(a), [3,4]);
+    test.same(a, [1,2,3,4]);
+    test.done();
+};
+
+exports['splitAt'] = function (test) {
+    test.same(L.splitAt(3, [1,2,3,4,5]), [[1,2,3], [4,5]]);
+    // partial application
+    test.same(L.splitAt(3)([1,2,3,4,5]), [[1,2,3], [4,5]]);
+    test.done();
+};
+
+exports['takeWhile'] = function (test) {
+    var lt3 = function (x) {
+        return x < 3;
+    };
+    test.same(L.takeWhile(lt3, [1,2,3,4]), [1,2]);
+    test.same(L.takeWhile(lt3, [1,2,1,2]), [1,2,1,2]);
+    test.same(L.takeWhile(lt3, [3,3,3,3]), []);
+    // partial application
+    test.same(L.takeWhile(lt3)([1,2,3,4]), [1,2]);
+    test.same(L.takeWhile(lt3)([1,2,1,2]), [1,2,1,2]);
+    test.same(L.takeWhile(lt3)([3,3,3,3]), []);
+    test.done();
+};
+
+exports['dropWhile'] = function (test) {
+    var lt3 = function (x) {
+        return x < 3;
+    };
+    test.same(L.dropWhile(lt3, [1,2,3,4]), [3,4]);
+    test.same(L.dropWhile(lt3, [1,2,1,2]), []);
+    test.same(L.dropWhile(lt3, [3,3,3,3]), [3,3,3,3]);
+    // partial application
+    test.same(L.dropWhile(lt3)([1,2,3,4]), [3,4]);
+    test.same(L.dropWhile(lt3)([1,2,1,2]), []);
+    test.same(L.dropWhile(lt3)([3,3,3,3]), [3,3,3,3]);
+    test.done();
+};
+
+exports['span'] = function (test) {
+    var lt3 = function (x) {
+        return x < 3;
+    };
+    test.same(L.span(lt3, [1,2,3,4]), [[1,2], [3,4]]);
+    test.same(L.span(lt3, [1,2]), [[1,2], []]);
+    test.same(L.span(lt3, [3,4]), [[], [3,4]]);
+    test.same(L.span(lt3, []), [[], []]);
+    // partial application
+    test.same(L.span(lt3)([1,2,3,4]), [[1,2], [3,4]]);
+    test.same(L.span(lt3)([1,2]), [[1,2], []]);
+    test.same(L.span(lt3)([3,4]), [[], [3,4]]);
+    test.same(L.span(lt3)([]), [[], []]);
+    test.done();
+};
+
+exports['elem'] = function (test) {
+    test.equal(L.elem(3, [1,2,3,4]), true);
+    test.equal(L.elem(6, [1,2,3,4]), false);
+    test.equal(L.elem(6, []), false);
+    // partial application
+    test.equal(L.elem(3)([1,2,3,4]), true);
+    test.equal(L.elem(6)([1,2,3,4]), false);
+    test.equal(L.elem(6)([]), false);
+    test.done();
+};
+
+exports['notElem'] = function (test) {
+    test.equal(L.notElem(3, [1,2,3,4]), false);
+    test.equal(L.notElem(6, [1,2,3,4]), true);
+    test.equal(L.notElem(6, []), true);
+    // partial application
+    test.equal(L.notElem(3)([1,2,3,4]), false);
+    test.equal(L.notElem(6)([1,2,3,4]), true);
+    test.equal(L.notElem(6)([]), true);
+    test.done();
+};
+
+exports['filter'] = function (test) {
+    var odd = function (x) {
+        return x % 2;
+    };
+    var a = [1,2,3,4];
+    test.same(L.filter(odd, a), [1,3]);
+    // test original array is unchanged
+    test.same(a, [1,2,3,4]);
+    // partial application
+    test.same(L.filter(odd)(a), [1,3]);
+    test.done();
+};
+
+exports['zip'] = function (test) {
+    test.same(L.zip([1,2,3], [4,5,6]), [[1,4],[2,5],[3,6]]);
+    test.same(L.zip([1,2], [4,5,6]), [[1,4],[2,5]]);
+    // partial application
+    test.same(L.zip([1,2])([4,5]), [[1,4],[2,5]]);
+    test.done();
+};
+
+exports['zipWith'] = function (test) {
+    var add = function (a, b) {
+        return a + b;
+    };
+    test.same(L.zipWith(add, [1,2,3,4,5], [6,7,8,9,10]), [7,9,11,13,15]);
+    test.same(L.zipWith(add, [1,2,3], [6,7,8,9,10]), [7,9,11]);
+    // partial application
+    test.same(L.zipWith(add, [1,2,3])([6,7,8]), [7,9,11]);
+    test.same(L.zipWith(add)([1,2,3], [6,7,8]), [7,9,11]);
+    test.same(L.zipWith(add)([1,2,3])([6,7,8]), [7,9,11]);
+    test.done();
+};
+
+exports['nub'] = function (test) {
+    test.same(L.nub([1,2,1,1,2,3,3,4]), [1,2,3,4]);
+    test.same(L.nub([1,2,3,4]), [1,2,3,4]);
+    test.same(L.nub(['a','c','b','b']), ['a','c','b']);
+    test.done();
+};
+
+exports['sort'] = function (test) {
+    var a = [2,4,3,1];
+    test.same(L.sort(a), [1,2,3,4]);
+    test.same(a, [2,4,3,1]);
+    var b = [1,2,3,4];
+    test.same(L.sort([1,2,3,4]), [1,2,3,4]);
+    test.same(b, [1,2,3,4]);
+    test.same(L.sort([1,2,14,21,3]), [1,2,3,14,21]);
+    test.same(L.sort(['a','c','b']), ['a','b','c']);
+    test.done();
+};
+
 
 
 
@@ -1150,7 +1400,7 @@ exports['set'] = function (test) {
     };
     var orig_a = JSON.stringify(a);
 
-    var b = L.set(a, ['three', 'four'], 40);
+    var b = L.set(['three', 'four'], 40, a);
 
     // existing values and references are the same
     test.strictEqual(a.one, b.one);
@@ -1169,7 +1419,7 @@ exports['set'] = function (test) {
     var c = [{one: 1}, {two: 2}, {three: 3}];
     var orig_c = JSON.stringify(c);
 
-    var d = L.set(c, 1, {four: 4});
+    var d = L.set(1, {four: 4}, c);
 
     // existing values and references are the same
     test.strictEqual(c[0], d[0]);
@@ -1190,93 +1440,27 @@ exports['get'] = function (test) {
         four: { five: 5 },
         six: 6
     };
-    test.equal(L.get(a, ['one', 'two', 'three']), 3);
-    test.equal(L.get(a, ['one', 'two']), a.one.two);
-    test.equal(L.get(a, ['four', 'five', 'six']), undefined);
-    test.equal(L.get(a, ['four', 'five', 'six', 'seven']), undefined);
+    test.equal(L.get(['one', 'two', 'three'], a), 3);
+    test.equal(L.get(['one', 'two'], a), a.one.two);
+    test.equal(L.get(['four', 'five', 'six'], a), undefined);
+    test.equal(L.get(['four', 'five', 'six', 'seven'], a), undefined);
     /*
     test.throws(function () {
         L.get(a, ['four', 'five', 'six', 'seven'], true);
     });
     */
-    test.equal(L.get(a, 'six'), 6);
+    test.equal(L.get('six', a), 6);
 
-    test.equal(L.get([1,2,3,4], 1), 2);
-    test.equal(L.get([1,2,3,4], 2), 3);
-    test.equal(L.get([1,2,3,4], 5), undefined);
+    test.equal(L.get(1, [1,2,3,4]), 2);
+    test.equal(L.get(2, [1,2,3,4]), 3);
+    test.equal(L.get(5, [1,2,3,4]), undefined);
 
     test.done();
 };
 
 
 
-exports['take'] = function (test) {
-    var a = [1,2,3,4];
-    test.same(L.take(1, a), [1]);
-    test.same(a, [1,2,3,4]);
-    test.same(L.take(2, a), [1,2]);
-    test.same(a, [1,2,3,4]);
-    test.same(L.take(3, a), [1,2,3]);
-    test.same(a, [1,2,3,4]);
-    test.same(L.take(4, a), [1,2,3,4]);
-    test.same(a, [1,2,3,4]);
-    test.same(L.take(5, a), [1,2,3,4]);
-    test.same(a, [1,2,3,4]);
-    // partial application
-    test.same(L.take(1)(a), [1]);
-    test.same(a, [1,2,3,4]);
-    test.same(L.take(2)(a), [1,2]);
-    test.same(a, [1,2,3,4]);
-    test.done();
-};
 
-exports['takeWhile'] = function (test) {
-    var lt3 = function (x) {
-        return x < 3;
-    };
-    test.same(L.takeWhile(lt3, [1,2,3,4]), [1,2]);
-    test.same(L.takeWhile(lt3, [1,2,1,2]), [1,2,1,2]);
-    test.same(L.takeWhile(lt3, [3,3,3,3]), []);
-    // partial application
-    test.same(L.takeWhile(lt3)([1,2,3,4]), [1,2]);
-    test.same(L.takeWhile(lt3)([1,2,1,2]), [1,2,1,2]);
-    test.same(L.takeWhile(lt3)([3,3,3,3]), []);
-    test.done();
-};
-
-exports['drop'] = function (test) {
-    var a = [1,2,3,4];
-    test.same(L.drop(1, a), [2,3,4]);
-    test.same(a, [1,2,3,4]);
-    test.same(L.drop(2, a), [3,4]);
-    test.same(a, [1,2,3,4]);
-    test.same(L.drop(3, a), [4]);
-    test.same(a, [1,2,3,4]);
-    test.same(L.drop(4, a), []);
-    test.same(a, [1,2,3,4]);
-    test.same(L.drop(5, a), []);
-    test.same(a, [1,2,3,4]);
-    // partial application
-    test.same(L.drop(1)(a), [2,3,4]);
-    test.same(a, [1,2,3,4]);
-    test.same(L.drop(2)(a), [3,4]);
-    test.same(a, [1,2,3,4]);
-    test.done();
-};
-
-exports['dropWhile'] = function (test) {
-    var lt3 = function (x) {
-        return x < 3;
-    };
-    test.same(L.dropWhile(lt3, [1,2,3,4]), [3,4]);
-    test.same(L.dropWhile(lt3, [1,2,1,2]), []);
-    test.same(L.dropWhile(lt3, [3,3,3,3]), [3,3,3,3]);
-    // partial application
-    test.same(L.dropWhile(lt3)([1,2,3,4]), [3,4]);
-    test.same(L.dropWhile(lt3)([1,2,1,2]), []);
-    test.same(L.dropWhile(lt3)([3,3,3,3]), [3,3,3,3]);
-    test.done();
-};
 
 
 
@@ -1333,39 +1517,8 @@ exports['jsonClone'] = function (test) {
 
 
 
-exports['map'] = function (test) {
-    var dbl = function (x) {
-        return x * 2;
-    };
-    var a = [1,2,3,4];
-    test.same(L.map(dbl, a), [2,4,6,8]);
-    // test original array is unchanged
-    test.same(a, [1,2,3,4]);
-    // partial application
-    test.same(L.map(dbl)(a), [2,4,6,8]);
-    test.done();
-};
 
-exports['concatMap'] = function (test) {
-    var fn = function (c) {
-        return c.toUpperCase();
-    };
-    test.equal(L.concatMap(fn, ['a','b','c']), 'ABC');
-    test.done();
-};
 
-exports['filter'] = function (test) {
-    var odd = function (x) {
-        return x % 2;
-    };
-    var a = [1,2,3,4];
-    test.same(L.filter(odd, a), [1,3]);
-    // test original array is unchanged
-    test.same(a, [1,2,3,4]);
-    // partial application
-    test.same(L.filter(odd)(a), [1,3]);
-    test.done();
-};
 
 exports['keys'] = function (test) {
     var a = {a: 1, b: 2, c: {d: 3}};
@@ -1413,44 +1566,9 @@ exports['join'] = function (test) {
 
 
 
-exports['all'] = function (test) {
-    test.equal(L.all(L.not, [false, false, false]), true);
-    test.equal(L.all(L.not, [true, false, false]), false);
-    // partial applicatoin
-    test.equal(L.all(L.not)([false, false, false]), true);
-    test.equal(L.all(L.not)([true, false, false]), false);
-    test.done();
-};
-
-exports['any'] = function (test) {
-    test.equal(L.any(L.not, [false, false, false]), true);
-    test.equal(L.any(L.not, [true, false, false]), true);
-    test.equal(L.any(L.not, [true, true, true]), false);
-    // partial applicatoin
-    test.equal(L.any(L.not)([false, false, false]), true);
-    test.equal(L.any(L.not)([true, false, false]), true);
-    test.equal(L.any(L.not)([true, true, true]), false);
-    test.done();
-};
-
-exports['elem'] = function (test) {
-    test.equal(L.elem(3, [1,2,3,4]), true);
-    test.equal(L.elem(6, [1,2,3,4]), false);
-    test.equal(L.elem(6, []), false);
-    // partial application
-    test.equal(L.elem(3)([1,2,3,4]), true);
-    test.equal(L.elem(6)([1,2,3,4]), false);
-    test.equal(L.elem(6)([]), false);
-    test.done();
-};
 
 
-exports['nub'] = function (test) {
-    test.same(L.nub([1,2,1,1,2,3,3,4]), [1,2,3,4]);
-    test.same(L.nub([1,2,3,4]), [1,2,3,4]);
-    test.same(L.nub(['a','c','b','b']), ['a','c','b']);
-    test.done();
-};
+
 
 
 exports['id'] = function (test) {
@@ -1463,87 +1581,12 @@ exports['id'] = function (test) {
 
 
 
-exports['maximum'] = function (test) {
-    test.equal(L.maximum([1,2,3,4]), 4);
-    test.equal(L.maximum([1,4,2,3]), 4);
-    test.done();
-};
 
 
-exports['minimum'] = function (test) {
-    test.equal(L.minimum([1,2,3,4]), 1);
-    test.equal(L.minimum([3,2,4,1]), 1);
-    test.done();
-};
 
-exports['notElem'] = function (test) {
-    test.equal(L.notElem(3, [1,2,3,4]), false);
-    test.equal(L.notElem(6, [1,2,3,4]), true);
-    test.equal(L.notElem(6, []), true);
-    // partial application
-    test.equal(L.notElem(3)([1,2,3,4]), false);
-    test.equal(L.notElem(6)([1,2,3,4]), true);
-    test.equal(L.notElem(6)([]), true);
-    test.done();
-};
 
-exports['replicate'] = function (test) {
-    test.same(L.replicate(3, "ho"), ["ho","ho","ho"]);
-    test.same(L.replicate(5, 1), [1,1,1,1,1]);
-    test.same(L.replicate(1, 2), [2]);
-    test.same(L.replicate(0, 2), []);
-    // partial application
-    test.same(L.replicate(3)("ho"), ["ho","ho","ho"]);
-    test.same(L.replicate(5)(1), [1,1,1,1,1]);
-    test.same(L.replicate(1)(2), [2]);
-    test.same(L.replicate(0)(2), []);
-    test.done();
-};
 
-exports['reverse'] = function (test) {
-    test.same(L.reverse([1,2,3,4]), [4,3,2,1]);
-    test.same(L.reverse([4,3,2,1]), [1,2,3,4]);
-    test.same(L.reverse([1]), [1]);
-    test.same(L.reverse([]), []);
-    // make sure original array is unchanged
-    var a = [1,2];
-    test.same(L.reverse(a), [2,1]);
-    test.same(a, [1,2]);
-    test.done();
-};
 
-exports['sort'] = function (test) {
-    var a = [2,4,3,1];
-    test.same(L.sort(a), [1,2,3,4]);
-    test.same(a, [2,4,3,1]);
-    var b = [1,2,3,4];
-    test.same(L.sort([1,2,3,4]), [1,2,3,4]);
-    test.same(b, [1,2,3,4]);
-    test.done();
-};
-
-exports['span'] = function (test) {
-    var lt3 = function (x) {
-        return x < 3;
-    };
-    test.same(L.span(lt3, [1,2,3,4]), [[1,2], [3,4]]);
-    test.same(L.span(lt3, [1,2]), [[1,2], []]);
-    test.same(L.span(lt3, [3,4]), [[], [3,4]]);
-    test.same(L.span(lt3, []), [[], []]);
-    // partial application
-    test.same(L.span(lt3)([1,2,3,4]), [[1,2], [3,4]]);
-    test.same(L.span(lt3)([1,2]), [[1,2], []]);
-    test.same(L.span(lt3)([3,4]), [[], [3,4]]);
-    test.same(L.span(lt3)([]), [[], []]);
-    test.done();
-};
-
-exports['splitAt'] = function (test) {
-    test.same(L.splitAt(3, [1,2,3,4,5]), [[1,2,3], [4,5]]);
-    // partial application
-    test.same(L.splitAt(3)([1,2,3,4,5]), [[1,2,3], [4,5]]);
-    test.done();
-};
 
 exports['until'] = function (test) {
     var p = function (x) {
@@ -1560,26 +1603,7 @@ exports['until'] = function (test) {
     test.done();
 };
 
-exports['zipWith'] = function (test) {
-    var add = function (a, b) {
-        return a + b;
-    };
-    test.same(L.zipWith(add, [1,2,3,4,5], [6,7,8,9,10]), [7,9,11,13,15]);
-    test.same(L.zipWith(add, [1,2,3], [6,7,8,9,10]), [7,9,11]);
-    // partial application
-    test.same(L.zipWith(add, [1,2,3])([6,7,8]), [7,9,11]);
-    test.same(L.zipWith(add)([1,2,3], [6,7,8]), [7,9,11]);
-    test.same(L.zipWith(add)([1,2,3])([6,7,8]), [7,9,11]);
-    test.done();
-};
 
-exports['zip'] = function (test) {
-    test.same(L.zip([1,2,3], [4,5,6]), [[1,4],[2,5],[3,6]]);
-    test.same(L.zip([1,2], [4,5,6]), [[1,4],[2,5]]);
-    // partial application
-    test.same(L.zip([1,2])([4,5]), [[1,4],[2,5]]);
-    test.done();
-};
 
 
 exports['error'] = function (test) {
