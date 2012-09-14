@@ -1474,6 +1474,16 @@ exports['get'] = function (test) {
     test.done();
 };
 
+exports['trans'] = function (test) {
+    var a = {b: 2};
+    test.same(L.trans('b', L.add(3), a), {b: 5});
+    // partial application
+    test.same(L.trans('b', L.add(3))(a), {b: 5});
+    test.same(L.trans('b')(L.add(3), a), {b: 5});
+    test.same(L.trans('b')(L.add(3))(a), {b: 5});
+    test.done();
+};
+
 
 
 

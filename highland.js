@@ -1947,6 +1947,26 @@ L.get = L.curry(function (path, obj) {
 });
 
 /**
+ * Performs a transformation on a property of an object, returning a new object
+ * with that property updated. This is the combination of a 'get', then calling
+ * the transformation function with the value, then calling 'set' with the new
+ * value.
+ *
+ * @name trans path -> f -> obj -> result
+ * @param {String|Array} path - the property or array of nested properties
+ * @param {Function} f - the transformation function to apply to the value
+ * @param {Object] obj - the object to get the properties from
+ * @api public
+ *
+ * var a = {b: 2};
+ * trans(a, 'b', add(3)) == {b: 5}
+ */
+
+L.trans = L.curry(function (path, f, obj) {
+    return L.set(path, f(L.get(path, obj)), obj);
+});
+
+/**
  * Shallow freezes an Object so it's properties cannot be modified and no new
  * properties can be added to the object. Calls Object.freeze.
  *
