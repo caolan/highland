@@ -75,6 +75,16 @@ exports['flip'] = function (test) {
     test.done();
 };
 
+exports['seq'] = function (test) {
+    var fn1 = L.concat('one:');
+    var fn2 = L.concat('two:');
+    var fn = L.seq(fn1, fn2);
+    test.equal(fn('zero'), 'two:one:zero');
+    // partial application
+    test.equal(L.seq(fn1)(fn2)('zero'), 'two:one:zero');
+    test.done();
+};
+
 
 /***** Operators *****/
 

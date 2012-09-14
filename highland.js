@@ -218,6 +218,24 @@ L.partial = function (f /* args... */) {
 
 L.flip = L.curry(function (fn, x, y) { return fn(y, x); });
 
+/**
+ * The flipped version of compose. Where argument are in the order of
+ * application.
+ *
+ * @name compose a -> b -> Function(x)
+ * @param {Function} a - the function to apply to x
+ * @param {Function} b - the function to apply to the result of a(x)
+ * @api public
+ *
+ * var add1 = add(1);
+ * var mul3 = mul(3);
+ *
+ * var add1mul3 = seq(add1, mul3);
+ * add1mul3(2) == 9
+ */
+
+L.seq = L.flip(L.compose);
+
 
 /**
  * @section Operators
