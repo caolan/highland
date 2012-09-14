@@ -1494,6 +1494,16 @@ exports['trans'] = function (test) {
     test.done();
 };
 
+exports['transWhere'] = function (test) {
+    var a = [{b: 2}, {b: 4}];
+    var bAbove2 = function (obj) { return obj.b > 2; };
+    test.same(
+        L.transWhere(bAbove2, 'b', L.mul(2), a),
+        [{b: 2}, {b: 8}]
+    );
+    test.done();
+};
+
 exports['extend'] = function (test) {
     var a = {a: 1, b: 2};
     var b = {a: 0, c: 3};

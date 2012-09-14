@@ -1985,6 +1985,37 @@ L.trans = L.curry(function (path, f, obj) {
 });
 
 /**
+ * Transform elements of a list the match a predicate.
+ *
+ * @name transWhere p -> path -> f -> obj -> result
+ * @param {Function} p - tests whether an element should be transformed
+ * @param {String|Array} path - the property or array of nested properties
+ * @param {Function} f - the transformation function to apply to matched values
+ * @param {Array} arr - the array to get objects from
+ * @api public
+ *
+ * var a = [{b: 2}, {b: 4}];
+ * var bAbove2 = function (obj) { return obj.b > 2; };
+ * transWhere(bAbove2, 'b', mul(2), a) == [{b: 2}, {b: 8}]
+ */
+
+L.transWhere = L.curry(function (p, path, f, arr) {
+    var results = [];
+    for (var i = 0, len = arr.length; i < len; i++) {
+        var x = arr[i];
+        if (p(x)) {
+            results.push(
+                L.set(path, f(L.get(path, x)), x)
+            );
+        }
+        else {
+            results.push(x);
+        }
+    }
+    return results;
+});
+
+/**
  * Adds properties of object b to object a, returning a new object with the
  * combined properties.
  *
