@@ -1484,6 +1484,18 @@ exports['trans'] = function (test) {
     test.done();
 };
 
+exports['extend'] = function (test) {
+    var a = {a: 1, b: 2};
+    var b = {a: 0, c: 3};
+    var c = L.extend(a, b);
+    test.same(c, {a: 0, b: 2, c: 3});
+    test.same(a, {a: 1, b: 2});
+    test.same(b, {a: 0, c: 3});
+    // partial application
+    test.same(L.extend(a)(b), c);
+    test.done();
+};
+
 
 
 

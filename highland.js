@@ -1967,6 +1967,24 @@ L.trans = L.curry(function (path, f, obj) {
 });
 
 /**
+ * Adds properties of object b to object a, returning a new object with the
+ * combined properties.
+ *
+ * @name extend a -> b -> result
+ * @param {Object} a - the initial object to extend
+ * @param {Object} b - the object to extend a with
+ * @api public
+ *
+ * var a = {a: 1, b: 2};
+ * var b = {a: 0, c: 3};
+ * extend(a, b) == {a: 0, b: 2, c: 3};
+ */
+
+L.extend = L.curry(function (a, b) {
+    return L.foldl(function (c, k) { return L.set(k, b[k], c); }, a, L.keys(b));
+});
+
+/**
  * Shallow freezes an Object so it's properties cannot be modified and no new
  * properties can be added to the object. Calls Object.freeze.
  *
