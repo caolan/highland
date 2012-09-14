@@ -178,7 +178,31 @@ L.compose = L.curry(function (a, b) {
 L.apply = L.curry(function (f, args) { return f.apply(this, args); });
 
 /**
+ * Partially applies the function (regardless of whether it has had curry
+ * called on it). This will always postpone execution until at least the next
+ * call of the partially applied function.
  *
+ * @name partial f args... -> g
+ * @param {Function} f - function to partial apply
+ * @param args... - the arguments to apply to the function
+ * @api public
+ *
+ * var addAll = function () {
+ *     var args = Array.prototype.slice.call(arguments);
+ *     return foldl1(add, args);
+ * };
+ * var f = partial(addAll, 1, 2);
+ * f(3, 4) == 10
+ */
+
+L.partial = function (f /* args... */) {
+    var args = slice.call(arguments, 1);
+    return function () {
+        return f.apply(this, args.concat(slice.call(arguments)));
+    };
+};
+
+/**
  * Evaluates the function `f` with the argument positions swapped. Only
  * works with functions that accept two arguments.
  *

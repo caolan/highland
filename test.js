@@ -54,6 +54,16 @@ exports['apply'] = function (test) {
     test.done();
 };
 
+exports['partial'] = function (test) {
+    var addAll = function () {
+        var args = Array.prototype.slice.call(arguments);
+        return L.foldl1(L.add, args);
+    };
+    var f = L.partial(addAll, 1, 2);
+    test.equal(f(3, 4), 10);
+    test.done();
+};
+
 exports['flip'] = function (test) {
     var subtract = function (a, b) {
         return a - b;
