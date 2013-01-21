@@ -236,6 +236,43 @@ L.flip = L.curry(function (fn, x, y) { return fn(y, x); });
 
 L.seq = L.flip(L.compose);
 
+/**
+ * Add tail-call optimization using a trampolining technique. This
+ * version passes the provided function a continuation that can be used
+ * to safely recur for many iterations. This does not suffer from the
+ * side-effect issues of some other techniques (which do not allow you
+ * to use the tail optimized function elsewhere during recursion) but
+ * is slightly slower.
+ *
+ * @name tailopt fn -> Function(args.., recur)
+ * @param {Function} fn - the function to tail call optimize
+ * @api public
+ *
+ * var sum = tailopt(function(x, y, sum) {
+ *     return y > 0 ? sum(x + 1, y - 1) :
+ *            y < 0 ? sum(x - 1, y + 1) :
+ *            x;
+ * });
+ */
+
+L.tailopt = function (fn) {
+    return function () {
+        function NextArgs(args) {
+            args[args.length] = acc;
+            args.length++;
+            this.args = args;
+        }
+        function acc() {
+            return new NextArgs(arguments);
+        }
+        var v = new NextArgs(arguments);
+        while (v instanceof NextArgs) {
+            v = fn.apply(this, v.args);
+        }
+        return v;
+    };
+};
+
 
 /**
  * @section Operators

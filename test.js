@@ -85,6 +85,46 @@ exports['seq'] = function (test) {
     test.done();
 };
 
+exports['tailopt'] = function (test) {
+    var sum = L.tailopt(function(x, y, recur) {
+        return y > 0 ? recur(x + 1, y - 1) :
+               y < 0 ? recur(x - 1, y + 1) :
+               x;
+    });
+    test.equal(sum(20, 100000), 100020);
+    var foo = L.tailopt(function (x, y, foo) {
+        if (x === 0) {
+            return foo(x + 1, y);
+        }
+        else if (x === 1) {
+            bar(x, y); // check for side-effects
+            return x + y;
+        }
+    });
+    var bar = function (x, y) {
+        // check public function is side-effect free when used
+        // elsewhere during recursion
+        return foo(x * 2, y * 2);
+    };
+    test.equal(foo(0, 1), 2);
+    var foo2 = L.tailopt(function (x, y, foo2) {
+        if (x === 0) {
+            return foo(x + 1, y);
+        }
+        else if (x === 1) {
+            bar2(x, y, foo2); // check for side-effects
+            return x + y;
+        }
+    });
+    var bar2 = function (x, y, foo2) {
+        // check continuation function is side-effect free when used
+        // elsewhere during recursion
+        return foo2(x * 2, y * 2);
+    };
+    test.equal(foo(0, 1), 2);
+    test.done();
+};
+
 
 /***** Operators *****/
 
