@@ -257,17 +257,21 @@ L.seq = L.flip(L.compose);
 
 L.tailopt = function (fn) {
     return function () {
+        var that = this;
         function NextArgs(args) {
             args[args.length] = acc;
             args.length++;
             this.args = args;
         }
+        NextArgs.prototype.valueOf = function () {
+            return fn.apply(that, this.args);
+        };
         function acc() {
             return new NextArgs(arguments);
         }
         var v = new NextArgs(arguments);
         while (v instanceof NextArgs) {
-            v = fn.apply(this, v.args);
+            v = fn.apply(that, v.args);
         }
         return v;
     };

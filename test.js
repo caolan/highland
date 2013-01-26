@@ -122,6 +122,21 @@ exports['tailopt'] = function (test) {
         return foo2(x * 2, y * 2);
     };
     test.equal(foo(0, 1), 2);
+    // make sure you can still make non-tail optimized calls
+    var len = L.tailopt(function (arr, len) {
+        if (arr.length === 0) {
+            return 0;
+        }
+        return 1 + len(L.tail(arr));
+    });
+    test.equal(len([1,2,3]), 3);
+    var strtest = L.tailopt(function (arr, len) {
+        if (arr.length === 0) {
+            return '0';
+        }
+        return '1' + len(L.tail(arr));
+    });
+    test.equal(strtest([1,2,3]), '1110');
     test.done();
 };
 
