@@ -4,15 +4,15 @@ exports.tasks = {
 
 exports.builds = {
     docs: {
-        'handlebars-load': {paths: ['website/index.html']},
+        'handlebars-load': {path: ['website/index.html']},
         'comments': null
     },
     website: ['@docs', {
         'include': {paths: {
-            'website/js': 'js',
-            'website/img': 'img',
-            'website/css': 'css',
-            'highland.js': 'js/highland.js'
+            'js': 'website/js',
+            'img': 'website/img',
+            'css': 'website/css',
+            'js/highland.js': 'highland.js'
         }}
     }],
     all: ['website']

@@ -1,4 +1,4 @@
-var L = require('./highland');
+var L = require('../lib/prelude');
 
 
 /***** Functions *****/
@@ -137,6 +137,15 @@ exports['tailopt'] = function (test) {
         return '1' + len(L.tail(arr));
     });
     test.equal(strtest([1,2,3]), '1110');
+    /*
+    var strtest2 = L.tailopt(function (arr, len) {
+        if (arr.length === 0) {
+            return ['0'];
+        }
+        return L.cons('1', len(L.tail(arr)));
+    });
+    test.equal(strtest2([1,2,3]), ['1','1','1','0']);
+    */
     test.done();
 };
 
