@@ -48,7 +48,7 @@
 
 "use strict";
 
-var L = {};
+var h = {};
 
 // reference to global object
 var root = this; // only works in non-strict mode
@@ -102,9 +102,9 @@ var slice            = ArrayProto.slice,
  * fn(1)(2, 3) == fn(1, 2, 3)
  */
 
-L.curry = function (fn /* args... */) {
+h.curry = function (fn /* args... */) {
     var args = slice.call(arguments);
-    return L.ncurry.apply(this, [fn.length].concat(args));
+    return h.ncurry.apply(this, [fn.length].concat(args));
 };
 
 /**
@@ -128,15 +128,15 @@ L.curry = function (fn /* args... */) {
  * fn(1)(2)(3) == '1.2.3';
  */
 
-L.ncurry = function (n, fn /* args... */) {
+h.ncurry = function (n, fn /* args... */) {
     var largs = slice.call(arguments, 2);
     if (largs.length >= n) {
-        return L.apply(fn, largs.slice(0, n));
+        return h.apply(fn, largs.slice(0, n));
     }
     return function () {
         var args = largs.concat(slice.call(arguments));
         if (args.length < n) {
-            return L.ncurry.apply(this, [n, fn].concat(args));
+            return h.ncurry.apply(this, [n, fn].concat(args));
         }
         return fn.apply(this, args.slice(0, n));
     }
@@ -158,8 +158,8 @@ L.ncurry = function (n, fn /* args... */) {
  * add1mul3(2) == 9
  */
 
-L.compose = L.curry(function (a, b) {
-    return function () { return a(L.apply(b, arguments)); };
+h.compose = h.curry(function (a, b) {
+    return function () { return a(h.apply(b, arguments)); };
 });
 
 /**
@@ -175,7 +175,7 @@ L.compose = L.curry(function (a, b) {
  * apply(mul)([3,3]) == 9
  */
 
-L.apply = L.curry(function (f, args) { return f.apply(this, args); });
+h.apply = h.curry(function (f, args) { return f.apply(this, args); });
 
 /**
  * Partially applies the function (regardless of whether it has had curry
@@ -195,7 +195,7 @@ L.apply = L.curry(function (f, args) { return f.apply(this, args); });
  * f(3, 4) == 10
  */
 
-L.partial = function (f /* args... */) {
+h.partial = function (f /* args... */) {
     var args = slice.call(arguments, 1);
     return function () {
         return f.apply(this, args.concat(slice.call(arguments)));
@@ -216,7 +216,7 @@ L.partial = function (f /* args... */) {
  * flip(div)(2, 4) == 2
  */
 
-L.flip = L.curry(function (fn, x, y) { return fn(y, x); });
+h.flip = h.curry(function (fn, x, y) { return fn(y, x); });
 
 /**
  * The flipped version of compose. Where argument are in the order of
@@ -234,7 +234,7 @@ L.flip = L.curry(function (fn, x, y) { return fn(y, x); });
  * add1mul3(2) == 9
  */
 
-L.seq = L.flip(L.compose);
+h.seq = h.flip(h.compose);
 
 /**
  * Add tail-call optimization using a trampolining technique. This
@@ -255,7 +255,7 @@ L.seq = L.flip(L.compose);
  * });
  */
 
-L.tailopt = function (fn) {
+h.tailopt = function (fn) {
     return function () {
         var that = this;
         function NextArgs(args) {
@@ -284,7 +284,7 @@ L.tailopt = function (fn) {
 
 // helper for generating operator functions, not public
 var operator = function (op) {
-    return L.curry(new Function ('a', 'b', 'return a ' + op + ' b;'));
+    return h.curry(new Function ('a', 'b', 'return a ' + op + ' b;'));
 };
 
 /**
@@ -299,7 +299,7 @@ var operator = function (op) {
  * eq(1,2) == false
  */
 
-L.eq = operator('===');
+h.eq = operator('===');
 
 /**
  * Tests if the values of a and b are equivalent. With objects and arrays
@@ -329,7 +329,7 @@ var hasBuffer = (typeof Buffer !== 'undefined');
 // https://github.com/joyent/node/blob/master/LICENSE
 
 
-L.eqv = L.curry(function (a, b) {
+h.eqv = h.curry(function (a, b) {
     if (a === b) {
         return true;
     }
@@ -370,13 +370,13 @@ function objEquiv(a, b) {
     if (a.prototype !== b.prototype) return false;
     //~~~I've managed to break Object.keys through screwy arguments passing.
     //   Converting to array solves the problem.
-    if (L.isArgumentsObject(a)) {
-        if (!L.isArgumentsObject(b)) {
+    if (h.isArgumentsObject(a)) {
+        if (!h.isArgumentsObject(b)) {
             return false;
         }
         a = pSlice.call(a);
         b = pSlice.call(b);
-        return L.eqv(a, b);
+        return h.eqv(a, b);
     }
     try {
         var ka = Object.keys(a),
@@ -405,7 +405,7 @@ function objEquiv(a, b) {
     //~~~possibly expensive deep test
     for (i = ka.length - 1; i >= 0; i--) {
         key = ka[i];
-        if (!L.eqv(a[key], b[key])) {
+        if (!h.eqv(a[key], b[key])) {
             return false;
         }
     }
@@ -424,7 +424,7 @@ function objEquiv(a, b) {
  * ne(1,2) == true
  */
 
-L.ne = operator('!==');
+h.ne = operator('!==');
 
 /**
  * Tests if a is not truthy using `!`, this only works with Boolean values.
@@ -437,11 +437,8 @@ L.ne = operator('!==');
  * not(false) == true
  */
 
-L.not = function (a) {
-    if (L.isBoolean(a)) {
-        return !a;
-    }
-    throw new TypeError('Expected Boolean value, got: ' + type(a));
+h.not = function (a) {
+    return !a;
 };
 
 /**
@@ -462,9 +459,9 @@ L.not = function (a) {
  * lt(3,3) == false
  */
 
-L.lt = L.curry(function (a, b) {
-    var ta = L.type(a),
-        tb = L.type(b);
+h.lt = h.curry(function (a, b) {
+    var ta = h.type(a),
+        tb = h.type(b);
 
     if (ta !== tb) {
         throw new TypeError('Cannot compare type ' + ta + ' with type ' + tb);
@@ -473,12 +470,12 @@ L.lt = L.curry(function (a, b) {
         return a < b;
     }
     if (ta === 'array') {
-        var len = L.min(a.length, b.length);
+        var len = h.min(a.length, b.length);
         for (var i = 0; i < len; i++) {
-            if (L.lt(a[i], b[i])) {
+            if (h.lt(a[i], b[i])) {
                 return true;
             }
-            else if (!L.eqv(a[i], b[i])) {
+            else if (!h.eqv(a[i], b[i])) {
                 return false;
             }
         }
@@ -505,9 +502,9 @@ L.lt = L.curry(function (a, b) {
  * gt(3,3) == false
  */
 
-L.gt = L.curry(function (a, b) {
-    var ta = L.type(a),
-        tb = L.type(b);
+h.gt = h.curry(function (a, b) {
+    var ta = h.type(a),
+        tb = h.type(b);
 
     if (ta !== tb) {
         throw new TypeError('Cannot compare type ' + ta + ' with type ' + tb);
@@ -516,12 +513,12 @@ L.gt = L.curry(function (a, b) {
         return a > b;
     }
     if (ta === 'array') {
-        var len = L.min(a.length, b.length);
+        var len = h.min(a.length, b.length);
         for (var i = 0; i < len; i++) {
-            if (L.gt(a[i], b[i])) {
+            if (h.gt(a[i], b[i])) {
                 return true;
             }
-            else if (!L.eqv(a[i], b[i])) {
+            else if (!h.eqv(a[i], b[i])) {
                 return false;
             }
         }
@@ -543,7 +540,7 @@ L.gt = L.curry(function (a, b) {
  * le(3,3) == true
  */
 
-L.le = L.curry(function (a, b) { return L.not(L.gt(a, b)); });
+h.le = h.curry(function (a, b) { return h.not(h.gt(a, b)); });
 
 /**
  * Tests if a is greater than or equivalent to b.
@@ -558,7 +555,7 @@ L.le = L.curry(function (a, b) { return L.not(L.gt(a, b)); });
  * gt(3,3) == true
  */
 
-L.ge = L.curry(function (a, b) { return L.not(L.lt(a, b)); });
+h.ge = h.curry(function (a, b) { return h.not(h.lt(a, b)); });
 
 /**
  * Tests if both a and b are `true` using `&&`. However, unlike the
@@ -575,14 +572,7 @@ L.ge = L.curry(function (a, b) { return L.not(L.lt(a, b)); });
  * and(false, false) == false
  */
 
-L.and = L.curry(function (a, b) {
-    if (L.isBoolean(a) &&  L.isBoolean(b)) {
-        return a && b;
-    }
-    throw new TypeError(
-        'Expecting two Boolean arguments, got: ' + L.type(a) + ', ' + L.type(b)
-    );
-});
+h.and = operator('&&');
 
 /**
  * Tests if either a or b are `true` using `||`. However, unlike the
@@ -599,14 +589,7 @@ L.and = L.curry(function (a, b) {
  * or(false, false) == false
  */
 
-L.or = L.curry(function (a, b) {
-    if (L.isBoolean(a) &&  L.isBoolean(b)) {
-        return a || b;
-    }
-    throw new TypeError(
-        'Expecting two Boolean arguments, got: ' + L.type(a) + ', ' + L.type(b)
-    );
-});
+h.or = operator('||');
 
 
 /**
@@ -622,12 +605,12 @@ L.or = L.curry(function (a, b) {
  * add(5,5) == 10
  */
 
-L.add = L.curry(function (a, b) {
-    if (L.isNumber(a) && L.isNumber(b)) {
+h.add = h.curry(function (a, b) {
+    if (h.isNumber(a) && h.isNumber(b)) {
         return a + b;
     }
     throw new TypeError(
-        'Expecting two Number arguments, got: ' + L.type(a) + ', ' + L.type(b)
+        'Expecting two Number arguments, got: ' + h.type(a) + ', ' + h.type(b)
     );
 });
 
@@ -643,12 +626,12 @@ L.add = L.curry(function (a, b) {
  * sub(5,5) == 0
  */
 
-L.sub = L.curry(function (a, b) {
-    if (L.isNumber(a) && L.isNumber(b)) {
+h.sub = h.curry(function (a, b) {
+    if (h.isNumber(a) && h.isNumber(b)) {
         return a - b;
     }
     throw new TypeError(
-        'Expecting two Number arguments, got: ' + L.type(a) + ', ' + L.type(b)
+        'Expecting two Number arguments, got: ' + h.type(a) + ', ' + h.type(b)
     );
 });
 
@@ -664,12 +647,12 @@ L.sub = L.curry(function (a, b) {
  * mul(5,5) == 25
  */
 
-L.mul = L.curry(function (a, b) {
-    if (L.isNumber(a) && L.isNumber(b)) {
+h.mul = h.curry(function (a, b) {
+    if (h.isNumber(a) && h.isNumber(b)) {
         return a * b;
     }
     throw new TypeError(
-        'Expecting two Number arguments, got: ' + L.type(a) + ', ' + L.type(b)
+        'Expecting two Number arguments, got: ' + h.type(a) + ', ' + h.type(b)
     );
 });
 
@@ -685,12 +668,12 @@ L.mul = L.curry(function (a, b) {
  * div(15,5) == 3
  */
 
-L.div = L.curry(function (a, b) {
-    if (L.isNumber(a) && L.isNumber(b)) {
+h.div = h.curry(function (a, b) {
+    if (h.isNumber(a) && h.isNumber(b)) {
         return a / b;
     }
     throw new TypeError(
-        'Expecting two Number arguments, got: ' + L.type(a) + ', ' + L.type(b)
+        'Expecting two Number arguments, got: ' + h.type(a) + ', ' + h.type(b)
     );
 });
 
@@ -707,12 +690,12 @@ L.div = L.curry(function (a, b) {
  * rem(-1, 5) == -1
  */
 
-L.rem = L.curry(function (a, b) {
-    if (L.isNumber(a) && L.isNumber(b)) {
+h.rem = h.curry(function (a, b) {
+    if (h.isNumber(a) && h.isNumber(b)) {
         return a % b;
     }
     throw new TypeError(
-        'Expecting two Number arguments, got: ' + L.type(a) + ', ' + L.type(b)
+        'Expecting two Number arguments, got: ' + h.type(a) + ', ' + h.type(b)
     );
 });
 
@@ -730,12 +713,12 @@ L.rem = L.curry(function (a, b) {
  * mod(-1, 5) == 4
  */
 
-L.mod = L.curry(function (a, b) {
-    if (L.isNumber(a) && L.isNumber(b)) {
+h.mod = h.curry(function (a, b) {
+    if (h.isNumber(a) && h.isNumber(b)) {
         return ((a % b) + b) % b;
     }
     throw new TypeError(
-        'Expecting two Number arguments, got: ' + L.type(a) + ', ' + L.type(b)
+        'Expecting two Number arguments, got: ' + h.type(a) + ', ' + h.type(b)
     );
 });
 
@@ -771,8 +754,23 @@ L.mod = L.curry(function (a, b) {
  * isArray({}) == false
  */
 
-L.isArray = Array.isArray || function (x) {
+h.isArray = Array.isArray || function (x) {
     return toString.call(x) === '[object Array]';
+};
+
+/**
+ * Tests if obj is a stream.
+ *
+ * @name isStream obj -> Boolean
+ * @param x - the value to test
+ * @api public
+ *
+ * isStream(createStream()) == true
+ * isStream(123) == false
+ */
+
+h.isStream = function (x) {
+    return x instanceof h.Stream;
 };
 
 /**
@@ -790,11 +788,11 @@ L.isArray = Array.isArray || function (x) {
  * isObject(function(){}) == false
  */
 
-L.isObject = function (x) {
+h.isObject = function (x) {
     return x === Object(x) &&
-        !L.isArray(x) &&
-        !L.isFunction(x) &&
-        !L.isString(x);
+        !h.isArray(x) &&
+        !h.isFunction(x) &&
+        !h.isString(x);
 };
 
 /**
@@ -808,7 +806,7 @@ L.isObject = function (x) {
  * isFunction(123) == false
  */
 
-L.isFunction = function (x) {
+h.isFunction = function (x) {
     return toString.call(x) == '[object Function]';
 };
 
@@ -823,7 +821,7 @@ L.isFunction = function (x) {
  * isString(123) == false
  */
 
-L.isString = function (x) {
+h.isString = function (x) {
     return toString.call(x) == '[object String]';
 };
 
@@ -839,7 +837,7 @@ L.isString = function (x) {
  * isNumber('abc') == false
  */
 
-L.isNumber = function (x) {
+h.isNumber = function (x) {
     return toString.call(x) == '[object Number]';
 };
 
@@ -854,7 +852,7 @@ L.isNumber = function (x) {
  * isBoolean('abc') == false
  */
 
-L.isBoolean = function (x) {
+h.isBoolean = function (x) {
     return x === true || x=== false || toString.call(x) == '[object Boolean]';
 };
 
@@ -869,7 +867,7 @@ L.isBoolean = function (x) {
  * isNull(123) == false
  */
 
-L.isNull = function (x) {
+h.isNull = function (x) {
     return x === null;
 };
 
@@ -884,7 +882,7 @@ L.isNull = function (x) {
  * isUndefined('abc') == false
  */
 
-L.isUndefined = function (x) {
+h.isUndefined = function (x) {
     return x === void 0;
 };
 
@@ -900,7 +898,7 @@ L.isUndefined = function (x) {
  * isNaN(undefined) == false
  */
 
-L.isNaN = function (x) {
+h.isNaN = function (x) {
     // `NaN` is the only value for which `===` is not reflexive.
     return x !== x;
 };
@@ -916,7 +914,7 @@ L.isNaN = function (x) {
  * isDateObject({}) == false
  */
 
-L.isDateObject = function (x) {
+h.isDateObject = function (x) {
   return toString.call(x) == '[object Date]';
 };
 
@@ -932,7 +930,7 @@ L.isDateObject = function (x) {
  */
 
 // Is the given value a regular expression?
-L.isRegExpObject = function (x) {
+h.isRegExpObject = function (x) {
     return toString.call(x) == '[object RegExp]';
 };
 
@@ -948,12 +946,12 @@ L.isRegExpObject = function (x) {
  */
 
 // Is a given variable an arguments object?
-L.isArgumentsObject = function (x) {
+h.isArgumentsObject = function (x) {
     return toString.call(x) == '[object Arguments]';
 };
-if (!L.isArgumentsObject(arguments)) {
-    L.isArgumentsObject = function (x) {
-        return !!(x && L.has('callee', x));
+if (!h.isArgumentsObject(arguments)) {
+    h.isArgumentsObject = function (x) {
+        return !!(x && h.has('callee', x));
     };
 }
 
@@ -970,16 +968,16 @@ if (!L.isArgumentsObject(arguments)) {
  * type('abc') == 'string'
  */
 
-L.type = function (x) {
+h.type = function (x) {
     return (
-        (L.isArray(x) && 'array') ||
-        (L.isFunction(x) && 'function') ||
-        (L.isObject(x) && 'object') ||
-        (L.isString(x) && 'string') ||
-        (L.isNumber(x) && 'number') ||
-        (L.isBoolean(x) && 'boolean') ||
-        (L.isNull(x) && 'null') ||
-        (L.isUndefined(x) && 'undefined')
+        (h.isArray(x) && 'array') ||
+        (h.isFunction(x) && 'function') ||
+        (h.isObject(x) && 'object') ||
+        (h.isString(x) && 'string') ||
+        (h.isNumber(x) && 'number') ||
+        (h.isBoolean(x) && 'boolean') ||
+        (h.isNull(x) && 'null') ||
+        (h.isUndefined(x) && 'undefined')
     );
 };
 
@@ -1002,7 +1000,7 @@ L.type = function (x) {
  * max([1,2,3],[2,3,4]) == [2,3,4]
  */
 
-L.max = L.curry(function (x, y) { return L.ge(x, y) ? x: y; });
+h.max = h.curry(function (x, y) { return h.ge(x, y) ? x: y; });
 
 /**
  * Returns the lowest of two values. Works with Numbers, Strings or Arrays.
@@ -1016,7 +1014,7 @@ L.max = L.curry(function (x, y) { return L.ge(x, y) ? x: y; });
  * min([1,2,3],[2,3,4]) == [1,2,3]
  */
 
-L.min = L.curry(function (x, y) { return L.le(x, y) ? x: y; });
+h.min = h.curry(function (x, y) { return h.le(x, y) ? x: y; });
 
 /**
  * Compares two values, returning -1 if x it less than y, 0 if the values
@@ -1033,8 +1031,8 @@ L.min = L.curry(function (x, y) { return L.le(x, y) ? x: y; });
  * compare(5,3) == 1
  */
 
-L.compare = L.curry(function (x, y) {
-    return L.lt(x, y) ? -1: (L.gt(x, y) ? 1: 0);
+h.compare = h.curry(function (x, y) {
+    return h.lt(x, y) ? -1: (h.gt(x, y) ? 1: 0);
 });
 
 
@@ -1053,7 +1051,7 @@ L.compare = L.curry(function (x, y) {
  * cons(0, [1,2,3]) == [0,1,2,3]
  */
 
-L.cons = L.curry(function (x, xs) {
+h.cons = h.curry(function (x, xs) {
     return [x].concat(xs);
 });
 
@@ -1067,7 +1065,7 @@ L.cons = L.curry(function (x, xs) {
  * append(4, [1,2,3]) == [1,2,3,4]
  */
 
-L.append = L.curry(function (x, xs) {
+h.append = h.curry(function (x, xs) {
     return xs.concat([x]);
 });
 
@@ -1084,8 +1082,8 @@ L.append = L.curry(function (x, xs) {
  * head([1,2,3,4]) == 1
  */
 
-L.head = function (xs) {
-    return L.empty(xs) ? L.error('head of empty array'): xs[0];
+h.head = function (xs) {
+    return h.empty(xs) ? h.error('head of empty array'): xs[0];
 };
 
 /**
@@ -1098,8 +1096,8 @@ L.head = function (xs) {
  * last([1,2,3,4]) == 4
  */
 
-L.last = function (xs) {
-    return L.empty(xs) ? L.error('last of empty array'): xs[xs.length - 1];
+h.last = function (xs) {
+    return h.empty(xs) ? h.error('last of empty array'): xs[xs.length - 1];
 };
 
 /**
@@ -1113,8 +1111,8 @@ L.last = function (xs) {
  * tail([1,2,3,4]) == [2,3,4]
  */
 
-L.tail = function (xs) {
-    return L.empty(xs) ? L.error('tail of empty array'): xs.slice(1);
+h.tail = function (xs) {
+    return h.empty(xs) ? h.error('tail of empty array'): xs.slice(1);
 };
 
 /**
@@ -1128,9 +1126,9 @@ L.tail = function (xs) {
  * init([1,2,3,4]) == [1,2,3]
  */
 
-L.init = function (xs) {
-    return L.empty(xs) ?
-        L.error('init of empty array'):
+h.init = function (xs) {
+    return h.empty(xs) ?
+        h.error('init of empty array'):
         xs.slice(0, xs.length - 1);
 };
 
@@ -1145,7 +1143,7 @@ L.init = function (xs) {
  * empty([1,2,3]) == false
  */
 
-L.empty  = function (xs) { return xs.length === 0; };
+h.empty  = function (xs) { return xs.length === 0; };
 
 /**
  * Returns the length of an Array or String.
@@ -1157,7 +1155,7 @@ L.empty  = function (xs) { return xs.length === 0; };
  * length([1,2,3]) == 3
  */
 
-L.length = function (xs) { return xs.length; };
+h.length = function (xs) { return xs.length; };
 
 /**
  * Adds the elements of one Array to another, returning a new Array.
@@ -1172,11 +1170,11 @@ L.length = function (xs) { return xs.length; };
  * concat('abc', 'def') == 'abcdef'
  */
 
-L.concat = L.curry(function (a, b) {
-    if (L.isArray(a) && L.isArray(b)) {
+h.concat = h.curry(function (a, b) {
+    if (h.isArray(a) && h.isArray(b)) {
         return ArrayProto.concat.apply(a, b);
     }
-    if (L.isString(a) && L.isString(b)) {
+    if (h.isString(a) && h.isString(b)) {
         return a + b;
     }
     throw new Error(
@@ -1193,17 +1191,28 @@ L.concat = L.curry(function (a, b) {
  * the initial state of the reduction, and each successive step of it should
  * be returned by iterator.
  *
+ * If used with a stream, returns a new stream which emits each
+ * reduced state after the stream emits data.
+ *
  * @name foldl f -> z -> xs -> result
  * @param {Function} f - the combining function
  * @param z - the inital value
- * @param {Array|String} xs - the array to combine
+ * @param {Array|String|Stream} xs - the values to combine
  * @api public
  *
  * foldl(add, 1, [2,3,4]) == 10
  */
 
-L.foldl = L.curry(function (f, z, xs) {
-    return (L.isString(xs) ? xs.split(''): xs).reduce(f, z);
+h.foldl = h.curry(function (f, z, xs) {
+    if (h.isStream(xs)) {
+        var ys = h.createStream();
+        xs.on('data', function (x) {
+            z = f(z, x);
+            ys.push(z);
+        });
+        return ys;
+    }
+    return (h.isString(xs) ? xs.split(''): xs).reduce(f, z);
 });
 
 /**
@@ -1218,8 +1227,8 @@ L.foldl = L.curry(function (f, z, xs) {
  * foldl1(add, [1,2,3,4]) == 10
  */
 
-L.foldl1 = L.curry(function (f, xs) {
-    return L.foldl(f, L.head(xs), L.tail(xs));
+h.foldl1 = h.curry(function (f, xs) {
+    return h.foldl(f, h.head(xs), h.tail(xs));
 });
 
 /**
@@ -1234,7 +1243,10 @@ L.foldl1 = L.curry(function (f, xs) {
  * foldr(add, 4, [1,2,3]) == 10
  */
 
-L.foldr = L.curry(function (f, z, xs) {
+h.foldr = h.curry(function (f, z, xs) {
+    if (h.isStream(xs)) {
+        throw new Error('Cannot fold right on a stream');
+    }
     for (var i = xs.length - 1; i >= 0; --i) {
         z = f(xs[i], z);
     }
@@ -1253,12 +1265,34 @@ L.foldr = L.curry(function (f, z, xs) {
  * foldr1(add, [1,2,3,4]) == 10
  */
 
-L.foldr1 = L.curry(function (f, xs) {
-    return L.foldr(f, L.last(xs), L.init(xs));
+h.foldr1 = h.curry(function (f, xs) {
+    return h.foldr(f, h.last(xs), h.init(xs));
 });
 
 
 /** List transformations **/
+
+/**
+ * Performs a function on each element in an array or each data read
+ * from a stream. Returns nothing and used only when side-effects are
+ * required.
+ *
+ * @name each f -> xs -> undefined
+ * @param {Function} f - the function to call on each value
+ * @param {Array|Stream} xs - the values to call `f` on
+ * @api public
+ */
+
+h.each = h.curry(function (f, xs) {
+    if (h.isStream(xs)) {
+        xs.on('data', f);
+        return;
+    }
+    for (var i = 0, len = xs.length; i < len; i++) {
+        f(xs[i]);
+    }
+    return;
+});
 
 /**
  * Produces a new array of values by mapping each value in list through a
@@ -1267,15 +1301,23 @@ L.foldr1 = L.curry(function (f, xs) {
  * function, which also gets the index and a reference to the original
  * array.
  *
- * @name map f -> xs -> Array
+ * @name map f -> xs -> Array | Stream
  * @param {Function} f - the transformation to apply to each element
- * @param {Array} xs - the array to iterate over
+ * @param {Array|Stream} xs - the array or stream to iterate over
  * @api public
  *
  * map(add(1), [1,2,3,4]) == [2,3,4,5]
+ * map(add(1), stream) ==> new_stream ..2 ..3 ..4 ..5
  */
 
-L.map = L.curry(function (f, xs) {
+h.map = h.curry(function (f, xs) {
+    if (h.isStream(xs)) {
+        var ys = h.createStream();
+        xs.on('data', function (x) {
+            ys.push(f(x));
+        });
+        return ys;
+    }
     var r = [];
     for (var i = 0, len = xs.length; i < len; i++) {
         r[i] = f(xs[i]);
@@ -1293,7 +1335,7 @@ L.map = L.curry(function (f, xs) {
  * reverse([1,2,3,4]) == [4,3,2,1]
  */
 
-L.reverse = L.foldl(L.flip(L.cons), []);
+h.reverse = h.foldl(h.flip(h.cons), []);
 
 // intersperse
 // intercalate
@@ -1315,8 +1357,8 @@ L.reverse = L.foldl(L.flip(L.cons), []);
  * concatMap(reverse, [[1,2,3], [4,5,6]]) == [3,2,1,6,5,4]
  */
 
-L.concatMap = L.curry(function (f, xs) {
-    return L.foldl1(L.concat, L.map(f, xs));
+h.concatMap = h.curry(function (f, xs) {
+    return h.foldl1(h.concat, h.map(f, xs));
 });
 
 /**
@@ -1331,8 +1373,8 @@ L.concatMap = L.curry(function (f, xs) {
  * all(isNumber, [1,2,3,'abc']) == false
  */
 
-L.all = L.curry(function (p, xs) {
-    return L.foldl(L.and, true, L.map(p, xs));
+h.all = h.curry(function (p, xs) {
+    return h.foldl(h.and, true, h.map(p, xs));
 });
 
 /**
@@ -1347,8 +1389,8 @@ L.all = L.curry(function (p, xs) {
  * any(isNumber, ['abc','def']) == false
  */
 
-L.any = L.curry(function (p, xs) {
-    return L.foldl(L.or, false, L.map(p, xs));
+h.any = h.curry(function (p, xs) {
+    return h.foldl(h.or, false, h.map(p, xs));
 });
 
 /**
@@ -1361,7 +1403,7 @@ L.any = L.curry(function (p, xs) {
  * maximum([1,2,3,4]) == 4
  */
 
-L.maximum = L.foldl1(L.max);
+h.maximum = h.foldl1(h.max);
 
 /**
  * Returns the minimum value in an Array.
@@ -1373,7 +1415,7 @@ L.maximum = L.foldl1(L.max);
  * minimum([1,2,3,4]) == 1
  */
 
-L.minimum = L.foldl1(L.min);
+h.minimum = h.foldl1(h.min);
 
 // sum
 // product
@@ -1414,7 +1456,7 @@ L.minimum = L.foldl1(L.min);
  * replicate(3, 'abc') == ['abc','abc','abc']
  */
 
-L.replicate = L.curry(function (n, x) {
+h.replicate = h.curry(function (n, x) {
     var r = [];
     for (var i = 0; i < n; i++) {
         r[i] = x;
@@ -1436,7 +1478,7 @@ L.replicate = L.curry(function (n, x) {
  */
 
 // custom addition to replace [1..10] etc
-L.range = function (a, b) {
+h.range = function (a, b) {
     var xs = [];
     for (var i = a; i <= b; i++) {
         xs.push(i);
@@ -1465,7 +1507,7 @@ L.range = function (a, b) {
  * take(2, [1,2,3,4]) == [1,2]
  */
 
-L.take = L.curry(function (n, xs) { return slice.call(xs, 0, n); });
+h.take = h.curry(function (n, xs) { return slice.call(xs, 0, n); });
 
 /**
  * Returns a new array without the first n elements.
@@ -1478,7 +1520,7 @@ L.take = L.curry(function (n, xs) { return slice.call(xs, 0, n); });
  * drop(2, [1,2,3,4]) == [3,4]
  */
 
-L.drop = L.curry(function (n, xs) { return slice.call(xs, n); });
+h.drop = h.curry(function (n, xs) { return slice.call(xs, n); });
 
 /**
  * Returns an Array of two elements where the first element is the first n
@@ -1492,8 +1534,8 @@ L.drop = L.curry(function (n, xs) { return slice.call(xs, n); });
  * splitAt(2, [1,2,3,4,5]) == [[1,2],[3,4,5]]
  */
 
-L.splitAt = L.curry(function (n, xs) {
-    return [L.take(n, xs), L.drop(n, xs)];
+h.splitAt = h.curry(function (n, xs) {
+    return [h.take(n, xs), h.drop(n, xs)];
 });
 
 /**
@@ -1507,12 +1549,12 @@ L.splitAt = L.curry(function (n, xs) {
  * takeWhile(function (x) { return x <= 2; }, [1,2,3,2,1]) == [1,2]
  */
 
-L.takeWhile = L.curry(function (p, xs) {
+h.takeWhile = h.curry(function (p, xs) {
     var len = xs.length, i = 0;
     while (i < len && p(xs[i])) {
         i++;
     }
-    return L.take(i, xs);
+    return h.take(i, xs);
 });
 
 /**
@@ -1526,12 +1568,12 @@ L.takeWhile = L.curry(function (p, xs) {
  * dropWhile(function (x) { return x <= 2; }, [1,2,3,2,1]) == [3,2,1]
  */
 
-L.dropWhile = L.curry(function (p, xs) {
+h.dropWhile = h.curry(function (p, xs) {
     var len = xs.length, i = 0;
     while (i < len && p(xs[i])) {
         i++;
     }
-    return L.drop(i, xs);
+    return h.drop(i, xs);
 });
 
 /**
@@ -1547,7 +1589,7 @@ L.dropWhile = L.curry(function (p, xs) {
  * span(function (x) { return x <= 2; }, [1,2,3,2,1]) == [[1,2],[3,2,1]]
  */
 
-L.span = L.curry(function (p, xs) {
+h.span = h.curry(function (p, xs) {
     var left = [];
     var len = xs.length, i = 0;
     while (i < len && p(xs[i])) {
@@ -1590,7 +1632,7 @@ L.span = L.curry(function (p, xs) {
  * elem(5, [1,2,3]) == false
  */
 
-L.elem    = L.curry(function (x, xs) { return L.any(L.eq(x), xs); });
+h.elem    = h.curry(function (x, xs) { return h.any(h.eq(x), xs); });
 
 /**
  * Tests if element x does not exist in the Array xs.
@@ -1604,7 +1646,7 @@ L.elem    = L.curry(function (x, xs) { return L.any(L.eq(x), xs); });
  * notElem(5, [1,2,3]) == true
  */
 
-L.notElem = L.curry(function (x, xs) { return L.not(L.elem(x, xs)); });
+h.notElem = h.curry(function (x, xs) { return h.not(h.elem(x, xs)); });
 
 // lookup
 
@@ -1623,7 +1665,7 @@ L.notElem = L.curry(function (x, xs) { return L.not(L.elem(x, xs)); });
  * find(eq(10), [1,2,3,4]) == undefined
  */
 
-L.find = L.curry(function (p, xs) {
+h.find = h.curry(function (p, xs) {
     for (var i = 0, len = xs.length; i < len; i++) {
         var x = xs[i];
         if (p(x)) {
@@ -1638,15 +1680,24 @@ L.find = L.curry(function (p, xs) {
  * Unlike the normal JavaScript filter, the function `p` does not get the
  * index and a reference to the original array as arguments.
  *
- * @name filter p -> xs -> Array
+ * @name filter p -> xs -> Array | Stream
  * @param {Function} p - the truth test to apply to each element
- * @param {Array} xs - the array to filter
+ * @param {Array|Stream} xs - the array or stream to filter
  * @api public
  *
  * filter(eq(2), [1,2,3,2,1]) == [2,2]
  */
 
-L.filter = L.curry(function (p, xs) {
+h.filter = h.curry(function (p, xs) {
+    if (h.isStream(xs)) {
+        var ys = h.createStream();
+        xs.on('data', function (x) {
+            if (p(x)) {
+                ys.push(x);
+            }
+        });
+        return ys;
+    }
     var r = [];
     for (var i = 0, len = xs.length; i < len; i++) {
         var x = xs[i];
@@ -1655,6 +1706,22 @@ L.filter = L.curry(function (p, xs) {
         }
     }
     return r;
+});
+
+/**
+ * Inverse of filter, return an array with all elements that satisfy the
+ * predicate `p` removed.
+ *
+ * @name reject p -> xs -> Array
+ * @param {Function} p - the truth test to apply to each element
+ * @param {Array} xs - the array to filter
+ * @api public
+ *
+ * reject(eq(2), [1,2,3,2,1]) == [2,2]
+ */
+
+h.reject = h.curry(function (p, xs) {
+    return h.filter(h.compose(h.not, p), xs);
 });
 
 // partition
@@ -1683,8 +1750,8 @@ L.filter = L.curry(function (p, xs) {
  * zip([1,2,3], ['a','b','c']) == [[1,'a'],[2,'b'],[3,'c']]
  */
 
-L.zip = L.curry(function (xs, ys) {
-    return L.zipWith(function (x, y) { return [x, y]; }, xs, ys);
+h.zip = h.curry(function (xs, ys) {
+    return h.zipWith(function (x, y) { return [x, y]; }, xs, ys);
 });
 
 // zip3
@@ -1704,9 +1771,9 @@ L.zip = L.curry(function (xs, ys) {
  * zipWith(add, [1,2,3], [4,5,6]) == [5,7,9]
  */
 
-L.zipWith = L.curry(function (f, xs, ys) {
+h.zipWith = h.curry(function (f, xs, ys) {
     var r = [];
-    var len = L.min(L.length(xs), L.length(ys));
+    var len = h.min(h.length(xs), h.length(ys));
     for (var i = 0; i < len; i++) {
         r[i] = f(xs[i], ys[i]);
     }
@@ -1743,8 +1810,8 @@ L.zipWith = L.curry(function (f, xs, ys) {
  * nub([1,2,3,2,1]) == [1,2,3]
  */
 
-L.nub = L.foldl(function (ys, x) {
-    return L.elem(x, ys) ? ys: L.append(x, ys);
+h.nub = h.foldl(function (ys, x) {
+    return h.elem(x, ys) ? ys: h.append(x, ys);
 }, []);
 
 // nub (uniq)
@@ -1765,7 +1832,7 @@ L.nub = L.foldl(function (ys, x) {
  * sort([1,2,21,14,3]) == [1,2,3,14,21]
  */
 
-L.sort = function (xs) { return slice.call(xs).sort(L.compare); };
+h.sort = function (xs) { return slice.call(xs).sort(h.compare); };
 
 // insert
 
@@ -1815,7 +1882,7 @@ L.sort = function (xs) { return slice.call(xs).sort(L.compare); };
  * join('-', ['abc','def']) == 'abc-def'
  */
 
-L.join = L.curry(function (sep, xs) {
+h.join = h.curry(function (sep, xs) {
     return ArrayProto.join.call(xs, sep);
 });
 
@@ -1845,7 +1912,7 @@ L.join = L.curry(function (sep, xs) {
  * has('b', {a: 1}) == false
  */
 
-L.has = L.curry(function (key, obj) {
+h.has = h.curry(function (key, obj) {
     return hasOwnProperty.call(obj, key);
 });
 
@@ -1866,8 +1933,8 @@ L.has = L.curry(function (key, obj) {
  * a.b.c == 3   // a.b.c is a deeply nested object and not cloned
  */
 
-L.shallowClone = function (obj) {
-    if (L.isArray(obj)) {
+h.shallowClone = function (obj) {
+    if (h.isArray(obj)) {
         return slice.call(obj);
     }
     var newobj = {};
@@ -1894,14 +1961,14 @@ L.shallowClone = function (obj) {
  * a.b.c == 2   // a.b.c is deeply nested but still unchanged
  */
 
-L.deepClone = function (obj) {
-    if (L.isArray(obj)) {
-        return map(L.deepClone, obj);
+h.deepClone = function (obj) {
+    if (h.isArray(obj)) {
+        return map(h.deepClone, obj);
     }
-    if (L.isObject(obj)) {
+    if (h.isObject(obj)) {
         var newobj = {};
         for (var k in obj) {
-            newobj[k] = L.deepClone(obj[k]);
+            newobj[k] = h.deepClone(obj[k]);
         }
         return newobj;
     }
@@ -1926,7 +1993,7 @@ L.deepClone = function (obj) {
  * a.b.c == 2   // a.b.c is deeply nested but still unchanged
  */
 
-L.jsonClone = function (obj) {
+h.jsonClone = function (obj) {
     return JSON.parse( JSON.stringify(obj) );
 };
 
@@ -1952,22 +2019,22 @@ L.jsonClone = function (obj) {
  * a.d.e == 'foo'; // original object changed
  */
 
-L.set = L.curry(function (path, val, obj) {
-    if (!L.isArray(path)) {
+h.set = h.curry(function (path, val, obj) {
+    if (!h.isArray(path)) {
         path = [path];
     }
     if (path.length === 0) {
         return val;
     }
-    var newobj = L.shallowClone(obj),
-        p = L.head(path),
-        ps = L.tail(path);
+    var newobj = h.shallowClone(obj),
+        p = h.head(path),
+        ps = h.tail(path);
 
-    if (L.isObject(obj[p])) {
-        newobj[p] = L.set(ps, val, L.shallowClone(obj[p]));
+    if (h.isObject(obj[p])) {
+        newobj[p] = h.set(ps, val, h.shallowClone(obj[p]));
     }
     else {
-        newobj[p] = L.set(ps, val, {});
+        newobj[p] = h.set(ps, val, {});
     }
     return newobj;
 });
@@ -1989,18 +2056,18 @@ L.set = L.curry(function (path, val, obj) {
  * get(['foo','bar'], a) == undefined
  */
 
-L.get = L.curry(function (path, obj) {
-    if (!L.isArray(path)) {
+h.get = h.curry(function (path, obj) {
+    if (!h.isArray(path)) {
         path = [path];
     }
     if (path.length === 0) {
         return obj;
     }
-    var p = L.head(path),
-        ps = L.tail(path);
+    var p = h.head(path),
+        ps = h.tail(path);
 
     if (obj.hasOwnProperty(p)) {
-        return L.get(ps, obj[p]);
+        return h.get(ps, obj[p]);
     }
     return undefined;
 });
@@ -2021,8 +2088,8 @@ L.get = L.curry(function (path, obj) {
  * trans(a, 'b', add(3)) == {b: 5}
  */
 
-L.trans = L.curry(function (path, f, obj) {
-    return L.set(path, f(L.get(path, obj)), obj);
+h.trans = h.curry(function (path, f, obj) {
+    return h.set(path, f(h.get(path, obj)), obj);
 });
 
 /**
@@ -2040,13 +2107,13 @@ L.trans = L.curry(function (path, f, obj) {
  * transWhere(bAbove2, 'b', mul(2), a) == [{b: 2}, {b: 8}]
  */
 
-L.transWhere = L.curry(function (p, path, f, arr) {
+h.transWhere = h.curry(function (p, path, f, arr) {
     var results = [];
     for (var i = 0, len = arr.length; i < len; i++) {
         var x = arr[i];
         if (p(x)) {
             results.push(
-                L.set(path, f(L.get(path, x)), x)
+                h.set(path, f(h.get(path, x)), x)
             );
         }
         else {
@@ -2070,8 +2137,8 @@ L.transWhere = L.curry(function (p, path, f, arr) {
  * extend(a, b) == {a: 0, b: 2, c: 3};
  */
 
-L.extend = L.curry(function (a, b) {
-    return L.foldl(function (c, k) { return L.set(k, b[k], c); }, a, L.keys(b));
+h.extend = h.curry(function (a, b) {
+    return h.foldl(function (c, k) { return h.set(k, b[k], c); }, a, h.keys(b));
 });
 
 /**
@@ -2087,7 +2154,7 @@ L.extend = L.curry(function (a, b) {
  * a.b.c = 3; // changing deeply nested properties still works
  */
 
-L.shallowFreeze = Object.freeze;
+h.shallowFreeze = Object.freeze;
 
 /**
  * Freeze an object so it cannot be modified or extended with new properties,
@@ -2103,15 +2170,15 @@ L.shallowFreeze = Object.freeze;
  * // a.b.c = 3 - changing deeply nested properties does NOT work
  */
 
-L.deepFreeze = function (obj) {
+h.deepFreeze = function (obj) {
     if (typeof obj === 'object') {
-        L.freeze(obj);
+        h.freeze(obj);
 
-        //map L.values(obj)
+        //map h.values(obj)
 
         for (var k in obj) {
             if (obj.hasOwnProperty(k)) {
-                L.deepFreeze(obj[k]);
+                h.deepFreeze(obj[k]);
             }
         }
     }
@@ -2129,7 +2196,7 @@ L.deepFreeze = function (obj) {
  * keys(obj) == ['a','b']
  */
 
-L.keys = Object.keys;
+h.keys = Object.keys;
 
 /**
  * Returns the values for each property in an object.
@@ -2141,8 +2208,8 @@ L.keys = Object.keys;
  * values({a: 1, b: 2}) == [1,2]
  */
 
-L.values = function (obj) {
-    return L.map(function (k) { return obj[k]; }, L.keys(obj));
+h.values = function (obj) {
+    return h.map(function (k) { return obj[k]; }, h.keys(obj));
 };
 
 /**
@@ -2155,8 +2222,8 @@ L.values = function (obj) {
  * pairs({a: 1, b: 2}) == [['a',1],['b',2]]
  */
 
-L.pairs = function (obj) {
-    return L.map(function (k) { return [k, obj[k]]; }, L.keys(obj));
+h.pairs = function (obj) {
+    return h.map(function (k) { return [k, obj[k]]; }, h.keys(obj));
 };
 
 
@@ -2175,7 +2242,7 @@ L.pairs = function (obj) {
  * id('abc') == 'abc'
  */
 
-L.id = function (x) { return x; };
+h.id = function (x) { return x; };
 
 /**
  * Yields the result of applying f until p holds.
@@ -2189,7 +2256,7 @@ L.id = function (x) { return x; };
  * until(eq(5), add(1), 1) == 5
  */
 
-L.until = L.curry(function (p, f, x) {
+h.until = h.curry(function (p, f, x) {
     var r = x;
     while (!p(r)) {
         r = f(r);
@@ -2205,9 +2272,367 @@ L.until = L.curry(function (p, f, x) {
  * @api public
  */
 
-L.error = function (msg) {
+h.error = function (msg) {
     throw new Error(msg);
 };
+
+
+/**
+ * ## Events module
+ *
+ * This is a browser port of the node.js events module. Many objects and
+ * modules emit events and these are instances of events.EventEmitter.
+ *
+ * You can access this module by doing: `require("events")`
+ *
+ * Functions can then be attached to objects, to be executed when an
+ * event is emitted. These functions are called listeners.
+ *
+ * @module
+ */
+
+
+/**
+ * When an EventEmitter instance experiences an error, the typical
+ * action is to emit an 'error' event. Error events are treated as a
+ * special case. If there is no listener for it, then the default action
+ * is for the error to throw.
+ *
+ * All EventEmitters emit the event 'newListener' when new listeners
+ * are added.
+ *
+ * @name events.EventEmitter
+ * @api public
+ *
+ * ```javascript
+ * // create an event emitter
+ * var emitter = new EventEmitter();
+ * ```
+ */
+
+var EventEmitter = h.EventEmitter = function () {};
+
+/**
+ * By default EventEmitters will print a warning if more than 10
+ * listeners are added for a particular event. This is a useful default
+ * which helps finding memory leaks. Obviously not all Emitters should
+ * be limited to 10. This function allows that to be increased. Set to
+ * zero for unlimited.
+ *
+ * @name emitter.setMaxListeners(n)
+ * @param {Number} n - The maximum number of listeners
+ * @api public
+ */
+
+var defaultMaxListeners = 10;
+
+EventEmitter.prototype.setMaxListeners = function (n) {
+    if (!this._events) {
+        this._events = {};
+    }
+    this._events.maxListeners = n;
+};
+
+
+/**
+ * Execute each of the listeners in order with the supplied arguments.
+ *
+ * @name emitter.emit(event, [arg1], [arg2], [...])
+ * @param {String} event - The event name/id to fire
+ * @api public
+ */
+
+EventEmitter.prototype.emit = function (type) {
+    // If there is no 'error' event listener then throw.
+    if (type === 'error') {
+        if (!this._events ||
+            !this._events.error ||
+            !this._events.error.length) {
+
+            if (arguments[1] instanceof Error) {
+                throw arguments[1]; // Unhandled 'error' event
+            }
+            else {
+                throw new Error("Uncaught, unspecified 'error' event.");
+            }
+            return false;
+        }
+    }
+    if (!this._events) {
+        return false;
+    }
+    var handler = this._events[type];
+    if (!handler) {
+        return false;
+    }
+    if (typeof handler == 'function') {
+        switch (arguments.length) {
+            // fast cases
+            case 1:
+                handler.call(this);
+                break;
+            case 2:
+                handler.call(this, arguments[1]);
+                break;
+            case 3:
+                handler.call(this, arguments[1], arguments[2]);
+                break;
+            // slower
+            default:
+                var args = Array.prototype.slice.call(arguments, 1);
+                handler.apply(this, args);
+        }
+        return true;
+    }
+    else if (h.isArray(handler)) {
+        var args = Array.prototype.slice.call(arguments, 1);
+        var listeners = handler.slice();
+        for (var i = 0, l = listeners.length; i < l; i++) {
+            listeners[i].apply(this, args);
+        }
+        return true;
+    }
+    else {
+        return false;
+    }
+};
+
+
+/**
+ * Adds a listener to the end of the listeners array for the specified
+ * event.
+ *
+ * @name emitter.on(ev, listener) | emitter.addListener(ev, listener)
+ * @param {String} event - The event name/id to listen for
+ * @param {Function} listener - The function to bind to the event
+ * @api public
+ *
+ * ```javascript
+ * session.on('change', function (userCtx) {
+ *     console.log('session changed!');
+ * });
+ * ```
+ */
+
+EventEmitter.prototype.addListener = function (type, listener) {
+    if ('function' !== typeof listener) {
+        throw new Error('addListener only takes instances of Function');
+    }
+    if (!this._events) {
+        this._events = {};
+    }
+    // To avoid recursion in the case that type == "newListener"! Before
+    // adding it to the listeners, first emit "newListener".
+    this.emit('newListener', type, listener);
+
+    if (!this._events[type]) {
+        // Optimize the case of one listener. Don't need the extra
+        // array object.
+        this._events[type] = listener;
+    }
+    else if (h.isArray(this._events[type])) {
+        // Check for listener leak
+        if (!this._events[type].warned) {
+            var m;
+            if (this._events.maxListeners !== undefined) {
+                m = this._events.maxListeners;
+            }
+            else {
+                m = defaultMaxListeners;
+            }
+            if (m && m > 0 && this._events[type].length > m) {
+                this._events[type].warned = true;
+                console.error(
+                    'possible EventEmitter memory ' +
+                    'leak detected. %d listeners added. ' +
+                    'Use emitter.setMaxListeners() to increase limit.',
+                    this._events[type].length
+                );
+                console.trace();
+            }
+        }
+        // If we've already got an array, just append.
+        this._events[type].push(listener);
+    }
+    else {
+        // Adding the second element, need to change to array.
+        this._events[type] = [this._events[type], listener];
+    }
+    return this;
+};
+
+EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+
+/**
+ * Adds a one time listener for the event. This listener is invoked
+ * only the next time the event is fired, after which it is removed.
+ *
+ * @name emitter.once(event, listener)
+ * @param {String} event- The event name/id to listen for
+ * @param {Function} listener - The function to bind to the event
+ * @api public
+ *
+ * ```javascript
+ * db.once('unauthorized', function (req) {
+ *     // this event listener will fire once, then be unbound
+ * });
+ * ```
+ */
+
+EventEmitter.prototype.once = function (type, listener) {
+    var self = this;
+    self.on(type, function g() {
+        self.removeListener(type, g);
+        listener.apply(this, arguments);
+    });
+    return this;
+};
+
+/**
+ * Remove a listener from the listener array for the specified event.
+ * Caution: changes array indices in the listener array behind the
+ * listener.
+ *
+ * @name emitter.removeListener(event, listener)
+ * @param {String} event - The event name/id to remove the listener from
+ * @param {Function} listener - The listener function to remove
+ * @api public
+ *
+ * ```javascript
+ * var callback = function (init) {
+ *     console.log('duality app loaded');
+ * };
+ * devents.on('init', callback);
+ * // ...
+ * devents.removeListener('init', callback);
+ * ```
+ */
+
+EventEmitter.prototype.removeListener = function (type, listener) {
+    if ('function' !== typeof listener) {
+        throw new Error(
+            'removeListener only takes instances of Function'
+        );
+    }
+    // does not use listeners(), so no side effect of creating
+    // _events[type]
+    if (!this._events || !this._events[type]) {
+        return this;
+    }
+    var list = this._events[type];
+
+    if (h.isArray(list)) {
+        var i = list.indexOf(listener);
+        if (i < 0) {
+            return this;
+        }
+        list.splice(i, 1);
+        if (list.length == 0) {
+            delete this._events[type];
+        }
+    }
+    else if (this._events[type] === listener) {
+        delete this._events[type];
+    }
+    return this;
+};
+
+/**
+ * Removes all listeners, or those of the specified event.
+ *
+ * @name emitter.removeAllListeners([event])
+ * @param {String} event - Event name/id to remove all listeners for
+ * (optional)
+ * @api public
+ */
+
+EventEmitter.prototype.removeAllListeners = function (type) {
+    // does not use listeners(), so no side effect of creating
+    // _events[type]
+    if (type && this._events && this._events[type]) {
+        this._events[type] = null;
+    }
+    return this;
+};
+
+/**
+ * Returns an array of listeners for the specified event. This array
+ * can be manipulated, e.g. to remove listeners.
+ *
+ * @name emitter.listeners(event)
+ * @param {String} events - The event name/id to return listeners for
+ * @api public
+ *
+ * ```javascript
+ * session.on('change', function (stream) {
+ *     console.log('session changed');
+ * });
+ * console.log(util.inspect(session.listeners('change')));
+ * // [ [Function] ]
+ * ```
+ */
+
+EventEmitter.prototype.listeners = function (type) {
+    if (!this._events) {
+        this._events = {};
+    }
+    if (!this._events[type]) {
+        this._events[type] = [];
+    }
+    if (!h.isArray(this._events[type])) {
+        this._events[type] = [this._events[type]];
+    }
+    return this._events[type];
+};
+
+
+/**
+ * @name emitter Event: 'newListener'
+ *
+ * This event is emitted any time someone adds a new listener.
+ *
+ * ```javascript
+ * emitter.on('newListener', function (event, listener) {
+ *     // new listener added
+ * });
+ * ```
+ */
+
+var Stream = h.Stream = function Stream() {
+    EventEmitter.call(this);
+};
+Stream.prototype = new EventEmitter();
+
+h.Stream.prototype.push = function (value) {
+    this.emit('data', value);
+};
+
+h.createStream = function () {
+    return new Stream();
+};
+
+h.combine = function (streams) {
+    var xs = h.createStream();
+    for (var i = 0, len = streams.length; i < len; i++) {
+        streams[i].on('data', function (x) {
+            xs.push(x);
+        });
+    }
+    return xs;
+};
+
+h.events = h.curry(function (name, selector, el) {
+    var evs = h.createStream();
+    $(el).on(name, selector, function (ev) {
+        evs.push(ev);
+    });
+    return evs;
+});
+
+h.html = h.curry(function (el, val) {
+    h.isStream(val) ? h.each(h.html(el), val): $(el).html(val);
+});
+
 
 /**
  * Installs all functions to the global object.
@@ -2218,15 +2643,15 @@ L.error = function (msg) {
  * Highland.install();
  */
 
-L.install = function () {
-    var keys = L.keys(L);
+h.install = function () {
+    var keys = h.keys(h);
     for (var i = 0; i < keys.length; i++) {
         (function (k) {
-            if (root[k] === L[k]) {
+            if (root[k] === h[k]) {
                 return; // skip if already installed
             }
             Object.defineProperty(root, k, {
-                get: function () { return L[k]; },
+                get: function () { return h[k]; },
                 set: function () { throw new Error(k + ' is read-only'); },
                 configurable: false
             });
@@ -2234,6 +2659,6 @@ L.install = function () {
     }
 };
 
-return Object.freeze(L);
+return Object.freeze(h);
 
 }));

@@ -1,10 +1,10 @@
-var L = require('../lib/prelude');
+var h = require('../highland');
 
 
 /***** Functions *****/
 
 exports['curry'] = function (test) {
-    var fn = L.curry(function (a, b, c, d) {
+    var fn = h.curry(function (a, b, c, d) {
         return a + b + c + d;
     });
     test.equal(fn(1,2,3,4), fn(1,2)(3,4));
@@ -12,13 +12,13 @@ exports['curry'] = function (test) {
     var fn2 = function (a, b, c, d) {
         return a + b + c + d;
     };
-    test.equal(L.curry(fn2)(1,2,3,4), L.curry(fn2,1,2,3,4));
-    test.equal(L.curry(fn2)(1,2,3,4), L.curry(fn2,1,2)(3,4));
+    test.equal(h.curry(fn2)(1,2,3,4), h.curry(fn2,1,2,3,4));
+    test.equal(h.curry(fn2)(1,2,3,4), h.curry(fn2,1,2)(3,4));
     test.done();
 };
 
 exports['ncurry'] = function (test) {
-    var fn = L.ncurry(3, function (a, b, c, d) {
+    var fn = h.ncurry(3, function (a, b, c, d) {
         return a + b + c + (d || 0);
     });
     test.equal(fn(1,2,3,4), 6);
@@ -26,20 +26,20 @@ exports['ncurry'] = function (test) {
     test.equal(fn(1,2,3,4), fn(1)(2)(3));
     var fn2 = function () {
         var args = Array.prototype.slice(arguments);
-        return L.foldl(function (a, b) { return a + b; }, 0, args);
+        return h.foldl(function (a, b) { return a + b; }, 0, args);
     };
-    test.equal(L.ncurry(3,fn2)(1,2,3,4), L.ncurry(3,fn2,1,2,3,4));
-    test.equal(L.ncurry(3,fn2)(1,2,3,4), L.ncurry(3,fn2,1,2)(3,4));
+    test.equal(h.ncurry(3,fn2)(1,2,3,4), h.ncurry(3,fn2,1,2,3,4));
+    test.equal(h.ncurry(3,fn2)(1,2,3,4), h.ncurry(3,fn2,1,2)(3,4));
     test.done();
 };
 
 exports['compose'] = function (test) {
-    var fn1 = L.concat('one:');
-    var fn2 = L.concat('two:');
-    var fn = L.compose(fn2, fn1);
+    var fn1 = h.concat('one:');
+    var fn2 = h.concat('two:');
+    var fn = h.compose(fn2, fn1);
     test.equal(fn('zero'), 'two:one:zero');
     // partial application
-    test.equal(L.compose(fn2)(fn1)('zero'), 'two:one:zero');
+    test.equal(h.compose(fn2)(fn1)('zero'), 'two:one:zero');
     test.done();
 };
 
@@ -47,19 +47,19 @@ exports['apply'] = function (test) {
     var fn = function (a, b, c, d) {
         return a + b + c + d;
     };
-    test.equal(L.apply(fn, [1,2,3,4]), 10);
-    test.equal(L.apply(fn, [1,1,1,1]), 4);
+    test.equal(h.apply(fn, [1,2,3,4]), 10);
+    test.equal(h.apply(fn, [1,1,1,1]), 4);
     // partial application
-    test.equal(L.apply(fn)([1,2,3,4]), 10);
+    test.equal(h.apply(fn)([1,2,3,4]), 10);
     test.done();
 };
 
 exports['partial'] = function (test) {
     var addAll = function () {
         var args = Array.prototype.slice.call(arguments);
-        return L.foldl1(L.add, args);
+        return h.foldl1(h.add, args);
     };
-    var f = L.partial(addAll, 1, 2);
+    var f = h.partial(addAll, 1, 2);
     test.equal(f(3, 4), 10);
     test.done();
 };
@@ -69,30 +69,30 @@ exports['flip'] = function (test) {
         return a - b;
     };
     test.equal(subtract(4,2), 2);
-    test.equal(L.flip(subtract)(4,2), -2);
-    test.equal(L.flip(subtract, 4)(2), -2);
-    test.equal(L.flip(subtract, 4, 2), -2);
+    test.equal(h.flip(subtract)(4,2), -2);
+    test.equal(h.flip(subtract, 4)(2), -2);
+    test.equal(h.flip(subtract, 4, 2), -2);
     test.done();
 };
 
 exports['seq'] = function (test) {
-    var fn1 = L.concat('one:');
-    var fn2 = L.concat('two:');
-    var fn = L.seq(fn1, fn2);
+    var fn1 = h.concat('one:');
+    var fn2 = h.concat('two:');
+    var fn = h.seq(fn1, fn2);
     test.equal(fn('zero'), 'two:one:zero');
     // partial application
-    test.equal(L.seq(fn1)(fn2)('zero'), 'two:one:zero');
+    test.equal(h.seq(fn1)(fn2)('zero'), 'two:one:zero');
     test.done();
 };
 
 exports['tailopt'] = function (test) {
-    var sum = L.tailopt(function(x, y, recur) {
+    var sum = h.tailopt(function(x, y, recur) {
         return y > 0 ? recur(x + 1, y - 1) :
                y < 0 ? recur(x - 1, y + 1) :
                x;
     });
     test.equal(sum(20, 100000), 100020);
-    var foo = L.tailopt(function (x, y, foo) {
+    var foo = h.tailopt(function (x, y, foo) {
         if (x === 0) {
             return foo(x + 1, y);
         }
@@ -107,7 +107,7 @@ exports['tailopt'] = function (test) {
         return foo(x * 2, y * 2);
     };
     test.equal(foo(0, 1), 2);
-    var foo2 = L.tailopt(function (x, y, foo2) {
+    var foo2 = h.tailopt(function (x, y, foo2) {
         if (x === 0) {
             return foo(x + 1, y);
         }
@@ -123,26 +123,26 @@ exports['tailopt'] = function (test) {
     };
     test.equal(foo(0, 1), 2);
     // make sure you can still make non-tail optimized calls
-    var len = L.tailopt(function (arr, len) {
+    var len = h.tailopt(function (arr, len) {
         if (arr.length === 0) {
             return 0;
         }
-        return 1 + len(L.tail(arr));
+        return 1 + len(h.tail(arr));
     });
     test.equal(len([1,2,3]), 3);
-    var strtest = L.tailopt(function (arr, len) {
+    var strtest = h.tailopt(function (arr, len) {
         if (arr.length === 0) {
             return '0';
         }
-        return '1' + len(L.tail(arr));
+        return '1' + len(h.tail(arr));
     });
     test.equal(strtest([1,2,3]), '1110');
     /*
-    var strtest2 = L.tailopt(function (arr, len) {
+    var strtest2 = h.tailopt(function (arr, len) {
         if (arr.length === 0) {
             return ['0'];
         }
-        return L.cons('1', len(L.tail(arr)));
+        return h.cons('1', len(h.tail(arr)));
     });
     test.equal(strtest2([1,2,3]), ['1','1','1','0']);
     */
@@ -154,10 +154,10 @@ exports['tailopt'] = function (test) {
 
 exports['eq'] = function (test) {
     function testTrue(args) {
-        test.strictEqual(L.eq(args[0], args[1]), true);
+        test.strictEqual(h.eq(args[0], args[1]), true);
     }
     function testFalse(args) {
-        test.strictEqual(L.eq(args[0], args[1]), false);
+        test.strictEqual(h.eq(args[0], args[1]), false);
     }
     var a = [1,2,3,4];
     var b = {foo: 'bar'};
@@ -178,18 +178,18 @@ exports['eq'] = function (test) {
     fails.forEach(testFalse);
 
     // partial application
-    test.equal(L.eq(123)(123), true);
-    test.equal(L.eq(123)(321), false);
+    test.equal(h.eq(123)(123), true);
+    test.equal(h.eq(123)(321), false);
 
     test.done();
 };
 
 exports['ne'] = function (test) {
     function testTrue(args) {
-        test.strictEqual(L.ne(args[0], args[1]), true);
+        test.strictEqual(h.ne(args[0], args[1]), true);
     }
     function testFalse(args) {
-        test.strictEqual(L.ne(args[0], args[1]), false);
+        test.strictEqual(h.ne(args[0], args[1]), false);
     }
     var a = [1,2,3,4];
     var b = {foo: 'bar'};
@@ -210,30 +210,24 @@ exports['ne'] = function (test) {
     passes.forEach(testTrue);
 
     // partial application
-    test.equal(L.ne(123)(123), false);
-    test.equal(L.ne(123)(321), true);
+    test.equal(h.ne(123)(123), false);
+    test.equal(h.ne(123)(321), true);
 
     test.done();
 };
 
 exports['not'] = function (test) {
-    test.equal(!true, L.not(true));
-    test.equal(!false, L.not(false));
-    test.throws(function () { L.not(123); });
-    test.throws(function () { L.not('asdf'); });
-    test.throws(function () { L.not(null); });
-    test.throws(function () { L.not(undefined); });
-    test.throws(function () { L.not({}); });
-    test.throws(function () { L.not([]); });
+    test.equal(!true, h.not(true));
+    test.equal(!false, h.not(false));
     test.done();
 };
 
 exports['eqv'] = function (test) {
     function testTrue(args) {
-        test.strictEqual(L.eqv(args[0], args[1]), true);
+        test.strictEqual(h.eqv(args[0], args[1]), true);
     }
     function testFalse(args) {
-        test.strictEqual(L.eqv(args[0], args[1]), false);
+        test.strictEqual(h.eqv(args[0], args[1]), false);
     }
 
     var passes = [
@@ -251,22 +245,22 @@ exports['eqv'] = function (test) {
     fails.forEach(testFalse);
 
     // partial application
-    test.equal(L.eqv({a:1})({b:2}), false);
-    test.equal(L.eqv({a:1})({a:1}), true);
+    test.equal(h.eqv({a:1})({b:2}), false);
+    test.equal(h.eqv({a:1})({a:1}), true);
 
     test.done();
 };
 
 exports['lt'] = function (test) {
     function testTrue(args) {
-        test.strictEqual(L.lt(args[0], args[1]), true);
+        test.strictEqual(h.lt(args[0], args[1]), true);
     }
     function testFalse(args) {
-        test.strictEqual(L.lt(args[0], args[1]), false);
+        test.strictEqual(h.lt(args[0], args[1]), false);
     }
     function testThrows(args) {
         test.throws(function () {
-            L.lt(args[0], args[1]);
+            h.lt(args[0], args[1]);
         });
     }
     var passes = [
@@ -291,22 +285,22 @@ exports['lt'] = function (test) {
     throwers.forEach(testThrows);
 
     // partial application
-    test.equal(L.lt('abc')('def'), true);
-    test.equal(L.lt(456)(123), false);
+    test.equal(h.lt('abc')('def'), true);
+    test.equal(h.lt(456)(123), false);
 
     test.done();
 };
 
 exports['gt'] = function (test) {
     function testTrue(args) {
-        test.strictEqual(L.gt(args[0], args[1]), true);
+        test.strictEqual(h.gt(args[0], args[1]), true);
     }
     function testFalse(args) {
-        test.strictEqual(L.gt(args[0], args[1]), false);
+        test.strictEqual(h.gt(args[0], args[1]), false);
     }
     function testThrows(args) {
         test.throws(function () {
-            L.gt(args[0], args[1]);
+            h.gt(args[0], args[1]);
         });
     }
     var fails = [
@@ -331,22 +325,22 @@ exports['gt'] = function (test) {
     throwers.forEach(testThrows);
 
     // partial application
-    test.equal(L.gt('abc')('def'), false);
-    test.equal(L.gt(456)(123), true);
+    test.equal(h.gt('abc')('def'), false);
+    test.equal(h.gt(456)(123), true);
 
     test.done();
 };
 
 exports['le'] = function (test) {
     function testTrue(args) {
-        test.strictEqual(L.le(args[0], args[1]), true);
+        test.strictEqual(h.le(args[0], args[1]), true);
     }
     function testFalse(args) {
-        test.strictEqual(L.le(args[0], args[1]), false);
+        test.strictEqual(h.le(args[0], args[1]), false);
     }
     function testThrows(args) {
         test.throws(function () {
-            L.le(args[0], args[1]);
+            h.le(args[0], args[1]);
         });
     }
     var passes = [
@@ -371,23 +365,23 @@ exports['le'] = function (test) {
     throwers.forEach(testThrows);
 
     // partial application
-    test.equal(L.le('abc')('def'), true);
-    test.equal(L.le(456)(123), false);
-    test.equal(L.le(123)(123), true);
+    test.equal(h.le('abc')('def'), true);
+    test.equal(h.le(456)(123), false);
+    test.equal(h.le(123)(123), true);
 
     test.done();
 };
 
 exports['ge'] = function (test) {
     function testTrue(args) {
-        test.strictEqual(L.ge(args[0], args[1]), true);
+        test.strictEqual(h.ge(args[0], args[1]), true);
     }
     function testFalse(args) {
-        test.strictEqual(L.ge(args[0], args[1]), false);
+        test.strictEqual(h.ge(args[0], args[1]), false);
     }
     function testThrows(args) {
         test.throws(function () {
-            L.ge(args[0], args[1]);
+            h.ge(args[0], args[1]);
         });
     }
     var fails = [
@@ -412,136 +406,126 @@ exports['ge'] = function (test) {
     throwers.forEach(testThrows);
 
     // partial application
-    test.equal(L.ge('abc')('def'), false);
-    test.equal(L.ge(456)(123), true);
-    test.equal(L.ge(123)(123), true);
+    test.equal(h.ge('abc')('def'), false);
+    test.equal(h.ge(456)(123), true);
+    test.equal(h.ge(123)(123), true);
 
     test.done();
 };
 
 exports['and'] = function (test) {
-    test.strictEqual(L.and(true, true), true);
-    test.strictEqual(L.and(false, true), false);
-    test.strictEqual(L.and(true, false), false);
-    test.strictEqual(L.and(false, false), false);
-    test.throws(function () { L.and('asdf', true); });
-    test.throws(function () { L.and('asdf', 123); });
-    test.throws(function () { L.and(123, {}); });
-    test.throws(function () { L.and([], undefined); });
-    test.throws(function () { L.and(undefined, null); });
+    test.strictEqual(h.and(true, true), true);
+    test.strictEqual(h.and(false, true), false);
+    test.strictEqual(h.and(true, false), false);
+    test.strictEqual(h.and(false, false), false);
     // partial application
-    test.equal(true && true, L.and(true)(true));
-    test.equal(true && false, L.and(true)(false));
-    test.equal(false && true, L.and(false)(true));
-    test.equal(false && false, L.and(false)(false));
+    test.equal(true && true, h.and(true)(true));
+    test.equal(true && false, h.and(true)(false));
+    test.equal(false && true, h.and(false)(true));
+    test.equal(false && false, h.and(false)(false));
     test.done();
 };
 
 exports['or'] = function (test) {
-    test.strictEqual(L.or(true, true), true);
-    test.strictEqual(L.or(false, true), true);
-    test.strictEqual(L.or(true, false), true);
-    test.strictEqual(L.or(false, false), false);
-    test.throws(function () { L.or('asdf', true); });
-    test.throws(function () { L.or('asdf', 123); });
-    test.throws(function () { L.or(123, {}); });
-    test.throws(function () { L.or([], undefined); });
-    test.throws(function () { L.or(undefined, null); });
+    test.strictEqual(h.or(true, true), true);
+    test.strictEqual(h.or(false, true), true);
+    test.strictEqual(h.or(true, false), true);
+    test.strictEqual(h.or(false, false), false);
     // partial application
-    test.equal(true || true, L.or(true)(true));
-    test.equal(true || false, L.or(true)(false));
-    test.equal(false || true, L.or(false)(true));
-    test.equal(false || false, L.or(false)(false));
+    test.equal(true || true, h.or(true)(true));
+    test.equal(true || false, h.or(true)(false));
+    test.equal(false || true, h.or(false)(true));
+    test.equal(false || false, h.or(false)(false));
     test.done();
 };
 
 exports['add'] = function (test) {
-    test.strictEqual(L.add(1,2), 3);
-    test.strictEqual(L.add(2,2), 4);
-    test.strictEqual(L.add(2.3,2.12), 4.42);
-    test.throws(function () { L.add('123', true); });
-    test.throws(function () { L.add('123', 123); });
-    test.throws(function () { L.add(123, {}); });
-    test.throws(function () { L.add([], undefined); });
-    test.throws(function () { L.add(undefined, null); });
+    test.strictEqual(h.add(1,2), 3);
+    test.strictEqual(h.add(2,2), 4);
+    test.strictEqual(h.add(2.3,2.12), 4.42);
+    test.throws(function () { h.add('123', true); });
+    test.throws(function () { h.add('123', 123); });
+    test.throws(function () { h.add(123, {}); });
+    test.throws(function () { h.add([], undefined); });
+    test.throws(function () { h.add(undefined, null); });
     // partial application
-    test.equal(L.add(1)(1), L.add(1,1));
-    test.equal(L.add(2)(5), L.add(2,5));
+    test.equal(h.add(1)(1), h.add(1,1));
+    test.equal(h.add(2)(5), h.add(2,5));
     test.done();
 };
 
 exports['sub'] = function (test) {
-    test.strictEqual(L.sub(2,1), 1);
-    test.strictEqual(L.sub(2,2), 0);
-    test.strictEqual(L.sub(2,5), -3);
-    test.throws(function () { L.sub('123', true); });
-    test.throws(function () { L.sub('123', 123); });
-    test.throws(function () { L.sub(123, {}); });
-    test.throws(function () { L.sub([], undefined); });
-    test.throws(function () { L.sub(undefined, null); });
+    test.strictEqual(h.sub(2,1), 1);
+    test.strictEqual(h.sub(2,2), 0);
+    test.strictEqual(h.sub(2,5), -3);
+    test.throws(function () { h.sub('123', true); });
+    test.throws(function () { h.sub('123', 123); });
+    test.throws(function () { h.sub(123, {}); });
+    test.throws(function () { h.sub([], undefined); });
+    test.throws(function () { h.sub(undefined, null); });
     // partial application
-    test.equal(L.sub(1)(1), L.sub(1,1));
-    test.equal(L.sub(5)(2), L.sub(5,2));
+    test.equal(h.sub(1)(1), h.sub(1,1));
+    test.equal(h.sub(5)(2), h.sub(5,2));
     test.done();
 };
 
 exports['mul'] = function (test) {
-    test.strictEqual(L.mul(2,1), 2);
-    test.strictEqual(L.mul(2,2), 4);
-    test.strictEqual(L.mul(2,5), 10);
-    test.throws(function () { L.mul('123', true); });
-    test.throws(function () { L.mul('123', 123); });
-    test.throws(function () { L.mul(123, {}); });
-    test.throws(function () { L.mul([], undefined); });
-    test.throws(function () { L.mul(undefined, null); });
+    test.strictEqual(h.mul(2,1), 2);
+    test.strictEqual(h.mul(2,2), 4);
+    test.strictEqual(h.mul(2,5), 10);
+    test.throws(function () { h.mul('123', true); });
+    test.throws(function () { h.mul('123', 123); });
+    test.throws(function () { h.mul(123, {}); });
+    test.throws(function () { h.mul([], undefined); });
+    test.throws(function () { h.mul(undefined, null); });
     // partial application
-    test.equal(L.mul(1)(1), L.mul(1,1));
-    test.equal(L.mul(5)(2), L.mul(5,2));
+    test.equal(h.mul(1)(1), h.mul(1,1));
+    test.equal(h.mul(5)(2), h.mul(5,2));
     test.done();
 };
 
 exports['div'] = function (test) {
-    test.strictEqual(L.div(2,1), 2);
-    test.strictEqual(L.div(2,2), 1);
-    test.strictEqual(L.div(10,2), 5);
-    test.throws(function () { L.div('123', true); });
-    test.throws(function () { L.div('123', 123); });
-    test.throws(function () { L.div(123, {}); });
-    test.throws(function () { L.div([], undefined); });
-    test.throws(function () { L.div(undefined, null); });
+    test.strictEqual(h.div(2,1), 2);
+    test.strictEqual(h.div(2,2), 1);
+    test.strictEqual(h.div(10,2), 5);
+    test.throws(function () { h.div('123', true); });
+    test.throws(function () { h.div('123', 123); });
+    test.throws(function () { h.div(123, {}); });
+    test.throws(function () { h.div([], undefined); });
+    test.throws(function () { h.div(undefined, null); });
     // partial application
-    test.equal(L.div(1)(1), L.div(1,1));
-    test.equal(L.div(5)(2), L.div(5,2));
+    test.equal(h.div(1)(1), h.div(1,1));
+    test.equal(h.div(5)(2), h.div(5,2));
     test.done();
 };
 
 exports['rem'] = function (test) {
-    test.strictEqual(L.rem(1,2), 1);
-    test.strictEqual(L.rem(2,2), 0);
-    test.strictEqual(L.rem(-1,5), -1);
-    test.throws(function () { L.rem('123', true); });
-    test.throws(function () { L.rem('123', 123); });
-    test.throws(function () { L.rem(123, {}); });
-    test.throws(function () { L.rem([], undefined); });
-    test.throws(function () { L.rem(undefined, null); });
+    test.strictEqual(h.rem(1,2), 1);
+    test.strictEqual(h.rem(2,2), 0);
+    test.strictEqual(h.rem(-1,5), -1);
+    test.throws(function () { h.rem('123', true); });
+    test.throws(function () { h.rem('123', 123); });
+    test.throws(function () { h.rem(123, {}); });
+    test.throws(function () { h.rem([], undefined); });
+    test.throws(function () { h.rem(undefined, null); });
     // partial application
-    test.equal(L.rem(1)(1), L.rem(1,1));
-    test.equal(L.rem(5)(2), L.rem(5,2));
+    test.equal(h.rem(1)(1), h.rem(1,1));
+    test.equal(h.rem(5)(2), h.rem(5,2));
     test.done();
 };
 
 exports['mod'] = function (test) {
-    test.strictEqual(L.mod(1,2), 1);
-    test.strictEqual(L.mod(2,2), 0);
-    test.strictEqual(L.mod(-1,5), 4);
-    test.throws(function () { L.mod('123', true); });
-    test.throws(function () { L.mod('123', 123); });
-    test.throws(function () { L.mod(123, {}); });
-    test.throws(function () { L.mod([], undefined); });
-    test.throws(function () { L.mod(undefined, null); });
+    test.strictEqual(h.mod(1,2), 1);
+    test.strictEqual(h.mod(2,2), 0);
+    test.strictEqual(h.mod(-1,5), 4);
+    test.throws(function () { h.mod('123', true); });
+    test.throws(function () { h.mod('123', 123); });
+    test.throws(function () { h.mod(123, {}); });
+    test.throws(function () { h.mod([], undefined); });
+    test.throws(function () { h.mod(undefined, null); });
     // partial application
-    test.equal(L.mod(1)(1), L.mod(1,1));
-    test.equal(L.mod(5)(2), L.mod(5,2));
+    test.equal(h.mod(1)(1), h.mod(1,1));
+    test.equal(h.mod(5)(2), h.mod(5,2));
     test.done();
 };
 
@@ -550,10 +534,10 @@ exports['mod'] = function (test) {
 
 exports['isArray'] = function (test) {
     function testTrue(x) {
-        test.strictEqual(L.isArray(x), true);
+        test.strictEqual(h.isArray(x), true);
     }
     function testFalse(x) {
-        test.strictEqual(L.isArray(x), false);
+        test.strictEqual(h.isArray(x), false);
     }
 
     var fails = [
@@ -583,10 +567,10 @@ exports['isArray'] = function (test) {
 
 exports['isObject'] = function (test) {
     function testTrue(x) {
-        test.strictEqual(L.isObject(x), true, x);
+        test.strictEqual(h.isObject(x), true, x);
     }
     function testFalse(x) {
-        test.strictEqual(L.isObject(x), false, x);
+        test.strictEqual(h.isObject(x), false, x);
     }
 
     var fails = [
@@ -616,10 +600,10 @@ exports['isObject'] = function (test) {
 
 exports['isFunction'] = function (test) {
     function testTrue(x) {
-        test.strictEqual(L.isFunction(x), true, x);
+        test.strictEqual(h.isFunction(x), true, x);
     }
     function testFalse(x) {
-        test.strictEqual(L.isFunction(x), false, x);
+        test.strictEqual(h.isFunction(x), false, x);
     }
 
     var fails = [
@@ -649,10 +633,10 @@ exports['isFunction'] = function (test) {
 
 exports['isString'] = function (test) {
     function testTrue(x) {
-        test.strictEqual(L.isString(x), true, x);
+        test.strictEqual(h.isString(x), true, x);
     }
     function testFalse(x) {
-        test.strictEqual(L.isString(x), false, x);
+        test.strictEqual(h.isString(x), false, x);
     }
 
     var fails = [
@@ -682,10 +666,10 @@ exports['isString'] = function (test) {
 
 exports['isNumber'] = function (test) {
     function testTrue(x) {
-        test.strictEqual(L.isNumber(x), true, x);
+        test.strictEqual(h.isNumber(x), true, x);
     }
     function testFalse(x) {
-        test.strictEqual(L.isNumber(x), false, x);
+        test.strictEqual(h.isNumber(x), false, x);
     }
 
     var fails = [
@@ -715,10 +699,10 @@ exports['isNumber'] = function (test) {
 
 exports['isBoolean'] = function (test) {
     function testTrue(x) {
-        test.strictEqual(L.isBoolean(x), true, x);
+        test.strictEqual(h.isBoolean(x), true, x);
     }
     function testFalse(x) {
-        test.strictEqual(L.isBoolean(x), false, x);
+        test.strictEqual(h.isBoolean(x), false, x);
     }
 
     var fails = [
@@ -749,10 +733,10 @@ exports['isBoolean'] = function (test) {
 
 exports['isNull'] = function (test) {
     function testTrue(x) {
-        test.strictEqual(L.isNull(x), true, x);
+        test.strictEqual(h.isNull(x), true, x);
     }
     function testFalse(x) {
-        test.strictEqual(L.isNull(x), false, x);
+        test.strictEqual(h.isNull(x), false, x);
     }
 
     var fails = [
@@ -782,10 +766,10 @@ exports['isNull'] = function (test) {
 
 exports['isUndefined'] = function (test) {
     function testTrue(x) {
-        test.strictEqual(L.isUndefined(x), true, x);
+        test.strictEqual(h.isUndefined(x), true, x);
     }
     function testFalse(x) {
-        test.strictEqual(L.isUndefined(x), false, x);
+        test.strictEqual(h.isUndefined(x), false, x);
     }
 
     var fails = [
@@ -815,10 +799,10 @@ exports['isUndefined'] = function (test) {
 
 exports['isNaN'] = function (test) {
     function testTrue(x) {
-        test.strictEqual(L.isNaN(x), true, x);
+        test.strictEqual(h.isNaN(x), true, x);
     }
     function testFalse(x) {
-        test.strictEqual(L.isNaN(x), false, x);
+        test.strictEqual(h.isNaN(x), false, x);
     }
 
     var fails = [
@@ -848,10 +832,10 @@ exports['isNaN'] = function (test) {
 
 exports['isDateObject'] = function (test) {
     function testTrue(x) {
-        test.strictEqual(L.isDateObject(x), true, x);
+        test.strictEqual(h.isDateObject(x), true, x);
     }
     function testFalse(x) {
-        test.strictEqual(L.isDateObject(x), false, x);
+        test.strictEqual(h.isDateObject(x), false, x);
     }
 
     var fails = [
@@ -881,10 +865,10 @@ exports['isDateObject'] = function (test) {
 
 exports['isRegExpObject'] = function (test) {
     function testTrue(x) {
-        test.strictEqual(L.isRegExpObject(x), true, x);
+        test.strictEqual(h.isRegExpObject(x), true, x);
     }
     function testFalse(x) {
-        test.strictEqual(L.isRegExpObject(x), false, x);
+        test.strictEqual(h.isRegExpObject(x), false, x);
     }
 
     var fails = [
@@ -915,10 +899,10 @@ exports['isRegExpObject'] = function (test) {
 
 exports['isArgumentsObject'] = function (test) {
     function testTrue(x) {
-        test.strictEqual(L.isArgumentsObject(x), true, x);
+        test.strictEqual(h.isArgumentsObject(x), true, x);
     }
     function testFalse(x) {
-        test.strictEqual(L.isArgumentsObject(x), false, x);
+        test.strictEqual(h.isArgumentsObject(x), false, x);
     }
 
     var fails = [
@@ -947,20 +931,20 @@ exports['isArgumentsObject'] = function (test) {
 };
 
 exports['type'] = function (test) {
-    test.equal(L.type({}), 'object');
-    test.equal(L.type([]), 'array');
-    test.equal(L.type(function () {}), 'function');
-    test.equal(L.type('asdf'), 'string');
-    test.equal(L.type(new String('asdf')), 'string');
-    test.equal(L.type(123), 'number');
-    test.equal(L.type(Infinity), 'number');
-    test.equal(L.type(true), 'boolean');
-    test.equal(L.type(null), 'null');
-    test.equal(L.type(undefined), 'undefined');
-    test.equal(L.type(NaN), 'number'); // yes, really
-    test.equal(L.type(new Date()), 'object');
-    test.equal(L.type(new RegExp('asdf')), 'object');
-    test.equal(L.type(arguments), 'object');
+    test.equal(h.type({}), 'object');
+    test.equal(h.type([]), 'array');
+    test.equal(h.type(function () {}), 'function');
+    test.equal(h.type('asdf'), 'string');
+    test.equal(h.type(new String('asdf')), 'string');
+    test.equal(h.type(123), 'number');
+    test.equal(h.type(Infinity), 'number');
+    test.equal(h.type(true), 'boolean');
+    test.equal(h.type(null), 'null');
+    test.equal(h.type(undefined), 'undefined');
+    test.equal(h.type(NaN), 'number'); // yes, really
+    test.equal(h.type(new Date()), 'object');
+    test.equal(h.type(new RegExp('asdf')), 'object');
+    test.equal(h.type(arguments), 'object');
     test.done();
 };
 
@@ -968,59 +952,59 @@ exports['type'] = function (test) {
 /***** Numbers *****/
 
 exports['max'] = function (test) {
-    test.equal(L.max(1,2), 2);
-    test.equal(L.max(2,2), 2);
-    test.equal(L.max(2,1), 2);
-    test.equal(L.max('abc','def'), 'def');
-    test.same(L.max([1,2],[3,4]), [3,4]);
-    test.throws(function () { L.max(1, {}); });
-    test.throws(function () { L.max('asdf', 1); });
-    test.throws(function () { L.max([], 1); });
-    test.throws(function () { L.max(true, 1); });
-    test.throws(function () { L.max(null, 1); });
-    test.throws(function () { L.max(undefined, 1); });
+    test.equal(h.max(1,2), 2);
+    test.equal(h.max(2,2), 2);
+    test.equal(h.max(2,1), 2);
+    test.equal(h.max('abc','def'), 'def');
+    test.same(h.max([1,2],[3,4]), [3,4]);
+    test.throws(function () { h.max(1, {}); });
+    test.throws(function () { h.max('asdf', 1); });
+    test.throws(function () { h.max([], 1); });
+    test.throws(function () { h.max(true, 1); });
+    test.throws(function () { h.max(null, 1); });
+    test.throws(function () { h.max(undefined, 1); });
     // partial application
-    test.equal(L.max(1)(2), 2);
-    test.equal(L.max(2)(2), 2);
-    test.equal(L.max(2)(1), 2);
+    test.equal(h.max(1)(2), 2);
+    test.equal(h.max(2)(2), 2);
+    test.equal(h.max(2)(1), 2);
     test.done();
 };
 
 exports['min'] = function (test) {
-    test.equal(L.min(1,2), 1);
-    test.equal(L.min(2,2), 2);
-    test.equal(L.min(2,1), 1);
-    test.equal(L.min('abc','def'), 'abc');
-    test.same(L.min([1,2],[3,4]), [1,2]);
-    test.throws(function () { L.min(1, {}); });
-    test.throws(function () { L.min('asdf', 1); });
-    test.throws(function () { L.min([], 1); });
-    test.throws(function () { L.min(true, 1); });
-    test.throws(function () { L.min(null, 1); });
-    test.throws(function () { L.min(undefined, 1); });
+    test.equal(h.min(1,2), 1);
+    test.equal(h.min(2,2), 2);
+    test.equal(h.min(2,1), 1);
+    test.equal(h.min('abc','def'), 'abc');
+    test.same(h.min([1,2],[3,4]), [1,2]);
+    test.throws(function () { h.min(1, {}); });
+    test.throws(function () { h.min('asdf', 1); });
+    test.throws(function () { h.min([], 1); });
+    test.throws(function () { h.min(true, 1); });
+    test.throws(function () { h.min(null, 1); });
+    test.throws(function () { h.min(undefined, 1); });
     // partial application
-    test.equal(L.min(1)(2), 1);
-    test.equal(L.min(2)(2), 2);
-    test.equal(L.min(2)(1), 1);
+    test.equal(h.min(1)(2), 1);
+    test.equal(h.min(2)(2), 2);
+    test.equal(h.min(2)(1), 1);
     test.done();
 };
 
 exports['compare'] = function (test) {
-    test.equal(L.compare(1,2), -1);
-    test.equal(L.compare(2,2), 0);
-    test.equal(L.compare(2,1), 1);
-    test.equal(L.compare('abc','def'), -1);
-    test.same(L.compare([1,2],[3,4]), -1);
-    test.throws(function () { L.compare(1, {}); });
-    test.throws(function () { L.compare('asdf', 1); });
-    test.throws(function () { L.compare([], 1); });
-    test.throws(function () { L.compare(true, 1); });
-    test.throws(function () { L.compare(null, 1); });
-    test.throws(function () { L.compare(undefined, 1); });
+    test.equal(h.compare(1,2), -1);
+    test.equal(h.compare(2,2), 0);
+    test.equal(h.compare(2,1), 1);
+    test.equal(h.compare('abc','def'), -1);
+    test.same(h.compare([1,2],[3,4]), -1);
+    test.throws(function () { h.compare(1, {}); });
+    test.throws(function () { h.compare('asdf', 1); });
+    test.throws(function () { h.compare([], 1); });
+    test.throws(function () { h.compare(true, 1); });
+    test.throws(function () { h.compare(null, 1); });
+    test.throws(function () { h.compare(undefined, 1); });
     // partial application
-    test.equal(L.compare(1)(2), -1);
-    test.equal(L.compare(2)(2), 0);
-    test.equal(L.compare(2)(1), 1);
+    test.equal(h.compare(1)(2), -1);
+    test.equal(h.compare(2)(2), 0);
+    test.equal(h.compare(2)(1), 1);
     test.done();
 };
 
@@ -1028,32 +1012,32 @@ exports['compare'] = function (test) {
 /***** Lists *****/
 
 exports['cons'] = function (test) {
-    test.same(L.cons(1, [2,3,4]), [1,2,3,4]);
-    test.same(L.cons(1, []), [1]);
+    test.same(h.cons(1, [2,3,4]), [1,2,3,4]);
+    test.same(h.cons(1, []), [1]);
     // partial application
-    test.same(L.cons(1)([2,3,4]), [1,2,3,4]);
-    test.same(L.cons(1)([]), [1]);
+    test.same(h.cons(1)([2,3,4]), [1,2,3,4]);
+    test.same(h.cons(1)([]), [1]);
     test.done();
 };
 
 exports['append'] = function (test) {
-    test.same(L.append(4, [1,2,3]), [1,2,3,4]);
+    test.same(h.append(4, [1,2,3]), [1,2,3,4]);
     test.done();
 };
 
 exports['head'] = function (test) {
     var a = [1,2,3,4];
-    test.equal(L.head(a), 1);
+    test.equal(h.head(a), 1);
     test.same(a, [1,2,3,4]);
     var b = [4,3,2,1];
-    test.equal(L.head(b), 4);
+    test.equal(h.head(b), 4);
     test.same(b, [4,3,2,1]);
     // head of an empty list should result in an error
     test.throws(function () {
-        L.head([]);
+        h.head([]);
     });
     try {
-        L.head([]);
+        h.head([]);
     }
     catch (e) {
         test.equal(e.message, 'head of empty array');
@@ -1063,102 +1047,102 @@ exports['head'] = function (test) {
 
 exports['last'] = function (test) {
     var a = [1,2,3,4];
-    test.equal(L.last(a), 4);
+    test.equal(h.last(a), 4);
     test.same(a, [1,2,3,4]);
     var b = [4,3,2,1];
-    test.equal(L.last(b), 1);
+    test.equal(h.last(b), 1);
     test.same(b, [4,3,2,1]);
     // last of an empty list should result in an error
     test.throws(function () {
-        L.last([]);
+        h.last([]);
     });
     test.done();
 };
 
 exports['tail'] = function (test) {
     var a = [1,2,3,4];
-    test.same(L.tail(a), [2,3,4]);
+    test.same(h.tail(a), [2,3,4]);
     test.same(a, [1,2,3,4]);
     var b = [4,3,2,1];
-    test.same(L.tail(b), [3,2,1]);
+    test.same(h.tail(b), [3,2,1]);
     test.same(b, [4,3,2,1]);
     // tail of an empty list should result in an error
     test.throws(function () {
-        L.tail([]);
+        h.tail([]);
     });
     test.done();
 };
 
 exports['init'] = function (test) {
     var a = [1,2,3,4];
-    test.same(L.init(a), [1,2,3]);
+    test.same(h.init(a), [1,2,3]);
     test.same(a, [1,2,3,4]);
     var b = [4,3,2,1];
-    test.same(L.init(b), [4,3,2]);
+    test.same(h.init(b), [4,3,2]);
     test.same(b, [4,3,2,1]);
     // init of an empty list should result in an error
     test.throws(function () {
-        L.init([]);
+        h.init([]);
     });
     test.done();
 };
 
 exports['empty'] = function (test) {
-    test.equal(L.empty([1,2,3]), false);
-    test.equal(L.empty([]), true);
-    test.equal(L.empty(''), true);
-    test.equal(L.empty('abc'), false);
+    test.equal(h.empty([1,2,3]), false);
+    test.equal(h.empty([]), true);
+    test.equal(h.empty(''), true);
+    test.equal(h.empty('abc'), false);
     test.done();
 };
 
 exports['length'] = function (test) {
-    test.equal(L.length([1,2,3,4]), 4);
-    test.equal(L.length([1,2,3]), 3);
-    test.equal(L.length('abc'), 3);
+    test.equal(h.length([1,2,3,4]), 4);
+    test.equal(h.length([1,2,3]), 3);
+    test.equal(h.length('abc'), 3);
     test.done();
 };
 
 exports['concat'] = function (test) {
     var a = [1];
     var b = [2,3];
-    test.same(L.concat(a, b), [1,2,3]);
+    test.same(h.concat(a, b), [1,2,3]);
     // test original arrays are unchanged
     test.same(a, [1]);
     test.same(b, [2,3]);
-    test.same(L.concat([1,2,3], []), [1,2,3]);
+    test.same(h.concat([1,2,3], []), [1,2,3]);
     // partial application
-    var fn = L.concat([1,2]);
+    var fn = h.concat([1,2]);
     test.same(fn([3,4]), [1,2,3,4]);
     test.same(fn([3,4,5]), [1,2,3,4,5]);
-    test.equal(L.concat('abc', 'def'), 'abcdef');
-    test.throws(function () { L.concat('abc', [1,2]); });
-    test.throws(function () { L.concat([1,2], 'abc'); });
-    test.throws(function () { L.concat(1, [2,3]); });
-    test.throws(function () { L.concat([2,3], null); });
-    test.throws(function () { L.concat(undefined, [2,3]); });
-    test.throws(function () { L.concat([2,3], {}); });
+    test.equal(h.concat('abc', 'def'), 'abcdef');
+    test.throws(function () { h.concat('abc', [1,2]); });
+    test.throws(function () { h.concat([1,2], 'abc'); });
+    test.throws(function () { h.concat(1, [2,3]); });
+    test.throws(function () { h.concat([2,3], null); });
+    test.throws(function () { h.concat(undefined, [2,3]); });
+    test.throws(function () { h.concat([2,3], {}); });
     test.done();
 };
 
 exports['foldl'] = function (test) {
-    test.equal(L.foldl(L.concat, '', ['1','2','3','4']), '1234');
+    test.equal(h.foldl(h.concat, '', ['1','2','3','4']), '1234');
     var fn = function (x, y) {
         return x + y;
     };
-    test.equal(L.foldl(fn, 0, [1,2,3,4]), 10);
+    test.equal(h.foldl(fn, 0, [1,2,3,4]), 10);
     // partial application
-    test.equal(L.foldl(fn, 0)([1,2,3,4]), 10);
-    test.equal(L.foldl(fn)(0, [1,2,3,4]), 10);
-    test.equal(L.foldl(fn)(0)([1,2,3,4]), 10);
+    test.equal(h.foldl(fn, 0)([1,2,3,4]), 10);
+    test.equal(h.foldl(fn)(0, [1,2,3,4]), 10);
+    test.equal(h.foldl(fn)(0)([1,2,3,4]), 10);
     var minus = function (a, b) {
         return a - b;
     };
-    test.equal(L.foldl(minus, 1, [1,2,3]), -5);
+    test.equal(h.foldl(minus, 1, [1,2,3]), -5);
     var concatUpper = function (a, b) {
         return (a + b).toUpperCase();
     };
-    test.equal(L.foldl(concatUpper, 'a', 'bcd'), 'ABCD');
-    test.equal(L.foldl(L.div, 4, [4, 2]), 0.5);
+    test.equal(h.foldl(concatUpper, 'a', 'bcd'), 'ABCD');
+    test.equal(h.foldl(h.div, 4, [4, 2]), 0.5);
     test.done();
 };
 
@@ -1166,17 +1150,17 @@ exports['foldl1'] = function (test) {
     var fn = function (x, y) {
         return x + y;
     };
-    test.equal(L.foldl1(fn, [1,2,3,4]), 10);
+    test.equal(h.foldl1(fn, [1,2,3,4]), 10);
     // partial application
-    test.equal(L.foldl1(fn)([1,2,3,4]), 10);
+    test.equal(h.foldl1(fn)([1,2,3,4]), 10);
     var minus = function (a, b) {
         return a - b;
     };
-    test.equal(L.foldl1(minus, [1,2,3]), -4);
+    test.equal(h.foldl1(minus, [1,2,3]), -4);
     var concatUpper = function (a, b) {
         return (a + b).toUpperCase();
     };
-    test.equal(L.foldl1(concatUpper, 'abcd'), 'ABCD');
+    test.equal(h.foldl1(concatUpper, 'abcd'), 'ABCD');
     test.done();
 };
 
@@ -1184,15 +1168,15 @@ exports['foldr'] = function (test) {
     var minus = function (a, b) {
         return a - b;
     };
-    test.equal(L.foldr(minus, 1, [1,2,3]), 1);
+    test.equal(h.foldr(minus, 1, [1,2,3]), 1);
     var concatUpper = function (a, b) {
         return (a + b).toUpperCase();
     };
-    test.equal(L.foldr(concatUpper, 'd', 'abc'), 'ABCD');
-    test.equal(L.foldr(L.div, 4, [4, 2]), 8);
+    test.equal(h.foldr(concatUpper, 'd', 'abc'), 'ABCD');
+    test.equal(h.foldr(h.div, 4, [4, 2]), 8);
     // partial application
-    test.equal(L.foldr(minus, 1)([1,2,3]), 1);
-    test.equal(L.foldr(minus)(1)([1,2,3]), 1);
+    test.equal(h.foldr(minus, 1)([1,2,3]), 1);
+    test.equal(h.foldr(minus)(1)([1,2,3]), 1);
     test.done();
 };
 
@@ -1200,13 +1184,23 @@ exports['foldr1'] = function (test) {
     var minus = function (a, b) {
         return a - b;
     };
-    test.equal(L.foldr1(minus, [1,2,3]), 2);
+    test.equal(h.foldr1(minus, [1,2,3]), 2);
     var concatUpper = function (a, b) {
         return (a + b).toUpperCase();
     };
-    test.equal(L.foldr1(concatUpper, 'abcd'), 'ABCD');
+    test.equal(h.foldr1(concatUpper, 'abcd'), 'ABCD');
     // partial application
-    test.equal(L.foldr1(minus)([1,2,3]), 2);
+    test.equal(h.foldr1(minus)([1,2,3]), 2);
+    test.done();
+};
+
+exports['each'] = function (test) {
+    var calls = [];
+    var val = h.each(function (x) {
+        calls.push(x);
+    }, [1,2,3,4]);
+    test.same(calls, [1,2,3,4]);
+    test.strictEqual(val, undefined);
     test.done();
 };
 
@@ -1216,22 +1210,22 @@ exports['map'] = function (test) {
         return x * 2;
     };
     var a = [1,2,3,4];
-    test.same(L.map(dbl, a), [2,4,6,8]);
+    test.same(h.map(dbl, a), [2,4,6,8]);
     // test original array is unchanged
     test.same(a, [1,2,3,4]);
     // partial application
-    test.same(L.map(dbl)(a), [2,4,6,8]);
+    test.same(h.map(dbl)(a), [2,4,6,8]);
     test.done();
 };
 
 exports['reverse'] = function (test) {
-    test.same(L.reverse([1,2,3,4]), [4,3,2,1]);
-    test.same(L.reverse([4,3,2,1]), [1,2,3,4]);
-    test.same(L.reverse([1]), [1]);
-    test.same(L.reverse([]), []);
+    test.same(h.reverse([1,2,3,4]), [4,3,2,1]);
+    test.same(h.reverse([4,3,2,1]), [1,2,3,4]);
+    test.same(h.reverse([1]), [1]);
+    test.same(h.reverse([]), []);
     // make sure original array is unchanged
     var a = [1,2];
-    test.same(L.reverse(a), [2,1]);
+    test.same(h.reverse(a), [2,1]);
     test.same(a, [1,2]);
     test.done();
 };
@@ -1240,104 +1234,104 @@ exports['concatMap'] = function (test) {
     var fn = function (c) {
         return c.toUpperCase();
     };
-    test.equal(L.concatMap(fn, ['a','b','c']), 'ABC');
+    test.equal(h.concatMap(fn, ['a','b','c']), 'ABC');
     test.done();
 };
 
 exports['all'] = function (test) {
-    test.equal(L.all(L.not, [false, false, false]), true);
-    test.equal(L.all(L.not, [true, false, false]), false);
+    test.equal(h.all(h.not, [false, false, false]), true);
+    test.equal(h.all(h.not, [true, false, false]), false);
     // partial applicatoin
-    test.equal(L.all(L.not)([false, false, false]), true);
-    test.equal(L.all(L.not)([true, false, false]), false);
+    test.equal(h.all(h.not)([false, false, false]), true);
+    test.equal(h.all(h.not)([true, false, false]), false);
     test.done();
 };
 
 exports['any'] = function (test) {
-    test.equal(L.any(L.not, [false, false, false]), true);
-    test.equal(L.any(L.not, [true, false, false]), true);
-    test.equal(L.any(L.not, [true, true, true]), false);
+    test.equal(h.any(h.not, [false, false, false]), true);
+    test.equal(h.any(h.not, [true, false, false]), true);
+    test.equal(h.any(h.not, [true, true, true]), false);
     // partial applicatoin
-    test.equal(L.any(L.not)([false, false, false]), true);
-    test.equal(L.any(L.not)([true, false, false]), true);
-    test.equal(L.any(L.not)([true, true, true]), false);
+    test.equal(h.any(h.not)([false, false, false]), true);
+    test.equal(h.any(h.not)([true, false, false]), true);
+    test.equal(h.any(h.not)([true, true, true]), false);
     test.done();
 };
 
 exports['maximum'] = function (test) {
-    test.equal(L.maximum([1,2,3,4]), 4);
-    test.equal(L.maximum([1,4,2,3]), 4);
+    test.equal(h.maximum([1,2,3,4]), 4);
+    test.equal(h.maximum([1,4,2,3]), 4);
     test.done();
 };
 
 exports['minimum'] = function (test) {
-    test.equal(L.minimum([1,2,3,4]), 1);
-    test.equal(L.minimum([3,2,4,1]), 1);
+    test.equal(h.minimum([1,2,3,4]), 1);
+    test.equal(h.minimum([3,2,4,1]), 1);
     test.done();
 };
 
 exports['replicate'] = function (test) {
-    test.same(L.replicate(3, "ho"), ["ho","ho","ho"]);
-    test.same(L.replicate(5, 1), [1,1,1,1,1]);
-    test.same(L.replicate(1, 2), [2]);
-    test.same(L.replicate(0, 2), []);
+    test.same(h.replicate(3, "ho"), ["ho","ho","ho"]);
+    test.same(h.replicate(5, 1), [1,1,1,1,1]);
+    test.same(h.replicate(1, 2), [2]);
+    test.same(h.replicate(0, 2), []);
     // partial application
-    test.same(L.replicate(3)("ho"), ["ho","ho","ho"]);
-    test.same(L.replicate(5)(1), [1,1,1,1,1]);
-    test.same(L.replicate(1)(2), [2]);
-    test.same(L.replicate(0)(2), []);
+    test.same(h.replicate(3)("ho"), ["ho","ho","ho"]);
+    test.same(h.replicate(5)(1), [1,1,1,1,1]);
+    test.same(h.replicate(1)(2), [2]);
+    test.same(h.replicate(0)(2), []);
     test.done();
 };
 
 exports['range'] = function (test) {
-    test.same(L.range(1, 10), [1,2,3,4,5,6,7,8,9,10]);
+    test.same(h.range(1, 10), [1,2,3,4,5,6,7,8,9,10]);
     test.done();
 };
 
 exports['take'] = function (test) {
     var a = [1,2,3,4];
-    test.same(L.take(1, a), [1]);
+    test.same(h.take(1, a), [1]);
     test.same(a, [1,2,3,4]);
-    test.same(L.take(2, a), [1,2]);
+    test.same(h.take(2, a), [1,2]);
     test.same(a, [1,2,3,4]);
-    test.same(L.take(3, a), [1,2,3]);
+    test.same(h.take(3, a), [1,2,3]);
     test.same(a, [1,2,3,4]);
-    test.same(L.take(4, a), [1,2,3,4]);
+    test.same(h.take(4, a), [1,2,3,4]);
     test.same(a, [1,2,3,4]);
-    test.same(L.take(5, a), [1,2,3,4]);
+    test.same(h.take(5, a), [1,2,3,4]);
     test.same(a, [1,2,3,4]);
     // partial application
-    test.same(L.take(1)(a), [1]);
+    test.same(h.take(1)(a), [1]);
     test.same(a, [1,2,3,4]);
-    test.same(L.take(2)(a), [1,2]);
+    test.same(h.take(2)(a), [1,2]);
     test.same(a, [1,2,3,4]);
     test.done();
 };
 
 exports['drop'] = function (test) {
     var a = [1,2,3,4];
-    test.same(L.drop(1, a), [2,3,4]);
+    test.same(h.drop(1, a), [2,3,4]);
     test.same(a, [1,2,3,4]);
-    test.same(L.drop(2, a), [3,4]);
+    test.same(h.drop(2, a), [3,4]);
     test.same(a, [1,2,3,4]);
-    test.same(L.drop(3, a), [4]);
+    test.same(h.drop(3, a), [4]);
     test.same(a, [1,2,3,4]);
-    test.same(L.drop(4, a), []);
+    test.same(h.drop(4, a), []);
     test.same(a, [1,2,3,4]);
-    test.same(L.drop(5, a), []);
+    test.same(h.drop(5, a), []);
     test.same(a, [1,2,3,4]);
     // partial application
-    test.same(L.drop(1)(a), [2,3,4]);
+    test.same(h.drop(1)(a), [2,3,4]);
     test.same(a, [1,2,3,4]);
-    test.same(L.drop(2)(a), [3,4]);
+    test.same(h.drop(2)(a), [3,4]);
     test.same(a, [1,2,3,4]);
     test.done();
 };
 
 exports['splitAt'] = function (test) {
-    test.same(L.splitAt(3, [1,2,3,4,5]), [[1,2,3], [4,5]]);
+    test.same(h.splitAt(3, [1,2,3,4,5]), [[1,2,3], [4,5]]);
     // partial application
-    test.same(L.splitAt(3)([1,2,3,4,5]), [[1,2,3], [4,5]]);
+    test.same(h.splitAt(3)([1,2,3,4,5]), [[1,2,3], [4,5]]);
     test.done();
 };
 
@@ -1345,13 +1339,13 @@ exports['takeWhile'] = function (test) {
     var lt3 = function (x) {
         return x < 3;
     };
-    test.same(L.takeWhile(lt3, [1,2,3,4]), [1,2]);
-    test.same(L.takeWhile(lt3, [1,2,1,2]), [1,2,1,2]);
-    test.same(L.takeWhile(lt3, [3,3,3,3]), []);
+    test.same(h.takeWhile(lt3, [1,2,3,4]), [1,2]);
+    test.same(h.takeWhile(lt3, [1,2,1,2]), [1,2,1,2]);
+    test.same(h.takeWhile(lt3, [3,3,3,3]), []);
     // partial application
-    test.same(L.takeWhile(lt3)([1,2,3,4]), [1,2]);
-    test.same(L.takeWhile(lt3)([1,2,1,2]), [1,2,1,2]);
-    test.same(L.takeWhile(lt3)([3,3,3,3]), []);
+    test.same(h.takeWhile(lt3)([1,2,3,4]), [1,2]);
+    test.same(h.takeWhile(lt3)([1,2,1,2]), [1,2,1,2]);
+    test.same(h.takeWhile(lt3)([3,3,3,3]), []);
     test.done();
 };
 
@@ -1359,13 +1353,13 @@ exports['dropWhile'] = function (test) {
     var lt3 = function (x) {
         return x < 3;
     };
-    test.same(L.dropWhile(lt3, [1,2,3,4]), [3,4]);
-    test.same(L.dropWhile(lt3, [1,2,1,2]), []);
-    test.same(L.dropWhile(lt3, [3,3,3,3]), [3,3,3,3]);
+    test.same(h.dropWhile(lt3, [1,2,3,4]), [3,4]);
+    test.same(h.dropWhile(lt3, [1,2,1,2]), []);
+    test.same(h.dropWhile(lt3, [3,3,3,3]), [3,3,3,3]);
     // partial application
-    test.same(L.dropWhile(lt3)([1,2,3,4]), [3,4]);
-    test.same(L.dropWhile(lt3)([1,2,1,2]), []);
-    test.same(L.dropWhile(lt3)([3,3,3,3]), [3,3,3,3]);
+    test.same(h.dropWhile(lt3)([1,2,3,4]), [3,4]);
+    test.same(h.dropWhile(lt3)([1,2,1,2]), []);
+    test.same(h.dropWhile(lt3)([3,3,3,3]), [3,3,3,3]);
     test.done();
 };
 
@@ -1373,43 +1367,43 @@ exports['span'] = function (test) {
     var lt3 = function (x) {
         return x < 3;
     };
-    test.same(L.span(lt3, [1,2,3,4]), [[1,2], [3,4]]);
-    test.same(L.span(lt3, [1,2]), [[1,2], []]);
-    test.same(L.span(lt3, [3,4]), [[], [3,4]]);
-    test.same(L.span(lt3, []), [[], []]);
+    test.same(h.span(lt3, [1,2,3,4]), [[1,2], [3,4]]);
+    test.same(h.span(lt3, [1,2]), [[1,2], []]);
+    test.same(h.span(lt3, [3,4]), [[], [3,4]]);
+    test.same(h.span(lt3, []), [[], []]);
     // partial application
-    test.same(L.span(lt3)([1,2,3,4]), [[1,2], [3,4]]);
-    test.same(L.span(lt3)([1,2]), [[1,2], []]);
-    test.same(L.span(lt3)([3,4]), [[], [3,4]]);
-    test.same(L.span(lt3)([]), [[], []]);
+    test.same(h.span(lt3)([1,2,3,4]), [[1,2], [3,4]]);
+    test.same(h.span(lt3)([1,2]), [[1,2], []]);
+    test.same(h.span(lt3)([3,4]), [[], [3,4]]);
+    test.same(h.span(lt3)([]), [[], []]);
     test.done();
 };
 
 exports['elem'] = function (test) {
-    test.equal(L.elem(3, [1,2,3,4]), true);
-    test.equal(L.elem(6, [1,2,3,4]), false);
-    test.equal(L.elem(6, []), false);
+    test.equal(h.elem(3, [1,2,3,4]), true);
+    test.equal(h.elem(6, [1,2,3,4]), false);
+    test.equal(h.elem(6, []), false);
     // partial application
-    test.equal(L.elem(3)([1,2,3,4]), true);
-    test.equal(L.elem(6)([1,2,3,4]), false);
-    test.equal(L.elem(6)([]), false);
+    test.equal(h.elem(3)([1,2,3,4]), true);
+    test.equal(h.elem(6)([1,2,3,4]), false);
+    test.equal(h.elem(6)([]), false);
     test.done();
 };
 
 exports['notElem'] = function (test) {
-    test.equal(L.notElem(3, [1,2,3,4]), false);
-    test.equal(L.notElem(6, [1,2,3,4]), true);
-    test.equal(L.notElem(6, []), true);
+    test.equal(h.notElem(3, [1,2,3,4]), false);
+    test.equal(h.notElem(6, [1,2,3,4]), true);
+    test.equal(h.notElem(6, []), true);
     // partial application
-    test.equal(L.notElem(3)([1,2,3,4]), false);
-    test.equal(L.notElem(6)([1,2,3,4]), true);
-    test.equal(L.notElem(6)([]), true);
+    test.equal(h.notElem(3)([1,2,3,4]), false);
+    test.equal(h.notElem(6)([1,2,3,4]), true);
+    test.equal(h.notElem(6)([]), true);
     test.done();
 };
 
 exports['find'] = function (test) {
-    test.strictEqual(L.find(L.eq(2), [1,2,3,4]), 2);
-    test.strictEqual(L.find(L.eq(10), [1,2,3,4]), undefined);
+    test.strictEqual(h.find(h.eq(2), [1,2,3,4]), 2);
+    test.strictEqual(h.find(h.eq(10), [1,2,3,4]), undefined);
     test.done();
 };
 
@@ -1418,19 +1412,32 @@ exports['filter'] = function (test) {
         return x % 2;
     };
     var a = [1,2,3,4];
-    test.same(L.filter(odd, a), [1,3]);
+    test.same(h.filter(odd, a), [1,3]);
     // test original array is unchanged
     test.same(a, [1,2,3,4]);
     // partial application
-    test.same(L.filter(odd)(a), [1,3]);
+    test.same(h.filter(odd)(a), [1,3]);
+    test.done();
+};
+
+exports['reject'] = function (test) {
+    var odd = function (x) {
+        return x % 2;
+    };
+    var a = [1,2,3,4];
+    test.same(h.reject(odd, a), [2,4]);
+    // test original array is unchanged
+    test.same(a, [1,2,3,4]);
+    // partial application
+    test.same(h.reject(odd)(a), [2,4]);
     test.done();
 };
 
 exports['zip'] = function (test) {
-    test.same(L.zip([1,2,3], [4,5,6]), [[1,4],[2,5],[3,6]]);
-    test.same(L.zip([1,2], [4,5,6]), [[1,4],[2,5]]);
+    test.same(h.zip([1,2,3], [4,5,6]), [[1,4],[2,5],[3,6]]);
+    test.same(h.zip([1,2], [4,5,6]), [[1,4],[2,5]]);
     // partial application
-    test.same(L.zip([1,2])([4,5]), [[1,4],[2,5]]);
+    test.same(h.zip([1,2])([4,5]), [[1,4],[2,5]]);
     test.done();
 };
 
@@ -1438,31 +1445,31 @@ exports['zipWith'] = function (test) {
     var add = function (a, b) {
         return a + b;
     };
-    test.same(L.zipWith(add, [1,2,3,4,5], [6,7,8,9,10]), [7,9,11,13,15]);
-    test.same(L.zipWith(add, [1,2,3], [6,7,8,9,10]), [7,9,11]);
+    test.same(h.zipWith(add, [1,2,3,4,5], [6,7,8,9,10]), [7,9,11,13,15]);
+    test.same(h.zipWith(add, [1,2,3], [6,7,8,9,10]), [7,9,11]);
     // partial application
-    test.same(L.zipWith(add, [1,2,3])([6,7,8]), [7,9,11]);
-    test.same(L.zipWith(add)([1,2,3], [6,7,8]), [7,9,11]);
-    test.same(L.zipWith(add)([1,2,3])([6,7,8]), [7,9,11]);
+    test.same(h.zipWith(add, [1,2,3])([6,7,8]), [7,9,11]);
+    test.same(h.zipWith(add)([1,2,3], [6,7,8]), [7,9,11]);
+    test.same(h.zipWith(add)([1,2,3])([6,7,8]), [7,9,11]);
     test.done();
 };
 
 exports['nub'] = function (test) {
-    test.same(L.nub([1,2,1,1,2,3,3,4]), [1,2,3,4]);
-    test.same(L.nub([1,2,3,4]), [1,2,3,4]);
-    test.same(L.nub(['a','c','b','b']), ['a','c','b']);
+    test.same(h.nub([1,2,1,1,2,3,3,4]), [1,2,3,4]);
+    test.same(h.nub([1,2,3,4]), [1,2,3,4]);
+    test.same(h.nub(['a','c','b','b']), ['a','c','b']);
     test.done();
 };
 
 exports['sort'] = function (test) {
     var a = [2,4,3,1];
-    test.same(L.sort(a), [1,2,3,4]);
+    test.same(h.sort(a), [1,2,3,4]);
     test.same(a, [2,4,3,1]);
     var b = [1,2,3,4];
-    test.same(L.sort([1,2,3,4]), [1,2,3,4]);
+    test.same(h.sort([1,2,3,4]), [1,2,3,4]);
     test.same(b, [1,2,3,4]);
-    test.same(L.sort([1,2,14,21,3]), [1,2,3,14,21]);
-    test.same(L.sort(['a','c','b']), ['a','b','c']);
+    test.same(h.sort([1,2,14,21,3]), [1,2,3,14,21]);
+    test.same(h.sort(['a','c','b']), ['a','b','c']);
     test.done();
 };
 
@@ -1490,7 +1497,7 @@ exports['set'] = function (test) {
     };
     var orig_a = JSON.stringify(a);
 
-    var b = L.set(['three', 'four'], 40, a);
+    var b = h.set(['three', 'four'], 40, a);
 
     // existing values and references are the same
     test.strictEqual(a.one, b.one);
@@ -1509,7 +1516,7 @@ exports['set'] = function (test) {
     var c = [{one: 1}, {two: 2}, {three: 3}];
     var orig_c = JSON.stringify(c);
 
-    var d = L.set(1, {four: 4}, c);
+    var d = h.set(1, {four: 4}, c);
 
     // existing values and references are the same
     test.strictEqual(c[0], d[0]);
@@ -1530,31 +1537,31 @@ exports['get'] = function (test) {
         four: { five: 5 },
         six: 6
     };
-    test.equal(L.get(['one', 'two', 'three'], a), 3);
-    test.equal(L.get(['one', 'two'], a), a.one.two);
-    test.equal(L.get(['four', 'five', 'six'], a), undefined);
-    test.equal(L.get(['four', 'five', 'six', 'seven'], a), undefined);
+    test.equal(h.get(['one', 'two', 'three'], a), 3);
+    test.equal(h.get(['one', 'two'], a), a.one.two);
+    test.equal(h.get(['four', 'five', 'six'], a), undefined);
+    test.equal(h.get(['four', 'five', 'six', 'seven'], a), undefined);
     /*
     test.throws(function () {
-        L.get(a, ['four', 'five', 'six', 'seven'], true);
+        h.get(a, ['four', 'five', 'six', 'seven'], true);
     });
     */
-    test.equal(L.get('six', a), 6);
+    test.equal(h.get('six', a), 6);
 
-    test.equal(L.get(1, [1,2,3,4]), 2);
-    test.equal(L.get(2, [1,2,3,4]), 3);
-    test.equal(L.get(5, [1,2,3,4]), undefined);
+    test.equal(h.get(1, [1,2,3,4]), 2);
+    test.equal(h.get(2, [1,2,3,4]), 3);
+    test.equal(h.get(5, [1,2,3,4]), undefined);
 
     test.done();
 };
 
 exports['trans'] = function (test) {
     var a = {b: 2};
-    test.same(L.trans('b', L.add(3), a), {b: 5});
+    test.same(h.trans('b', h.add(3), a), {b: 5});
     // partial application
-    test.same(L.trans('b', L.add(3))(a), {b: 5});
-    test.same(L.trans('b')(L.add(3), a), {b: 5});
-    test.same(L.trans('b')(L.add(3))(a), {b: 5});
+    test.same(h.trans('b', h.add(3))(a), {b: 5});
+    test.same(h.trans('b')(h.add(3), a), {b: 5});
+    test.same(h.trans('b')(h.add(3))(a), {b: 5});
     test.done();
 };
 
@@ -1562,7 +1569,7 @@ exports['transWhere'] = function (test) {
     var a = [{b: 2}, {b: 4}];
     var bAbove2 = function (obj) { return obj.b > 2; };
     test.same(
-        L.transWhere(bAbove2, 'b', L.mul(2), a),
+        h.transWhere(bAbove2, 'b', h.mul(2), a),
         [{b: 2}, {b: 8}]
     );
     test.done();
@@ -1571,12 +1578,12 @@ exports['transWhere'] = function (test) {
 exports['extend'] = function (test) {
     var a = {a: 1, b: 2};
     var b = {a: 0, c: 3};
-    var c = L.extend(a, b);
+    var c = h.extend(a, b);
     test.same(c, {a: 0, b: 2, c: 3});
     test.same(a, {a: 1, b: 2});
     test.same(b, {a: 0, c: 3});
     // partial application
-    test.same(L.extend(a)(b), c);
+    test.same(h.extend(a)(b), c);
     test.done();
 };
 
@@ -1588,18 +1595,18 @@ exports['extend'] = function (test) {
 
 exports['install'] = function (test) {
     test.expect(4);
-    L.install();
-    test.strictEqual(init, L.init);
-    test.strictEqual(tail, L.tail);
-    test.strictEqual(head, L.head);
-    test.strictEqual(last, L.last);
+    h.install();
+    test.strictEqual(init, h.init);
+    test.strictEqual(tail, h.tail);
+    test.strictEqual(head, h.head);
+    test.strictEqual(last, h.last);
     test.done();
 };
 
 
 exports['shallowClone'] = function (test) {
     var a = {x: 1, y: {z: 'foo'}};
-    var b = L.shallowClone(a);
+    var b = h.shallowClone(a);
     b.x = 2;
     test.same(a, {x: 1, y: {z: 'foo'}});
     test.same(b, {x: 2, y: {z: 'foo'}});
@@ -1611,7 +1618,7 @@ exports['shallowClone'] = function (test) {
 
 exports['deepClone'] = function (test) {
     var a = {x: 1, y: {z: 'foo'}};
-    var b = L.deepClone(a);
+    var b = h.deepClone(a);
     b.x = 2;
     test.same(a, {x: 1, y: {z: 'foo'}});
     test.same(b, {x: 2, y: {z: 'foo'}});
@@ -1623,7 +1630,7 @@ exports['deepClone'] = function (test) {
 
 exports['jsonClone'] = function (test) {
     var a = {x: 1, y: {z: 'foo'}};
-    var b = L.jsonClone(a);
+    var b = h.jsonClone(a);
     b.x = 2;
     test.same(a, {x: 1, y: {z: 'foo'}});
     test.same(b, {x: 2, y: {z: 'foo'}});
@@ -1644,13 +1651,13 @@ exports['jsonClone'] = function (test) {
 
 exports['keys'] = function (test) {
     var a = {a: 1, b: 2, c: {d: 3}};
-    test.same(L.keys(a), ['a','b','c']);
+    test.same(h.keys(a), ['a','b','c']);
     test.done();
 };
 
 exports['values'] = function (test) {
     var a = {a: 1, b: 2, c: {d: 3}};
-    test.same(L.values(a), [1,2,{d:3}]);
+    test.same(h.values(a), [1,2,{d:3}]);
     test.done();
 };
 
@@ -1669,7 +1676,7 @@ exports['pairs'] = function (test) {
         eight: 8
       }
     };
-    test.same(L.pairs(a), [
+    test.same(h.pairs(a), [
         ['one', 1],
         ['two', 2],
         ['three', {four: 4, five: {six: 6}}],
@@ -1679,10 +1686,10 @@ exports['pairs'] = function (test) {
 };
 
 exports['join'] = function (test) {
-    test.equal(L.join(':', ['a', 'b', 'c']), 'a:b:c');
-    test.equal(L.join(' and ', ['abc', '123']), 'abc and 123');
+    test.equal(h.join(':', ['a', 'b', 'c']), 'a:b:c');
+    test.equal(h.join(' and ', ['abc', '123']), 'abc and 123');
     // partial application
-    test.equal(L.join(':')(['a', 'b', 'c']), 'a:b:c');
+    test.equal(h.join(':')(['a', 'b', 'c']), 'a:b:c');
     test.done();
 };
 
@@ -1694,21 +1701,12 @@ exports['join'] = function (test) {
 
 
 exports['id'] = function (test) {
-    test.equal(L.id(1), 1);
-    test.equal(L.id('abc'), 'abc');
-    test.equal(L.id(L.id(1)), 1);
-    test.equal(L.id(L.id(L.id(1))), 1);
+    test.equal(h.id(1), 1);
+    test.equal(h.id('abc'), 'abc');
+    test.equal(h.id(h.id(1)), 1);
+    test.equal(h.id(h.id(h.id(1))), 1);
     test.done();
 };
-
-
-
-
-
-
-
-
-
 
 exports['until'] = function (test) {
     var p = function (x) {
@@ -1717,24 +1715,148 @@ exports['until'] = function (test) {
     var f = function (x) {
         return x * 2;
     };
-    test.equal(L.until(p, f, 1), 1024);
+    test.equal(h.until(p, f, 1), 1024);
     // partial application
-    test.equal(L.until(p)(f, 1), 1024);
-    test.equal(L.until(p, f)(1), 1024);
-    test.equal(L.until(p)(f)(1), 1024);
+    test.equal(h.until(p)(f, 1), 1024);
+    test.equal(h.until(p, f)(1), 1024);
+    test.equal(h.until(p)(f)(1), 1024);
     test.done();
 };
-
-
-
 
 exports['error'] = function (test) {
     test.expect(1);
     try {
-        L.error('my message');
+        h.error('my message');
     }
     catch (e) {
         test.equal(e.message, 'my message');
     }
+    test.done();
+};
+
+exports['stream.push'] = function (test) {
+    var call_order = [];
+    var s = h.createStream();
+    s.on('data', function (val) {
+        call_order.push(val);
+    });
+    test.same(call_order, []);
+    s.push('foo');
+    test.same(call_order, ['foo']);
+    s.push('bar');
+    test.same(call_order, ['foo', 'bar']);
+    s.push('baz');
+    test.same(call_order, ['foo', 'bar', 'baz']);
+    test.done();
+};
+
+exports['map stream'] = function (test) {
+    var bvalues = [];
+    var a = h.createStream();
+    var b = h.map(h.add(1), a);
+    b.on('data', function (val) {
+        bvalues.push(val);
+    });
+    test.same(bvalues, []);
+    a.push(1);
+    test.same(bvalues, [2]);
+    a.push(2);
+    test.same(bvalues, [2,3]);
+    a.push(3);
+    test.same(bvalues, [2,3,4]);
+    test.done();
+};
+
+exports['filter stream'] = function (test) {
+    var bvalues = [];
+    var a = h.createStream();
+    function isEqual(n) {
+        return !(n % 2);
+    }
+    var b = h.filter(isEqual, a);
+    b.on('data', function (val) {
+        bvalues.push(val);
+    });
+    test.same(bvalues, []);
+    a.push(1);
+    test.same(bvalues, []);
+    a.push(2);
+    test.same(bvalues, [2]);
+    a.push(3);
+    test.same(bvalues, [2]);
+    a.push(4);
+    test.same(bvalues, [2,4]);
+    test.done();
+};
+
+exports['foldl stream'] = function (test) {
+    var bvalues = [];
+    var a = h.createStream();
+    var b = h.foldl(add, 10, a);
+    b.on('data', function (val) {
+        bvalues.push(val);
+    });
+    test.same(bvalues, []);
+    a.push(1);
+    test.same(bvalues, [11]);
+    a.push(2);
+    test.same(bvalues, [11, 13]);
+    a.push(3);
+    test.same(bvalues, [11, 13, 16]);
+    a.push(4);
+    test.same(bvalues, [11, 13, 16, 20]);
+    test.done();
+};
+
+exports['foldr stream'] = function (test) {
+    var a = h.createStream();
+    // foldr doesn't make sense with streams
+    test.throws(function () {
+        var b = h.foldr(add, 10, a);
+    });
+    test.done();
+};
+
+exports['each stream'] = function (test) {
+    var calls = [];
+    var a = h.createStream();
+    var b = h.each(function (x) {
+        calls.push(x);
+    }, a);
+    test.strictEqual(b, undefined);
+    test.same(calls, []);
+    a.push(1);
+    test.same(calls, [1]);
+    a.push(2);
+    test.same(calls, [1,2]);
+    a.push(3);
+    test.same(calls, [1,2,3]);
+    test.done();
+};
+
+exports['combine'] = function (test) {
+    var vals = [];
+    var a = h.createStream();
+    var b = h.createStream();
+    var c = h.createStream();
+    var combined = h.combine([a,b,c]);
+    combined.on('data', function (val) {
+        vals.push(val);
+    });
+    test.same(vals, []);
+    a.push(1);
+    test.same(vals, [1]);
+    b.push(2);
+    test.same(vals, [1,2]);
+    c.push(3);
+    test.same(vals, [1,2,3]);
+    a.push(4);
+    b.push(5);
+    c.push(6);
+    c.push(7);
+    c.push(8);
+    b.push(9);
+    a.push(10);
+    test.same(vals, [1,2,3,4,5,6,7,8,9,10]);
     test.done();
 };
