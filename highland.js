@@ -1206,7 +1206,19 @@ h.concat = h.curry(function (a, b) {
 h.foldl = h.curry(function (f, z, xs) {
     if (h.isStream(xs)) {
         var ys = h.createStream();
+        var initial_sent = false;
+        var t = setTimeout(function () {
+            if (!initial_sent) {
+                ys.push(z);
+            }
+            initial_sent = true;
+        }, 0);
         xs.on('data', function (x) {
+            if (!initial_sent) {
+                ys.push(z);
+                initial_sent = true;
+                clearTimeout(t);
+            }
             z = f(z, x);
             ys.push(z);
         });
@@ -2121,6 +2133,15 @@ h.transWhere = h.curry(function (p, path, f, arr) {
         }
     }
     return results;
+});
+
+h.setWhere = h.curry(function (p, path, val, arr) {
+    return h.map(function (x) {
+        if (p(x)) {
+            return h.set(path, val, x);
+        }
+        return x;
+    }, arr);
 });
 
 /**

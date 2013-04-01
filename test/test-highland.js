@@ -1796,15 +1796,14 @@ exports['foldl stream'] = function (test) {
     b.on('data', function (val) {
         bvalues.push(val);
     });
-    test.same(bvalues, []);
     a.push(1);
-    test.same(bvalues, [11]);
+    test.same(bvalues, [10, 11]);
     a.push(2);
-    test.same(bvalues, [11, 13]);
+    test.same(bvalues, [10, 11, 13]);
     a.push(3);
-    test.same(bvalues, [11, 13, 16]);
+    test.same(bvalues, [10, 11, 13, 16]);
     a.push(4);
-    test.same(bvalues, [11, 13, 16, 20]);
+    test.same(bvalues, [10, 11, 13, 16, 20]);
     test.done();
 };
 
