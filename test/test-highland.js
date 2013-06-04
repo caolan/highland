@@ -1433,6 +1433,19 @@ exports['reject'] = function (test) {
     test.done();
 };
 
+exports['partition'] = function (test) {
+    var odd = function (x) {
+        return x % 2;
+    };
+    var a = [1,2,3,4];
+    test.same(h.partition(odd, a), [[1,3],[2,4]]);
+    // test original array is unchanged
+    test.same(a, [1,2,3,4]);
+    // partial application
+    test.same(h.partition(odd)(a), [[1,3],[2,4]]);
+    test.done();
+};
+
 exports['zip'] = function (test) {
     test.same(h.zip([1,2,3], [4,5,6]), [[1,4],[2,5],[3,6]]);
     test.same(h.zip([1,2], [4,5,6]), [[1,4],[2,5]]);
@@ -1786,6 +1799,37 @@ exports['filter stream'] = function (test) {
     test.same(bvalues, [2]);
     a.push(4);
     test.same(bvalues, [2,4]);
+    test.done();
+};
+
+exports['partition stream'] = function (test) {
+    var p1values = [];
+    var p2values = [];
+    var a = h.createStream();
+    function isEqual(n) {
+        return !(n % 2);
+    }
+    var p = h.partition(isEqual, a);
+    p[0].on('data', function (val) {
+        p1values.push(val);
+    });
+    p[1].on('data', function (val) {
+        p2values.push(val);
+    });
+    test.same(p1values, []);
+    test.same(p2values, []);
+    a.push(1);
+    test.same(p1values, []);
+    test.same(p2values, [1]);
+    a.push(2);
+    test.same(p1values, [2]);
+    test.same(p2values, [1]);
+    a.push(3);
+    test.same(p1values, [2]);
+    test.same(p2values, [1,3]);
+    a.push(4);
+    test.same(p1values, [2,4]);
+    test.same(p2values, [1,3]);
     test.done();
 };
 

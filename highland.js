@@ -1736,8 +1736,46 @@ h.reject = h.curry(function (p, xs) {
     return h.filter(h.compose(h.not, p), xs);
 });
 
-// partition
+/**
+ * Takes a predicate and an array and returns an array with two elements, the
+ * first element is all the items that matched the predicate, the second is
+ * all the items that did not match the predicate.
+ *
+ * @name partition p -> xs -> [Array, Array]
+ * @param {Function} p - the truth test to apply to each element
+ * @param {Array} xs - the array to filter
+ * @api public
+ *
+ * partition(eq(2), [1,2,3,2,1]) == [[2,2],[1,3,1]]
+ */
 
+h.partition = h.curry(function (p, xs) {
+    if (h.isStream(xs)) {
+        var as = h.createStream();
+        var bs = h.createStream();
+        xs.on('data', function (x) {
+            if (p(x)) {
+                as.push(x);
+            }
+            else {
+                bs.push(x);
+            }
+        });
+        return [as, bs];
+    }
+    var r1 = [];
+    var r2 = [];
+    for (var i = 0, len = xs.length; i < len; i++) {
+        var x = xs[i];
+        if (p(x)) {
+            r1.push(x);
+        }
+        else {
+            r2.push(x);
+        }
+    }
+    return [r1, r2];
+});
 
 /*** Indexing Lists ***/
 
