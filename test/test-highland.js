@@ -1882,13 +1882,13 @@ exports['each stream'] = function (test) {
     test.done();
 };
 
-exports['combine'] = function (test) {
+exports['merge'] = function (test) {
     var vals = [];
     var a = h.createStream();
     var b = h.createStream();
     var c = h.createStream();
-    var combined = h.combine([a,b,c]);
-    combined.on('data', function (val) {
+    var merged = h.merge([a,b,c]);
+    merged.on('data', function (val) {
         vals.push(val);
     });
     test.same(vals, []);

@@ -2706,7 +2706,7 @@ h.createStream = function (fn) {
     return new Stream(fn);
 };
 
-h.combine = function (streams) {
+h.merge = function (streams) {
     var xs = h.createStream();
     for (var i = 0, len = streams.length; i < len; i++) {
         streams[i].on('data', function (x) {
