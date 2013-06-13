@@ -236,6 +236,15 @@ h.flip = h.curry(function (fn, x, y) { return fn(y, x); });
 
 h.seq = h.flip(h.compose);
 
+/**
+ * Creates a new stream where each value written to it is passed
+ * through every stream or function given as an argument to pipe,
+ * in series, before the final value is emitted.
+ *
+ * @name pipe -> Function | Stream ...
+ * @api public
+ */
+
 h.pipe = function (/* streams | functions ... */) {
     function _toStream(x) {
         return h.isStream(x) ? x: h.createStream(x);
