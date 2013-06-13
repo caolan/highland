@@ -1204,6 +1204,7 @@ exports['each'] = function (test) {
     test.done();
 };
 
+// TODO: map to a value eg, stream.map(1) => Stream: 1, 1, 1, 1
 exports['map'] = function (test) {
     var dbl = function (x) {
         test.equal(arguments.length, 1);
@@ -1747,6 +1748,7 @@ exports['error'] = function (test) {
     test.done();
 };
 
+/*
 exports['stream.push'] = function (test) {
     var call_order = [];
     var s = h.createStream();
@@ -1762,6 +1764,7 @@ exports['stream.push'] = function (test) {
     test.same(call_order, ['foo', 'bar', 'baz']);
     test.done();
 };
+*/
 
 exports['map stream'] = function (test) {
     var bvalues = [];
@@ -1771,11 +1774,11 @@ exports['map stream'] = function (test) {
         bvalues.push(val);
     });
     test.same(bvalues, []);
-    a.push(1);
+    a.emit('data', 1);
     test.same(bvalues, [2]);
-    a.push(2);
+    a.emit('data', 2);
     test.same(bvalues, [2,3]);
-    a.push(3);
+    a.emit('data', 3);
     test.same(bvalues, [2,3,4]);
     test.done();
 };
@@ -1791,13 +1794,13 @@ exports['filter stream'] = function (test) {
         bvalues.push(val);
     });
     test.same(bvalues, []);
-    a.push(1);
+    a.emit('data', 1);
     test.same(bvalues, []);
-    a.push(2);
+    a.emit('data', 2);
     test.same(bvalues, [2]);
-    a.push(3);
+    a.emit('data', 3);
     test.same(bvalues, [2]);
-    a.push(4);
+    a.emit('data', 4);
     test.same(bvalues, [2,4]);
     test.done();
 };
@@ -1818,16 +1821,16 @@ exports['partition stream'] = function (test) {
     });
     test.same(p1values, []);
     test.same(p2values, []);
-    a.push(1);
+    a.emit('data', 1);
     test.same(p1values, []);
     test.same(p2values, [1]);
-    a.push(2);
+    a.emit('data', 2);
     test.same(p1values, [2]);
     test.same(p2values, [1]);
-    a.push(3);
+    a.emit('data', 3);
     test.same(p1values, [2]);
     test.same(p2values, [1,3]);
-    a.push(4);
+    a.emit('data', 4);
     test.same(p1values, [2,4]);
     test.same(p2values, [1,3]);
     test.done();
@@ -1840,13 +1843,13 @@ exports['foldl stream'] = function (test) {
     b.on('data', function (val) {
         bvalues.push(val);
     });
-    a.push(1);
+    a.emit('data', 1);
     test.same(bvalues, [10, 11]);
-    a.push(2);
+    a.emit('data', 2);
     test.same(bvalues, [10, 11, 13]);
-    a.push(3);
+    a.emit('data', 3);
     test.same(bvalues, [10, 11, 13, 16]);
-    a.push(4);
+    a.emit('data', 4);
     test.same(bvalues, [10, 11, 13, 16, 20]);
     test.done();
 };
@@ -1854,6 +1857,8 @@ exports['foldl stream'] = function (test) {
 exports['foldr stream'] = function (test) {
     var a = h.createStream();
     // foldr doesn't make sense with streams
+    // TODO: perhaps it does! we could accumulate all the steam into an array
+    // then do a foldr on it...
     test.throws(function () {
         var b = h.foldr(add, 10, a);
     });
@@ -1868,11 +1873,11 @@ exports['each stream'] = function (test) {
     }, a);
     test.strictEqual(b, undefined);
     test.same(calls, []);
-    a.push(1);
+    a.emit('data', 1);
     test.same(calls, [1]);
-    a.push(2);
+    a.emit('data', 2);
     test.same(calls, [1,2]);
-    a.push(3);
+    a.emit('data', 3);
     test.same(calls, [1,2,3]);
     test.done();
 };
@@ -1887,19 +1892,154 @@ exports['combine'] = function (test) {
         vals.push(val);
     });
     test.same(vals, []);
-    a.push(1);
+    a.emit('data', 1);
     test.same(vals, [1]);
-    b.push(2);
+    b.emit('data', 2);
     test.same(vals, [1,2]);
-    c.push(3);
+    c.emit('data', 3);
     test.same(vals, [1,2,3]);
-    a.push(4);
-    b.push(5);
-    c.push(6);
-    c.push(7);
-    c.push(8);
-    b.push(9);
-    a.push(10);
+    a.emit('data', 4);
+    b.emit('data', 5);
+    c.emit('data', 6);
+    c.emit('data', 7);
+    c.emit('data', 8);
+    b.emit('data', 9);
+    a.emit('data', 10);
     test.same(vals, [1,2,3,4,5,6,7,8,9,10]);
+    test.done();
+};
+
+exports['pipe: function, function'] = function (test) {
+    var fn1 = h.add(4);
+    var fn2 = function (n) {
+        return n / 3;
+    };
+    var svalues = [];
+    var s = h.pipe(fn1, fn2);
+    s.on('data', function (val) {
+        svalues.push(val);
+    });
+    s.write(8);
+    test.same(svalues, [4]);
+    test.done();
+};
+
+exports['pipe: stream, function'] = function (test) {
+    var bvalues = [];
+    var a = h.createStream();
+    var b = h.pipe(a, h.add(1));
+    b.on('data', function (val) {
+        bvalues.push(val);
+    });
+    test.same(bvalues, []);
+    a.emit('data', 1);
+    test.same(bvalues, [2]);
+    a.emit('data', 2);
+    test.same(bvalues, [2,3]);
+    a.emit('data', 3);
+    test.same(bvalues, [2,3,4]);
+    test.done();
+};
+
+exports['pipe: function, stream'] = function (test) {
+    var avalues = [];
+    var bvalues = [];
+    var a = h.createStream();
+    var b = h.pipe(h.add(1), a);
+    a.on('data', function (val) {
+        avalues.push(val);
+    });
+    b.on('data', function (val) {
+        bvalues.push(val);
+    });
+    test.same(avalues, []);
+    test.same(bvalues, []);
+    b.write(1);
+    test.same(avalues, [2]);
+    test.same(bvalues, [2]);
+    b.write(2);
+    test.same(avalues, [2,3]);
+    test.same(bvalues, [2,3]);
+    b.write(3);
+    test.same(avalues, [2,3,4]);
+    test.same(bvalues, [2,3,4]);
+    test.done();
+};
+
+exports['pipe: stream, stream'] = function (test) {
+    var cvalues = [];
+    var bvalues = [];
+    var a = h.createStream();
+    var b = h.createStream();
+    var c = h.pipe(a, b);
+    b.on('data', function (val) {
+        bvalues.push(val);
+    });
+    c.on('data', function (val) {
+        cvalues.push(val);
+    });
+    test.same(bvalues, []);
+    test.same(cvalues, []);
+    a.emit('data', 1);
+    test.same(bvalues, [1]);
+    test.same(cvalues, [1]);
+    a.emit('data', 2);
+    test.same(bvalues, [1,2]);
+    test.same(cvalues, [1,2]);
+    a.emit('data', 3);
+    test.same(bvalues, [1,2,3]);
+    test.same(cvalues, [1,2,3]);
+    test.done();
+};
+
+exports['pipe: stream, function, stream'] = function (test) {
+    var cvalues = [];
+    var bvalues = [];
+    var a = h.createStream();
+    var b = h.createStream();
+    var c = h.pipe(a, add(1), b);
+    b.on('data', function (val) {
+        bvalues.push(val);
+    });
+    c.on('data', function (val) {
+        cvalues.push(val);
+    });
+    test.same(bvalues, []);
+    test.same(cvalues, []);
+    a.emit('data', 1);
+    test.same(bvalues, [2]);
+    test.same(cvalues, [2]);
+    a.emit('data', 2);
+    test.same(bvalues, [2,3]);
+    test.same(cvalues, [2,3]);
+    a.emit('data', 3);
+    test.same(bvalues, [2,3,4]);
+    test.same(cvalues, [2,3,4]);
+    test.done();
+};
+
+exports['pipe: function, stream, function'] = function (test) {
+    var cvalues = [];
+    var bvalues = [];
+    var a = add(1);
+    var b = h.createStream();
+    var c = h.pipe(a, b, mul(2));
+    b.on('data', function (val) {
+        bvalues.push(val);
+    });
+    c.on('data', function (val) {
+        cvalues.push(val);
+    });
+    test.same(bvalues, []);
+    test.same(cvalues, []);
+    c.write(1);
+    test.same(bvalues, [2]);
+    test.same(cvalues, [4]);
+    c.write(2);
+    test.same(bvalues, [2,3]);
+    test.same(cvalues, [4,6]);
+    c.write(3);
+    test.same(bvalues, [2,3,4]);
+    test.same(cvalues, [4,6,8]);
     test.done();
 };

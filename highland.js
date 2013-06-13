@@ -236,6 +236,29 @@ h.flip = h.curry(function (fn, x, y) { return fn(y, x); });
 
 h.seq = h.flip(h.compose);
 
+h.pipe = function (/* streams | functions ... */) {
+    function _toStream(x) {
+        return h.isStream(x) ? x: h.createStream(x);
+    }
+
+    function _pipe(a, b) {
+        var s = createStream();
+        a.on('data', function (val) {
+            b.write(val);
+        });
+        b.on('data', function (val) {
+            s.emit('data', val);
+        });
+        s.write = function (val) {
+            a.write(val);
+        };
+        return s;
+    }
+
+    var args = h.map(_toStream, arguments);
+    return h.foldl1(_pipe, args);
+};
+
 /**
  * Add tail-call optimization using a trampolining technique. This
  * version passes the provided function a continuation that can be used
@@ -1209,18 +1232,18 @@ h.foldl = h.curry(function (f, z, xs) {
         var initial_sent = false;
         var t = setTimeout(function () {
             if (!initial_sent) {
-                ys.push(z);
+                ys.emit('data', z);
             }
             initial_sent = true;
         }, 0);
         xs.on('data', function (x) {
             if (!initial_sent) {
-                ys.push(z);
+                ys.emit('data', z);
                 initial_sent = true;
                 clearTimeout(t);
             }
             z = f(z, x);
-            ys.push(z);
+            ys.emit('data', z);
         });
         return ys;
     }
@@ -1326,7 +1349,7 @@ h.map = h.curry(function (f, xs) {
     if (h.isStream(xs)) {
         var ys = h.createStream();
         xs.on('data', function (x) {
-            ys.push(f(x));
+            ys.emit('data', f(x));
         });
         return ys;
     }
@@ -1705,7 +1728,7 @@ h.filter = h.curry(function (p, xs) {
         var ys = h.createStream();
         xs.on('data', function (x) {
             if (p(x)) {
-                ys.push(x);
+                ys.emit('data', x);
             }
         });
         return ys;
@@ -1755,10 +1778,10 @@ h.partition = h.curry(function (p, xs) {
         var bs = h.createStream();
         xs.on('data', function (x) {
             if (p(x)) {
-                as.push(x);
+                as.emit('data', x);
             }
             else {
-                bs.push(x);
+                bs.emit('data', x);
             }
         });
         return [as, bs];
@@ -2162,9 +2185,7 @@ h.transWhere = h.curry(function (p, path, f, arr) {
     for (var i = 0, len = arr.length; i < len; i++) {
         var x = arr[i];
         if (p(x)) {
-            results.push(
-                h.set(path, f(h.get(path, x)), x)
-            );
+            results.push(h.set(path, f(h.get(path, x)), x));
         }
         else {
             results.push(x);
@@ -2657,24 +2678,30 @@ EventEmitter.prototype.listeners = function (type) {
  * ```
  */
 
-var Stream = h.Stream = function Stream() {
+var Stream = h.Stream = function Stream(fn) {
     EventEmitter.call(this);
+    fn = fn || h.id;
+    this.write = function (val) {
+        this.emit('data', fn(val));
+    };
 };
 Stream.prototype = new EventEmitter();
 
+/*
 h.Stream.prototype.push = function (value) {
     this.emit('data', value);
 };
+*/
 
-h.createStream = function () {
-    return new Stream();
+h.createStream = function (fn) {
+    return new Stream(fn);
 };
 
 h.combine = function (streams) {
     var xs = h.createStream();
     for (var i = 0, len = streams.length; i < len; i++) {
         streams[i].on('data', function (x) {
-            xs.push(x);
+            xs.emit('data', x);
         });
     }
     return xs;
@@ -2683,7 +2710,7 @@ h.combine = function (streams) {
 h.events = h.curry(function (name, selector, el) {
     var evs = h.createStream();
     $(el).on(name, selector, function (ev) {
-        evs.push(ev);
+        evs.emit('data', ev);
     });
     return evs;
 });
