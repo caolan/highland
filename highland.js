@@ -289,23 +289,25 @@ h.pipe = function (/* streams | functions ... */) {
 
 h.tailopt = function (fn) {
     return function () {
-        var that = this;
-        function NextArgs(args) {
-            args[args.length] = acc;
-            args.length++;
-            this.args = args;
-        }
-        NextArgs.prototype.valueOf = function () {
-            return fn.apply(that, this.args);
-        };
+        var result, next;
+
         function acc() {
-            return new NextArgs(arguments);
+            next = arguments;
+            next[next.length] = acc;
+            next.length++;
         }
-        var v = new NextArgs(arguments);
-        while (v instanceof NextArgs) {
-            v = fn.apply(that, v.args);
+        acc.apply(this, arguments);
+
+        while (next) {
+            var _args = next;
+            next = null;
+            result = fn.apply(this, _args);
+            if (next && result !== undefined) {
+                throw new Error('Non tail-recursive call');
+            }
         }
-        return v;
+
+        return result;
     };
 };
 

@@ -92,6 +92,7 @@ exports['tailopt'] = function (test) {
                x;
     });
     test.equal(sum(20, 100000), 100020);
+
     var foo = h.tailopt(function (x, y, foo) {
         if (x === 0) {
             return foo(x + 1, y);
@@ -107,6 +108,7 @@ exports['tailopt'] = function (test) {
         return foo(x * 2, y * 2);
     };
     test.equal(foo(0, 1), 2);
+
     var foo2 = h.tailopt(function (x, y, foo2) {
         if (x === 0) {
             return foo(x + 1, y);
@@ -122,30 +124,52 @@ exports['tailopt'] = function (test) {
         return foo2(x * 2, y * 2);
     };
     test.equal(foo(0, 1), 2);
+
     // make sure you can still make non-tail optimized calls
-    var len = h.tailopt(function (arr, len) {
-        if (arr.length === 0) {
-            return 0;
+    test.throws(function () {
+        var len = h.tailopt(function (arr, len) {
+            if (arr.length === 0) {
+                return 0;
+            }
+            return 1 + len(h.tail(arr));
+        });
+        //test.equal(len([1,2,3]), 3);
+        len([1,2,3]);
+    }, 'Non tail-recursive call');
+
+    test.throws(function () {
+        var strtest = h.tailopt(function (arr, strtest) {
+            if (arr.length === 0) {
+                return '0';
+            }
+            return '1' + strtest(h.tail(arr));
+        });
+        //test.equal(strtest([1,2,3]), '1110');
+        strtest([1,2,3]);
+    }, 'Non tail-recursive call');
+
+    test.throws(function () {
+        var strtest2 = h.tailopt(function (arr, len) {
+            if (arr.length === 0) {
+                return ['0'];
+            }
+            return h.cons('1', len(h.tail(arr)));
+        });
+        //test.equal(strtest2([1,2,3]), ['1','1','1','0']);
+        strtest2([1,2,3]);
+    }, 'Non tail-recursive call');
+
+    // call tail functions even with no return value
+    var countdown_calls = [];
+    var countdown = h.tailopt(function (n, fn) {
+        countdown_calls.push(n);
+        if (n !== 0) {
+            fn(--n);
         }
-        return 1 + len(h.tail(arr));
     });
-    test.equal(len([1,2,3]), 3);
-    var strtest = h.tailopt(function (arr, len) {
-        if (arr.length === 0) {
-            return '0';
-        }
-        return '1' + len(h.tail(arr));
-    });
-    test.equal(strtest([1,2,3]), '1110');
-    /*
-    var strtest2 = h.tailopt(function (arr, len) {
-        if (arr.length === 0) {
-            return ['0'];
-        }
-        return h.cons('1', len(h.tail(arr)));
-    });
-    test.equal(strtest2([1,2,3]), ['1','1','1','0']);
-    */
+    test.strictEqual(countdown(5), undefined);
+    test.same(countdown_calls, [5,4,3,2,1,0]);
+
     test.done();
 };
 
