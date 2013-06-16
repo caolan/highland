@@ -288,10 +288,15 @@ h.pipe = function (/* streams | functions ... */) {
  */
 
 h.tailopt = function (fn) {
-    return function () {
-        var result, next;
+    var newfn = function () {
+        var result, next, finished;
 
         function acc() {
+            if (finished) {
+                // this is an async call
+                // start this process again with new args
+                return newfn.apply(this, arguments);
+            }
             next = arguments;
             next[next.length] = acc;
             next.length++;
@@ -307,8 +312,10 @@ h.tailopt = function (fn) {
             }
         }
 
+        finished = true;
         return result;
     };
+    return newfn;
 };
 
 

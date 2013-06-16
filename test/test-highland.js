@@ -170,7 +170,22 @@ exports['tailopt'] = function (test) {
     test.strictEqual(countdown(5), undefined);
     test.same(countdown_calls, [5,4,3,2,1,0]);
 
-    test.done();
+    // usually pointless async tail-opt should still work
+    var countdown2_calls = [];
+    var countdown2 = h.tailopt(function (n, fn) {
+        countdown2_calls.push(n);
+        if (n !== 0) {
+            setTimeout(function () {
+                fn(--n);
+            }, 0);
+        }
+        else {
+            // do the test now
+            test.same(countdown_calls, [5,4,3,2,1,0]);
+            test.done();
+        }
+    });
+    test.strictEqual(countdown2(5), undefined);
 };
 
 
