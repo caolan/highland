@@ -1,4 +1,4 @@
-var h = require('../highland');
+var h = require('../lib/highland');
 
 
 /***** Functions *****/

@@ -1,11 +1,13 @@
 {
     "name": "highland",
     "version": "0.0.1",
+    "description": "Higher-order utilities for JavaScript",
     "devDependencies": {
         "scrawl": "0.0.2"
     },
     "jam": {
         "main": "highland.js",
         "include": ["highland.js", "README", "LICENSE"]
-    }
+    },
+    "main": "lib/highland.js"
 }

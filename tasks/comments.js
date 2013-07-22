@@ -5,7 +5,7 @@ var scrawl = require('scrawl'),
 
 module.exports = function (tea, context, config, callback) {
     var t = context.handlebars;
-    var filename = path.resolve(tea.source, 'highland.js');
+    var filename = path.resolve(tea.source, 'lib/highland.js');
     exports.parseComments(filename, function (err, comments) {
         if (err) {
             return callback(err);
