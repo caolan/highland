@@ -1,4 +1,5 @@
-var h = require('../lib/highland');
+var h = require('../lib/highland'),
+    stream = require('stream');
 
 
 /***** Functions *****/
@@ -1243,7 +1244,6 @@ exports['each'] = function (test) {
     test.done();
 };
 
-// TODO: map to a value eg, stream.map(1) => Stream: 1, 1, 1, 1
 exports['map'] = function (test) {
     var dbl = function (x) {
         test.equal(arguments.length, 1);
@@ -1813,12 +1813,293 @@ exports['map stream'] = function (test) {
         bvalues.push(val);
     });
     test.same(bvalues, []);
-    a.emit('data', 1);
+    a.push(1);
     test.same(bvalues, [2]);
-    a.emit('data', 2);
+    a.push(2);
     test.same(bvalues, [2,3]);
-    a.emit('data', 3);
+    a.push(3);
     test.same(bvalues, [2,3,4]);
+    test.done();
+};
+
+exports['map async stream'] = function (test) {
+    var s1 = h.createStream();
+
+    var counter = 0;
+    function addMore() {
+        setTimeout(function () {
+            if (counter < 4) {
+                s1.push(++counter);
+                addMore();
+            }
+            else {
+                s1.end();
+            }
+        }, 10);
+    }
+    addMore();
+
+    var s2 = h.map(function (x) {
+        return x * 2;
+    }, s1);
+
+    var results = [];
+    h.each(function (x) {
+        results.push(x);
+    }, s2);
+
+    s2.on('end', function () {
+        test.same(results, [2,4,6,8]);
+        test.done();
+    });
+};
+
+exports['multiple maps over single source'] = function (test) {
+    var s1 = h.createStream();
+
+    var counter = 0;
+    function addMore() {
+        setTimeout(function () {
+            if (counter < 4) {
+                s1.push(++counter);
+                addMore();
+            }
+            else {
+                s1.end();
+            }
+        }, 10);
+    }
+    addMore();
+
+    var s2 = h.map(function (x) {
+        return x * 2;
+    }, s1);
+    var s3 = h.map(function (x) {
+        return x + 1;
+    }, s1);
+
+    var results = [];
+    h.each(function (x) {
+        results.push(x);
+    }, s2);
+    h.each(function (x) {
+        results.push(x);
+    }, s3);
+
+    s1.on('end', function () {
+        test.same(results, [2,2,4,3,6,4,8,5]);
+        test.done();
+    });
+};
+
+exports['map sync stream already ended'] = function (test) {
+    var s1 = h.createStream();
+    s1.push(1);
+    s1.push(2);
+    s1.push(3);
+    s1.push(4);
+    s1.end();
+    var s2 = h.map(function (x) {
+        return x + 2;
+    }, s1);
+    var results = [];
+    h.each(function (x) {
+        results.push(x);
+    }, s2);
+    s1.on('end', function () {
+        test.same(results, [3,4,5,6]);
+        test.done();
+    });
+};
+
+exports['pipe with back-pressure'] = function (test) {
+    var count = 0;
+    var source = h.createStream();
+    var iter = function () {
+        source.push((++count).toString());
+    };
+    var pause_counter = 0;
+    var t = null;
+    source.pause = function () {
+        pause_counter++;
+        if (t) {
+            clearInterval(t);
+            t = null;
+        }
+    };
+    source.resume = function () {
+        if (!t) {
+            t = setInterval(iter, 10);
+        }
+    };
+    source.resume();
+
+    var written = '';
+    var dest = new stream.Writable({
+        decodeStrings: false
+    });
+    dest._write = function (chunk, encoding, callback) {
+        setTimeout(function () {
+            written += chunk;
+            if (count < 4) {
+                dest.emit('drain');
+            }
+            callback();
+        }, 100);
+    };
+    var _origWrite = dest.write;
+    dest.write = function () {
+        var r = _origWrite.apply(this, arguments);
+        // return false after every write(), emit drain on every _write callback
+        return false;
+    };
+
+    h.pipe(source, dest);
+
+    setTimeout(function () {
+        test.equal(pause_counter, 4);
+        test.equal(written, '1234');
+        test.same(source.buffer, []);
+        test.done();
+    }, 600);
+};
+
+exports['pipe regulates flow for slowest consumer'] = function (test) {
+    var count = 0;
+    var source = h.createStream();
+    var iter = function () {
+        source.push((++count).toString());
+    };
+    var resume_counter = 0;
+    var t = null;
+    source.pause = function () {
+        if (t) {
+            clearInterval(t);
+            t = null;
+        }
+    };
+    source.resume = function () {
+        resume_counter++;
+        if (!t) {
+            t = setInterval(iter, 10);
+        }
+    };
+    source.resume();
+
+    var written1 = '';
+    var dest1 = new stream.Writable({decodeStrings: false});
+    dest1._write = function (chunk, encoding, callback) {
+        setTimeout(function () {
+            written1 += chunk;
+            if (count < 4) {
+                dest1.emit('drain');
+            }
+            callback();
+        }, 200);
+    };
+    var _origWrite = dest1.write;
+    dest1.write = function () {
+        var r = _origWrite.apply(this, arguments);
+        // return false after every write(), emit drain on every _write callback
+        return false;
+    };
+
+    var written2 = '';
+    var dest2 = new stream.Writable({decodeStrings: false});
+    dest2._write = function (chunk, encoding, callback) {
+        setTimeout(function () {
+            written2 += chunk;
+            dest2.emit('drain');
+            callback();
+        }, 50);
+    };
+    var _origWrite = dest2.write;
+    dest2.write = function () {
+        var r = _origWrite.apply(this, arguments);
+        // return false after every write(), emit drain on every _write callback
+        return false;
+    };
+
+    h.pipe(source, dest1);
+    h.pipe(source, dest2);
+
+    setTimeout(function () {
+        test.equal(resume_counter, 4);
+        test.equal(written1, '1234');
+        test.equal(written2, '1234');
+        test.same(source.buffer, []);
+        test.done();
+    }, 1000);
+};
+
+exports['map then pipe with back-pressure'] = function (test) {
+    var count = 0;
+    var source = h.createStream();
+    var iter = function () {
+        source.push((++count).toString());
+    };
+    var pause_counter = 0;
+    var t = null;
+    source.pause = function () {
+        pause_counter++;
+        if (t) {
+            clearInterval(t);
+            t = null;
+        }
+    };
+    source.resume = function () {
+        if (!t) {
+            t = setInterval(iter, 10);
+        }
+    };
+    source.resume();
+
+    var written = '';
+    var dest = new stream.Writable({
+        decodeStrings: false
+    });
+    dest._write = function (chunk, encoding, callback) {
+        setTimeout(function () {
+            written += chunk;
+            if (count < 4) {
+                dest.emit('drain');
+            }
+            callback();
+        }, 100);
+    };
+    var _origWrite = dest.write;
+    dest.write = function () {
+        var r = _origWrite.apply(this, arguments);
+        // return false after every write(), emit drain on every _write callback
+        return false;
+    };
+
+    h.pipe(h.map(function (x) { return x + '.'; }, source), dest);
+
+    setTimeout(function () {
+        test.equal(pause_counter, 4);
+        test.equal(written, '1.2.3.4.');
+        test.same(source.buffer, []);
+        test.done();
+    }, 600);
+};
+
+exports['multiple pause requests from same dest resume ok'] = function (test) {
+    var s1 = h.createStream();
+    var pause_counter = 0;
+    s1.pause = function () {
+        pause_counter++;
+    };
+    var resume_counter = 0;
+    s1.resume = function () {
+        resume_counter++;
+    };
+    var s2 = h.createStream();
+    s1._requestPause(s2);
+    s1._requestPause(s2);
+    s1._requestResume(s2);
+    test.equal(pause_counter, 1);
+    test.equal(resume_counter, 1);
     test.done();
 };
 
@@ -1833,15 +2114,72 @@ exports['filter stream'] = function (test) {
         bvalues.push(val);
     });
     test.same(bvalues, []);
-    a.emit('data', 1);
+    a.push(1);
     test.same(bvalues, []);
-    a.emit('data', 2);
+    a.push(2);
     test.same(bvalues, [2]);
-    a.emit('data', 3);
+    a.push(3);
     test.same(bvalues, [2]);
-    a.emit('data', 4);
+    a.push(4);
     test.same(bvalues, [2,4]);
     test.done();
+};
+
+exports['filter then pipe with back-pressure'] = function (test) {
+    var count = 0;
+    var source = h.createStream();
+    var iter = function () {
+        source.push((++count).toString());
+    };
+    var pause_counter = 0;
+    var t = null;
+    source.pause = function () {
+        pause_counter++;
+        if (t) {
+            clearInterval(t);
+            t = null;
+        }
+    };
+    source.resume = function () {
+        if (!t) {
+            t = setInterval(iter, 10);
+        }
+    };
+    source.resume();
+
+    var written = '';
+    var dest = new stream.Writable({
+        decodeStrings: false
+    });
+    dest._write = function (chunk, encoding, callback) {
+        setTimeout(function () {
+            written += chunk;
+            if (count < 4) {
+                dest.emit('drain');
+            }
+            callback();
+        }, 100);
+    };
+    var _origWrite = dest.write;
+    dest.write = function () {
+        var r = _origWrite.apply(this, arguments);
+        // return false after every write(), emit drain on every _write callback
+        return false;
+    };
+
+    h.pipe(
+        h.filter(function (x) {
+            return !(Number(x) % 2);
+        }, source),
+        dest
+    );
+
+    setTimeout(function () {
+        test.equal(pause_counter, 2);
+        test.equal(written, '24');
+        test.same(source.buffer, []);
+        test.done();
+    }, 600);
 };
 
 exports['partition stream'] = function (test) {
@@ -1860,16 +2198,16 @@ exports['partition stream'] = function (test) {
     });
     test.same(p1values, []);
     test.same(p2values, []);
-    a.emit('data', 1);
+    a.push(1);
     test.same(p1values, []);
     test.same(p2values, [1]);
-    a.emit('data', 2);
+    a.push( 2);
     test.same(p1values, [2]);
     test.same(p2values, [1]);
-    a.emit('data', 3);
+    a.push(3);
     test.same(p1values, [2]);
     test.same(p2values, [1,3]);
-    a.emit('data', 4);
+    a.push(4);
     test.same(p1values, [2,4]);
     test.same(p2values, [1,3]);
     test.done();
@@ -1882,13 +2220,13 @@ exports['foldl stream'] = function (test) {
     b.on('data', function (val) {
         bvalues.push(val);
     });
-    a.emit('data', 1);
+    a.push(1);
     test.same(bvalues, [10, 11]);
-    a.emit('data', 2);
+    a.push(2);
     test.same(bvalues, [10, 11, 13]);
-    a.emit('data', 3);
+    a.push(3);
     test.same(bvalues, [10, 11, 13, 16]);
-    a.emit('data', 4);
+    a.push(4);
     test.same(bvalues, [10, 11, 13, 16, 20]);
     test.done();
 };
@@ -1912,11 +2250,11 @@ exports['each stream'] = function (test) {
     }, a);
     test.strictEqual(b, undefined);
     test.same(calls, []);
-    a.emit('data', 1);
+    a.push(1);
     test.same(calls, [1]);
-    a.emit('data', 2);
+    a.push(2);
     test.same(calls, [1,2]);
-    a.emit('data', 3);
+    a.push(3);
     test.same(calls, [1,2,3]);
     test.done();
 };
@@ -1931,154 +2269,19 @@ exports['merge'] = function (test) {
         vals.push(val);
     });
     test.same(vals, []);
-    a.emit('data', 1);
+    a.push(1);
     test.same(vals, [1]);
-    b.emit('data', 2);
+    b.push(2);
     test.same(vals, [1,2]);
-    c.emit('data', 3);
+    c.push(3);
     test.same(vals, [1,2,3]);
-    a.emit('data', 4);
-    b.emit('data', 5);
-    c.emit('data', 6);
-    c.emit('data', 7);
-    c.emit('data', 8);
-    b.emit('data', 9);
-    a.emit('data', 10);
+    a.push(4);
+    b.push(5);
+    c.push(6);
+    c.push(7);
+    c.push(8);
+    b.push(9);
+    a.push(10);
     test.same(vals, [1,2,3,4,5,6,7,8,9,10]);
-    test.done();
-};
-
-exports['pipe: function, function'] = function (test) {
-    var fn1 = h.add(4);
-    var fn2 = function (n) {
-        return n / 3;
-    };
-    var svalues = [];
-    var s = h.pipe(fn1, fn2);
-    s.on('data', function (val) {
-        svalues.push(val);
-    });
-    s.write(8);
-    test.same(svalues, [4]);
-    test.done();
-};
-
-exports['pipe: stream, function'] = function (test) {
-    var bvalues = [];
-    var a = h.createStream();
-    var b = h.pipe(a, h.add(1));
-    b.on('data', function (val) {
-        bvalues.push(val);
-    });
-    test.same(bvalues, []);
-    a.emit('data', 1);
-    test.same(bvalues, [2]);
-    a.emit('data', 2);
-    test.same(bvalues, [2,3]);
-    a.emit('data', 3);
-    test.same(bvalues, [2,3,4]);
-    test.done();
-};
-
-exports['pipe: function, stream'] = function (test) {
-    var avalues = [];
-    var bvalues = [];
-    var a = h.createStream();
-    var b = h.pipe(h.add(1), a);
-    a.on('data', function (val) {
-        avalues.push(val);
-    });
-    b.on('data', function (val) {
-        bvalues.push(val);
-    });
-    test.same(avalues, []);
-    test.same(bvalues, []);
-    b.write(1);
-    test.same(avalues, [2]);
-    test.same(bvalues, [2]);
-    b.write(2);
-    test.same(avalues, [2,3]);
-    test.same(bvalues, [2,3]);
-    b.write(3);
-    test.same(avalues, [2,3,4]);
-    test.same(bvalues, [2,3,4]);
-    test.done();
-};
-
-exports['pipe: stream, stream'] = function (test) {
-    var cvalues = [];
-    var bvalues = [];
-    var a = h.createStream();
-    var b = h.createStream();
-    var c = h.pipe(a, b);
-    b.on('data', function (val) {
-        bvalues.push(val);
-    });
-    c.on('data', function (val) {
-        cvalues.push(val);
-    });
-    test.same(bvalues, []);
-    test.same(cvalues, []);
-    a.emit('data', 1);
-    test.same(bvalues, [1]);
-    test.same(cvalues, [1]);
-    a.emit('data', 2);
-    test.same(bvalues, [1,2]);
-    test.same(cvalues, [1,2]);
-    a.emit('data', 3);
-    test.same(bvalues, [1,2,3]);
-    test.same(cvalues, [1,2,3]);
-    test.done();
-};
-
-exports['pipe: stream, function, stream'] = function (test) {
-    var cvalues = [];
-    var bvalues = [];
-    var a = h.createStream();
-    var b = h.createStream();
-    var c = h.pipe(a, add(1), b);
-    b.on('data', function (val) {
-        bvalues.push(val);
-    });
-    c.on('data', function (val) {
-        cvalues.push(val);
-    });
-    test.same(bvalues, []);
-    test.same(cvalues, []);
-    a.emit('data', 1);
-    test.same(bvalues, [2]);
-    test.same(cvalues, [2]);
-    a.emit('data', 2);
-    test.same(bvalues, [2,3]);
-    test.same(cvalues, [2,3]);
-    a.emit('data', 3);
-    test.same(bvalues, [2,3,4]);
-    test.same(cvalues, [2,3,4]);
-    test.done();
-};
-
-exports['pipe: function, stream, function'] = function (test) {
-    var cvalues = [];
-    var bvalues = [];
-    var a = add(1);
-    var b = h.createStream();
-    var c = h.pipe(a, b, mul(2));
-    b.on('data', function (val) {
-        bvalues.push(val);
-    });
-    c.on('data', function (val) {
-        cvalues.push(val);
-    });
-    test.same(bvalues, []);
-    test.same(cvalues, []);
-    c.write(1);
-    test.same(bvalues, [2]);
-    test.same(cvalues, [4]);
-    c.write(2);
-    test.same(bvalues, [2,3]);
-    test.same(cvalues, [4,6]);
-    c.write(3);
-    test.same(bvalues, [2,3,4]);
-    test.same(cvalues, [4,6,8]);
     test.done();
 };
