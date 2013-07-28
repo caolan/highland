@@ -1822,6 +1822,23 @@ exports['map stream'] = function (test) {
     test.done();
 };
 
+exports['map as method of stream'] = function (test) {
+    var bvalues = [];
+    var a = h.createStream();
+    var b = a.map(h.add(1));
+    b.on('data', function (val) {
+        bvalues.push(val);
+    });
+    test.same(bvalues, []);
+    a.push(1);
+    test.same(bvalues, [2]);
+    a.push(2);
+    test.same(bvalues, [2,3]);
+    a.push(3);
+    test.same(bvalues, [2,3,4]);
+    test.done();
+};
+
 exports['map async stream'] = function (test) {
     var s1 = h.createStream();
 
@@ -1955,6 +1972,83 @@ exports['pipe with back-pressure'] = function (test) {
     };
 
     h.pipe(source, dest);
+
+    setTimeout(function () {
+        test.equal(pause_counter, 4);
+        test.equal(written, '1234');
+        test.same(source.buffer, []);
+        test.done();
+    }, 600);
+};
+
+exports['pipe end event gets called on target'] = function (test) {
+    test.expect(1);
+    var src = h.createStream();
+    src.push('1');
+    src.push('1');
+    src.push('1');
+    src.push('1');
+    src.end();
+    var written = '';
+    var dest = new stream.Writable({
+        decodeStrings: false
+    });
+    dest._write = function (chunk, encoding, callback) {
+        setTimeout(function () {
+            written += chunk;
+            callback();
+        }, 10);
+    };
+    dest.end = function () {
+        test.ok(true);
+        test.done();
+    };
+    src.pipe(dest);
+};
+
+exports['pipe as method of stream'] = function (test) {
+    var count = 0;
+    var source = h.createStream();
+    var iter = function () {
+        source.push((++count).toString());
+    };
+    var pause_counter = 0;
+    var t = null;
+    source.pause = function () {
+        pause_counter++;
+        if (t) {
+            clearInterval(t);
+            t = null;
+        }
+    };
+    source.resume = function () {
+        if (!t) {
+            t = setInterval(iter, 10);
+        }
+    };
+    source.resume();
+
+    var written = '';
+    var dest = new stream.Writable({
+        decodeStrings: false
+    });
+    dest._write = function (chunk, encoding, callback) {
+        setTimeout(function () {
+            written += chunk;
+            if (count < 4) {
+                dest.emit('drain');
+            }
+            callback();
+        }, 100);
+    };
+    var _origWrite = dest.write;
+    dest.write = function () {
+        var r = _origWrite.apply(this, arguments);
+        // return false after every write(), emit drain on every _write callback
+        return false;
+    };
+
+    source.pipe(dest);
 
     setTimeout(function () {
         test.equal(pause_counter, 4);
@@ -2110,6 +2204,28 @@ exports['filter stream'] = function (test) {
         return !(n % 2);
     }
     var b = h.filter(isEqual, a);
+    b.on('data', function (val) {
+        bvalues.push(val);
+    });
+    test.same(bvalues, []);
+    a.push(1);
+    test.same(bvalues, []);
+    a.push(2);
+    test.same(bvalues, [2]);
+    a.push(3);
+    test.same(bvalues, [2]);
+    a.push(4);
+    test.same(bvalues, [2,4]);
+    test.done();
+};
+
+exports['filter as method of stream'] = function (test) {
+    var bvalues = [];
+    var a = h.createStream();
+    function isEqual(n) {
+        return !(n % 2);
+    }
+    var b = a.filter(isEqual);
     b.on('data', function (val) {
         bvalues.push(val);
     });
@@ -2283,5 +2399,143 @@ exports['merge'] = function (test) {
     b.push(9);
     a.push(10);
     test.same(vals, [1,2,3,4,5,6,7,8,9,10]);
+    test.done();
+};
+
+exports['cons stream'] = function (test) {
+    var s1 = h.createStream();
+    s1.push(1);
+    s1.push(2);
+    s1.push(3);
+    s1.end();
+    var s2 = h.cons(0, s1);
+    var xs = [];
+    h.each(function (x) {
+        xs.push(x);
+    }, s2);
+    s2.on('end', function () {
+        test.same(xs, [0,1,2,3]);
+        test.done();
+    });
+};
+
+exports['prepend is alias for cons'] = function (test) {
+    test.equal(h.cons, h.prepend);
+    test.done();
+};
+
+exports['prepend as method of stream'] = function (test) {
+    var s1 = h.createStream();
+    s1.push(1);
+    s1.push(2);
+    s1.push(3);
+    s1.end();
+    var s2 = s1.prepend(0);
+    var xs = [];
+    h.each(function (x) {
+        xs.push(x);
+    }, s2);
+    s2.on('end', function () {
+        test.same(xs, [0,1,2,3]);
+        test.done();
+    });
+};
+
+exports['append stream'] = function (test) {
+    var s1 = h.createStream();
+    s1.push(1);
+    s1.push(2);
+    s1.push(3);
+    s1.end();
+    var s2 = h.append(4, s1);
+    var xs = [];
+    h.each(function (x) {
+        xs.push(x);
+    }, s2);
+    s2.on('end', function () {
+        test.same(xs, [1,2,3,4]);
+        test.done();
+    });
+};
+
+exports['append as method of stream'] = function (test) {
+    var s1 = h.createStream();
+    s1.push(1);
+    s1.push(2);
+    s1.push(3);
+    s1.end();
+    var s2 = s1.append(4);
+    var xs = [];
+    h.each(function (x) {
+        xs.push(x);
+    }, s2);
+    s2.on('end', function () {
+        test.same(xs, [1,2,3,4]);
+        test.done();
+    });
+};
+
+exports['where'] = function (test) {
+    var a = [
+        {name: 'foo', group: 'users', roles: ['one', 'two']},
+        {name: 'bar', group: 'users', roles: ['one', 'three']},
+        {name: 'baz', group: 'admins', roles: ['one', 'two']},
+        {name: 'qux', group: 'users', roles: []},
+        {name: 'qux', group: 'admins'}
+    ];
+    test.same(h.where({group: 'admins'}, a), [
+        {name: 'baz', group: 'admins', roles: ['one', 'two']},
+        {name: 'qux', group: 'admins'}
+    ]);
+    test.same(h.where({name: 'foo'}, a), [
+        {name: 'foo', group: 'users', roles: ['one', 'two']},
+    ]);
+    test.same(h.where({name: 'qux'}, a), [
+        {name: 'qux', group: 'users', roles: []},
+        {name: 'qux', group: 'admins'}
+    ]);
+    test.same(h.where({name: 'qux', group: 'users'}, a), [
+        {name: 'qux', group: 'users', roles: []},
+    ]);
+    // does't do deep comparisons
+    test.same(h.where({roles: ['one']}, a), []);
+    test.same(h.where({roles: ['one', 'two']}, a), []);
+    test.same(h.where({asdf: 123}, a), []);
+    // partial application
+    test.same(h.where({group: 'admins'})(a), [
+        {name: 'baz', group: 'admins', roles: ['one', 'two']},
+        {name: 'qux', group: 'admins'}
+    ]);
+    test.done();
+};
+
+exports['findWhere'] = function (test) {
+    var a = [
+        {name: 'foo', group: 'users', roles: ['one', 'two']},
+        {name: 'bar', group: 'users', roles: ['one', 'three']},
+        {name: 'baz', group: 'admins', roles: ['one', 'two']},
+        {name: 'qux', group: 'users', roles: []},
+        {name: 'qux', group: 'admins'}
+    ];
+    test.same(h.findWhere({group: 'admins'}, a),
+        {name: 'baz', group: 'admins', roles: ['one', 'two']}
+    );
+    test.same(h.findWhere({name: 'foo'}, a),
+        {name: 'foo', group: 'users', roles: ['one', 'two']}
+    );
+    test.same(h.findWhere({name: 'qux'}, a),
+        {name: 'qux', group: 'users', roles: []}
+    );
+    test.same(h.findWhere({name: 'qux', group: 'users'}, a),
+        {name: 'qux', group: 'users', roles: []}
+    );
+    // does't do deep comparisons
+    test.strictEqual(h.findWhere({roles: ['one']}, a), undefined);
+    test.strictEqual(h.findWhere({roles: ['one', 'two']}, a), undefined);
+    test.strictEqual(h.findWhere({asdf: 123}, a), undefined);
+    // partial application
+    test.same(h.findWhere({group: 'admins'})(a),
+        {name: 'baz', group: 'admins', roles: ['one', 'two']}
+    );
     test.done();
 };
