@@ -2539,3 +2539,21 @@ exports['findWhere'] = function (test) {
     );
     test.done();
 };
+
+exports['contains'] = function (test) {
+    var a = ['wibble', 'wobble', 'wubble'];
+    test.strictEqual(h.contains('wibble', a), true);
+    test.strictEqual(h.contains('wobble', a), true);
+    test.strictEqual(h.contains('foo', a), false);
+    test.strictEqual(h.contains(null, a), false);
+    test.strictEqual(h.contains('wibble')(a), true);
+    test.done();
+};
+
+exports['without'] = function (test) {
+    var a = ['wibble', 'wobble', 'wubble'];
+    test.same(h.without('wobble', a), ['wibble', 'wubble']);
+    test.same(h.without('foo', a), ['wibble', 'wobble', 'wubble']);
+    test.same(h.without('wobble')(a), ['wibble', 'wubble']);
+    test.done();
+};
