@@ -1270,6 +1270,33 @@ exports['reverse'] = function (test) {
     test.done();
 };
 
+exports['intersperse'] = function (test) {
+    test.same(h.intersperse(",", ["a","b","c"]), ["a",",","b",",","c"]);
+    test.same(h.intersperse(",", ["a",1]), ["a",",",1]);
+    test.same(h.intersperse(",", [1]), [1]);
+    test.same(h.intersperse(",", []), []);
+    test.same(h.intersperse([0], [1,2,3]), [1,[0],2,[0],3]);
+    test.same(h.intersperse(",")(["a","b","c"]), ["a",",","b",",","c"]);
+    test.done();
+};
+
+exports['intersperse stream'] = function (test) {
+    var bvalues = [];
+    var a = h.createStream();
+    var b = h.intersperse(0, a);
+    b.on('data', function (val) {
+        bvalues.push(val);
+    });
+    test.same(bvalues, []);
+    a.push(1);
+    test.same(bvalues, [1]);
+    a.push(2);
+    test.same(bvalues, [1,0,2]);
+    a.push(3);
+    test.same(bvalues, [1,0,2,0,3]);
+    test.done();
+};
+
 exports['concatMap'] = function (test) {
     var fn = function (c) {
         return c.toUpperCase();
