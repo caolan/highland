@@ -1,6 +1,6 @@
 {
     "name": "highland",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "Higher-order utilities for JavaScript",
     "devDependencies": {
         "scrawl": "0.0.2"
