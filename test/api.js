@@ -377,6 +377,20 @@ exports['stream.apply'] = function (test) {
     });
 };
 
+exports['stream.concat'] = function (test) {
+    var s1 = Stream(function (push, next) {
+        setTimeout(function () {
+            push(1);
+            next(Stream());
+        }, 200);
+    });
+    var s2 = Stream([2]);
+    var s = s1.concat(s2).concat([3,4]).toArray(function (arr) {
+        test.same(arr, [1,2,3,4]);
+        test.done();
+    });
+};
+
 /*
 exports['long sync stream generator'] = function (test) {
     test.done();

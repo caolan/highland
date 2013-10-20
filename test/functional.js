@@ -116,3 +116,12 @@ exports['top level map function curry - array'] = function (test) {
         test.done();
     });
 };
+
+exports['concat'] = function (test) {
+    var a = [1];
+    var b = [2,3];
+    h.concat(a, b).toArray(function (arr) {
+        test.same(arr, [1,2,3]);
+        test.done();
+    });
+};

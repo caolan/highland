@@ -9,6 +9,10 @@ var Nil = exports.Nil = {};
 // collection of base methods inherited by all streams
 function BaseStream() {}
 
+BaseStream.prototype.concat = function (s) {
+    return new ConcatStream(this, Stream(s));
+};
+
 BaseStream.prototype.map = function (f) {
     return new TransformStream(this, function (err, x) {
         if (err) {
@@ -241,6 +245,43 @@ inherits(TransformStream, BaseStream);
 TransformStream.prototype.consume = function (f) {
     //console.log(['TransformStream.consume', f]);
     return new TransformStreamConsumer(this, f);
+};
+
+
+function ConcatStreamConsumer(src, f) {
+    var that = this;
+    this.source = src;
+    this.reader = f;
+    this.consumer = src._a.consume(function (err, x) {
+        if (x === Nil) {
+            that.consumer = src._b.consume(that.reader);
+            that.consumer.resume();
+        }
+        else {
+            that.reader(err, x);
+        }
+    });
+};
+
+ConcatStreamConsumer.prototype.pause = function () {
+    //console.log(['ConcatStreamConsumer.pause']);
+    this.consumer.pause();
+};
+
+ConcatStreamConsumer.prototype.resume = function () {
+    //console.log(['ConcatStreamConsumer.resume']);
+    this.consumer.resume();
+};
+
+function ConcatStream(a, b) {
+    this._a = a;
+    this._b = b;
+};
+inherits(ConcatStream, BaseStream);
+
+ConcatStream.prototype.consume = function (f) {
+    //console.log(['ConcatStream.consume', f]);
+    return new ConcatStreamConsumer(this, f);
 };
 
 
@@ -706,4 +747,10 @@ h.seq = h.flip(h.compose);
 
 h.map = h.curry(function (f, xs) {
     return Stream(xs).map(f);
+});
+
+
+
+h.concat = h.curry(function (a, b) {
+    return Stream(a).concat(b);
 });
