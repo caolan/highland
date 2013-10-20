@@ -7,5 +7,6 @@
     },
     "scripts": {
         "test": "node node_modules/.bin/nodeunit test"
-    }
+    },
+    "main": "highland.js"
 }
