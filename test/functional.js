@@ -125,3 +125,32 @@ exports['concat'] = function (test) {
         test.done();
     });
 };
+
+exports['zip'] = function (test) {
+    h.zip([1,2,3], [4,5,6]).toArray(function (arr) {
+        test.same(arr, [[1,4],[2,5],[3,6]]);
+    });
+    h.zip([1,2], [4,5,6]).toArray(function (arr) {
+        test.same(arr, [[1,4],[2,5],[h.Nil, 6]]);
+    });
+    // partial application
+    h.zip([1,2])([4,5]).toArray(function (arr) {
+        test.same(arr, [[1,4],[2,5]]);
+    });
+    var s1 = h.Stream(function (push, next) {
+        push(1);
+        push(2);
+        push(3);
+        next(h.Stream());
+    });
+    var s2 = h.Stream(function (push, next) {
+        push(4);
+        push(5);
+        push(6);
+        next(h.Stream());
+    });
+    h.zip(s1, s2).toArray(function (arr) {
+        test.same(arr, [[1,4],[2,5],[3,6]]);
+        test.done();
+    });
+};

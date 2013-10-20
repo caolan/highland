@@ -62,6 +62,64 @@ BaseStream.prototype.filter = function (f) {
     });
 };
 
+BaseStream.prototype.zip = function (b) {
+    var a = this;
+    b = Stream(b);
+    var ac = a.consume();
+    var bc = b.consume();
+    return new GeneratorStream(function (push, next) {
+        var pair = [];
+        ac.reader = function (err, x) {
+            ac.pause();
+            pair[0] = {value: x};
+            if (pair[1]) {
+                if (x === Nil) {
+                    if (pair[1].value === Nil) {
+                        // both streams finished
+                        next(Stream());
+                    }
+                    else {
+                        // only this stream finished
+                        push([pair[0].value, pair[1].value]);
+                        next(b.map(function (x) {
+                            return [Nil, x];
+                        }));
+                    }
+                }
+                else {
+                    push([pair[0].value, pair[1].value]);
+                    next();
+                }
+            }
+        };
+        bc.reader = function (err, x) {
+            bc.pause();
+            pair[1] = {value: x};
+            if (pair[0]) {
+                if (x === Nil) {
+                    if (pair[0].value === Nil) {
+                        // both streams finished
+                        next(Stream());
+                    }
+                    else {
+                        // only this stream finished
+                        push([pair[0].value, pair[1].value]);
+                        next(a.map(function (x) {
+                            return [x, Nil];
+                        }));
+                    }
+                }
+                else {
+                    push([pair[0].value, pair[1].value]);
+                    next();
+                }
+            }
+        };
+        ac.resume();
+        bc.resume();
+    });
+};
+
 BaseStream.prototype.transform = function (f) {
     var that = this;
     return new GeneratorStream(function (push, next) {
@@ -787,4 +845,10 @@ h.map = h.curry(function (f, xs) {
 
 h.concat = h.curry(function (a, b) {
     return Stream(a).concat(b);
+});
+
+
+
+h.zip = h.curry(function (a, b) {
+    return Stream(a).zip(b);
 });
