@@ -512,7 +512,114 @@ var Stream = exports.Stream = function (xs) {
     else if (xs instanceof stream.Stream) {
         return new NodeStream(xs);
     }
+    else if (xs instanceof BaseStream) {
+        return xs;
+    }
     else {
         throw new Error('Unexpected argument type: ' + xs);
     }
 };
+
+
+
+var h = module.exports;
+
+
+// Save bytes in the minified (but not gzipped) version:
+var ArrayProto = Array.prototype,
+    FuncProto = Function.prototype,
+    ObjProto = Object.prototype;
+
+// Create quick reference variables for speed access to core prototypes.
+var slice = ArrayProto.slice,
+    unshift = ArrayProto.unshift,
+    toString = ObjProto.toString,
+    hasOwnProperty = ObjProto.hasOwnProperty;
+
+
+/**
+* Transforms a function with specific arity (all arguments must be
+* defined) in a way that it can be called as a chain of functions until
+* the arguments list is saturated.
+*
+* This function is not itself curryable.
+*
+* @name curry f args... -> Function(...)
+* @param {Function} f - the function to curry
+* @param args.. - any number of arguments to pre-apply to the function
+* @api public
+*
+* fn = curry(function (a, b, c) {
+* return a + b + c;
+* });
+*
+* fn(1)(2)(3) == fn(1, 2, 3)
+* fn(1, 2)(3) == fn(1, 2, 3)
+* fn(1)(2, 3) == fn(1, 2, 3)
+*/
+
+h.curry = function (fn /* args... */) {
+    var args = slice.call(arguments);
+    return h.ncurry.apply(this, [fn.length].concat(args));
+};
+
+/**
+* Same as `curry` but with a specific number of arguments. This can be
+* useful when functions do not explicitly define all its parameters.
+*
+* This function is not itself curryable.
+*
+* @name ncurry n fn args... -> Function(...)
+* @param {Number} n - the number of arguments to wait for before apply fn
+* @param {Function} fn - the function to curry
+* @param args... - any number of arguments to pre-apply to the function
+* @api public
+*
+* fn = ncurry(3, function () {
+* return Array.prototype.join.call(arguments, '.');
+* });
+*
+* fn(1, 2, 3) == '1.2.3';
+* fn(1, 2)(3) == '1.2.3';
+* fn(1)(2)(3) == '1.2.3';
+*/
+
+h.ncurry = function (n, fn /* args... */) {
+    var largs = slice.call(arguments, 2);
+    if (largs.length >= n) {
+        return fn.apply(this, largs.slice(0, n));
+    }
+    return function () {
+        var args = largs.concat(slice.call(arguments));
+        if (args.length < n) {
+            return h.ncurry.apply(this, [n, fn].concat(args));
+        }
+        return fn.apply(this, args.slice(0, n));
+    }
+};
+
+/**
+* Creates a composite function, which is the application of function 'a' to
+* the results of function 'b'.
+*
+* @name compose a -> b -> Function(x)
+* @param {Function} a - the function to apply to the result of b(x)
+* @param {Function} b - the function to apply to x
+* @api public
+*
+* var add1 = add(1);
+* var mul3 = mul(3);
+*
+* var add1mul3 = compose(mul3, add1);
+* add1mul3(2) == 9
+*/
+
+h.compose = h.curry(function (a, b) {
+    return function () { return a(b.apply(null, arguments)); };
+});
+
+
+
+h.map = h.curry(function (f, xs) {
+    return Stream(xs).map(f);
+});

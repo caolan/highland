@@ -26,25 +26,38 @@ exports['wrap node stream'] = function (test) {
     var s = Stream(ns);
     var calls = [];
     function upper(buf) {
-        console.log(['upper', buf]);
         return buf.toString().toUpperCase();
     }
     s.map(upper).walk(function (err, x) {
-        console.log(['walk', err, x]);
         if (err) {
-            console.log('got error');
             return test.done(err);
         }
         else if (x !== Nil) {
-            console.log('got value');
             calls.push(x);
         }
         else {
-            console.log('got null');
             test.equal(calls.join(''), "HELLO, WORLD!\n");
             test.done();
         }
     });
+};
+
+exports['return same obj if Stream() called on existing stream'] = function (test) {
+    function mul2(x) {
+        return x * 2;
+    }
+    var s1 = Stream(function (push, next) {
+        push(1);
+        push(2);
+        push(3);
+        push(Nil);
+    });
+    var s2 = Stream([1,2,3]);
+    var s3 = s2.map(mul2);
+    test.equal(s1, Stream(s1));
+    test.equal(s2, Stream(s2));
+    test.equal(s3, Stream(s3));
+    test.done();
 };
 
 /*

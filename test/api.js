@@ -1,5 +1,6 @@
-var Stream = require('../highland').Stream,
-    Nil = require('../highland').Nil;
+var highland = require('../highland'),
+    Stream = highland.Stream,
+    Nil = highland.Nil;
 
 
 exports['empty stream returns Nil on read'] = function (test) {
