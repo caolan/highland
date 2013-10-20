@@ -361,6 +361,22 @@ exports['merge streams in series'] = function (test) {
     });
 };
 
+exports['stream.apply'] = function (test) {
+    var s = Stream(function (push, next) {
+        push(1);
+        push(2);
+        push(3);
+        next(Stream());
+    });
+    s.apply(function (a, b, c) {
+        test.equal(a, 1);
+        test.equal(b, 2);
+        test.equal(c, 3);
+        test.equal(arguments.length, 3);
+        test.done();
+    });
+};
+
 /*
 exports['long sync stream generator'] = function (test) {
     test.done();

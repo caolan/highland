@@ -132,6 +132,14 @@ BaseStream.prototype.each = function (f) {
     });
 };
 
+BaseStream.prototype.apply = function (f) {
+    var result;
+    this.toArray(function (xs) {
+        result = f.apply(null, xs);
+    });
+    return result;
+};
+
 BaseStream.prototype.toArray = function (f) {
     var arr = [];
     var c = this.walk(function (err, x) {
@@ -617,6 +625,82 @@ h.ncurry = function (n, fn /* args... */) {
 h.compose = h.curry(function (a, b) {
     return function () { return a(b.apply(null, arguments)); };
 });
+
+/**
+* Applies function `f` with arguments array `args`. Same as doing
+* `fn.apply(this, args)`
+*
+* @name apply f -> args -> result
+* @param {Function} f - the function to apply the arguments to
+* @param {Array} args - an array of arguments to apply
+* @api public
+*
+* apply(add, [1,2]) == 3
+* apply(mul)([3,3]) == 9
+*/
+
+h.apply = h.curry(function (f, args) {
+    return Stream(args).apply(f);
+});
+
+/**
+* Partially applies the function (regardless of whether it has had curry
+* called on it). This will always postpone execution until at least the next
+* call of the partially applied function.
+*
+* @name partial f args... -> g
+* @param {Function} f - function to partial apply
+* @param args... - the arguments to apply to the function
+* @api public
+*
+* var addAll = function () {
+* var args = Array.prototype.slice.call(arguments);
+* return foldl1(add, args);
+* };
+* var f = partial(addAll, 1, 2);
+* f(3, 4) == 10
+*/
+
+h.partial = function (f /* args... */) {
+    var args = slice.call(arguments, 1);
+    return function () {
+        return f.apply(this, args.concat(slice.call(arguments)));
+    };
+};
+
+/**
+* Evaluates the function `f` with the argument positions swapped. Only
+* works with functions that accept two arguments.
+*
+* @name flip f -> x -> y -> result
+* @param {Function} f - function to flip argument application for
+* @param x - parameter to apply to the right hand side of f
+* @param y - parameter to apply to the left hand side of f
+* @api public
+*
+* div(2, 4) == 0.5
+* flip(div)(2, 4) == 2
+*/
+
+h.flip = h.curry(function (fn, x, y) { return fn(y, x); });
+
+/**
+* The flipped version of compose. Where argument are in the order of
+* application.
+*
+* @name compose a -> b -> Function(x)
+* @param {Function} a - the function to apply to x
+* @param {Function} b - the function to apply to the result of a(x)
+* @api public
+*
+* var add1 = add(1);
+* var mul3 = mul(3);
+*
+* var add1mul3 = seq(add1, mul3);
+* add1mul3(2) == 9
+*/
+
+h.seq = h.flip(h.compose);
 
 
 

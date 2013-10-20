@@ -44,7 +44,57 @@ exports['compose'] = function (test) {
     // partial application
     test.equal(h.compose(fn2)(fn1)('zero'), 'two:one:zero');
     test.done();
+};
+
+exports['apply'] = function (test) {
+    var fn = function (a, b, c, d) {
+        return a + b + c + d;
+    };
+    test.equal(h.apply(fn, [1,2,3,4]), 10);
+    test.equal(h.apply(fn, [1,1,1,1]), 4);
+    // partial application
+    test.equal(h.apply(fn)([1,2,3,4]), 10);
+    test.done();
+};
+
+exports['partial'] = function (test) {
+    var addAll = function () {
+        var args = Array.prototype.slice.call(arguments);
+        return args.reduce(function (a, b) { return a + b; }, 0);
+    };
+    var f = h.partial(addAll, 1, 2);
+    test.equal(f(3, 4), 10);
+    test.done();
+};
+
+exports['flip'] = function (test) {
+    var subtract = function (a, b) {
+        return a - b;
+    };
+    test.equal(subtract(4,2), 2);
+    test.equal(h.flip(subtract)(4,2), -2);
+    test.equal(h.flip(subtract, 4)(2), -2);
+    test.equal(h.flip(subtract, 4, 2), -2);
+    test.done();
+};
+
+exports['seq'] = function (test) {
+    function prepend(x) {
+        return function (str) {
+            return x + str;
+        };
+    }
+    var fn1 = prepend('one:');
+    var fn2 = prepend('two:');
+    var fn = h.seq(fn1, fn2);
+    test.equal(fn('zero'), 'two:one:zero');
+    // partial application
+    test.equal(h.seq(fn1)(fn2)('zero'), 'two:one:zero');
+    test.done();
 }
+
+
+
 
 exports['top level map function - array'] = function (test) {
     var mul2 = function (x) {
