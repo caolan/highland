@@ -476,11 +476,21 @@ function NodeStream(s) {
     this._buffer = [];
     this._consumers = [];
     this._ended = false;
-    s.on('readable', function () {
-        //console.log('readable');
-        that._buffer.push({value: s.read()});
-        that._checkConsumers();
-    });
+    if (s.read === undefined) {
+        // old-style stream?
+        s.on('data', function (x) {
+            //console.log(['data', x]);
+            that._buffer.push({value: x});
+            that._checkConsumers();
+        });
+    }
+    else {
+        s.on('readable', function () {
+            //console.log('readable');
+            that._buffer.push({value: s.read()});
+            that._checkConsumers();
+        });
+    }
     s.on('error', function (e) {
         //console.log('error');
         that._buffer.push({error: e});
