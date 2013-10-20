@@ -13,6 +13,27 @@ BaseStream.prototype.concat = function (s) {
     return new ConcatStream(this, Stream(s));
 };
 
+BaseStream.prototype.last = function () {
+    // an additional end marker for us to use to insert the prev value
+    var Last = {};
+    // stores the previously seen value
+    var prev = Last;
+    return new TransformStream(this.concat([Last]), function (err, x) {
+        if (err) {
+            return [err, null];
+        }
+        else if (x === Nil) {
+            return [null, Nil];
+        }
+        else if (x === Last && prev !== Last) {
+            return [null, prev];
+        }
+        else {
+            prev = x;
+        }
+    });
+};
+
 BaseStream.prototype.map = function (f) {
     return new TransformStream(this, function (err, x) {
         if (err) {
@@ -221,7 +242,10 @@ function TransformStreamConsumer(src, f) {
     this.source = src;
     this.reader = f;
     this.consumer = src._parent.consume(function (err, x) {
-        that.reader.apply(null, that.source._transform(err, x));
+        var y = that.source._transform(err, x);
+        if (y) {
+            that.reader.apply(null, y);
+        }
     });
 };
 

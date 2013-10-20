@@ -391,6 +391,15 @@ exports['stream.concat'] = function (test) {
     });
 };
 
+exports['stream.last'] = function (test) {
+    Stream([1,2,3,4]).last().apply(function (x) {
+        test.equal(x, 4);
+        test.done();
+    });
+};
+
+// TODO: test filter function
+
 /*
 exports['long sync stream generator'] = function (test) {
     test.done();
