@@ -1,0 +1,11 @@
+{
+    "name": "highland",
+    "version": "0.0.1",
+    "description": "High-level streaming library",
+    "devDependencies": {
+        "nodeunit": "latest"
+    },
+    "scripts": {
+        "test": "node node_modules/.bin/nodeunit test"
+    }
+}
