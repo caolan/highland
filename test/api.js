@@ -335,6 +335,31 @@ exports['thunk array stream'] = function (test) {
     });
 };
 
+exports['merge streams in series'] = function (test) {
+    var s1 = Stream(function (push, next) {
+        setTimeout(function () {
+            push(1);
+            next(Stream());
+        }, 200);
+    });
+    var s2 = Stream(function (push, next) {
+        setTimeout(function () {
+            push(2);
+            next(Stream());
+        }, 100);
+    });
+    var s3 = Stream(function (push, next) {
+        setTimeout(function () {
+            push(3);
+            next(Stream());
+        }, 300);
+    });
+    Stream([s1, s2, s3]).series().toArray(function (arr) {
+        test.same(arr, [1, 2, 3]);
+        test.done();
+    });
+};
+
 /*
 exports['long sync stream generator'] = function (test) {
     test.done();

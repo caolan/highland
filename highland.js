@@ -61,7 +61,6 @@ BaseStream.prototype.transform = function (f) {
             });
         };
         loop();
-        c.resume();
     });
 };
 
@@ -84,6 +83,31 @@ BaseStream.prototype.parallel = function () {
                 });
             });
         });
+    });
+};
+
+BaseStream.prototype.series = function () {
+    return this.transform(function (err, s, push, next) {
+        if (err) {
+            push.error(err);
+            next();
+        }
+        else if (s === Nil) {
+            push(Nil);
+        }
+        else {
+            s.walk(function (err, x) {
+                if (err) {
+                    push.error(err);
+                }
+                else if (x === Nil) {
+                    next();
+                }
+                else {
+                    push(x);
+                }
+            });
+        }
     });
 };
 
