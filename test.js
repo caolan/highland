@@ -263,7 +263,6 @@ exports['calls generator multiple times if paused by next'] = function (test) {
     });
 };
 
-/*
 exports['switch to alternate stream using next'] = function (test) {
     var s2_gen_calls = 0;
     var s2 = _(function (push, next) {
@@ -299,6 +298,7 @@ exports['switch to alternate stream using next'] = function (test) {
     });
 };
 
+/*
 exports['switch to alternate stream using next (async)'] = function (test) {
     var s2_gen_calls = 0;
     var s2 = _(function (push, next) {

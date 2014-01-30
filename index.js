@@ -72,6 +72,10 @@ function StreamError(err) {
     this.error = err;
 }
 
+function StreamRedirect(to) {
+    this.to = to;
+}
+
 Stream.prototype.send = function (err, x) {
     //console.log(['send', err, x]);
     var cs = this.consumers;
@@ -112,7 +116,7 @@ Stream.prototype.checkBackPressure = function () {
 };
 
 Stream.prototype.resume = function () {
-    //console.log(['resume']);
+    //console.log([this.id, 'resume']);
     if (this._resume_running) {
         // already processing incoming buffer, ignore resume call
         this._repeat_resume = true;
@@ -133,6 +137,9 @@ Stream.prototype.resume = function () {
             var x = this.incoming[i];
             if (x instanceof StreamError) {
                 this.send(x);
+            }
+            else if (x instanceof StreamRedirect) {
+                this.redirect(x.to);
             }
             else {
                 this.send(null, x);
@@ -158,6 +165,23 @@ Stream.prototype.resume = function () {
     this._resume_running = false;
 };
 
+Stream.prototype.redirect = function (to) {
+    //console.log([this.id, 'redirect', to]);
+    to.consumers = this.consumers.map(function (c) {
+        c.source = to;
+        return c;
+    });
+    this.consumers = [];
+    this.through = to.through.bind(to);
+    if (this.paused) {
+        to.pause();
+    }
+    else {
+        this.pause();
+        to.resume();
+    }
+};
+
 Stream.prototype.runGenerator = function () {
     // if generator already running, exit
     if (this._generator_running) {
@@ -167,7 +191,20 @@ Stream.prototype.runGenerator = function () {
     var push = function (err, x) {
         self.write(err ? new StreamError(err): x);
     };
-    var next = function () {
+    var next = function (s) {
+        if (s) {
+            // we MUST pause to get the redirect object into the incoming buffer
+            // otherwise it would be passed directly to send(), which does not
+            // handle StreamRedirect objects!
+            var _paused = self.paused;
+            if (!_paused) {
+                self.pause();
+            }
+            self.write(new StreamRedirect(s));
+            if (!_paused) {
+                self.resume();
+            }
+        }
         self._generator_running = false;
     };
     do {
