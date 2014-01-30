@@ -1,0 +1,21 @@
+<script src="../index.js"></script>
+<script>
+  function run() {
+    console.profile();
+
+    var xs = [];
+    for (var i = 0; i < 100000; i++) {
+      xs.push(i);
+    }
+
+    function doubled(x) {
+      return x * 2;
+    }
+
+    _(xs).map(doubled).resume();
+
+    console.profileEnd();
+  }
+
+  console.log('call run() to see profile info');
+</script>
