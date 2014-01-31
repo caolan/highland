@@ -541,3 +541,89 @@ exports['sequence - series alias'] = function (test) {
     test.done();
 };
 */
+
+exports['fork'] = function (test) {
+    var s = _([1,2,3,4]);
+    s.id = 's';
+    var s2 = s.map(function (x) {
+        return x * 2;
+    });
+    s2.id = 's2';
+    var s3 = s.fork().map(function (x) {
+        return x * 3;
+    });
+    s3.id = 's3';
+    var s2_data = [];
+    var s3_data = [];
+    s2.take(1).each(function (x) {
+        s2_data.push(x);
+    });
+    // don't start until both consumers resume
+    test.same(s2_data, []);
+    s3.take(2).each(function (x) {
+        s3_data.push(x);
+    });
+    test.same(s2_data, [2]);
+    test.same(s3_data, [3]);
+    s2.take(1).each(function (x) {
+        s2_data.push(x);
+    });
+    test.same(s2_data, [2,4]);
+    test.same(s3_data, [3,6]);
+    s3.take(2).each(function (x) {
+        s3_data.push(x);
+    });
+    test.same(s2_data, [2,4]);
+    test.same(s3_data, [3,6]);
+    s2.take(2).each(function (x) {
+        s2_data.push(x);
+    });
+    test.same(s2_data, [2,4,6,8]);
+    test.same(s3_data, [3,6,9,12]);
+    test.done();
+};
+
+exports['observe'] = function (test) {
+    var s = _([1,2,3,4]);
+    s.id = 's';
+    var s2 = s.map(function (x) {
+        return x * 2;
+    });
+    s2.id = 's2';
+    var s3 = s.observe().map(function (x) {
+        return x * 3;
+    });
+    s3.id = 's3';
+    var s2_data = [];
+    var s3_data = [];
+    s2.take(1).each(function (x) {
+        s2_data.push(x);
+    });
+    test.same(s2_data, [2]);
+    test.same(s3_data, []);
+    test.same(s3.source.incoming, [1]);
+    s3.take(2).each(function (x) {
+        s3_data.push(x);
+    });
+    test.same(s2_data, [2]);
+    test.same(s3_data, [3]);
+    s2.take(1).each(function (x) {
+        s2_data.push(x);
+    });
+    test.same(s2_data, [2,4]);
+    test.same(s3_data, [3,6]);
+    s3.take(2).each(function (x) {
+        s3_data.push(x);
+    });
+    test.same(s2_data, [2,4]);
+    test.same(s3_data, [3,6]);
+    s2.take(2).each(function (x) {
+        s2_data.push(x);
+    });
+    test.same(s2_data, [2,4,6,8]);
+    test.same(s3_data, [3,6,9,12]);
+    test.done();
+};
+
+// TODO: test redirect after fork, forked streams should transfer over
+// TODO: test redirect after observe, observed streams should transfer over

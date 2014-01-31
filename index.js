@@ -406,6 +406,7 @@ function Stream(xs) {
     }
     this.paused = true;
     this.consumers = [];
+    this.observers = [];
 
     // TODO: remove this
     this.id = ('' + Math.random()).substr(2, 6);
@@ -453,19 +454,25 @@ function StreamRedirect(to) {
 
 Stream.prototype.send = function (err, x) {
     //console.log([this.id, 'send', err, x, this.consumers]);
-    var cs = this.consumers;
-    for (var i = 0, len = cs.length; i < len; i++) {
-        var c = cs[i];
-        if (c.paused) {
-            if (err) {
-                c.write(new StreamError(err));
+    if (this.consumers.length) {
+        for (var i = 0, len = this.consumers.length; i < len; i++) {
+            var c = this.consumers[i];
+            if (c.paused) {
+                if (err) {
+                    c.write(new StreamError(err));
+                }
+                else {
+                    c.write(x);
+                }
             }
             else {
-                c.write(x);
+                c.send(err, x);
             }
         }
-        else {
-            c.send(err, x);
+    }
+    if (this.observers.length) {
+        for (var i = 0, len = this.observers.length; i < len; i++) {
+            this.observers[i].write(x);
         }
     }
     if (this.send_events) {
@@ -490,17 +497,17 @@ Stream.prototype.pause = function () {
 
 Stream.prototype.checkBackPressure = function () {
     //console.log(['checkBackPressure', this]);
-    if (this.consumers.length) {
-        for (var i = 0, len = this.consumers.length; i < len; i++) {
-            if (this.consumers[i].paused) {
-                //console.log('checkBackPressure, consumer paused, pausing: ' + this.id);
-                return this.pause();
-            }
-        }
-        return this.resume();
+    if (!this.consumers.length) {
+        //console.log('checkBackPressure, no consumers, pausing: ' + this.id);
+        return this.pause();
     }
-    //console.log('checkBackPressure, no consumers, pausing: ' + this.id);
-    return this.pause();
+    for (var i = 0, len = this.consumers.length; i < len; i++) {
+        if (this.consumers[i].paused) {
+            //console.log('checkBackPressure, consumer paused, pausing: ' + this.id);
+            return this.pause();
+        }
+    }
+    return this.resume();
 };
 
 Stream.prototype.resume = function () {
@@ -541,7 +548,7 @@ Stream.prototype.resume = function () {
         if (!this.paused) {
             // ask parent for more data
             if (this.source) {
-                this.source.resume();
+                this.source.checkBackPressure();
             }
             // run generator to fill up incoming buffer
             else if (this.generator) {
@@ -601,6 +608,7 @@ Stream.prototype.redirect = function (to) {
         c.source = to;
         return c;
     });
+    // TODO: copy observers
     this.consumers = [];
     this.through = function () {
         return to.through.apply(to, arguments);
@@ -699,6 +707,23 @@ Stream.prototype.write = function (x) {
         }
     }
     return !this.paused;
+};
+
+Stream.prototype.fork = function () {
+    var s = new Stream();
+    s.id = 'fork:' + s.id;
+    s.source = this;
+    this.consumers.push(s);
+    this.checkBackPressure();
+    return s;
+};
+
+Stream.prototype.observe = function () {
+    var s = new Stream();
+    s.id = 'observe:' + s.id;
+    s.source = this;
+    this.observers.push(s);
+    return s;
 };
 
 Stream.prototype.each = function (f) {
