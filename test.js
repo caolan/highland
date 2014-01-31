@@ -394,7 +394,6 @@ exports['pipe highland stream to node stream'] = function (test) {
     src.pipe(dest);
 };
 
-/*
 exports['pipe to node stream with backpressure'] = function (test) {
     var src = _([1,2,3,4]);
     var xs = [];
@@ -429,7 +428,6 @@ exports['attach data event handler'] = function (test) {
         test.done();
     });
 };
-*/
 
 exports['multiple pull calls on async generator'] = function (test) {
     var calls = 0;
