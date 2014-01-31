@@ -514,3 +514,30 @@ exports['sequence - GeneratorStream'] = function (test) {
         test.done();
     });
 };
+
+exports['sequence - nested GeneratorStreams'] = function (test) {
+    var s2 = _(function (push, next) {
+        push(null, 2);
+        push(null, _.nil);
+    });
+    var s1 = _(function (push, next) {
+        push(null, 1);
+        push(null, s2);
+        push(null, _.nil);
+    });
+    _([s1]).sequence().toArray(function (xs) {
+        test.same(xs, [1, s2]);
+    });
+    test.done();
+};
+
+/*
+exports['sequence - series alias'] = function (test) {
+    test.equal(_.sequence, _.series);
+    var s1 = _([1,2,3]);
+    var s2 = _(function (push, next) {});
+    test.equal(s1.sequence, s1.series);
+    test.equal(s2.sequence, s2.series);
+    test.done();
+};
+*/
