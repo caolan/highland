@@ -466,3 +466,51 @@ exports['multiple pull calls on async generator'] = function (test) {
         test.done();
     });
 };
+
+/*
+exports['sequence'] = function (test) {
+    _.sequence([[1,2], [3], [[4],5]]).toArray(function (xs) {
+        test.same(xs, [1,2,3,[4],5]);
+    });
+    test.done();
+};
+*/
+
+exports['sequence - ArrayStream'] = function (test) {
+    _([[1,2], [3], [[4],5]]).sequence().toArray(function (xs) {
+        test.same(xs, [1,2,3,[4],5]);
+    });
+    test.done();
+};
+
+exports['sequence - GeneratorStream'] = function (test) {
+    var calls = [];
+    function countdown(name, n) {
+        var s = _(function (push, next) {
+            calls.push(name);
+            if (n === 0) {
+                push(null, _.nil);
+            }
+            else {
+                setTimeout(function () {
+                    push(null, n);
+                    next(countdown(name, n - 1));
+                }, 10);
+            }
+        });
+        s.id = 'countdown:' + name + ':' + n;
+        return s;
+    }
+    var s1 = countdown('one', 3);
+    var s2 = countdown('two', 3);
+    var s3 = countdown('three', 3);
+    _([s1, s2, s3]).sequence().take(8).toArray(function (xs) {
+        test.same(xs, [3,2,1,3,2,1,3,2]);
+        test.same(calls, [
+            'one', 'one', 'one', 'one',
+            'two', 'two', 'two', 'two',
+            'three', 'three' // last call missed off due to take(8)
+        ]);
+        test.done();
+    });
+};

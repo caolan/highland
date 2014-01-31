@@ -432,6 +432,17 @@ function Stream(xs) {
 }
 inherits(Stream, EventEmitter);
 
+// adds a top-level _.foo(mystream) style export for Stream methods
+function exposeMethod(name) {
+    var f = Stream.prototype[name];
+    var n = f.length;
+    _[name] = _.ncurry(n + 1, function () {
+        var args = Array.prototype.slice.call(arguments);
+        var s = _(args.pop());
+        return f.apply(s, args);
+    });
+};
+
 function StreamError(err) {
     this.error = err;
 }
@@ -765,6 +776,54 @@ Stream.prototype.take = function (n) {
                 push(null, nil);
             }
         }
+    });
+};
+
+Stream.prototype.sequence = function () {
+    function _nextStream(rest, push, next) {
+        rest.pull(function (err, y) {
+            if (err) {
+                push(err);
+                next();
+            }
+            else if (y !== nil) {
+                // move onto next stream
+                next(_sequence(y, rest));
+            }
+            else {
+                // no more streams to consume
+                push(null, nil);
+            }
+        });
+    }
+    function _sequence(curr, rest) {
+        return _(function (push, next) {
+            if (Array.isArray(curr)) {
+                curr.forEach(function (x) {
+                    push(null, x);
+                });
+                _nextStream(rest, push, next);
+            }
+            else if (!(curr instanceof Stream)) {
+                push(new Error('Expected Stream, got ' + (typeof curr)));
+                _nextStream(rest, push, next);
+            }
+            else {
+                curr.pull(function (err, x) {
+                    if (err || x !== nil) {
+                        push(err, x);
+                        next();
+                    }
+                    else {
+                        _nextStream(rest, push, next);
+                    }
+                });
+            }
+        });
+    };
+    var self = this;
+    return _(function (push, next) {
+        return _nextStream(self, push, next);
     });
 };
 
