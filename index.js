@@ -49,6 +49,7 @@ var _ = exports = module.exports = function (xs) {
 var nil = _.nil = {};
 
 function Stream(xs) {
+    var self = this;
     if (xs === undefined) {
         this.incoming = [];
     }
@@ -58,6 +59,32 @@ function Stream(xs) {
     else if (typeof xs === 'function') {
         this.incoming = [];
         this.generator = xs;
+        this.generator_push = function (err, x) {
+            //console.log(['generator push called', err, x, self]);
+            self.write(err ? new StreamError(err): x);
+        };
+        this.generator_next = function (s) {
+            //console.log([self.id, 'generator next called', s, self]);
+            if (s) {
+                // we MUST pause to get the redirect object into the incoming buffer
+                // otherwise it would be passed directly to send(), which does not
+                // handle StreamRedirect objects!
+                var _paused = self.paused;
+                if (!_paused) {
+                    self.pause();
+                }
+                self.write(new StreamRedirect(s));
+                if (!_paused) {
+                    self.resume();
+                }
+            }
+            else {
+                self._generator_running = false;
+            }
+            if (!self.paused) {
+                self.resume();
+            }
+        };
     }
     else {
         throw new Error(
@@ -66,6 +93,7 @@ function Stream(xs) {
     }
     this.paused = true;
     this.consumers = [];
+    // TODO: remove this
     this.id = ('' + Math.random()).substr(2, 6);
 }
 
@@ -78,7 +106,7 @@ function StreamRedirect(to) {
 }
 
 Stream.prototype.send = function (err, x) {
-    //console.log(['send', err, x]);
+    //console.log([this.id, 'send', err, x, this.consumers]);
     var cs = this.consumers;
     for (var i = 0, len = cs.length; i < len; i++) {
         var c = cs[i];
@@ -97,7 +125,7 @@ Stream.prototype.send = function (err, x) {
 };
 
 Stream.prototype.pause = function () {
-    console.log([this.id, 'pause']);
+    //console.log([this.id, 'pause']);
     this.paused = true;
     if (this.source) {
         this.source.checkBackPressure();
@@ -109,16 +137,18 @@ Stream.prototype.checkBackPressure = function () {
     if (this.consumers.length) {
         for (var i = 0, len = this.consumers.length; i < len; i++) {
             if (this.consumers[i].paused) {
+                //console.log('checkBackPressure, consumer paused, pausing: ' + this.id);
                 return this.pause();
             }
         }
         return this.resume();
     }
+    //console.log('checkBackPressure, no consumers, pausing: ' + this.id);
     return this.pause();
 };
 
 Stream.prototype.resume = function () {
-    console.log([this.id, 'resume']);
+    //console.log([this.id, 'resume']);
     if (this._resume_running) {
         // already processing incoming buffer, ignore resume call
         this._repeat_resume = true;
@@ -172,52 +202,35 @@ Stream.prototype.runGenerator = function () {
     if (this._generator_running) {
         return;
     }
-    var self = this;
-    var push = function (err, x) {
-        self.write(err ? new StreamError(err): x);
-    };
-    var next = function (s) {
-        if (s) {
-            // we MUST pause to get the redirect object into the incoming buffer
-            // otherwise it would be passed directly to send(), which does not
-            // handle StreamRedirect objects!
-            var _paused = self.paused;
-            if (!_paused) {
-                self.pause();
-            }
-            self.write(new StreamRedirect(s));
-            if (!_paused) {
-                self.resume();
-            }
-        }
-        self._generator_running = false;
-    };
-    do {
-        this._generator_running = true;
-        this.generator(push, next);
-    } while (!self._generator_running && !self.paused);
+    this._generator_running = true;
+    this.generator(this.generator_push, this.generator_next);
 };
 
 Stream.prototype.redirect = function (to) {
-    console.log([this.id, 'redirect', to.id]);
+    //console.log([this.id, 'redirect', to.id]);
+    //console.log(['copying consumers', this.consumers.length]);
     to.consumers = this.consumers.map(function (c) {
         c.source = to;
         return c;
     });
     this.consumers = [];
-    this.through = to.through.bind(to);
-    this.removeConsumer = to.removeConsumer.bind(to);
+    this.through = function () {
+        return to.through.apply(to, arguments);
+    };
+    this.removeConsumer = function () {
+        return to.removeConsumer.apply(to, arguments);
+    };
     if (this.paused) {
         to.pause();
     }
     else {
         this.pause();
-        to.resume();
+        to.checkBackPressure();
     }
 };
 
 Stream.prototype.addConsumer = function (s) {
-    console.log([this.id, 'addConsumer', s.id]);
+    //console.log([this.id, 'addConsumer', s.id]);
     if (this.consumers.length) {
         throw new Error(
             'Stream already being consumed, you must either fork() or observe()'
@@ -229,7 +242,7 @@ Stream.prototype.addConsumer = function (s) {
 };
 
 Stream.prototype.removeConsumer = function (s) {
-    console.log([this.id, 'removeConsumer', s.id]);
+    //console.log([this.id, 'removeConsumer', s.id]);
     this.consumers = this.consumers.filter(function (c) {
         return c !== s;
     });
@@ -257,7 +270,7 @@ Stream.prototype.through = function (name, f) {
     };
     var next_called;
     var next = function () {
-        console.log([s.id, 'through next called', 'resuming ' + self.id]);
+        //console.log([s.id, 'through next called', self.id, self, s]);
         next_called = true;
         //self.resume();
     };
@@ -265,6 +278,7 @@ Stream.prototype.through = function (name, f) {
         next_called = false;
         f(err, x, push, next);
         if (!next_called) {
+            //console.log(['!next_called, pausing: ' + s.id, f.toString(), 'source: ' + (s.source && s.source.id)]);
             s.pause();
         }
     };
@@ -273,18 +287,18 @@ Stream.prototype.through = function (name, f) {
 };
 
 Stream.prototype.pull = function (f) {
-    console.log([this.id, 'pull', f]);
-    var s = this.through(function (err, x, push, next) {
-        console.log(['pull consumer', err, x]);
+    //console.log([this.id, 'pull', f]);
+    //console.log('pull from: ' + this.id);
+    var s = this.through('pull', function (err, x, push, next) {
+        //console.log(['pull consumer', err, x]);
         s.source.removeConsumer(s);
         f(err, x);
     });
-    s.id = 'pull';
     s.resume();
 };
 
 Stream.prototype.write = function (x) {
-    //console.log(['write', x]);
+    //console.log([this.id, 'write', x]);
     if (this.paused) {
         this.incoming.push(x);
     }

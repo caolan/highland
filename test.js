@@ -329,17 +329,14 @@ exports['switch to alternate stream using next (async)'] = function (test) {
     test.equal(s1_gen_calls, 0);
     test.equal(s2_gen_calls, 0);
     s1.take(1).toArray(function (xs) {
-        console.log(['RESULT 1', xs]);
         test.equal(s1_gen_calls, 1);
         test.equal(s2_gen_calls, 0);
         test.same(xs, [1]);
         s1.take(1).toArray(function (xs) {
-            console.log(['RESULT 2', xs]);
             test.equal(s1_gen_calls, 1);
             test.equal(s2_gen_calls, 1);
             test.same(xs, [2]);
             s1.take(1).toArray(function (xs) {
-                console.log(['RESULT 3', xs]);
                 test.equal(s1_gen_calls, 1);
                 test.equal(s2_gen_calls, 1);
                 test.same(xs, []);
@@ -352,7 +349,6 @@ exports['switch to alternate stream using next (async)'] = function (test) {
 exports['lazily evalute stream'] = function (test) {
     var map_calls = [];
     function doubled(x) {
-        console.log(['doubled', x]);
         map_calls.push(x);
         return x * 2;
     }
@@ -439,7 +435,6 @@ exports['multiple pull calls on async generator'] = function (test) {
     var calls = 0;
     function countdown(n) {
         var s = _(function (push, next) {
-            console.log(['s generator']);
             calls++;
             if (n === 0) {
                 push(null, _.nil);
@@ -456,9 +451,7 @@ exports['multiple pull calls on async generator'] = function (test) {
     }
     var s = countdown(3);
     var s2 = _(function (push, next) {
-        console.log(['s2 generator']);
         s.pull(function (err, x) {
-            console.log(['pull callback']);
             if (err || x !== _.nil) {
                 push(err, x);
                 next();
@@ -471,7 +464,7 @@ exports['multiple pull calls on async generator'] = function (test) {
     s2.id = 's2';
     s2.toArray(function (xs) {
         test.same(xs, [3,2,1]);
-        test.same(calls, 3);
+        test.same(calls, 4);
         test.done();
     });
 };
