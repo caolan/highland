@@ -263,6 +263,15 @@ exports['calls generator multiple times if paused by next'] = function (test) {
     });
 };
 
+exports['adding multiple consumers should error'] = function (test) {
+    var s = _([1,2,3,4]);
+    s.through(function () {});
+    test.throws(function () {
+        s.through(function () {});
+    });
+    test.done();
+};
+
 exports['switch to alternate stream using next'] = function (test) {
     var s2_gen_calls = 0;
     var s2 = _(function (push, next) {
@@ -298,7 +307,6 @@ exports['switch to alternate stream using next'] = function (test) {
     });
 };
 
-/*
 exports['switch to alternate stream using next (async)'] = function (test) {
     var s2_gen_calls = 0;
     var s2 = _(function (push, next) {
@@ -344,14 +352,16 @@ exports['switch to alternate stream using next (async)'] = function (test) {
 exports['lazily evalute stream'] = function (test) {
     var map_calls = [];
     function doubled(x) {
+        console.log(['doubled', x]);
         map_calls.push(x);
         return x * 2;
     }
     var s = _([1, 2, 3, 4]);
+    s.id = 's';
     s.map(doubled).take(2).toArray(function (xs) {
         test.same(xs, [2, 4]);
     });
-    test.same(map_calls, [1, 2]);
+    test.same(JSON.stringify(map_calls), JSON.stringify([1, 2]));
     test.done();
 };
 
@@ -412,15 +422,6 @@ exports['pipe to node stream with backpressure'] = function (test) {
     src.pipe(dest);
 };
 
-exports['adding multiple consumers should error'] = function (test) {
-    var s = _([1,2,3,4]);
-    s.consume(function () {});
-    test.throws(function () {
-        s.consume(function () {});
-    });
-    test.done();
-};
-
 exports['attach data event handler'] = function (test) {
     var s = _([1,2,3,4]);
     var xs = [];
@@ -432,11 +433,13 @@ exports['attach data event handler'] = function (test) {
         test.done();
     });
 };
+*/
 
 exports['multiple pull calls on async generator'] = function (test) {
     var calls = 0;
     function countdown(n) {
         var s = _(function (push, next) {
+            console.log(['s generator']);
             calls++;
             if (n === 0) {
                 push(null, _.nil);
@@ -453,7 +456,9 @@ exports['multiple pull calls on async generator'] = function (test) {
     }
     var s = countdown(3);
     var s2 = _(function (push, next) {
+        console.log(['s2 generator']);
         s.pull(function (err, x) {
+            console.log(['pull callback']);
             if (err || x !== _.nil) {
                 push(err, x);
                 next();
@@ -470,4 +475,3 @@ exports['multiple pull calls on async generator'] = function (test) {
         test.done();
     });
 };
-*/

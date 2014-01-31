@@ -66,6 +66,7 @@ function Stream(xs) {
     }
     this.paused = true;
     this.consumers = [];
+    this.id = ('' + Math.random()).substr(2, 6);
 }
 
 function StreamError(err) {
@@ -96,6 +97,7 @@ Stream.prototype.send = function (err, x) {
 };
 
 Stream.prototype.pause = function () {
+    console.log([this.id, 'pause']);
     this.paused = true;
     if (this.source) {
         this.source.checkBackPressure();
@@ -116,7 +118,7 @@ Stream.prototype.checkBackPressure = function () {
 };
 
 Stream.prototype.resume = function () {
-    //console.log([this.id, 'resume']);
+    console.log([this.id, 'resume']);
     if (this._resume_running) {
         // already processing incoming buffer, ignore resume call
         this._repeat_resume = true;
@@ -165,23 +167,6 @@ Stream.prototype.resume = function () {
     this._resume_running = false;
 };
 
-Stream.prototype.redirect = function (to) {
-    //console.log([this.id, 'redirect', to]);
-    to.consumers = this.consumers.map(function (c) {
-        c.source = to;
-        return c;
-    });
-    this.consumers = [];
-    this.through = to.through.bind(to);
-    if (this.paused) {
-        to.pause();
-    }
-    else {
-        this.pause();
-        to.resume();
-    }
-};
-
 Stream.prototype.runGenerator = function () {
     // if generator already running, exit
     if (this._generator_running) {
@@ -213,15 +198,38 @@ Stream.prototype.runGenerator = function () {
     } while (!self._generator_running && !self.paused);
 };
 
+Stream.prototype.redirect = function (to) {
+    console.log([this.id, 'redirect', to.id]);
+    to.consumers = this.consumers.map(function (c) {
+        c.source = to;
+        return c;
+    });
+    this.consumers = [];
+    this.through = to.through.bind(to);
+    this.removeConsumer = to.removeConsumer.bind(to);
+    if (this.paused) {
+        to.pause();
+    }
+    else {
+        this.pause();
+        to.resume();
+    }
+};
+
 Stream.prototype.addConsumer = function (s) {
-    //console.log(['addConsumer', s]);
+    console.log([this.id, 'addConsumer', s.id]);
+    if (this.consumers.length) {
+        throw new Error(
+            'Stream already being consumed, you must either fork() or observe()'
+        );
+    }
     s.source = this;
     this.consumers.push(s);
     this.checkBackPressure();
 };
 
 Stream.prototype.removeConsumer = function (s) {
-    //console.log(['removeConsumer', s]);
+    console.log([this.id, 'removeConsumer', s.id]);
     this.consumers = this.consumers.filter(function (c) {
         return c !== s;
     });
@@ -231,9 +239,14 @@ Stream.prototype.removeConsumer = function (s) {
     this.checkBackPressure();
 };
 
-Stream.prototype.through = function (f) {
+Stream.prototype.through = function (name, f) {
+    if (!f) {
+        f = name;
+        name = ('' + Math.random()).substr(2, 6);
+    }
     var self = this;
     var s = new Stream();
+    s.id = name;
     var _send = s.send;
     var push = function (err, x) {
         if (x === nil) {
@@ -244,8 +257,9 @@ Stream.prototype.through = function (f) {
     };
     var next_called;
     var next = function () {
+        console.log([s.id, 'through next called', 'resuming ' + self.id]);
         next_called = true;
-        self.resume();
+        //self.resume();
     };
     s.send = function (err, x) {
         next_called = false;
@@ -258,6 +272,16 @@ Stream.prototype.through = function (f) {
     return s;
 };
 
+Stream.prototype.pull = function (f) {
+    console.log([this.id, 'pull', f]);
+    var s = this.through(function (err, x, push, next) {
+        console.log(['pull consumer', err, x]);
+        s.source.removeConsumer(s);
+        f(err, x);
+    });
+    s.id = 'pull';
+    s.resume();
+};
 
 Stream.prototype.write = function (x) {
     //console.log(['write', x]);
@@ -290,7 +314,7 @@ Stream.prototype.each = function (f) {
 
 Stream.prototype.toArray = function (f) {
     var xs = [];
-    return this.through(function (err, x, push, next) {
+    return this.through('toArray', function (err, x, push, next) {
         //console.log(['toArray through', err, x]);
         if (err) {
             // TODO
@@ -307,7 +331,7 @@ Stream.prototype.toArray = function (f) {
 };
 
 Stream.prototype.map = function (f) {
-    return this.through(function (err, x, push, next) {
+    return this.through('map', function (err, x, push, next) {
         if (err) {
             push(err);
             next();
@@ -326,7 +350,8 @@ Stream.prototype.take = function (n) {
     if (n === 0) {
         return _([]);
     }
-    return this.through(function (err, x, push, next) {
+    return this.through('take', function (err, x, push, next) {
+        //console.log(['take through', err, x]);
         n--;
         if (err) {
             push(err);
