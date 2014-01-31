@@ -1,6 +1,6 @@
-var //EventEmitter = require('events').EventEmitter,
-    //streamify = require('stream-array'),
-    //concat = require('concat-stream'),
+var EventEmitter = require('events').EventEmitter,
+    streamify = require('stream-array'),
+    concat = require('concat-stream'),
     _ = require('./index');
 
 
@@ -362,12 +362,11 @@ exports['lazily evalute stream'] = function (test) {
 };
 
 
-/*
 exports['pipe node stream to highland stream'] = function (test) {
     var xs = [];
     var src = streamify([1,2,3,4]);
     var s1 = _();
-    var s2 = s1.consume(function (err, x, push, next) {
+    var s2 = s1.through(function (err, x, push, next) {
         xs.push(x);
         next();
     });
@@ -395,6 +394,7 @@ exports['pipe highland stream to node stream'] = function (test) {
     src.pipe(dest);
 };
 
+/*
 exports['pipe to node stream with backpressure'] = function (test) {
     var src = _([1,2,3,4]);
     var xs = [];
