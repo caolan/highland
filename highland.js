@@ -561,7 +561,7 @@ Stream.prototype.resume = function () {
             }
             // run generator to fill up incoming buffer
             else if (this.generator) {
-                this.runGenerator();
+                this._runGenerator();
             }
             else {
                 // perhaps a node stream is being piped in
@@ -601,7 +601,7 @@ Stream.prototype.pipe = function (dest) {
     return dest;
 };
 
-Stream.prototype.runGenerator = function () {
+Stream.prototype._runGenerator = function () {
     // if generator already running, exit
     if (this._generator_running) {
         return;
