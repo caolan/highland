@@ -589,8 +589,8 @@ Stream.prototype._send = function (err, x) {
  * @name Stream.pause()
  * @api public
  *
- * var mystream = _(generator);
- * mystream.pause();
+ * var xs = _(generator);
+ * xs.pause();
  */
 
 Stream.prototype.pause = function () {
@@ -599,6 +599,11 @@ Stream.prototype.pause = function () {
         this.source._checkBackPressure();
     }
 };
+
+/**
+ * When there is a change in downstream consumers, it will often ask
+ * the parent Stream to re-check it's state and pause/resume accordingly.
+ */
 
 Stream.prototype._checkBackPressure = function () {
     if (!this._consumers.length) {
@@ -611,6 +616,11 @@ Stream.prototype._checkBackPressure = function () {
     }
     return this.resume();
 };
+
+/**
+ * Starts pull values out of the incoming buffer and sending them downstream,
+ * this will exit early if this causes a downstream consumer to pause.
+ */
 
 Stream.prototype._readFromBuffer = function () {
     var len = this._incoming.length;
@@ -631,6 +641,19 @@ Stream.prototype._readFromBuffer = function () {
     // remove processed data from _incoming buffer
     this._incoming.splice(0, i);
 };
+
+/**
+ * Resumes a paused Stream. This will either read from the Stream's incoming
+ * buffer or request more data from an upstream source.
+ *
+ * @id resume
+ * @section Streams
+ * @name Stream.resume()
+ * @api public
+ *
+ * var xs = _(generator);
+ * xs.resume();
+ */
 
 Stream.prototype.resume = function () {
     if (this._resume_running) {

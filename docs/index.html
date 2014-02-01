@@ -37,6 +37,8 @@
         
         <li><a href="#pause">pause</a></li>
         
+        <li><a href="#resume">resume</a></li>
+        
         
       </ul>
     </nav>
@@ -158,8 +160,28 @@ an example of detecting the end of a Stream:</p>
           
 
           
-          <pre><code class="javascript">var mystream = _(generator);
-mystream.pause();</code></pre>
+          <pre><code class="javascript">var xs = _(generator);
+xs.pause();</code></pre>
+          
+        </div>
+      
+        <div id=resume class="doc-item">
+          <div class="doc-heading">
+            <ul class="links">
+              <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L645"><i class="fi-pencil"></i> Edit</a></li>
+              <li><a href="#resume"><i class="fi-link"></i> Link</a></li>
+            </ul>
+            <pre>Stream.resume()</pre>
+          </div>
+
+          <p>Resume a paused Stream. This will either read from the Stream's incoming
+buffer or request more data from an upstream source.</p>
+
+          
+
+          
+          <pre><code class="javascript">var xs = _(generator);
+xs.resume();</code></pre>
           
         </div>
       
