@@ -16,6 +16,8 @@ h2 {
 }
 
 code {
+    line-height: 19px;
+    font-size: 13px;
     font-weight: normal;
     border-radius: 3px;
     border: 1px solid #ddd;
@@ -114,4 +116,10 @@ main {
 
 .doc-heading .links a {
     padding: 0.618em;
+}
+
+.doc-params-heading {
+    font-weight: bold;
+    font-style: italic;
+    margin: 0.618em 0;
 }

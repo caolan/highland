@@ -380,13 +380,14 @@ function isUndefined(arg) {
  * still being consumed the generator function will then be called again.
  *
  * You can also redirect a generator Stream by passing a new source Stream
- * to read from to next. For example: `next(other_stream)` - then any subsequent
+ * to read from to next. For example: `next(stream2)` - then any subsequent
  * calls will be made to the new source.
  *
  * @id _(source)
  * @section Streams
  * @name _(source)
- * @param {Array | Function} source - (optional) array or generator to take from
+ * @param {Array | Function} source - (optional) Array or generator function to
+ *                                    take values from from
  * @api public
  *
  * _([1, 2, 3, 4]);
@@ -513,7 +514,10 @@ function Stream(xs) {
 }
 inherits(Stream, EventEmitter);
 
-// adds a top-level _.foo(mystream) style export for Stream methods
+/**
+ * adds a top-level _.foo(mystream) style export for Stream methods
+ */
+
 function exposeMethod(name) {
     var f = Stream.prototype[name];
     var n = f.length;
@@ -524,13 +528,26 @@ function exposeMethod(name) {
     });
 };
 
+
+/**
+ * Used as an Error marker when writing to a Stream's incoming buffer
+ */
+
 function StreamError(err) {
     this.error = err;
 }
 
+/**
+ * Used as a Redirect marker when writing to a Stream's incoming buffer
+ */
+
 function StreamRedirect(to) {
     this.to = to;
 }
+
+/**
+ * Sends errors / data to consumers, observers and event handlers
+ */
 
 Stream.prototype._send = function (err, x) {
     if (this._consumers.length) {
@@ -563,6 +580,18 @@ Stream.prototype._send = function (err, x) {
         }
     }
 };
+
+/**
+ * Pauses the stream. All Highland Streams start in the paused state.
+ *
+ * @id pause
+ * @section Streams
+ * @name Stream.pause()
+ * @api public
+ *
+ * var mystream = _(generator);
+ * mystream.pause();
+ */
 
 Stream.prototype.pause = function () {
     this.paused = true;

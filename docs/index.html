@@ -35,6 +35,8 @@
         
         <li><a href="#nil">nil</a></li>
         
+        <li><a href="#pause">pause</a></li>
+        
         
       </ul>
     </nav>
@@ -79,17 +81,17 @@ to signal you've finished processing the current data. If the Stream is
 still being consumed the generator function will then be called again.</p>
 
 <p>You can also redirect a generator Stream by passing a new source Stream
-to read from to next. For example: <code>next(othe\_stream)</code> - then any subsequent
+to read from to next. For example: <code>next(stream2)</code> - then any subsequent
 calls will be made to the new source.</p>
 
           
-          <strong>Parameters:</strong>
+          <div class="doc-params-heading">Parameters</div>
           <ul>
             
               <li>
-                source
+                <code>source</code>
                  - <em>Array | Function</em>
-                 - (optional) array or generator to take from
+                 - (optional) Array or generator function to take values from from
               </li>
             
           </ul>
@@ -111,7 +113,7 @@ var through = _();</code></pre>
         <div id=nil class="doc-item">
           <div class="doc-heading">
             <ul class="links">
-              <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L407"><i class="fi-pencil"></i> Edit</a></li>
+              <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L408"><i class="fi-pencil"></i> Edit</a></li>
               <li><a href="#nil"><i class="fi-link"></i> Link</a></li>
             </ul>
             <pre>_.nil</pre>
@@ -139,6 +141,25 @@ an example of detecting the end of a Stream:</p>
         }
     });
 };</code></pre>
+          
+        </div>
+      
+        <div id=pause class="doc-item">
+          <div class="doc-heading">
+            <ul class="links">
+              <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L584"><i class="fi-pencil"></i> Edit</a></li>
+              <li><a href="#pause"><i class="fi-link"></i> Link</a></li>
+            </ul>
+            <pre>Stream.pause()</pre>
+          </div>
+
+          <p>Pauses the stream. All Highland Streams start in the paused state.</p>
+
+          
+
+          
+          <pre><code class="javascript">var mystream = _(generator);
+mystream.pause();</code></pre>
           
         </div>
       

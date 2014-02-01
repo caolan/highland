@@ -65,11 +65,11 @@
           {{{description_html}}}
 
           {{#if params}}
-          <strong>Parameters:</strong>
+          <div class="doc-params-heading">Parameters</div>
           <ul>
             {{#each params}}
               <li>
-                {{name}}
+                <code>{{name}}</code>
                 {{#if type}} - <em>{{type}}</em>{{/if}}
                 {{#if description}} - {{description}}{{/if}}
               </li>
