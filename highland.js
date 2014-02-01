@@ -576,7 +576,7 @@ Stream.prototype.end = function () {
 Stream.prototype.pipe = function (dest) {
     //console.log([this.id, 'pipe', dest]);
     var self = this;
-    var s = self.through(function (err, x, push, next) {
+    var s = self.consume(function (err, x, push, next) {
         //console.log(['pipe consumer', err, x]);
         if (err) {
             self.emit('error', err);
@@ -615,8 +615,8 @@ Stream.prototype.redirect = function (to) {
     });
     // TODO: copy observers
     this.consumers = [];
-    this.through = function () {
-        return to.through.apply(to, arguments);
+    this.consume = function () {
+        return to.consume.apply(to, arguments);
     };
     this.removeConsumer = function () {
         return to.removeConsumer.apply(to, arguments);
@@ -653,7 +653,7 @@ Stream.prototype.removeConsumer = function (s) {
     this.checkBackPressure();
 };
 
-Stream.prototype.through = function (name, f) {
+Stream.prototype.consume = function (name, f) {
     if (!f) {
         f = name;
         name = ('' + Math.random()).substr(2, 6);
@@ -671,7 +671,7 @@ Stream.prototype.through = function (name, f) {
     };
     var next_called;
     var next = function () {
-        //console.log([s.id, 'through next called', self.id, self, s]);
+        //console.log([s.id, 'consume next called', self.id, self, s]);
         next_called = true;
         //self.resume();
     };
@@ -690,7 +690,7 @@ Stream.prototype.through = function (name, f) {
 Stream.prototype.pull = function (f) {
     //console.log([this.id, 'pull', f]);
     //console.log('pull from: ' + this.id);
-    var s = this.through('pull', function (err, x, push, next) {
+    var s = this.consume('pull', function (err, x, push, next) {
         //console.log(['pull consumer', err, x]);
         s.source.removeConsumer(s);
         f(err, x);
@@ -732,7 +732,7 @@ Stream.prototype.observe = function () {
 };
 
 Stream.prototype.each = function (f) {
-    return this.through(function (err, x, push, next) {
+    return this.consume(function (err, x, push, next) {
         if (err) {
             // TODO
             throw err;
@@ -746,8 +746,8 @@ Stream.prototype.each = function (f) {
 
 Stream.prototype.toArray = function (f) {
     var xs = [];
-    return this.through('toArray', function (err, x, push, next) {
-        //console.log(['toArray through', err, x]);
+    return this.consume('toArray', function (err, x, push, next) {
+        //console.log(['toArray consume', err, x]);
         if (err) {
             // TODO
             throw err;
@@ -763,7 +763,7 @@ Stream.prototype.toArray = function (f) {
 };
 
 Stream.prototype.map = function (f) {
-    return this.through('map', function (err, x, push, next) {
+    return this.consume('map', function (err, x, push, next) {
         if (err) {
             push(err);
             next();
@@ -782,8 +782,8 @@ Stream.prototype.take = function (n) {
     if (n === 0) {
         return _([]);
     }
-    return this.through('take', function (err, x, push, next) {
-        //console.log(['take through', err, x]);
+    return this.consume('take', function (err, x, push, next) {
+        //console.log(['take consume', err, x]);
         n--;
         if (err) {
             push(err);

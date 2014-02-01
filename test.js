@@ -55,7 +55,7 @@ exports['write when paused adds to incoming buffer'] = function (test) {
 exports['write when not paused sends to consumer'] = function (test) {
     var vals = [];
     var s1 = _();
-    var s2 = s1.through(function (err, x, push, next) {
+    var s2 = s1.consume(function (err, x, push, next) {
         vals.push(x);
         next();
     });
@@ -77,7 +77,7 @@ exports['write when not paused sends to consumer'] = function (test) {
 exports['buffered incoming data released on resume'] = function (test) {
     var vals = [];
     var s1 = _();
-    var s2 = s1.through(function (err, x, push, next) {
+    var s2 = s1.consume(function (err, x, push, next) {
         vals.push(x);
         next();
     });
@@ -96,7 +96,7 @@ exports['buffered incoming data released on resume'] = function (test) {
 exports['restart buffering incoming data on pause'] = function (test) {
     var vals = [];
     var s1 = _();
-    var s2 = s1.through(function (err, x, push, next) {
+    var s2 = s1.consume(function (err, x, push, next) {
         vals.push(x);
         next();
     });
@@ -202,7 +202,7 @@ exports['generator consumers are sent values eagerly until pause'] = function (t
         push(null, _.nil);
     });
     var calls = [];
-    var consumer = s.through(function (err, x, push, next) {
+    var consumer = s.consume(function (err, x, push, next) {
         calls.push(x);
         if (x !== 2) {
             next();
@@ -265,9 +265,9 @@ exports['calls generator multiple times if paused by next'] = function (test) {
 
 exports['adding multiple consumers should error'] = function (test) {
     var s = _([1,2,3,4]);
-    s.through(function () {});
+    s.consume(function () {});
     test.throws(function () {
-        s.through(function () {});
+        s.consume(function () {});
     });
     test.done();
 };
@@ -366,7 +366,7 @@ exports['pipe node stream to highland stream'] = function (test) {
     var xs = [];
     var src = streamify([1,2,3,4]);
     var s1 = _();
-    var s2 = s1.through(function (err, x, push, next) {
+    var s2 = s1.consume(function (err, x, push, next) {
         xs.push(x);
         next();
     });
