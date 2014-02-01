@@ -386,7 +386,7 @@ function Stream(xs) {
             //console.log([self.id, 'generator next called', s, self]);
             if (s) {
                 // we MUST pause to get the redirect object into the incoming
-                // buffer otherwise it would be passed directly to send(),
+                // buffer otherwise it would be passed directly to _send(),
                 // which does not handle StreamRedirect objects!
                 var _paused = self.paused;
                 if (!_paused) {
@@ -417,7 +417,7 @@ function Stream(xs) {
     this.paused = true;
     this.consumers = [];
     this.observers = [];
-    self._send_events = false;
+    this._send_events = false;
 
     self.on('newListener', function (ev, f) {
         if (ev === 'data') {
@@ -426,7 +426,7 @@ function Stream(xs) {
         }
         else if (ev === 'end') {
             // this property avoids us checking the length of the
-            // listners subscribed to each event on each send() call
+            // listners subscribed to each event on each _send() call
             self._send_events = true;
         }
     });
@@ -464,8 +464,8 @@ function StreamRedirect(to) {
     this.to = to;
 }
 
-Stream.prototype.send = function (err, x) {
-    //console.log([this.id, 'send', err, x, this.consumers]);
+Stream.prototype._send = function (err, x) {
+    //console.log([this.id, '_send', err, x, this.consumers]);
     if (this.consumers.length) {
         for (var i = 0, len = this.consumers.length; i < len; i++) {
             var c = this.consumers[i];
@@ -478,7 +478,7 @@ Stream.prototype.send = function (err, x) {
                 }
             }
             else {
-                c.send(err, x);
+                c._send(err, x);
             }
         }
     }
@@ -528,13 +528,13 @@ Stream.prototype.readFromBuffer = function () {
     while (i < len && !this.paused) {
         var x = this.incoming[i];
         if (x instanceof StreamError) {
-            this.send(x);
+            this._send(x);
         }
         else if (x instanceof StreamRedirect) {
             this.redirect(x.to);
         }
         else {
-            this.send(null, x);
+            this._send(null, x);
         }
         i++;
     }
@@ -665,7 +665,7 @@ Stream.prototype.consume = function (name, f) {
     var self = this;
     var s = new Stream();
     s.id = name;
-    var _send = s.send;
+    var _send = s._send;
     var push = function (err, x) {
         if (x === nil) {
             // ended, remove consumer from source
@@ -679,7 +679,7 @@ Stream.prototype.consume = function (name, f) {
         next_called = true;
         //self.resume();
     };
-    s.send = function (err, x) {
+    s._send = function (err, x) {
         next_called = false;
         f(err, x, push, next);
         if (!next_called) {
@@ -709,10 +709,10 @@ Stream.prototype.write = function (x) {
     }
     else {
         if (x instanceof StreamError) {
-            this.send(x);
+            this._send(x);
         }
         else {
-            this.send(null, x);
+            this._send(null, x);
         }
     }
     return !this.paused;
