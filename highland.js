@@ -413,7 +413,7 @@ function Stream(xs) {
 
     this.paused = true;
     this._consumers = [];
-    this.observers = [];
+    this._observers = [];
     this._send_events = false;
 
     self.on('newListener', function (ev, f) {
@@ -479,9 +479,9 @@ Stream.prototype._send = function (err, x) {
             }
         }
     }
-    if (this.observers.length) {
-        for (var i = 0, len = this.observers.length; i < len; i++) {
-            this.observers[i].write(x);
+    if (this._observers.length) {
+        for (var i = 0, len = this._observers.length; i < len; i++) {
+            this._observers[i].write(x);
         }
     }
     if (this._send_events) {
@@ -614,7 +614,7 @@ Stream.prototype._redirect = function (to) {
         c.source = to;
         return c;
     });
-    // TODO: copy observers
+    // TODO: copy _observers
     this._consumers = [];
     this.consume = function () {
         return to.consume.apply(to, arguments);
@@ -728,7 +728,7 @@ Stream.prototype.observe = function () {
     var s = new Stream();
     s.id = 'observe:' + s.id;
     s.source = this;
-    this.observers.push(s);
+    this._observers.push(s);
     return s;
 };
 
