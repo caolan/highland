@@ -522,7 +522,7 @@ Stream.prototype._checkBackPressure = function () {
     return this.resume();
 };
 
-Stream.prototype.readFromBuffer = function () {
+Stream.prototype._readFromBuffer = function () {
     var len = this.incoming.length;
     var i = 0;
     while (i < len && !this.paused) {
@@ -553,7 +553,7 @@ Stream.prototype.resume = function () {
     do {
         this._repeat_resume = false;
         this.paused = false;
-        this.readFromBuffer();
+        this._readFromBuffer();
         if (!this.paused) {
             // ask parent for more data
             if (this.source) {
