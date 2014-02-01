@@ -634,8 +634,8 @@ Stream.prototype._redirect = function (to) {
     }
 };
 
-Stream.prototype.addConsumer = function (s) {
-    //console.log([this.id, 'addConsumer', s.id]);
+Stream.prototype._addConsumer = function (s) {
+    //console.log([this.id, '_addConsumer', s.id]);
     if (this.consumers.length) {
         throw new Error(
             'Stream already being consumed, you must either fork() or observe()'
@@ -687,7 +687,7 @@ Stream.prototype.consume = function (name, f) {
             s.pause();
         }
     };
-    self.addConsumer(s);
+    self._addConsumer(s);
     return s;
 };
 
