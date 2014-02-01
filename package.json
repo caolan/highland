@@ -2,6 +2,7 @@
   "name": "highland",
   "version": "0.0.1",
   "description": "The high-level streams library",
+  "main": "highland.js",
   "devDependencies": {
     "nodeunit": "~0.8.1",
     "stream-array": "~0.1.3",

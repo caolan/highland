@@ -1,7 +1,7 @@
 var EventEmitter = require('events').EventEmitter,
     streamify = require('stream-array'),
     concat = require('concat-stream'),
-    _ = require('./index');
+    _ = require('./highland');
 
 
 /***** Streams *****/
