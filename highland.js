@@ -380,7 +380,7 @@ function isUndefined(arg) {
  * still being consumed the generator function will then be called again.
  *
  * You can also redirect a generator Stream by passing a new source Stream
- * to read from to next. For example: `next(stream2)` - then any subsequent
+ * to read from to next. For example: `next(other_stream)` - then any subsequent
  * calls will be made to the new source.
  *
  * @id _(source)
@@ -689,9 +689,46 @@ Stream.prototype.resume = function () {
     this._resume_running = false;
 };
 
+/**
+ * Ends a Stream. This is the same as sending a [nil](#nil) value as data.
+ * You shouldn't need to call this directly, rather it will be called by
+ * any [Node Readable Streams](http://nodejs.org/api/stream.html#stream_class_stream_readable)
+ * you pipe in.
+ *
+ * @id end
+ * @section Streams
+ * @name Stream.end()
+ * @api public
+ *
+ * mystream.end();
+ */
+
 Stream.prototype.end = function () {
     this.write(nil);
 };
+
+/**
+ * Pipe a Highland Stream to a [Node Writable Stream](http://nodejs.org/api/stream.html#stream_class_stream_writable)
+ * (Highland Streams are also Node Writable Streams). This will pull all the
+ * data from the source Highland Stream and write it to the destination,
+ * automatically managing flow so that the destination is not overwhelmed
+ * by a fast source.
+ *
+ * This function returns the destination so you can chain together pipe calls.
+ *
+ * @id pipe
+ * @section Streams
+ * @name Stream.pipe(dest)
+ * @param dest {Writable Stream} - the destination to write all data to
+ * @api public
+ *
+ * var source = _(generator);
+ * var dest = fs.createWriteStream('myfile.txt')
+ * source.pipe(dest);
+ *
+ * //chained call
+ * source.pipe(through).pipe(dest);
+ */
 
 Stream.prototype.pipe = function (dest) {
     var self = this;

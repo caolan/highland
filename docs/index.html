@@ -39,6 +39,10 @@
         
         <li><a href="#resume">resume</a></li>
         
+        <li><a href="#end">end</a></li>
+        
+        <li><a href="#pipe">pipe</a></li>
+        
         
       </ul>
     </nav>
@@ -83,7 +87,7 @@ to signal you've finished processing the current data. If the Stream is
 still being consumed the generator function will then be called again.</p>
 
 <p>You can also redirect a generator Stream by passing a new source Stream
-to read from to next. For example: <code>next(stream2)</code> - then any subsequent
+to read from to next. For example: <code>next(other_stream)</code> - then any subsequent
 calls will be made to the new source.</p>
 
           
@@ -174,7 +178,7 @@ xs.pause();</code></pre>
             <pre>Stream.resume()</pre>
           </div>
 
-          <p>Resume a paused Stream. This will either read from the Stream's incoming
+          <p>Resumes a paused Stream. This will either read from the Stream's incoming
 buffer or request more data from an upstream source.</p>
 
           
@@ -182,6 +186,67 @@ buffer or request more data from an upstream source.</p>
           
           <pre><code class="javascript">var xs = _(generator);
 xs.resume();</code></pre>
+          
+        </div>
+      
+        <div id=end class="doc-item">
+          <div class="doc-heading">
+            <ul class="links">
+              <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L692"><i class="fi-pencil"></i> Edit</a></li>
+              <li><a href="#end"><i class="fi-link"></i> Link</a></li>
+            </ul>
+            <pre>Stream.end()</pre>
+          </div>
+
+          <p>Ends a Stream. This is the same as sending a <a href="#nil">nil</a> value as data.
+You shouldn't need to call this directly, rather it will be called by
+any <a href="http://nodejs.org/api/stream.html#stream_class_stream_readable">Node Readable Streams</a>
+you pipe in.</p>
+
+          
+
+          
+          <pre><code class="javascript">mystream.end();</code></pre>
+          
+        </div>
+      
+        <div id=pipe class="doc-item">
+          <div class="doc-heading">
+            <ul class="links">
+              <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L710"><i class="fi-pencil"></i> Edit</a></li>
+              <li><a href="#pipe"><i class="fi-link"></i> Link</a></li>
+            </ul>
+            <pre>Stream.pipe(dest)</pre>
+          </div>
+
+          <p>Pipe a Highland Stream to a <a href="http://nodejs.org/api/stream.html#stream_class_stream_writable">Node Writable Stream</a>
+(Highland Streams are also Node Writable Streams). This will pull all the
+data from the source Highland Stream and write it to the destination,
+automatically managing flow so that the destination is not overwhelmed
+by a fast source.</p>
+
+<p>This function returns the destination so you can chain together pipe calls.</p>
+
+          
+          <div class="doc-params-heading">Parameters</div>
+          <ul>
+            
+              <li>
+                <code>dest</code>
+                
+                 - {Writable Stream} - the destination to write all data to
+              </li>
+            
+          </ul>
+          
+
+          
+          <pre><code class="javascript">var source = _(generator);
+var dest = fs.createWriteStream(&#x27;myfile.txt&#x27;)
+source.pipe(dest);
+
+//chained call
+source.pipe(through).pipe(dest);</code></pre>
           
         </div>
       
