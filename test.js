@@ -44,11 +44,11 @@ exports['if consumer paused, buffer data'] = function (test) {
 exports['write when paused adds to incoming buffer'] = function (test) {
     var s = _();
     test.ok(s.paused);
-    test.same(s.incoming, []);
+    test.same(s._incoming, []);
     test.strictEqual(s.write(1), false);
-    test.same(s.incoming, [1]);
+    test.same(s._incoming, [1]);
     test.strictEqual(s.write(2), false);
-    test.same(s.incoming, [1,2]);
+    test.same(s._incoming, [1,2]);
     test.done();
 };
 
@@ -61,15 +61,15 @@ exports['write when not paused sends to consumer'] = function (test) {
     });
     test.ok(s1.paused);
     test.ok(s2.paused);
-    test.same(s1.incoming, []);
-    test.same(s2.incoming, []);
+    test.same(s1._incoming, []);
+    test.same(s2._incoming, []);
     s2.resume();
     test.ok(!s1.paused);
     test.ok(!s2.paused);
     test.strictEqual(s1.write(1), true);
     test.strictEqual(s1.write(2), true);
-    test.same(s1.incoming, []);
-    test.same(s2.incoming, []);
+    test.same(s1._incoming, []);
+    test.same(s2._incoming, []);
     test.same(vals, [1,2]);
     test.done();
 };
@@ -82,12 +82,12 @@ exports['buffered incoming data released on resume'] = function (test) {
         next();
     });
     test.strictEqual(s1.write(1), false);
-    test.same(s1.incoming, [1]);
-    test.same(s2.incoming, []);
+    test.same(s1._incoming, [1]);
+    test.same(s2._incoming, []);
     s2.resume();
     test.same(vals, [1]);
-    test.same(s1.incoming, []);
-    test.same(s2.incoming, []);
+    test.same(s1._incoming, []);
+    test.same(s2._incoming, []);
     test.strictEqual(s1.write(2), true);
     test.same(vals, [1,2]);
     test.done();
@@ -103,18 +103,18 @@ exports['restart buffering incoming data on pause'] = function (test) {
     s2.resume();
     test.strictEqual(s1.write(1), true);
     test.strictEqual(s1.write(2), true);
-    test.same(s1.incoming, []);
-    test.same(s2.incoming, []);
+    test.same(s1._incoming, []);
+    test.same(s2._incoming, []);
     test.same(vals, [1,2]);
     s2.pause();
     test.strictEqual(s1.write(3), false);
     test.strictEqual(s1.write(4), false);
-    test.same(s1.incoming, [3,4]);
-    test.same(s2.incoming, []);
+    test.same(s1._incoming, [3,4]);
+    test.same(s2._incoming, []);
     test.same(vals, [1,2]);
     s2.resume();
-    test.same(s1.incoming, []);
-    test.same(s2.incoming, []);
+    test.same(s1._incoming, []);
+    test.same(s2._incoming, []);
     test.same(vals, [1,2,3,4]);
     test.done();
 };
@@ -372,13 +372,13 @@ exports['pipe node stream to highland stream'] = function (test) {
     });
     src.pipe(s1);
     setTimeout(function () {
-        test.same(s1.incoming, [1]);
-        test.same(s2.incoming, []);
+        test.same(s1._incoming, [1]);
+        test.same(s2._incoming, []);
         test.same(xs, []);
         s2.resume();
         setTimeout(function () {
-            test.same(s1.incoming, []);
-            test.same(s2.incoming, []);
+            test.same(s1._incoming, []);
+            test.same(s2._incoming, []);
             test.same(xs, [1,2,3,4,_.nil]);
             test.done();
         }, 100);
@@ -601,7 +601,7 @@ exports['observe'] = function (test) {
     });
     test.same(s2_data, [2]);
     test.same(s3_data, []);
-    test.same(s3.source.incoming, [1]);
+    test.same(s3.source._incoming, [1]);
     s3.take(2).each(function (x) {
         s3_data.push(x);
     });

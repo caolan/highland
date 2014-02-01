@@ -370,13 +370,13 @@ function Stream(xs) {
     var self = this;
 
     if (xs === undefined) {
-        this.incoming = [];
+        this._incoming = [];
     }
     else if (Array.isArray(xs)) {
-        self.incoming = xs.concat([nil]);
+        self._incoming = xs.concat([nil]);
     }
     else if (typeof xs === 'function') {
-        this.incoming = [];
+        this._incoming = [];
         this.generator = xs;
         this.generator_push = function (err, x) {
             //console.log(['generator push called', err, x, self]);
@@ -385,7 +385,7 @@ function Stream(xs) {
         this.generator_next = function (s) {
             //console.log([self.id, 'generator next called', s, self]);
             if (s) {
-                // we MUST pause to get the redirect object into the incoming
+                // we MUST pause to get the redirect object into the _incoming
                 // buffer otherwise it would be passed directly to _send(),
                 // which does not handle StreamRedirect objects!
                 var _paused = self.paused;
@@ -523,10 +523,10 @@ Stream.prototype._checkBackPressure = function () {
 };
 
 Stream.prototype._readFromBuffer = function () {
-    var len = this.incoming.length;
+    var len = this._incoming.length;
     var i = 0;
     while (i < len && !this.paused) {
-        var x = this.incoming[i];
+        var x = this._incoming[i];
         if (x instanceof StreamError) {
             this._send(x);
         }
@@ -538,14 +538,14 @@ Stream.prototype._readFromBuffer = function () {
         }
         i++;
     }
-    // remove processed data from incoming buffer
-    this.incoming.splice(0, i);
+    // remove processed data from _incoming buffer
+    this._incoming.splice(0, i);
 };
 
 Stream.prototype.resume = function () {
     //console.log([this.id, 'resume']);
     if (this._resume_running) {
-        // already processing incoming buffer, ignore resume call
+        // already processing _incoming buffer, ignore resume call
         this._repeat_resume = true;
         return;
     }
@@ -559,7 +559,7 @@ Stream.prototype.resume = function () {
             if (this.source) {
                 this.source._checkBackPressure();
             }
-            // run generator to fill up incoming buffer
+            // run generator to fill up _incoming buffer
             else if (this.generator) {
                 this._runGenerator();
             }
@@ -705,7 +705,7 @@ Stream.prototype.pull = function (f) {
 Stream.prototype.write = function (x) {
     //console.log([this.id, 'write', x]);
     if (this.paused) {
-        this.incoming.push(x);
+        this._incoming.push(x);
     }
     else {
         if (x instanceof StreamError) {
