@@ -366,8 +366,9 @@ var _ = exports = module.exports = function (xs) {
 var nil = _.nil = {};
 
 function Stream(xs) {
+    EventEmitter.call(this);
     var self = this;
-    EventEmitter.call(self);
+
     if (xs === undefined) {
         this.incoming = [];
     }
@@ -384,9 +385,9 @@ function Stream(xs) {
         this.generator_next = function (s) {
             //console.log([self.id, 'generator next called', s, self]);
             if (s) {
-                // we MUST pause to get the redirect object into the incoming buffer
-                // otherwise it would be passed directly to send(), which does not
-                // handle StreamRedirect objects!
+                // we MUST pause to get the redirect object into the incoming
+                // buffer otherwise it would be passed directly to send(),
+                // which does not handle StreamRedirect objects!
                 var _paused = self.paused;
                 if (!_paused) {
                     self.pause();
@@ -409,29 +410,35 @@ function Stream(xs) {
             'Unexpected argument type to Stream(): ' + (typeof xs)
         );
     }
-    this.paused = true;
-    this.consumers = [];
-    this.observers = [];
 
     // TODO: remove this
     this.id = ('' + Math.random()).substr(2, 6);
 
-    self.send_events = false;
+    this.paused = true;
+    this.consumers = [];
+    this.observers = [];
+    self._send_events = false;
+
     self.on('newListener', function (ev, f) {
         if (ev === 'data') {
-            self.send_events = true;
+            self._send_events = true;
             setImmediate(self.resume.bind(self));
         }
         else if (ev === 'end') {
-            self.send_events = true;
+            // this property avoids us checking the length of the
+            // listners subscribed to each event on each send() call
+            self._send_events = true;
         }
     });
+
+    // TODO: write test to cover this removeListener code
     self.on('removeListener', function (ev, f) {
         if (ev === 'end' || ev === 'data') {
-            var end_listenrs = self.listeners('end').length;
-            var data_listenrs = self.listeners('data').length;
+            var end_listeners = self.listeners('end').length;
+            var data_listeners = self.listeners('data').length;
             if (end_listeners + data_listeners === 0) {
-                self.send_events = false;
+                // stop emitting events
+                self._send_events = false;
             }
         }
     });
@@ -480,7 +487,7 @@ Stream.prototype.send = function (err, x) {
             this.observers[i].write(x);
         }
     }
-    if (this.send_events) {
+    if (this._send_events) {
         if (x === nil) {
             //console.log(['emitting end event']);
             this.emit('end');
