@@ -503,19 +503,19 @@ Stream.prototype.pause = function () {
     //console.log([this.id, 'pause']);
     this.paused = true;
     if (this.source) {
-        this.source.checkBackPressure();
+        this.source._checkBackPressure();
     }
 };
 
-Stream.prototype.checkBackPressure = function () {
-    //console.log(['checkBackPressure', this]);
+Stream.prototype._checkBackPressure = function () {
+    //console.log(['_checkBackPressure', this]);
     if (!this.consumers.length) {
-        //console.log('checkBackPressure, no consumers, pausing: ' + this.id);
+        //console.log('_checkBackPressure, no consumers, pausing: ' + this.id);
         return this.pause();
     }
     for (var i = 0, len = this.consumers.length; i < len; i++) {
         if (this.consumers[i].paused) {
-            //console.log('checkBackPressure, consumer paused, pausing: ' + this.id);
+            //console.log('_checkBackPressure, consumer paused, pausing: ' + this.id);
             return this.pause();
         }
     }
@@ -557,7 +557,7 @@ Stream.prototype.resume = function () {
         if (!this.paused) {
             // ask parent for more data
             if (this.source) {
-                this.source.checkBackPressure();
+                this.source._checkBackPressure();
             }
             // run generator to fill up incoming buffer
             else if (this.generator) {
@@ -630,7 +630,7 @@ Stream.prototype.redirect = function (to) {
     }
     else {
         this.pause();
-        to.checkBackPressure();
+        to._checkBackPressure();
     }
 };
 
@@ -643,7 +643,7 @@ Stream.prototype.addConsumer = function (s) {
     }
     s.source = this;
     this.consumers.push(s);
-    this.checkBackPressure();
+    this._checkBackPressure();
 };
 
 Stream.prototype.removeConsumer = function (s) {
@@ -654,7 +654,7 @@ Stream.prototype.removeConsumer = function (s) {
     if (s.source === this) {
         s.source = null;
     }
-    this.checkBackPressure();
+    this._checkBackPressure();
 };
 
 Stream.prototype.consume = function (name, f) {
@@ -723,7 +723,7 @@ Stream.prototype.fork = function () {
     s.id = 'fork:' + s.id;
     s.source = this;
     this.consumers.push(s);
-    this.checkBackPressure();
+    this._checkBackPressure();
     return s;
 };
 
