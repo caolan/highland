@@ -363,9 +363,41 @@ function isUndefined(arg) {
 /************** End of bundled dependencies **************/
 
 
+
 /**
- * The main exported function is a wrapper around the Stream constructor,
- * so we can do _([1,2,3,4]) to create a Stream
+ * The Stream constructor, accepts an array of values or a generator function
+ * as an optional argument. This is typically the entry point to the Highland
+ * APIs, providing a convenient way of chaining calls together.
+ *
+ * **Arrays -** Streams created from Arrays will emit each value of the Array
+ * and then emit a [nil](#nil) value to signal the end of the Stream.
+ *
+ * **Generators -** These are functions which provide values for the Stream.
+ * They are lazy and can be infinite, they can also be asynchronous (for
+ * example, making a HTTP request). You emit values on the Stream by calling
+ * `push(err, val)`, much like a standard Node.js callback. You call `next()`
+ * to signal you've finished processing the current data. If the Stream is
+ * still being consumed the generator function will then be called again.
+ *
+ * You can also redirect a generator Stream by passing a new source Stream
+ * to read from to next. For example: `next(other_stream)` - then any subsequent
+ * calls will be made to the new source.
+ *
+ * @id constructor
+ * @section Streams
+ * @name _([source])
+ * @param {Array | Function} source - (optional) array or generator to take from
+ * @api public
+ *
+ * _([1, 2, 3, 4]);
+ *
+ * _(function (push, next) {
+ *    push(null, 1);
+ *    push(err);
+ *    next();
+ * });
+ *
+ * var through = _();
  */
 
 var _ = exports = module.exports = function (xs) {
@@ -373,16 +405,37 @@ var _ = exports = module.exports = function (xs) {
 };
 
 /**
- * The end of stream marker. This is send along the data channel of a Stream
- * to tell consumers that the stream has ended.
+ * The end of stream marker. This is sent along the data channel of a Stream
+ * to tell consumers that the Stream has ended. See the following map code for
+ * an example of detecting the end of a Stream:
+ *
+ * @id nil
+ * @section Streams
+ * @name _.nil
+ * @api public
+ *
+ * var map = function (source, iterator) {
+ *     return source.consume(function (err, val, push, next) {
+ *         if (err) {
+ *             push(err);
+ *             next();
+ *         }
+ *         else if (val === _.nil) {
+ *             push(null, val);
+ *         }
+ *         else {
+ *             push(null, iterator(val));
+ *             next();
+ *         }
+ *     });
+ * };
  */
 
 var nil = _.nil = {};
 
 
 /**
- * The Stream constructor, accepts an array of values or a  generator function
- * as an optional argument
+ * Actual Stream constructor wrapped the the main exported function
  */
 
 function Stream(xs) {

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+
+<!--
+
+  DO NOT edit index.html directly, edit docs/templates/base.html for markup
+  and comments in highland.js for API documentation
+
+-->
+
+<!--[if IE 9]><html class="lt-ie10" lang="en" > <![endif]-->
+<html class="no-js" lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Highland.js</title>
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/foundation.css">
+    <link href='http://fonts.googleapis.com/css?family=Megrim' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="css/highland.css">
+    <script src="js/vendor/modernizr.js"></script>
+
+  </head>
+  <body>
+
+    <nav>
+      <ul>
+        <li class="heading"><a href="#">Highland.js</a></li>
+        <li><a href="#introduction">Introduction</a></li>
+        {{#each sections}}
+        <li class="heading"><a href="#">{{name}}</a></li>
+        {{#each items}}
+        <li><a href="#{{id}}">{{id}}</a></li>
+        {{/each}}
+        {{/each}}
+      </ul>
+    </nav>
+
+    <main>
+
+      <h1>HIGHLAND</h1>
+      <p>The high-level streams library for Node.js and the browser.</p>
+      <pre class="npm-install">$ npm install highland</pre>
+      <p>
+        <a class="button" href="#">Download</a>
+        <a class="button" href="https://github.com/caolan/highland">Source code</a>
+      </p>
+
+      <h3 id="introduction">Introduction</h3>
+      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+
+      <h2>Streams</h2>
+
+      {{#each comments}}
+        <div id={{id}} class="doc-item">
+          <div class="doc-heading">
+            <div class="links">
+              <a href="#{{id}}">Link</a>
+              <a href="https://github.com/caolan/highland/blob/master/highland.js#L{{line}}">Source</a>
+            </div>
+            <pre>{{name}}</pre>
+          </div>
+
+          {{{description_html}}}
+
+          <ul>
+            {{#each params}}
+              <li>
+                <strong>{{name}}</strong>
+                <em>{{type}}</em>
+                {{description}}
+              </li>
+            {{/each}}
+          </ul>
+
+          <pre><code class="javascript">{{example}}</code></pre>
+        </div>
+      {{/each}}
+
+    </main>
+
+    <script src="js/vendor/jquery.js"></script>
+    <script src="js/foundation.min.js"></script>
+    <script>
+      $(document).foundation();
+    </script>
+
+  </body>
+</html>

@@ -6,7 +6,9 @@
   "devDependencies": {
     "nodeunit": "~0.8.1",
     "stream-array": "~0.1.3",
-    "concat-stream": "~1.4.1"
+    "concat-stream": "~1.4.1",
+    "scrawl": "0.0.4",
+    "handlebars": "~1.3.0"
   },
   "scripts": {
     "test": "node node_modules/.bin/nodeunit test.js"
