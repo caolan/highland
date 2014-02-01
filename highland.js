@@ -414,7 +414,7 @@ var _ = exports = module.exports = function (xs) {
  * @name _.nil
  * @api public
  *
- * var map = function (source, iterator) {
+ * var map = function (iter, source) {
  *     return source.consume(function (err, val, push, next) {
  *         if (err) {
  *             push(err);
@@ -424,7 +424,7 @@ var _ = exports = module.exports = function (xs) {
  *             push(null, val);
  *         }
  *         else {
- *             push(null, iterator(val));
+ *             push(null, iter(val));
  *             next();
  *         }
  *     });

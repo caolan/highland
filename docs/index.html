@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="css/foundation.css">
     <link href='http://fonts.googleapis.com/css?family=Megrim' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" href="css/highland.css">
+    <link rel="stylesheet" href="css/highlight.github.css">
     <script src="js/vendor/modernizr.js"></script>
 
   </head>
@@ -81,16 +82,20 @@ still being consumed the generator function will then be called again.</p>
 to read from to next. For example: <code>next(othe\_stream)</code> - then any subsequent
 calls will be made to the new source.</p>
 
+          
+          <strong>Parameters:</strong>
           <ul>
             
               <li>
-                <strong>source</strong>
-                <em>Array | Function</em>
-                (optional) array or generator to take from
+                source
+                 - <em>Array | Function</em>
+                 - (optional) array or generator to take from
               </li>
             
           </ul>
+          
 
+          
           <pre><code class="javascript">_([1, 2, 3, 4]);
 
 _(function (push, next) {
@@ -100,6 +105,7 @@ _(function (push, next) {
 });
 
 var through = _();</code></pre>
+          
         </div>
       
         <div id=nil class="doc-item">
@@ -115,11 +121,10 @@ var through = _();</code></pre>
 to tell consumers that the Stream has ended. See the following map code for
 an example of detecting the end of a Stream:</p>
 
-          <ul>
-            
-          </ul>
+          
 
-          <pre><code class="javascript">var map = function (source, iterator) {
+          
+          <pre><code class="javascript">var map = function (iter, source) {
     return source.consume(function (err, val, push, next) {
         if (err) {
             push(err);
@@ -129,20 +134,23 @@ an example of detecting the end of a Stream:</p>
             push(null, val);
         }
         else {
-            push(null, iterator(val));
+            push(null, iter(val));
             next();
         }
     });
 };</code></pre>
+          
         </div>
       
 
     </main>
 
     <script src="js/vendor/jquery.js"></script>
+    <script src="js/vendor/highlight.pack.js"></script>
     <script src="js/foundation.min.js"></script>
     <script>
       $(document).foundation();
+      hljs.initHighlightingOnLoad();
     </script>
 
   </body>

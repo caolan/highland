@@ -4,7 +4,20 @@ h1 {
 }
 
 h2 {
-    margin-top: 1.618em;
+    margin-top: 1em;
+    margin-bottom: -0.382em;
+}
+
+code {
+    font-weight: normal;
+    border-radius: 3px;
+    border: 1px solid #ddd;
+    background-color: #f8f8f8;
+    color: #333;
+    margin: 0px 2px;
+    padding: 0px 5px;
+    font-family: Consolas,"Liberation Mono",Courier,monospace;
+    -moz-box-sizing: border-box;
 }
 
 nav {
@@ -63,10 +76,15 @@ main {
 }
 
 .doc-heading {
-    background-color: #eee;
+    background-color: #e8e8e8;
+    border: 1px solid #ddd;
     border-bottom: 1px solid #ccc;
-    padding: 0.382em 0;
-    margin: 1em 0 0.618em 0;
+    padding: 0.618em 3px;
+    margin: 2.618em 0 1.618em 0;
+}
+
+.doc-heading > pre {
+    font-weight: bold;
 }
 
 .doc-heading .links {
