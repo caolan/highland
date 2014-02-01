@@ -622,8 +622,8 @@ Stream.prototype._redirect = function (to) {
     this.consume = function () {
         return to.consume.apply(to, arguments);
     };
-    this.removeConsumer = function () {
-        return to.removeConsumer.apply(to, arguments);
+    this._removeConsumer = function () {
+        return to._removeConsumer.apply(to, arguments);
     };
     if (this.paused) {
         to.pause();
@@ -646,8 +646,8 @@ Stream.prototype._addConsumer = function (s) {
     this._checkBackPressure();
 };
 
-Stream.prototype.removeConsumer = function (s) {
-    //console.log([this.id, 'removeConsumer', s.id]);
+Stream.prototype._removeConsumer = function (s) {
+    //console.log([this.id, '_removeConsumer', s.id]);
     this.consumers = this.consumers.filter(function (c) {
         return c !== s;
     });
@@ -669,7 +669,7 @@ Stream.prototype.consume = function (name, f) {
     var push = function (err, x) {
         if (x === nil) {
             // ended, remove consumer from source
-            self.removeConsumer(s);
+            self._removeConsumer(s);
         }
         _send.call(s, err, x);
     };
@@ -696,7 +696,7 @@ Stream.prototype.pull = function (f) {
     //console.log('pull from: ' + this.id);
     var s = this.consume('pull', function (err, x, push, next) {
         //console.log(['pull consumer', err, x]);
-        s.source.removeConsumer(s);
+        s.source._removeConsumer(s);
         f(err, x);
     });
     s.resume();
