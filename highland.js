@@ -411,11 +411,8 @@ function Stream(xs) {
         );
     }
 
-    // TODO: remove this
-    this.id = ('' + Math.random()).substr(2, 6);
-
     this.paused = true;
-    this.consumers = [];
+    this._consumers = [];
     this.observers = [];
     this._send_events = false;
 
@@ -465,10 +462,10 @@ function StreamRedirect(to) {
 }
 
 Stream.prototype._send = function (err, x) {
-    //console.log([this.id, '_send', err, x, this.consumers]);
-    if (this.consumers.length) {
-        for (var i = 0, len = this.consumers.length; i < len; i++) {
-            var c = this.consumers[i];
+    //console.log([this.id, '_send', err, x, this._consumers]);
+    if (this._consumers.length) {
+        for (var i = 0, len = this._consumers.length; i < len; i++) {
+            var c = this._consumers[i];
             if (c.paused) {
                 if (err) {
                     c.write(new StreamError(err));
@@ -509,12 +506,12 @@ Stream.prototype.pause = function () {
 
 Stream.prototype._checkBackPressure = function () {
     //console.log(['_checkBackPressure', this]);
-    if (!this.consumers.length) {
-        //console.log('_checkBackPressure, no consumers, pausing: ' + this.id);
+    if (!this._consumers.length) {
+        //console.log('_checkBackPressure, no _consumers, pausing: ' + this.id);
         return this.pause();
     }
-    for (var i = 0, len = this.consumers.length; i < len; i++) {
-        if (this.consumers[i].paused) {
+    for (var i = 0, len = this._consumers.length; i < len; i++) {
+        if (this._consumers[i].paused) {
             //console.log('_checkBackPressure, consumer paused, pausing: ' + this.id);
             return this.pause();
         }
@@ -612,13 +609,13 @@ Stream.prototype._runGenerator = function () {
 
 Stream.prototype._redirect = function (to) {
     //console.log([this.id, '_redirect', to.id]);
-    //console.log(['copying consumers', this.consumers.length]);
-    to.consumers = this.consumers.map(function (c) {
+    //console.log(['copying _consumers', this._consumers.length]);
+    to._consumers = this._consumers.map(function (c) {
         c.source = to;
         return c;
     });
     // TODO: copy observers
-    this.consumers = [];
+    this._consumers = [];
     this.consume = function () {
         return to.consume.apply(to, arguments);
     };
@@ -636,19 +633,19 @@ Stream.prototype._redirect = function (to) {
 
 Stream.prototype._addConsumer = function (s) {
     //console.log([this.id, '_addConsumer', s.id]);
-    if (this.consumers.length) {
+    if (this._consumers.length) {
         throw new Error(
             'Stream already being consumed, you must either fork() or observe()'
         );
     }
     s.source = this;
-    this.consumers.push(s);
+    this._consumers.push(s);
     this._checkBackPressure();
 };
 
 Stream.prototype._removeConsumer = function (s) {
     //console.log([this.id, '_removeConsumer', s.id]);
-    this.consumers = this.consumers.filter(function (c) {
+    this._consumers = this._consumers.filter(function (c) {
         return c !== s;
     });
     if (s.source === this) {
@@ -722,7 +719,7 @@ Stream.prototype.fork = function () {
     var s = new Stream();
     s.id = 'fork:' + s.id;
     s.source = this;
-    this.consumers.push(s);
+    this._consumers.push(s);
     this._checkBackPressure();
     return s;
 };
