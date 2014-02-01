@@ -522,6 +522,26 @@ Stream.prototype.checkBackPressure = function () {
     return this.resume();
 };
 
+Stream.prototype.readFromBuffer = function () {
+    var len = this.incoming.length;
+    var i = 0;
+    while (i < len && !this.paused) {
+        var x = this.incoming[i];
+        if (x instanceof StreamError) {
+            this.send(x);
+        }
+        else if (x instanceof StreamRedirect) {
+            this.redirect(x.to);
+        }
+        else {
+            this.send(null, x);
+        }
+        i++;
+    }
+    // remove processed data from incoming buffer
+    this.incoming.splice(0, i);
+};
+
 Stream.prototype.resume = function () {
     //console.log([this.id, 'resume']);
     if (this._resume_running) {
@@ -533,30 +553,7 @@ Stream.prototype.resume = function () {
     do {
         this._repeat_resume = false;
         this.paused = false;
-
-        // process buffered incoming data
-        var len = this.incoming.length;
-        var i = 0;
-        //console.log(['i', i, 'len', len, this]);
-
-        while (i < len && !this.paused) {
-            //console.log(['sending buffered data', i]);
-            var x = this.incoming[i];
-            if (x instanceof StreamError) {
-                this.send(x);
-            }
-            else if (x instanceof StreamRedirect) {
-                this.redirect(x.to);
-            }
-            else {
-                this.send(null, x);
-            }
-            i++;
-        }
-
-        // remove processed data from incoming buffer
-        this.incoming.splice(0, i);
-
+        this.readFromBuffer();
         if (!this.paused) {
             // ask parent for more data
             if (this.source) {
