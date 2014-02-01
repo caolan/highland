@@ -383,9 +383,9 @@ function isUndefined(arg) {
  * to read from to next. For example: `next(other_stream)` - then any subsequent
  * calls will be made to the new source.
  *
- * @id constructor
+ * @id _(source)
  * @section Streams
- * @name _([source])
+ * @name _(source)
  * @param {Array | Function} source - (optional) array or generator to take from
  * @api public
  *

@@ -81,6 +81,7 @@ main {
     border-bottom: 1px solid #ccc;
     padding: 0.618em 3px;
     margin: 2.618em 0 1.618em 0;
+    position: relative;
 }
 
 .doc-heading > pre {
@@ -88,5 +89,22 @@ main {
 }
 
 .doc-heading .links {
-    float: right;
+    list-style-type: none;
+    position: absolute;
+    right: 0;
+    top: 0;
+    margin: 0;
+    padding: 0.382em;
+    font-size: 90%;
+}
+
+.doc-heading .links li {
+    margin; 0;
+    padding: 0;
+    display: block;
+    float: left;
+}
+
+.doc-heading .links a {
+    padding: 0.618em;
 }

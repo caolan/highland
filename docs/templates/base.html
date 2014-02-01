@@ -16,6 +16,7 @@
     <title>Highland.js</title>
     <link rel="stylesheet" href="css/normalize.css">
     <link rel="stylesheet" href="css/foundation.css">
+    <link rel="stylesheet" href="fonts/foundation-icons/foundation-icons.css">
     <link href='http://fonts.googleapis.com/css?family=Megrim' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" href="css/highland.css">
     <link rel="stylesheet" href="css/highlight.github.css">
@@ -44,7 +45,7 @@
       <pre class="npm-install">$ npm install highland</pre>
       <p>
         <a class="button" href="#">Download</a>
-        <a class="button" href="https://github.com/caolan/highland">Source code</a>
+        <a class="button" href="https://github.com/caolan/highland"><i style="margin-right: 3px" class="fi-social-github"></i> Source code</a>
       </p>
 
       <h3 id="introduction">Introduction</h3>
@@ -55,10 +56,10 @@
       {{#each comments}}
         <div id={{id}} class="doc-item">
           <div class="doc-heading">
-            <div class="links">
-              <a href="#{{id}}">Link</a>
-              <a href="https://github.com/caolan/highland/blob/master/highland.js#L{{line}}">Source</a>
-            </div>
+            <ul class="links">
+              <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L{{line}}"><i class="fi-pencil"></i> Edit</a></li>
+              <li><a href="#{{id}}"><i class="fi-link"></i> Link</a></li>
+            </ul>
             <pre>{{name}}</pre>
           </div>
 
