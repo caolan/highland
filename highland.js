@@ -73,6 +73,11 @@ else {
 }
 
 
+/**
+ * Node's EventEmitter ported for all engines
+ * see: https://github.com/Gozala/events
+ */
+
 function EventEmitter() {
   this._events = this._events || {};
   this._maxListeners = this._maxListeners || undefined;
