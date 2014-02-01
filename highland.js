@@ -531,7 +531,7 @@ Stream.prototype._readFromBuffer = function () {
             this._send(x);
         }
         else if (x instanceof StreamRedirect) {
-            this.redirect(x.to);
+            this._redirect(x.to);
         }
         else {
             this._send(null, x);
@@ -610,8 +610,8 @@ Stream.prototype._runGenerator = function () {
     this.generator(this.generator_push, this.generator_next);
 };
 
-Stream.prototype.redirect = function (to) {
-    //console.log([this.id, 'redirect', to.id]);
+Stream.prototype._redirect = function (to) {
+    //console.log([this.id, '_redirect', to.id]);
     //console.log(['copying consumers', this.consumers.length]);
     to.consumers = this.consumers.map(function (c) {
         c.source = to;
