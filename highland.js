@@ -377,13 +377,13 @@ function Stream(xs) {
     }
     else if (typeof xs === 'function') {
         this._incoming = [];
-        this.generator = xs;
-        this.generator_push = function (err, x) {
-            //console.log(['generator push called', err, x, self]);
+        this._generator = xs;
+        this._generator_push = function (err, x) {
+            //console.log(['_generator push called', err, x, self]);
             self.write(err ? new StreamError(err): x);
         };
-        this.generator_next = function (s) {
-            //console.log([self.id, 'generator next called', s, self]);
+        this._generator_next = function (s) {
+            //console.log([self.id, '_generator next called', s, self]);
             if (s) {
                 // we MUST pause to get the redirect object into the _incoming
                 // buffer otherwise it would be passed directly to _send(),
@@ -559,8 +559,8 @@ Stream.prototype.resume = function () {
             if (this.source) {
                 this.source._checkBackPressure();
             }
-            // run generator to fill up _incoming buffer
-            else if (this.generator) {
+            // run _generator to fill up _incoming buffer
+            else if (this._generator) {
                 this._runGenerator();
             }
             else {
@@ -602,12 +602,12 @@ Stream.prototype.pipe = function (dest) {
 };
 
 Stream.prototype._runGenerator = function () {
-    // if generator already running, exit
+    // if _generator already running, exit
     if (this._generator_running) {
         return;
     }
     this._generator_running = true;
-    this.generator(this.generator_push, this.generator_next);
+    this._generator(this._generator_push, this._generator_next);
 };
 
 Stream.prototype._redirect = function (to) {
