@@ -31,7 +31,7 @@
         <li><a href="#introduction">Introduction</a></li>
         <li><a href="#examples">Examples</a></li>
         {{#each sections}}
-        <li class="heading"><a href="#">{{name}}</a></li>
+        <li class="heading"><a href="#{{name}}">{{name}}</a></li>
         {{#each items}}
         <li><a href="#{{id}}">{{id}}</a></li>
         {{/each}}
@@ -58,7 +58,7 @@
         Highland manages synchronous and asynchronous code easily, using nothing more than
         standard JavaScript and Node-like Streams.
         You may be familiar with Promises, EventEmitters and callbacks but moving
-        between them is far from seamless. Thankfully, there is a deeper abstraction
+        between them is far from seamless. Thankfully, there exists a deeper abstraction
         which can free our code. By updating the tools we use on Arrays, and applying them
         to values distributed in time instead of space, we can discard plumbing and
         focus on the important things. By supporting <em>back-pressure</em>
@@ -68,38 +68,65 @@
       </p>
 
       <h3 id="examples">Examples</h3>
+      <p>Converting to/from Highland Streams</p>
+      <pre><code class="javascript">_([1,2,3,4]).toArray(function (xs) {
+  // xs is [1,2,3,4]
+});</code></pre>
+      <p>Mapping over a Stream</p>
+      <pre><code class="javascript">var doubled = _([1,2,3,4]).map(function (x) {
+  return x * 2;
+});</code></pre>
+      <p>Reading files in parallel (4 at once)</p>
+      <pre><code class="javascript">var data = filenames.map(readFile).parallel(4);</code></pre>
+      <p>Handling errors</p>
+      <pre><code class="javascript">filenames
+  .map(readFile)
+  .parallel(4)
+  .errors(function (err, rethrow) {
+    // handle or rethrow error
+  });</code></pre>
+      <p>Piping to/from Node streams</p>
+      <pre><code class="javascript">var db = levelup('./mydb');
 
-      <h2>Streams</h2>
+db.createReadStream()
+  .pipe(_.filter(isBlogpost))
+  .pipe(fs.createWriteStream('blogposts'));</code></pre>
+      <p>Handling events</p>
+      <pre><code class="javascript">var clicks = _('click', button);</code></pre>
 
-      {{#each comments}}
-        <div id={{id}} class="doc-item">
-          <div class="doc-heading">
-            <ul class="links">
-              <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L{{line}}"><i class="fi-pencil"></i> Edit</a></li>
-              <li><a href="#{{id}}"><i class="fi-link"></i> Link</a></li>
+      {{#each sections}}
+        <h2 id="{{name}}">{{name}}</h2>
+
+        {{#each items}}
+          <div id={{id}} class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L{{line}}"><i class="fi-pencil"></i> Edit</a></li>
+                <li><a href="#{{id}}"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>{{name}}</pre>
+            </div>
+
+            {{{description_html}}}
+
+            {{#if params}}
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              {{#each params}}
+                <li>
+                  <code>{{name}}</code>
+                  {{#if type}} - <em>{{type}}</em>{{/if}}
+                  {{#if description}} - {{description}}{{/if}}
+                </li>
+              {{/each}}
             </ul>
-            <pre>{{name}}</pre>
+            {{/if}}
+
+            {{#if example}}
+            <pre><code class="javascript">{{example}}</code></pre>
+            {{/if}}
           </div>
-
-          {{{description_html}}}
-
-          {{#if params}}
-          <div class="doc-params-heading">Parameters</div>
-          <ul>
-            {{#each params}}
-              <li>
-                <code>{{name}}</code>
-                {{#if type}} - <em>{{type}}</em>{{/if}}
-                {{#if description}} - {{description}}{{/if}}
-              </li>
-            {{/each}}
-          </ul>
-          {{/if}}
-
-          {{#if example}}
-          <pre><code class="javascript">{{example}}</code></pre>
-          {{/if}}
-        </div>
+        {{/each}}
       {{/each}}
 
     </main>

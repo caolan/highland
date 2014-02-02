@@ -123,3 +123,8 @@ main {
     font-style: italic;
     margin: 0.618em 0;
 }
+
+pre > code {
+    margin-top: -0.618em;
+    margin-bottom: 1em;
+}

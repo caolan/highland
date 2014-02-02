@@ -390,14 +390,17 @@ function isUndefined(arg) {
  *                                    take values from from
  * @api public
  *
+ * // from an Array
  * _([1, 2, 3, 4]);
  *
+ * // using a generator function
  * _(function (push, next) {
  *    push(null, 1);
  *    push(err);
  *    next();
  * });
  *
+ * // a stream with no source, can pipe node streams through it etc.
  * var through = _();
  */
 
@@ -726,7 +729,7 @@ Stream.prototype.end = function () {
  * var dest = fs.createWriteStream('myfile.txt')
  * source.pipe(dest);
  *
- * //chained call
+ * // chained call
  * source.pipe(through).pipe(dest);
  */
 
@@ -910,7 +913,7 @@ Stream.prototype.consume = function (name, f) {
  * @api public
  *
  * xs.pull(function (err, x) {
- *   // do something
+ *     // do something
  * });
  */
 
