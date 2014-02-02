@@ -55,6 +55,14 @@
         
         <li><a href="#observe">observe</a></li>
         
+        <li><a href="#each">each</a></li>
+        
+        <li><a href="#each">each</a></li>
+        
+        <li><a href="#map">map</a></li>
+        
+        <li><a href="#take">take</a></li>
+        
         
       </ul>
     </nav>
@@ -364,7 +372,7 @@ like a 'through' stream, handling values as they are read.</p>
           <div id=pull class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L901"><i class="fi-pencil"></i> Edit</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L896"><i class="fi-pencil"></i> Edit</a></li>
                 <li><a href="#pull"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.pull(f)</pre>
@@ -400,7 +408,7 @@ some functions in the Highland library.</p>
           <div id=write class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L928"><i class="fi-pencil"></i> Edit</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L923"><i class="fi-pencil"></i> Edit</a></li>
                 <li><a href="#write"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.write(x)</pre>
@@ -442,7 +450,7 @@ xs.toArray(function (ys) {
           <div id=fork class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L968"><i class="fi-pencil"></i> Edit</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L963"><i class="fi-pencil"></i> Edit</a></li>
                 <li><a href="#fork"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.fork()</pre>
@@ -470,7 +478,7 @@ zs.resume();</code></pre>
           <div id=observe class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L998"><i class="fi-pencil"></i> Edit</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L993"><i class="fi-pencil"></i> Edit</a></li>
                 <li><a href="#observe"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.observe()</pre>
@@ -494,6 +502,137 @@ ys.resume();</code></pre>
             
           </div>
         
+          <div id=each class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1021"><i class="fi-pencil"></i> Edit</a></li>
+                <li><a href="#each"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.each(f)</pre>
+            </div>
+
+            <p>Iterates over every value from the Stream, calling the iterator function
+on each of them. This function causes a <strong>thunk</strong>.</p>
+
+<p>If an error from the Stream reaches the <code>each</code> call, it will emit an
+error event (which will cause it to throw if unhandled).</p>
+
+            
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              
+                <li>
+                  <code>f</code>
+                   - <em>Function</em>
+                   - the iterator function
+                </li>
+              
+            </ul>
+            
+
+            
+            <pre><code class="javascript">_([1, 2, 3, 4]).each(function (x) {
+    // will be called 4 times with x being 1, 2, 3 and 4
+});</code></pre>
+            
+          </div>
+        
+          <div id=each class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1052"><i class="fi-pencil"></i> Edit</a></li>
+                <li><a href="#each"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.toArray(f)</pre>
+            </div>
+
+            <p>Collects all values from a Stream into an Array and calls a function with
+once with the result. This function causes a <strong>thunk</strong>.</p>
+
+<p>If an error from the Stream reaches the <code>toArray</code> call, it will emit an
+error event (which will cause it to throw if unhandled).</p>
+
+            
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              
+                <li>
+                  <code>f</code>
+                   - <em>Function</em>
+                   - the callback to provide the completed Array to
+                </li>
+              
+            </ul>
+            
+
+            
+            <pre><code class="javascript">_([1, 2, 3, 4]).each(function (x) {
+    // will be called 4 times with x being 1, 2, 3 and 4
+});</code></pre>
+            
+          </div>
+        
+          <div id=map class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1087"><i class="fi-pencil"></i> Edit</a></li>
+                <li><a href="#map"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.map(f)</pre>
+            </div>
+
+            <p>Creates a new Stream of transformed values by applying a function to each
+value from the source.</p>
+
+            
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              
+                <li>
+                  <code>f</code>
+                   - <em>Function</em>
+                   - the transformation function
+                </li>
+              
+            </ul>
+            
+
+            
+            <pre><code class="javascript">var doubled = _([1, 2, 3, 4]).map(function (x) {
+    return x * 2;
+});</code></pre>
+            
+          </div>
+        
+          <div id=take class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1118"><i class="fi-pencil"></i> Edit</a></li>
+                <li><a href="#take"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.take(n)</pre>
+            </div>
+
+            <p>Creates a new Stream with the first <code>n</code> values from the source.</p>
+
+            
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              
+                <li>
+                  <code>n</code>
+                   - <em>Number</em>
+                   - integer representing number of values to read from source
+                </li>
+              
+            </ul>
+            
+
+            
+            <pre><code class="javascript">_([1, 2, 3, 4]).take(2) // =&gt; 1, 2</code></pre>
+            
+          </div>
+        
       
 
     </main>
@@ -505,6 +644,27 @@ ys.resume();</code></pre>
       $(document).foundation();
       hljs.initHighlightingOnLoad();
     </script>
+
+
+    <!-- Start Open Web Analytics Tracker -->
+    <script type="text/javascript">
+      //<![CDATA[
+      var owa_baseUrl = 'http://owa.cyberdelia.org.uk/';
+      var owa_cmds = owa_cmds || [];
+      owa_cmds.push(['setSiteId', '319057ce1186ed2e85224e2f531916d9']);
+      owa_cmds.push(['trackPageView']);
+      owa_cmds.push(['trackClicks']);
+      owa_cmds.push(['trackDomStream']);
+
+      (function() {
+        var _owa = document.createElement('script'); _owa.type = 'text/javascript'; _owa.async = true;
+        owa_baseUrl = ('https:' == document.location.protocol ? window.owa_baseSecUrl || owa_baseUrl.replace(/http:/, 'https:') : owa_baseUrl );
+        _owa.src = owa_baseUrl + 'modules/base/js/owa.tracker-combined-min.js';
+        var _owa_s = document.getElementsByTagName('script')[0]; _owa_s.parentNode.insertBefore(_owa, _owa_s);
+      }());
+      //]]>
+    </script>
+    <!-- End Open Web Analytics Code -->
 
   </body>
 </html>

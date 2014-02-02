@@ -866,14 +866,9 @@ Stream.prototype._removeConsumer = function (s) {
  * };
  */
 
-Stream.prototype.consume = function (name, f) {
-    if (!f) {
-        f = name;
-        name = ('' + Math.random()).substr(2, 6);
-    }
+Stream.prototype.consume = function (f) {
     var self = this;
     var s = new Stream();
-    s.id = name;
     var _send = s._send;
     var push = function (err, x) {
         if (x === nil) {
@@ -918,7 +913,7 @@ Stream.prototype.consume = function (name, f) {
  */
 
 Stream.prototype.pull = function (f) {
-    var s = this.consume('pull', function (err, x, push, next) {
+    var s = this.consume(function (err, x, push, next) {
         s.source._removeConsumer(s);
         f(err, x);
     });
@@ -1023,11 +1018,29 @@ Stream.prototype.observe = function () {
     return s;
 };
 
+/**
+ * Iterates over every value from the Stream, calling the iterator function
+ * on each of them. This function causes a **thunk**.
+ *
+ * If an error from the Stream reaches the `each` call, it will emit an
+ * error event (which will cause it to throw if unhandled).
+ *
+ * @id each
+ * @section Streams
+ * @name Stream.each(f)
+ * @param {Function} f - the iterator function
+ * @api public
+ *
+ * _([1, 2, 3, 4]).each(function (x) {
+ *     // will be called 4 times with x being 1, 2, 3 and 4
+ * });
+ */
+
 Stream.prototype.each = function (f) {
+    var self = this;
     return this.consume(function (err, x, push, next) {
         if (err) {
-            // TODO
-            throw err;
+            self.emit('error', err);
         }
         else if (x !== nil) {
             f(x);
@@ -1036,12 +1049,30 @@ Stream.prototype.each = function (f) {
     }).resume();
 };
 
+/**
+ * Collects all values from a Stream into an Array and calls a function with
+ * once with the result. This function causes a **thunk**.
+ *
+ * If an error from the Stream reaches the `toArray` call, it will emit an
+ * error event (which will cause it to throw if unhandled).
+ *
+ * @id each
+ * @section Streams
+ * @name Stream.toArray(f)
+ * @param {Function} f - the callback to provide the completed Array to
+ * @api public
+ *
+ * _([1, 2, 3, 4]).each(function (x) {
+ *     // will be called 4 times with x being 1, 2, 3 and 4
+ * });
+ */
+
 Stream.prototype.toArray = function (f) {
+    var self = this;
     var xs = [];
-    return this.consume('toArray', function (err, x, push, next) {
+    return this.consume(function (err, x, push, next) {
         if (err) {
-            // TODO
-            throw err;
+            self.emit('error', err);
         }
         else if (x === nil) {
             f(xs);
@@ -1053,8 +1084,23 @@ Stream.prototype.toArray = function (f) {
     }).resume();
 };
 
+/**
+ * Creates a new Stream of transformed values by applying a function to each
+ * value from the source.
+ *
+ * @id map
+ * @section Streams
+ * @name Stream.map(f)
+ * @param {Function} f - the transformation function
+ * @api public
+ *
+ * var doubled = _([1, 2, 3, 4]).map(function (x) {
+ *     return x * 2;
+ * });
+ */
+
 Stream.prototype.map = function (f) {
-    return this.consume('map', function (err, x, push, next) {
+    return this.consume(function (err, x, push, next) {
         if (err) {
             push(err);
             next();
@@ -1069,12 +1115,24 @@ Stream.prototype.map = function (f) {
     });
 };
 
+/**
+ * Creates a new Stream with the first `n` values from the source.
+ *
+ * @id take
+ * @section Streams
+ * @name Stream.take(n)
+ * @param {Number} n - integer representing number of values to read from source
+ * @api public
+ *
+ * _([1, 2, 3, 4]).take(2) // => 1, 2
+ */
+
+// TODO: test that errors don't count in take 'n' calls
 Stream.prototype.take = function (n) {
     if (n === 0) {
         return _([]);
     }
-    return this.consume('take', function (err, x, push, next) {
-        n--;
+    return this.consume(function (err, x, push, next) {
         if (err) {
             push(err);
             if (n > 0) {
@@ -1088,6 +1146,7 @@ Stream.prototype.take = function (n) {
             push(null, nil);
         }
         else {
+            n--;
             push(null, x);
             if (n > 0) {
                 next();
