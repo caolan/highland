@@ -27,7 +27,9 @@
     <nav>
       <ul>
         <li class="heading"><a href="#">Highland.js</a></li>
+        <li><a href="#">Download</a></li>
         <li><a href="#introduction">Introduction</a></li>
+        <li><a href="#examples">Examples</a></li>
         {{#each sections}}
         <li class="heading"><a href="#">{{name}}</a></li>
         {{#each items}}
@@ -49,23 +51,23 @@
 
       <h3 id="introduction">Introduction</h3>
       <p>
-        Highland is re-thinking the 'JavaScript utility belt' for the Node generation.
-        We have many tools that provide Streams, EventEmitters, Promises, and callbacks,
-        but we lack the language to move seamlessly between them.
+        Re-thinking the
+        <a href="http://underscorejs.org">JavaScript</a>
+        <a href="http://lodash.com">utility</a>
+        <a href="https://github.com/caolan/async">belt</a>,
+        Highland manages synchronous and asynchronous code easily, using nothing more than
+        standard JavaScript and Node-like Streams.
+        You may be familiar with Promises, EventEmitters and callbacks but moving
+        between them is far from seamless. Thankfully, there is a deeper abstraction
+        which can free our code. By updating the tools we use on Arrays, and applying them
+        to values distributed in time instead of space, we can discard plumbing and
+        focus on the important things. By supporting <em>back-pressure</em>
+        and <em>laziness</em>,
+        Highland is able to describe whole programs including async control flow
+        and exception handling. Time to dive in!
       </p>
-      <p>
-        Thankfully, there is a deeper abstraction which promises a higher-level
-        of code. Streams, EventEmitters and Promises all represent values in the future.
-        Think of a Stream as an Array, where the values are distributed in time instead
-        of space. With this, we can imagine a general interface for describing operations
-        on any value in the future. If we describe this Stream as lazy, causing the
-        underlying effects when we pull values from it (eg, reading a file), we can also
-        describe patterns of execution and control-flow. Don't worry, it's not as scary
-        as it sounds.
-      </p>
-      <p>
-        Basically, we're going to <em>stream all the things!</em>
-      </p>
+
+      <h3 id="examples">Examples</h3>
 
       <h2>Streams</h2>
 
