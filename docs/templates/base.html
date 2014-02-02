@@ -57,7 +57,7 @@
         <a href="https://github.com/caolan/async">belt</a>,
         Highland manages synchronous and asynchronous code easily, using nothing more than
         standard JavaScript and Node-like Streams.
-        You may be familiar with Promises, EventEmitters and callbacks but moving
+        You may be familiar with Promises, EventEmitters and callbacks, but moving
         between them is far from seamless. Thankfully, there exists a deeper abstraction
         which can free our code. By updating the tools we use on Arrays, and applying them
         to values distributed in time instead of space, we can discard plumbing and
@@ -138,6 +138,27 @@ db.createReadStream()
       $(document).foundation();
       hljs.initHighlightingOnLoad();
     </script>
+
+
+    <!-- Start Open Web Analytics Tracker -->
+    <script type="text/javascript">
+      //<![CDATA[
+      var owa_baseUrl = 'http://owa.cyberdelia.org.uk/';
+      var owa_cmds = owa_cmds || [];
+      owa_cmds.push(['setSiteId', '319057ce1186ed2e85224e2f531916d9']);
+      owa_cmds.push(['trackPageView']);
+      owa_cmds.push(['trackClicks']);
+      owa_cmds.push(['trackDomStream']);
+
+      (function() {
+        var _owa = document.createElement('script'); _owa.type = 'text/javascript'; _owa.async = true;
+        owa_baseUrl = ('https:' == document.location.protocol ? window.owa_baseSecUrl || owa_baseUrl.replace(/http:/, 'https:') : owa_baseUrl );
+        _owa.src = owa_baseUrl + 'modules/base/js/owa.tracker-combined-min.js';
+        var _owa_s = document.getElementsByTagName('script')[0]; _owa_s.parentNode.insertBefore(_owa, _owa_s);
+      }());
+      //]]>
+    </script>
+    <!-- End Open Web Analytics Code -->
 
   </body>
 </html>
