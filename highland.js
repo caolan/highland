@@ -962,6 +962,27 @@ Stream.prototype.write = function (x) {
     return !this.paused;
 };
 
+/**
+ * Forks a stream, allowing you to add additional consumers with shared
+ * back-pressure. A stream forked to multiple consumers will only pull values
+ * from it's source as fast as the slowest consumer can handle them.
+ *
+ * @id fork
+ * @section Streams
+ * @name Stream.fork()
+ * @api public
+ *
+ * var xs = _([1, 2, 3, 4]);
+ * var ys = xs.fork();
+ * var zs = xs.fork();
+ *
+ * // no values will be pulled from xs until zs also resume
+ * ys.resume();
+ *
+ * // now both ys and zs will get values from xs
+ * zs.resume();
+ */
+
 Stream.prototype.fork = function () {
     var s = new Stream();
     s.id = 'fork:' + s.id;
@@ -970,6 +991,26 @@ Stream.prototype.fork = function () {
     this._checkBackPressure();
     return s;
 };
+
+/**
+ * Observes a stream, allowing you to handle values as they are emitted, without
+ * adding back-pressure or causing data to be pulled from the source. This can
+ * be useful when you are performing two related queries on a stream where one
+ * would block the other. Just be aware that a slow observer could fill up it's
+ * buffer and cause memory issues. Where possible, you should use [fork](#fork).
+ *
+ * @id observe
+ * @section Streams
+ * @name Stream.observe()
+ * @api public
+ *
+ * var xs = _([1, 2, 3, 4]);
+ * var ys = xs.fork();
+ * var zs = xs.observe();
+ *
+ * // now both zs and ys will recieve data as fast as ys can handle it
+ * ys.resume();
+ */
 
 Stream.prototype.observe = function () {
     var s = new Stream();

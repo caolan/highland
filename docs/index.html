@@ -49,6 +49,10 @@
         
         <li><a href="#write">write</a></li>
         
+        <li><a href="#fork">fork</a></li>
+        
+        <li><a href="#observe">observe</a></li>
+        
         
       </ul>
     </nav>
@@ -401,6 +405,61 @@ xs.end();
 xs.toArray(function (ys) {
     // ys will be [1, 2]
 });</code></pre>
+          
+        </div>
+      
+        <div id=fork class="doc-item">
+          <div class="doc-heading">
+            <ul class="links">
+              <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L965"><i class="fi-pencil"></i> Edit</a></li>
+              <li><a href="#fork"><i class="fi-link"></i> Link</a></li>
+            </ul>
+            <pre>Stream.fork()</pre>
+          </div>
+
+          <p>Forks a stream, allowing you to add additional consumers with shared
+back-pressure. A stream forked to multiple consumers will only pull values
+from it's source as fast as the slowest consumer can handle them.</p>
+
+          
+
+          
+          <pre><code class="javascript">var xs = _([1, 2, 3, 4]);
+var ys = xs.fork();
+var zs = xs.fork();
+
+// no values will be pulled from xs until zs also resume
+ys.resume();
+
+// now both ys and zs will get values from xs
+zs.resume();</code></pre>
+          
+        </div>
+      
+        <div id=observe class="doc-item">
+          <div class="doc-heading">
+            <ul class="links">
+              <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L995"><i class="fi-pencil"></i> Edit</a></li>
+              <li><a href="#observe"><i class="fi-link"></i> Link</a></li>
+            </ul>
+            <pre>Stream.observe()</pre>
+          </div>
+
+          <p>Observes a stream, allowing you to handle values as they are emitted, without
+adding back-pressure or causing data to be pulled from the source. This can
+be useful when you are performing two related queries on a stream where one
+would block the other. Just be aware that a slow observer could fill up it's
+buffer and cause memory issues. Where possible, you should use <a href="#fork">fork</a>.</p>
+
+          
+
+          
+          <pre><code class="javascript">var xs = _([1, 2, 3, 4]);
+var ys = xs.fork();
+var zs = xs.observe();
+
+// now both zs and ys will recieve data as fast as ys can handle it
+ys.resume();</code></pre>
           
         </div>
       
