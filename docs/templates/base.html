@@ -48,7 +48,23 @@
       </p>
 
       <h3 id="introduction">Introduction</h3>
-      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+      <p>
+        Highland is re-thinking the 'JavaScript utility belt' for the Node generation.
+        We have many tools that provide Streams, EventEmitters, Promises, and callbacks,
+        but we lack the language to move seamlessly between them.
+      </p>
+      <p>
+        Thankfully, there is a deeper abstraction which promises a higher-level
+        of code. Streams, EventEmitters and Promises all represent values in the future.
+        Think of a Stream as an Array, where the values are distributed in time instead
+        of space. With this, we can imagine a general interface for describing operations
+        on any value in the future. If we describe this Stream as lazy, causing the
+        underlying effects when we pull values from it (eg, reading a file), we can also
+        describe patterns of execution and control-flow.
+      </p>
+      <p>
+        Basically, we're going to <em>stream all the things!</em>
+      </p>
 
       <h2>Streams</h2>
 

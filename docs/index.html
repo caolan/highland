@@ -43,6 +43,12 @@
         
         <li><a href="#pipe">pipe</a></li>
         
+        <li><a href="#consume">consume</a></li>
+        
+        <li><a href="#pull">pull</a></li>
+        
+        <li><a href="#write">write</a></li>
+        
         
       </ul>
     </nav>
@@ -58,7 +64,23 @@
       </p>
 
       <h3 id="introduction">Introduction</h3>
-      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+      <p>
+        Highland is re-thinking the 'JavaScript utility belt' for the Node generation.
+        We have many tools that provide Streams, EventEmitters, Promises, and callbacks,
+        but we lack the language to move seamlessly between them.
+      </p>
+      <p>
+        Thankfully, there is a deeper abstraction which promises a higher-level
+        of code. Streams, EventEmitters and Promises all represent values in the future.
+        Think of a Stream as an Array, where the values are distributed in time instead
+        of space. With this, we can imagine a general interface for describing operations
+        on any value in the future. If we describe this Stream as lazy, causing the
+        underlying effects when we pull values from it (eg, reading a file), we can also
+        describe patterns of execution and control-flow.
+      </p>
+      <p>
+        Basically, we're going to <em>stream all the things!</em>
+      </p>
 
       <h2>Streams</h2>
 
@@ -219,7 +241,7 @@ you pipe in.</p>
             <pre>Stream.pipe(dest)</pre>
           </div>
 
-          <p>Pipe a Highland Stream to a <a href="http://nodejs.org/api/stream.html#stream_class_stream_writable">Node Writable Stream</a>
+          <p>Pipes a Highland Stream to a <a href="http://nodejs.org/api/stream.html#stream_class_stream_writable">Node Writable Stream</a>
 (Highland Streams are also Node Writable Streams). This will pull all the
 data from the source Highland Stream and write it to the destination,
 automatically managing flow so that the destination is not overwhelmed
@@ -233,8 +255,8 @@ by a fast source.</p>
             
               <li>
                 <code>dest</code>
-                
-                 - {Writable Stream} - the destination to write all data to
+                 - <em>Writable Stream</em>
+                 - the destination to write all data to
               </li>
             
           </ul>
@@ -247,6 +269,137 @@ source.pipe(dest);
 
 //chained call
 source.pipe(through).pipe(dest);</code></pre>
+          
+        </div>
+      
+        <div id=consume class="doc-item">
+          <div class="doc-heading">
+            <ul class="links">
+              <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L830"><i class="fi-pencil"></i> Edit</a></li>
+              <li><a href="#consume"><i class="fi-link"></i> Link</a></li>
+            </ul>
+            <pre>Stream.consume(f)</pre>
+          </div>
+
+          <p>Consumes values from a Stream (once resumed) and returns a new Stream for
+you to optionally push values onto using the provided push / next functions.</p>
+
+<p>This function forms the basis of many higher-level Stream operations.
+It will not cause a paused stream to immediately resume, but behaves more
+like a 'through' stream, handling values as they are read.</p>
+
+          
+          <div class="doc-params-heading">Parameters</div>
+          <ul>
+            
+              <li>
+                <code>f</code>
+                 - <em>Function</em>
+                 - the function to handle errors and values
+              </li>
+            
+          </ul>
+          
+
+          
+          <pre><code class="javascript">var filter = function (f, source) {
+    return source.consume(function (err, x, push, next) {
+        if (err) {
+            // pass errors along the stream and consume next value
+            push(err);
+            next();
+        }
+        else if (x === _.nil) {
+            // pass nil (end event) along the stream
+            push(null, x);
+        }
+        else {
+            // pass on the value only if the value passes the predicate
+            if (f(x)) {
+                push(null, x);
+            }
+            next();
+        }
+    });
+};</code></pre>
+          
+        </div>
+      
+        <div id=pull class="doc-item">
+          <div class="doc-heading">
+            <ul class="links">
+              <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L898"><i class="fi-pencil"></i> Edit</a></li>
+              <li><a href="#pull"><i class="fi-link"></i> Link</a></li>
+            </ul>
+            <pre>Stream.pull(f)</pre>
+          </div>
+
+          <p>Consumes a single item from the Stream. Unlike consume, this function will
+not provide a new stream for you to push values onto, and it will unsubscribe
+as soon as it has a single error, value or nil from the source.</p>
+
+<p>You probably won't need to use this directly, but it is used internally by
+some functions in the Highland library.</p>
+
+          
+          <div class="doc-params-heading">Parameters</div>
+          <ul>
+            
+              <li>
+                <code>f</code>
+                 - <em>Function</em>
+                 - the function to handle data
+              </li>
+            
+          </ul>
+          
+
+          
+          <pre><code class="javascript">xs.pull(function (err, x) {
+  // do something
+});</code></pre>
+          
+        </div>
+      
+        <div id=write class="doc-item">
+          <div class="doc-heading">
+            <ul class="links">
+              <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L925"><i class="fi-pencil"></i> Edit</a></li>
+              <li><a href="#write"><i class="fi-link"></i> Link</a></li>
+            </ul>
+            <pre>Stream.write(x)</pre>
+          </div>
+
+          <p>Writes a value to the Stream. If the Stream is paused it will go into the
+Stream's incoming buffer, otherwise it will be immediately processed and
+sent to the Stream's consumers (if any). Returns false if the Stream is
+paused, true otherwise. This lets Node's pipe method handle back-pressure.</p>
+
+<p>You shouldn't need to call this yourself, but it may be called by Node
+functions which treat Highland Streams as a <a href="http://nodejs.org/api/stream.html#stream_class_stream_writable">Node Writable Stream</a>.</p>
+
+          
+          <div class="doc-params-heading">Parameters</div>
+          <ul>
+            
+              <li>
+                <code>x</code>
+                
+                 - the value to write to the Stream
+              </li>
+            
+          </ul>
+          
+
+          
+          <pre><code class="javascript">var xs = _();
+xs.write(1);
+xs.write(2);
+xs.end();
+
+xs.toArray(function (ys) {
+    // ys will be [1, 2]
+});</code></pre>
           
         </div>
       

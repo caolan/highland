@@ -708,7 +708,7 @@ Stream.prototype.end = function () {
 };
 
 /**
- * Pipe a Highland Stream to a [Node Writable Stream](http://nodejs.org/api/stream.html#stream_class_stream_writable)
+ * Pipes a Highland Stream to a [Node Writable Stream](http://nodejs.org/api/stream.html#stream_class_stream_writable)
  * (Highland Streams are also Node Writable Streams). This will pull all the
  * data from the source Highland Stream and write it to the destination,
  * automatically managing flow so that the destination is not overwhelmed
@@ -719,7 +719,7 @@ Stream.prototype.end = function () {
  * @id pipe
  * @section Streams
  * @name Stream.pipe(dest)
- * @param dest {Writable Stream} - the destination to write all data to
+ * @param {Writable Stream} dest - the destination to write all data to
  * @api public
  *
  * var source = _(generator);
@@ -751,6 +751,12 @@ Stream.prototype.pipe = function (dest) {
     return dest;
 };
 
+/**
+ * Runs the generator function for this Stream. If the generator is already
+ * running (it has been called and not called next() yet) then this function
+ * will do nothing.
+ */
+
 Stream.prototype._runGenerator = function () {
     // if _generator already running, exit
     if (this._generator_running) {
@@ -759,6 +765,13 @@ Stream.prototype._runGenerator = function () {
     this._generator_running = true;
     this._generator(this._generator_push, this._generator_next);
 };
+
+/**
+ * Performs the redirect from one Stream to another. In order for the
+ * redirect to happen at the appropriate time, it is put on the incoming
+ * buffer as a StreamRedirect object, and this function is called
+ * once it is read from the buffer.
+ */
 
 Stream.prototype._redirect = function (to) {
     to._consumers = this._consumers.map(function (c) {
@@ -782,6 +795,13 @@ Stream.prototype._redirect = function (to) {
     }
 };
 
+/**
+ * Adds a new consumer Stream, which will accept data and provide backpressure
+ * to this Stream. Adding more than one consumer will cause an exception to be
+ * thrown as the backpressure strategy must be explicitly chosen by the
+ * developer (through calling fork or observe).
+ */
+
 Stream.prototype._addConsumer = function (s) {
     if (this._consumers.length) {
         throw new Error(
@@ -793,6 +813,10 @@ Stream.prototype._addConsumer = function (s) {
     this._checkBackPressure();
 };
 
+/**
+ * Removes a consumer from this Stream.
+ */
+
 Stream.prototype._removeConsumer = function (s) {
     this._consumers = this._consumers.filter(function (c) {
         return c !== s;
@@ -802,6 +826,42 @@ Stream.prototype._removeConsumer = function (s) {
     }
     this._checkBackPressure();
 };
+
+/**
+ * Consumes values from a Stream (once resumed) and returns a new Stream for
+ * you to optionally push values onto using the provided push / next functions.
+ *
+ * This function forms the basis of many higher-level Stream operations.
+ * It will not cause a paused stream to immediately resume, but behaves more
+ * like a 'through' stream, handling values as they are read.
+ *
+ * @id consume
+ * @section Streams
+ * @name Stream.consume(f)
+ * @param {Function} f - the function to handle errors and values
+ * @api public
+ *
+ * var filter = function (f, source) {
+ *     return source.consume(function (err, x, push, next) {
+ *         if (err) {
+ *             // pass errors along the stream and consume next value
+ *             push(err);
+ *             next();
+ *         }
+ *         else if (x === _.nil) {
+ *             // pass nil (end event) along the stream
+ *             push(null, x);
+ *         }
+ *         else {
+ *             // pass on the value only if the value passes the predicate
+ *             if (f(x)) {
+ *                 push(null, x);
+ *             }
+ *             next();
+ *         }
+ *     });
+ * };
+ */
 
 Stream.prototype.consume = function (name, f) {
     if (!f) {
@@ -835,6 +895,25 @@ Stream.prototype.consume = function (name, f) {
     return s;
 };
 
+/**
+ * Consumes a single item from the Stream. Unlike consume, this function will
+ * not provide a new stream for you to push values onto, and it will unsubscribe
+ * as soon as it has a single error, value or nil from the source.
+ *
+ * You probably won't need to use this directly, but it is used internally by
+ * some functions in the Highland library.
+ *
+ * @id pull
+ * @section Streams
+ * @name Stream.pull(f)
+ * @param {Function} f - the function to handle data
+ * @api public
+ *
+ * xs.pull(function (err, x) {
+ *   // do something
+ * });
+ */
+
 Stream.prototype.pull = function (f) {
     var s = this.consume('pull', function (err, x, push, next) {
         s.source._removeConsumer(s);
@@ -842,6 +921,31 @@ Stream.prototype.pull = function (f) {
     });
     s.resume();
 };
+
+/**
+ * Writes a value to the Stream. If the Stream is paused it will go into the
+ * Stream's incoming buffer, otherwise it will be immediately processed and
+ * sent to the Stream's consumers (if any). Returns false if the Stream is
+ * paused, true otherwise. This lets Node's pipe method handle back-pressure.
+ *
+ * You shouldn't need to call this yourself, but it may be called by Node
+ * functions which treat Highland Streams as a [Node Writable Stream](http://nodejs.org/api/stream.html#stream_class_stream_writable).
+ *
+ * @id write
+ * @section Streams
+ * @name Stream.write(x)
+ * @param x - the value to write to the Stream
+ * @api public
+ *
+ * var xs = _();
+ * xs.write(1);
+ * xs.write(2);
+ * xs.end();
+ *
+ * xs.toArray(function (ys) {
+ *     // ys will be [1, 2]
+ * });
+ */
 
 Stream.prototype.write = function (x) {
     if (this.paused) {
