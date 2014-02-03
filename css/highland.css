@@ -1,0 +1,137 @@
+@font-face {
+    font-family: "Megrim";
+    font-style: normal;
+    font-weight: 400;
+    src: local("Megrim"), url("../fonts/megrim.woff") format("woff");
+}
+
+h1 {
+    font-family: 'Megrim', 'Helvetica Neue', sans-serif;
+    font-size: 424%;
+}
+
+h2 {
+    /*margin-top: 1em;*/
+    /*margin-bottom: -0.382em;*/
+    line-height: 2em;
+}
+
+code {
+    line-height: 19px;
+    font-size: 13px;
+    font-weight: normal;
+    border-radius: 3px;
+    border: 1px solid #ddd;
+    background-color: #f8f8f8;
+    color: #333;
+    margin: 0px 2px;
+    padding: 0px 5px;
+    font-family: Consolas,"Liberation Mono",Courier,monospace;
+    -moz-box-sizing: border-box;
+}
+
+nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 230px;
+    height: 100%;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    color: rgba(255, 255, 255, 0.7);
+    background-color: #333;
+}
+
+nav ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+nav li {
+    padding: 0;
+    margin: 0;
+    border-bottom: 1px solid #262626;
+}
+
+nav a {
+    display: block;
+    padding: 0.618em;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+nav .heading a {
+    background-color: #444;
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 80%;
+    color: #999;
+}
+
+nav a:hover {
+    color: #eee;
+}
+
+main {
+    position: absolute;
+    left: 230px;
+    top: 0;
+    padding: 1.618em;
+}
+
+.npm-install {
+    padding: 2.618em 1.618em;
+    background-color: #eee;
+    margin-bottom: 1em;
+}
+
+.doc-item {
+    margin-top: 2.618em;
+}
+.doc-item:first-child {
+    margin-top: 0.618em;
+}
+.doc-heading {
+    background-color: #e8e8e8;
+    border: 1px solid #ddd;
+    border-bottom: 1px solid #ccc;
+    padding: 0.618em 3px;
+    margin-bottom: 0.618em;
+    position: relative;
+}
+
+.doc-heading > pre {
+    font-weight: bold;
+}
+
+.doc-heading .links {
+    list-style-type: none;
+    position: absolute;
+    right: 0;
+    top: 0;
+    margin: 0;
+    padding: 0.382em;
+    font-size: 90%;
+}
+
+.doc-heading .links li {
+    margin; 0;
+    padding: 0;
+    display: block;
+    float: left;
+}
+
+.doc-heading .links a {
+    padding: 0.618em;
+}
+
+.doc-params-heading {
+    font-weight: bold;
+    font-style: italic;
+    margin: 0.618em 0;
+}
+
+pre > code {
+    margin-top: -0.618em;
+    margin-bottom: 1.618em;
+}

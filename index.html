@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+
+<!--
+
+  DO NOT edit index.html directly, edit docs/templates/base.html for markup
+  and comments in highland.js for API documentation
+
+-->
+
+<!--[if IE 9]><html class="lt-ie10" lang="en" > <![endif]-->
+<html class="no-js" lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Highland.js</title>
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/foundation.css">
+    <link rel="stylesheet" href="fonts/foundation-icons/foundation-icons.css">
+    <link rel="stylesheet" href="css/highland.css">
+    <link rel="stylesheet" href="css/highlight.github.css">
+    <script src="js/vendor/modernizr.js"></script>
+
+  </head>
+  <body>
+
+    <nav>
+      <ul>
+        <li class="heading"><a href="#">Highland.js</a></li>
+        <li><a href="#">Download</a></li>
+        <li><a href="#introduction">Introduction</a></li>
+        <li class="heading"><a href="#examples">Examples</a></li>
+        <li><a href="#examples">Overview</a></li>
+        <li><a href="#laziness">Laziness</a></li>
+        <li><a href="#currying">Currying</a></li>
+        
+        <li class="heading"><a href="#Streams">Streams</a></li>
+        
+        <li><a href="#_(source)">_(source)</a></li>
+        
+        <li><a href="#nil">nil</a></li>
+        
+        <li><a href="#pause">pause</a></li>
+        
+        <li><a href="#resume">resume</a></li>
+        
+        <li><a href="#end">end</a></li>
+        
+        <li><a href="#pipe">pipe</a></li>
+        
+        <li><a href="#consume">consume</a></li>
+        
+        <li><a href="#pull">pull</a></li>
+        
+        <li><a href="#write">write</a></li>
+        
+        <li><a href="#fork">fork</a></li>
+        
+        <li><a href="#observe">observe</a></li>
+        
+        <li><a href="#each">each</a></li>
+        
+        <li><a href="#each">each</a></li>
+        
+        <li><a href="#map">map</a></li>
+        
+        <li><a href="#take">take</a></li>
+        
+        
+      </ul>
+    </nav>
+
+    <main>
+
+      <h1>HIGHLAND</h1>
+      <p>The high-level streams library for Node.js and the browser.</p>
+      <pre class="npm-install">$ npm install highland</pre>
+      <p>
+        <a class="button" href="#">Download</a>
+        <a class="button" href="https://github.com/caolan/highland"><i style="margin-right: 3px" class="fi-social-github"></i> Source code</a>
+      </p>
+
+      <h3 id="introduction">Introduction</h3>
+      <p>
+        Re-thinking the
+        <a href="http://underscorejs.org">JavaScript</a>
+        <a href="http://lodash.com">utility</a>
+        <a href="https://github.com/caolan/async">belt</a>,
+        Highland manages synchronous and asynchronous code easily, using nothing more than
+        standard JavaScript and Node-like Streams.
+        You may be familiar with Promises, EventEmitters and callbacks, but moving
+        between them is far from seamless. Thankfully, there exists a deeper abstraction
+        which can free our code. By updating the tools we use on Arrays, and applying them
+        to values distributed in time instead of space, we can discard plumbing and
+        focus on the important things. By supporting <em>back-pressure</em>
+        and <em>laziness</em>,
+        Highland is able to describe whole programs including async control flow
+        and exception handling. Time to dive in!
+      </p>
+
+      <h2 id="examples">Examples</h2>
+      <p>Converting to/from Highland Streams</p>
+      <pre><code class="javascript">_([1,2,3,4]).toArray(function (xs) {
+  // xs is [1,2,3,4]
+});</code></pre>
+      <p>Mapping over a Stream</p>
+      <pre><code class="javascript">var doubled = _([1,2,3,4]).map(function (x) {
+  return x * 2;
+});</code></pre>
+      <p>Reading files in parallel (4 at once)</p>
+      <pre><code class="javascript">var data = filenames.map(readFile).parallel(4);</code></pre>
+      <p>Handling errors</p>
+      <pre><code class="javascript">filenames
+  .map(readFile)
+  .parallel(4)
+  .errors(function (err, rethrow) {
+    // handle or rethrow error
+  });</code></pre>
+      <p>Piping to/from Node streams</p>
+      <pre><code class="javascript">var db = levelup('./mydb');
+
+var readStream = db.createReadStream();
+var writeStream = fs.createWriteStream('blogposts');
+
+// wrap a node stream and pipe to file
+_(readStream).filter(isBlogpost).pipe(writeStream);
+
+// Or, pipe in a node stream directly:
+readStream.pipe(_().filter(isBlogpost)).pipe(writeStream);</code></pre>
+      <p>Handling events</p>
+      <pre><code class="javascript">var clicks = _('click', button);</code></pre>
+
+      
+        <h2 id="Streams">Streams</h2>
+
+        <div class="doc-items">
+        
+          <div id=_(source) class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L377"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#_(source)"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>_(source)</pre>
+            </div>
+
+            <p>The Stream constructor, accepts an array of values or a generator function
+as an optional argument. This is typically the entry point to the Highland
+APIs, providing a convenient way of chaining calls together.</p>
+
+<p><strong>Arrays -</strong> Streams created from Arrays will emit each value of the Array
+and then emit a <a href="#nil">nil</a> value to signal the end of the Stream.</p>
+
+<p><strong>Generators -</strong> These are functions which provide values for the Stream.
+They are lazy and can be infinite, they can also be asynchronous (for
+example, making a HTTP request). You emit values on the Stream by calling
+<code>push(err, val)</code>, much like a standard Node.js callback. You call <code>next()</code>
+to signal you've finished processing the current data. If the Stream is
+still being consumed the generator function will then be called again.</p>
+
+<p>You can also redirect a generator Stream by passing a new source Stream
+to read from to next. For example: <code>next(other_stream)</code> - then any subsequent
+calls will be made to the new source.</p>
+
+            
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              
+                <li>
+                  <code>source</code>
+                   - <em>Array | Function</em>
+                   - (optional) Array or generator function to take values from from
+                </li>
+              
+            </ul>
+            
+
+            
+            <pre><code class="javascript">// from an Array
+_([1, 2, 3, 4]);
+
+// using a generator function
+_(function (push, next) {
+   push(null, 1);
+   push(err);
+   next();
+});
+
+// a stream with no source, can pipe node streams through it etc.
+var through = _();</code></pre>
+            
+          </div>
+        
+          <div id=nil class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L423"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#nil"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>_.nil</pre>
+            </div>
+
+            <p>The end of stream marker. This is sent along the data channel of a Stream
+to tell consumers that the Stream has ended. See the following map code for
+an example of detecting the end of a Stream:</p>
+
+            
+
+            
+            <pre><code class="javascript">var map = function (iter, source) {
+    return source.consume(function (err, val, push, next) {
+        if (err) {
+            push(err);
+            next();
+        }
+        else if (val === _.nil) {
+            push(null, val);
+        }
+        else {
+            push(null, iter(val));
+            next();
+        }
+    });
+};</code></pre>
+            
+          </div>
+        
+          <div id=pause class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L600"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#pause"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.pause()</pre>
+            </div>
+
+            <p>Pauses the stream. All Highland Streams start in the paused state.</p>
+
+            
+
+            
+            <pre><code class="javascript">var xs = _(generator);
+xs.pause();</code></pre>
+            
+          </div>
+        
+          <div id=resume class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L661"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#resume"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.resume()</pre>
+            </div>
+
+            <p>Resumes a paused Stream. This will either read from the Stream's incoming
+buffer or request more data from an upstream source.</p>
+
+            
+
+            
+            <pre><code class="javascript">var xs = _(generator);
+xs.resume();</code></pre>
+            
+          </div>
+        
+          <div id=end class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L708"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#end"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.end()</pre>
+            </div>
+
+            <p>Ends a Stream. This is the same as sending a <a href="#nil">nil</a> value as data.
+You shouldn't need to call this directly, rather it will be called by
+any <a href="http://nodejs.org/api/stream.html#stream_class_stream_readable">Node Readable Streams</a>
+you pipe in.</p>
+
+            
+
+            
+            <pre><code class="javascript">mystream.end();</code></pre>
+            
+          </div>
+        
+          <div id=pipe class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L726"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#pipe"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.pipe(dest)</pre>
+            </div>
+
+            <p>Pipes a Highland Stream to a <a href="http://nodejs.org/api/stream.html#stream_class_stream_writable">Node Writable Stream</a>
+(Highland Streams are also Node Writable Streams). This will pull all the
+data from the source Highland Stream and write it to the destination,
+automatically managing flow so that the destination is not overwhelmed
+by a fast source.</p>
+
+<p>This function returns the destination so you can chain together pipe calls.</p>
+
+            
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              
+                <li>
+                  <code>dest</code>
+                   - <em>Writable Stream</em>
+                   - the destination to write all data to
+                </li>
+              
+            </ul>
+            
+
+            
+            <pre><code class="javascript">var source = _(generator);
+var dest = fs.createWriteStream(&#x27;myfile.txt&#x27;)
+source.pipe(dest);
+
+// chained call
+source.pipe(through).pipe(dest);</code></pre>
+            
+          </div>
+        
+          <div id=consume class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L846"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#consume"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.consume(f)</pre>
+            </div>
+
+            <p>Consumes values from a Stream (once resumed) and returns a new Stream for
+you to optionally push values onto using the provided push / next functions.</p>
+
+<p>This function forms the basis of many higher-level Stream operations.
+It will not cause a paused stream to immediately resume, but behaves more
+like a 'through' stream, handling values as they are read.</p>
+
+            
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              
+                <li>
+                  <code>f</code>
+                   - <em>Function</em>
+                   - the function to handle errors and values
+                </li>
+              
+            </ul>
+            
+
+            
+            <pre><code class="javascript">var filter = function (f, source) {
+    return source.consume(function (err, x, push, next) {
+        if (err) {
+            // pass errors along the stream and consume next value
+            push(err);
+            next();
+        }
+        else if (x === _.nil) {
+            // pass nil (end event) along the stream
+            push(null, x);
+        }
+        else {
+            // pass on the value only if the value passes the predicate
+            if (f(x)) {
+                push(null, x);
+            }
+            next();
+        }
+    });
+};</code></pre>
+            
+          </div>
+        
+          <div id=pull class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L909"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#pull"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.pull(f)</pre>
+            </div>
+
+            <p>Consumes a single item from the Stream. Unlike consume, this function will
+not provide a new stream for you to push values onto, and it will unsubscribe
+as soon as it has a single error, value or nil from the source.</p>
+
+<p>You probably won't need to use this directly, but it is used internally by
+some functions in the Highland library.</p>
+
+            
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              
+                <li>
+                  <code>f</code>
+                   - <em>Function</em>
+                   - the function to handle data
+                </li>
+              
+            </ul>
+            
+
+            
+            <pre><code class="javascript">xs.pull(function (err, x) {
+    // do something
+});</code></pre>
+            
+          </div>
+        
+          <div id=write class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L936"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#write"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.write(x)</pre>
+            </div>
+
+            <p>Writes a value to the Stream. If the Stream is paused it will go into the
+Stream's incoming buffer, otherwise it will be immediately processed and
+sent to the Stream's consumers (if any). Returns false if the Stream is
+paused, true otherwise. This lets Node's pipe method handle back-pressure.</p>
+
+<p>You shouldn't need to call this yourself, but it may be called by Node
+functions which treat Highland Streams as a <a href="http://nodejs.org/api/stream.html#stream_class_stream_writable">Node Writable Stream</a>.</p>
+
+            
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              
+                <li>
+                  <code>x</code>
+                  
+                   - the value to write to the Stream
+                </li>
+              
+            </ul>
+            
+
+            
+            <pre><code class="javascript">var xs = _();
+xs.write(1);
+xs.write(2);
+xs.end();
+
+xs.toArray(function (ys) {
+    // ys will be [1, 2]
+});</code></pre>
+            
+          </div>
+        
+          <div id=fork class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L976"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#fork"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.fork()</pre>
+            </div>
+
+            <p>Forks a stream, allowing you to add additional consumers with shared
+back-pressure. A stream forked to multiple consumers will only pull values
+from it's source as fast as the slowest consumer can handle them.</p>
+
+            
+
+            
+            <pre><code class="javascript">var xs = _([1, 2, 3, 4]);
+var ys = xs.fork();
+var zs = xs.fork();
+
+// no values will be pulled from xs until zs also resume
+ys.resume();
+
+// now both ys and zs will get values from xs
+zs.resume();</code></pre>
+            
+          </div>
+        
+          <div id=observe class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1006"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#observe"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.observe()</pre>
+            </div>
+
+            <p>Observes a stream, allowing you to handle values as they are emitted, without
+adding back-pressure or causing data to be pulled from the source. This can
+be useful when you are performing two related queries on a stream where one
+would block the other. Just be aware that a slow observer could fill up it's
+buffer and cause memory issues. Where possible, you should use <a href="#fork">fork</a>.</p>
+
+            
+
+            
+            <pre><code class="javascript">var xs = _([1, 2, 3, 4]);
+var ys = xs.fork();
+var zs = xs.observe();
+
+// now both zs and ys will recieve data as fast as ys can handle it
+ys.resume();</code></pre>
+            
+          </div>
+        
+          <div id=each class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1034"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#each"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.each(f)</pre>
+            </div>
+
+            <p>Iterates over every value from the Stream, calling the iterator function
+on each of them. This function causes a <strong>thunk</strong>.</p>
+
+<p>If an error from the Stream reaches the <code>each</code> call, it will emit an
+error event (which will cause it to throw if unhandled).</p>
+
+            
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              
+                <li>
+                  <code>f</code>
+                   - <em>Function</em>
+                   - the iterator function
+                </li>
+              
+            </ul>
+            
+
+            
+            <pre><code class="javascript">_([1, 2, 3, 4]).each(function (x) {
+    // will be called 4 times with x being 1, 2, 3 and 4
+});</code></pre>
+            
+          </div>
+        
+          <div id=each class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1065"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#each"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.toArray(f)</pre>
+            </div>
+
+            <p>Collects all values from a Stream into an Array and calls a function with
+once with the result. This function causes a <strong>thunk</strong>.</p>
+
+<p>If an error from the Stream reaches the <code>toArray</code> call, it will emit an
+error event (which will cause it to throw if unhandled).</p>
+
+            
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              
+                <li>
+                  <code>f</code>
+                   - <em>Function</em>
+                   - the callback to provide the completed Array to
+                </li>
+              
+            </ul>
+            
+
+            
+            <pre><code class="javascript">_([1, 2, 3, 4]).each(function (x) {
+    // will be called 4 times with x being 1, 2, 3 and 4
+});</code></pre>
+            
+          </div>
+        
+          <div id=map class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1100"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#map"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.map(f)</pre>
+            </div>
+
+            <p>Creates a new Stream of transformed values by applying a function to each
+value from the source.</p>
+
+            
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              
+                <li>
+                  <code>f</code>
+                   - <em>Function</em>
+                   - the transformation function
+                </li>
+              
+            </ul>
+            
+
+            
+            <pre><code class="javascript">var doubled = _([1, 2, 3, 4]).map(function (x) {
+    return x * 2;
+});</code></pre>
+            
+          </div>
+        
+          <div id=take class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1131"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#take"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.take(n)</pre>
+            </div>
+
+            <p>Creates a new Stream with the first <code>n</code> values from the source.</p>
+
+            
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              
+                <li>
+                  <code>n</code>
+                   - <em>Number</em>
+                   - integer representing number of values to read from source
+                </li>
+              
+            </ul>
+            
+
+            
+            <pre><code class="javascript">_([1, 2, 3, 4]).take(2) // =&gt; 1, 2</code></pre>
+            
+          </div>
+        
+        </div>
+
+      
+
+    </main>
+
+    <script src="js/vendor/jquery.js"></script>
+    <script src="js/vendor/highlight.pack.js"></script>
+    <script src="js/foundation.min.js"></script>
+    <script>
+      $(document).foundation();
+      hljs.initHighlightingOnLoad();
+    </script>
+
+
+    <!-- Start Open Web Analytics Tracker -->
+    <script type="text/javascript">
+      //<![CDATA[
+      var owa_baseUrl = 'http://owa.cyberdelia.org.uk/';
+      var owa_cmds = owa_cmds || [];
+      owa_cmds.push(['setSiteId', '319057ce1186ed2e85224e2f531916d9']);
+      owa_cmds.push(['trackPageView']);
+      owa_cmds.push(['trackClicks']);
+      owa_cmds.push(['trackDomStream']);
+
+      (function() {
+        var _owa = document.createElement('script'); _owa.type = 'text/javascript'; _owa.async = true;
+        owa_baseUrl = ('https:' == document.location.protocol ? window.owa_baseSecUrl || owa_baseUrl.replace(/http:/, 'https:') : owa_baseUrl );
+        _owa.src = owa_baseUrl + 'modules/base/js/owa.tracker-combined-min.js';
+        var _owa_s = document.getElementsByTagName('script')[0]; _owa_s.parentNode.insertBefore(_owa, _owa_s);
+      }());
+      //]]>
+    </script>
+    <!-- End Open Web Analytics Code -->
+
+  </body>
+</html>

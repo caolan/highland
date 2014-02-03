@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+
+<!--
+
+  DO NOT edit index.html directly, edit docs/templates/base.html for markup
+  and comments in highland.js for API documentation
+
+-->
+
+<!--[if IE 9]><html class="lt-ie10" lang="en" > <![endif]-->
+<html class="no-js" lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Highland.js</title>
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/foundation.css">
+    <link rel="stylesheet" href="fonts/foundation-icons/foundation-icons.css">
+    <link rel="stylesheet" href="css/highland.css">
+    <link rel="stylesheet" href="css/highlight.github.css">
+    <script src="js/vendor/modernizr.js"></script>
+
+  </head>
+  <body>
+
+    <nav>
+      <ul>
+        <li class="heading"><a href="#">Highland.js</a></li>
+        <li><a href="#">Download</a></li>
+        <li><a href="#introduction">Introduction</a></li>
+        <li class="heading"><a href="#examples">Examples</a></li>
+        <li><a href="#examples">Overview</a></li>
+        <li><a href="#laziness">Laziness</a></li>
+        <li><a href="#currying">Currying</a></li>
+        {{#each sections}}
+        <li class="heading"><a href="#{{name}}">{{name}}</a></li>
+        {{#each items}}
+        <li><a href="#{{id}}">{{id}}</a></li>
+        {{/each}}
+        {{/each}}
+      </ul>
+    </nav>
+
+    <main>
+
+      <h1>HIGHLAND</h1>
+      <p>The high-level streams library for Node.js and the browser.</p>
+      <pre class="npm-install">$ npm install highland</pre>
+      <p>
+        <a class="button" href="#">Download</a>
+        <a class="button" href="https://github.com/caolan/highland"><i style="margin-right: 3px" class="fi-social-github"></i> Source code</a>
+      </p>
+
+      <h3 id="introduction">Introduction</h3>
+      <p>
+        Re-thinking the
+        <a href="http://underscorejs.org">JavaScript</a>
+        <a href="http://lodash.com">utility</a>
+        <a href="https://github.com/caolan/async">belt</a>,
+        Highland manages synchronous and asynchronous code easily, using nothing more than
+        standard JavaScript and Node-like Streams.
+        You may be familiar with Promises, EventEmitters and callbacks, but moving
+        between them is far from seamless. Thankfully, there exists a deeper abstraction
+        which can free our code. By updating the tools we use on Arrays, and applying them
+        to values distributed in time instead of space, we can discard plumbing and
+        focus on the important things. By supporting <em>back-pressure</em>
+        and <em>laziness</em>,
+        Highland is able to describe whole programs including async control flow
+        and exception handling. Time to dive in!
+      </p>
+
+      <h2 id="examples">Examples</h2>
+      <p>Converting to/from Highland Streams</p>
+      <pre><code class="javascript">_([1,2,3,4]).toArray(function (xs) {
+  // xs is [1,2,3,4]
+});</code></pre>
+      <p>Mapping over a Stream</p>
+      <pre><code class="javascript">var doubled = _([1,2,3,4]).map(function (x) {
+  return x * 2;
+});</code></pre>
+      <p>Reading files in parallel (4 at once)</p>
+      <pre><code class="javascript">var data = filenames.map(readFile).parallel(4);</code></pre>
+      <p>Handling errors</p>
+      <pre><code class="javascript">filenames
+  .map(readFile)
+  .parallel(4)
+  .errors(function (err, rethrow) {
+    // handle or rethrow error
+  });</code></pre>
+      <p>Piping to/from Node streams</p>
+      <pre><code class="javascript">var db = levelup('./mydb');
+
+var readStream = db.createReadStream();
+var writeStream = fs.createWriteStream('blogposts');
+
+// wrap a node stream and pipe to file
+_(readStream).filter(isBlogpost).pipe(writeStream);
+
+// Or, pipe in a node stream directly:
+readStream.pipe(_().filter(isBlogpost)).pipe(writeStream);</code></pre>
+      <p>Handling events</p>
+      <pre><code class="javascript">var clicks = _('click', button);</code></pre>
+
+      {{#each sections}}
+        <h2 id="{{name}}">{{name}}</h2>
+
+        <div class="doc-items">
+        {{#each items}}
+          <div id={{id}} class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L{{line}}"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#{{id}}"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>{{name}}</pre>
+            </div>
+
+            {{{description_html}}}
+
+            {{#if params}}
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              {{#each params}}
+                <li>
+                  <code>{{name}}</code>
+                  {{#if type}} - <em>{{type}}</em>{{/if}}
+                  {{#if description}} - {{description}}{{/if}}
+                </li>
+              {{/each}}
+            </ul>
+            {{/if}}
+
+            {{#if example}}
+            <pre><code class="javascript">{{example}}</code></pre>
+            {{/if}}
+          </div>
+        {{/each}}
+        </div>
+
+      {{/each}}
+
+    </main>
+
+    <script src="js/vendor/jquery.js"></script>
+    <script src="js/vendor/highlight.pack.js"></script>
+    <script src="js/foundation.min.js"></script>
+    <script>
+      $(document).foundation();
+      hljs.initHighlightingOnLoad();
+    </script>
+
+
+    <!-- Start Open Web Analytics Tracker -->
+    <script type="text/javascript">
+      //<![CDATA[
+      var owa_baseUrl = 'http://owa.cyberdelia.org.uk/';
+      var owa_cmds = owa_cmds || [];
+      owa_cmds.push(['setSiteId', '319057ce1186ed2e85224e2f531916d9']);
+      owa_cmds.push(['trackPageView']);
+      owa_cmds.push(['trackClicks']);
+      owa_cmds.push(['trackDomStream']);
+
+      (function() {
+        var _owa = document.createElement('script'); _owa.type = 'text/javascript'; _owa.async = true;
+        owa_baseUrl = ('https:' == document.location.protocol ? window.owa_baseSecUrl || owa_baseUrl.replace(/http:/, 'https:') : owa_baseUrl );
+        _owa.src = owa_baseUrl + 'modules/base/js/owa.tracker-combined-min.js';
+        var _owa_s = document.getElementsByTagName('script')[0]; _owa_s.parentNode.insertBefore(_owa, _owa_s);
+      }());
+      //]]>
+    </script>
+    <!-- End Open Web Analytics Code -->
+
+  </body>
+</html>
