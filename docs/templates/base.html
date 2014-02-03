@@ -123,7 +123,9 @@ readStream.pipe(_().filter(isBlogpost)).pipe(writeStream);</code></pre>
       <h3 id="async">Async</h3>
       <p>Now, let's see how we might swap out an Array source for an asynchronous one. By passing a function to the Stream constructor we can manually push values onto the Stream:</p>
       <pre><code class="javascript">function getData(filename) {
+    // create a new Stream
     return _(function (push, next) {
+        // do something async when we read from the Stream
         fs.readFile(filename, function (err, data) {
             push(err, data);
             push(null, _.nil);
@@ -131,10 +133,13 @@ readStream.pipe(_().filter(isBlogpost)).pipe(writeStream);</code></pre>
     });
 };</code></pre>
       <p>First, we return a new Stream which when read from will read a file (this is called lazy evaluation). When <code>fs.readFile</code> calls it's callback, we push the error and data values onto the Stream. Finally, we push <code>_.nil</code> onto the Stream. This is the "end of stream" marker and will tell any consumers of this stream to stop reading.</p>
-      <p>Now we have a new source, we can run the same code from the Array examples on it:</p>
+      <p>Since wrapping a callback is a fairly common thing to do, there is a convenience function:</p>
+      <pre><code class="javascript">var getData = _.wrapCallback(fs.readFile);</code></pre>
+      <p>Now we have a new asynchronous source, we can run the exact same code from the Array examples on it:</p>
       <pre><code class="javascript">getData('myfile').invoke('toUpperCase').map(function (x) {
     return {name: x};
 });</code></pre>
+      <p>With Highland, we really can have one language to work with both synchronous and asynchronous data, whether it's from a Node Stream, an EventEmitter, a callback or an Array.</p>
 
       {{#each sections}}
         <h2 id="{{name}}">{{name}}</h2>
