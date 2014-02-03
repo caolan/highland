@@ -30,9 +30,13 @@
         <li><a href="#">Download</a></li>
         <li><a href="#introduction">Introduction</a></li>
         <li class="heading"><a href="#examples">Examples</a></li>
-        <li><a href="#examples">Overview</a></li>
+        <li><a href="#nodejs">Node.js</a></li>
+        <li><a href="#browser">Browser</a></li>
+        <li><a href="#async">Arrays</a></li>
+        <li><a href="#async">Async</a></li>
         <li><a href="#laziness">Laziness</a></li>
         <li><a href="#currying">Currying</a></li>
+        <li><a href="#events">Events</a></li>
         {{#each sections}}
         <li class="heading"><a href="#{{name}}">{{name}}</a></li>
         {{#each items}}
@@ -101,6 +105,38 @@ _(readStream).filter(isBlogpost).pipe(writeStream);
 readStream.pipe(_().filter(isBlogpost)).pipe(writeStream);</code></pre>
       <p>Handling events</p>
       <pre><code class="javascript">var clicks = _('click', button);</code></pre>
+
+      <h3 id="arrays">Arrays</h3>
+      <p>To work with data in Arrays, just wrap it in <code>_()</code>. The Highland methods are then available on it:</p>
+      <pre><code class="javascript">var shouty = _(['foo', 'bar', 'baz']).invoke('toUpperCase');</code></pre>
+      <p>These methods return Stream objects, not Arrays, so you can chain together method calls:</p>
+      <pre><code class="javascript">_(['foo', 'bar', 'baz']).invoke('toUpperCase').map(function (x) {
+    return {name: x};
+});</code></pre>
+      <p>When using the Highland APIs there is little reason to turn this back into an Array, but if you're calling an outside library you may need to convert it back:</p>
+      <pre><code class="javascript">_(['foo', 'bar', 'baz']).invoke('toUpperCase').toArray(function (xs) {
+    // xs will now be ['FOO', 'BAR', 'BAZ]
+});</code></pre>
+      <p>Passing a function to the <code>toArray</code> call may seem a little unfamiliar, but this enables an important trick in Highland. Now, without changing any of your existing code, you could swap out <code class="javascript">['foo', 'bar', 'baz']</code> for an asynchronous data source, and it would just work!</p>
+      <p>You can also pass Arrays into the top-level functions instead of using methods on the Stream object:</p>
+      <pre><code class="javascript">_.map(doubled, [1, 2, 3, 4])  // => 2 4 6 8</code></pre>
+      <p>Note, this still returns a Stream.</p>
+
+      <h3 id="async">Async</h3>
+      <p>Now, let's see how we might swap out an Array source for an asynchronous one. By passing a function to the Stream constructor we can manually push values onto the Stream:</p>
+      <pre><code class="javascript">function getData(filename) {
+    return _(function (push, next) {
+        fs.readFile(filename, function (err, data) {
+            push(err, data);
+            push(null, _.nil);
+        });
+    });
+};</code></pre>
+      <p>First, we return a new Stream which when read from will read a file (this is called lazy evaluation). When <code>fs.readFile</code> calls it's callback, we push the error and data values onto the Stream. Finally, we push <code>_.nil</code> onto the Stream. This is the "end of stream" marker and will tell any consumers of this stream to stop reading.</p>
+      <p>Now we have a new source, we can run the same code from the Array examples on it:</p>
+      <pre><code class="javascript">getData('myfile').invoke('toUpperCase').map(function (x) {
+    return {name: x};
+});</code></pre>
 
       {{#each sections}}
         <h2 id="{{name}}">{{name}}</h2>
