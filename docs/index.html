@@ -189,6 +189,24 @@ var nums = _(['1', '2', '3']).map(function (x) {
       <pre><code class="javascript">filenames.map(readFile).series();
 filenames.map(readFile).parallel(10)</code></pre>
 
+      <h3 id="currying">Currying</h3>
+      <p>As well as calling functions as methods on the Stream object, Highland also exports them at the top-level.</p>
+      <pre><code class="javascript">mystream.map(doubled)
+// is equivalent to
+_.map(doubled, mystream)</code></pre>
+      <p>By convention, all top-level functions are 'curryable', meaning you can partially apply their arguments. In the above example, this could be called as:</p>
+      <pre><code class="javascript">_.map(doubled)(mystream);</code></pre>
+      <p>In real-world use, this means you can define the behaviour you'd like before know what Stream you'd like to perform it on:</p>
+      <pre><code class="javascript">// partially apply the filter() function to create a new function
+var getBlogposts = _.filter(function (doc) {
+    return doc.type === 'blogpost';
+});
+
+// now we can use the new function by completing it's arguments
+getBlogposts(data); // => new Stream of blogposts</code></pre>
+      <p>You can curry your own functions too:</p>
+      <pre><code class="javascript">var myCurrableFn = _.curry(fn);</code></pre>
+
       
         <h2 id="Streams">Streams</h2>
 
