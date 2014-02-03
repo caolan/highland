@@ -28,8 +28,7 @@ module.exports = function (grunt) {
 
         'gh-pages': {
             options: {
-                base: 'docs',
-                branch: 'master'
+                base: 'docs'
             },
             src: ['**']
         }
