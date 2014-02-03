@@ -1069,7 +1069,7 @@
      * If an error from the Stream reaches the `toArray` call, it will emit an
      * error event (which will cause it to throw if unhandled).
      *
-     * @id each
+     * @id toArray
      * @section Streams
      * @name Stream.toArray(f)
      * @param {Function} f - the callback to provide the completed Array to
