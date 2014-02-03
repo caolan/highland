@@ -141,6 +141,24 @@ readStream.pipe(_().filter(isBlogpost)).pipe(writeStream);</code></pre>
 });</code></pre>
       <p>With Highland, we really can have one language to work with both synchronous and asynchronous data, whether it's from a Node Stream, an EventEmitter, a callback or an Array.</p>
 
+      <h3 id="laziness">Laziness</h3>
+      <p>When you call <code>map</code> in Highland, it doesn't go off and immediately map over all your data. Rather it defines your intention, and the hard work occurs as you pull data from the Stream. This is 'lazy evaluation' and it's what enables Highland to manage back-pressure and also the sequencing of asynchronous actions, such as reading from a file.</p>
+      <pre><code class="javascript">var calls = 0;
+
+var nums = _(['1', '2', '3']).map(function (x) {
+    calls++;
+    return Number(x);
+});
+
+// calls === 0</code></pre>
+      <p>To get the map iterator to be called, we must pull some data from the Stream. This is called a <strong><em>thunk</em></strong>, and some Highland methods will cause them (eg, <code>each</code>, <code>toArray</code>, <code>pipe</code>, <code>resume</code>).</p>
+      <pre><code class="javascript">nums.each(function (n) { console.log(n); });
+
+// calls === 3</code></pre>
+      <p>Equally, when we tell Highland to map a Stream of filenames to the readFile function, it doesn't actually go and read all the files at once, it let's us decide on how we want to read them:</p>
+      <pre><code class="javascript">filenames.map(readFile).series();
+filenames.map(readFile).parallel(10)</code></pre>
+
       {{#each sections}}
         <h2 id="{{name}}">{{name}}</h2>
 
