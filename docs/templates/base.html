@@ -29,7 +29,10 @@
         <li class="heading"><a href="#">Highland.js</a></li>
         <li><a href="#">Download</a></li>
         <li><a href="#introduction">Introduction</a></li>
-        <li><a href="#examples">Examples</a></li>
+        <li class="heading"><a href="#examples">Examples</a></li>
+        <li><a href="#examples">Overview</a></li>
+        <li><a href="#laziness">Laziness</a></li>
+        <li><a href="#currying">Currying</a></li>
         {{#each sections}}
         <li class="heading"><a href="#{{name}}">{{name}}</a></li>
         {{#each items}}
@@ -67,7 +70,7 @@
         and exception handling. Time to dive in!
       </p>
 
-      <h3 id="examples">Examples</h3>
+      <h2 id="examples">Examples</h2>
       <p>Converting to/from Highland Streams</p>
       <pre><code class="javascript">_([1,2,3,4]).toArray(function (xs) {
   // xs is [1,2,3,4]
@@ -88,20 +91,26 @@
       <p>Piping to/from Node streams</p>
       <pre><code class="javascript">var db = levelup('./mydb');
 
-db.createReadStream()
-  .pipe(_.filter(isBlogpost))
-  .pipe(fs.createWriteStream('blogposts'));</code></pre>
+var readStream = db.createReadStream();
+var writeStream = fs.createWriteStream('blogposts');
+
+// wrap a node stream and pipe to file
+_(readStream).filter(isBlogpost).pipe(writeStream);
+
+// Or, pipe in a node stream directly:
+readStream.pipe(_().filter(isBlogpost)).pipe(writeStream);</code></pre>
       <p>Handling events</p>
       <pre><code class="javascript">var clicks = _('click', button);</code></pre>
 
       {{#each sections}}
         <h2 id="{{name}}">{{name}}</h2>
 
+        <div class="doc-items">
         {{#each items}}
           <div id={{id}} class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L{{line}}"><i class="fi-pencil"></i> Edit</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L{{line}}"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#{{id}}"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>{{name}}</pre>
@@ -127,6 +136,8 @@ db.createReadStream()
             {{/if}}
           </div>
         {{/each}}
+        </div>
+
       {{/each}}
 
     </main>

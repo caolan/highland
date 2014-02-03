@@ -11,8 +11,9 @@ h1 {
 }
 
 h2 {
-    margin-top: 1em;
-    margin-bottom: -0.382em;
+    /*margin-top: 1em;*/
+    /*margin-bottom: -0.382em;*/
+    line-height: 2em;
 }
 
 code {
@@ -84,12 +85,18 @@ main {
     margin-bottom: 1em;
 }
 
+.doc-item {
+    margin-top: 2.618em;
+}
+.doc-item:first-child {
+    margin-top: 0.618em;
+}
 .doc-heading {
     background-color: #e8e8e8;
     border: 1px solid #ddd;
     border-bottom: 1px solid #ccc;
     padding: 0.618em 3px;
-    margin: 2.618em 0 1.618em 0;
+    margin-bottom: 0.618em;
     position: relative;
 }
 
@@ -126,5 +133,5 @@ main {
 
 pre > code {
     margin-top: -0.618em;
-    margin-bottom: 1em;
+    margin-bottom: 1.618em;
 }

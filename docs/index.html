@@ -29,7 +29,10 @@
         <li class="heading"><a href="#">Highland.js</a></li>
         <li><a href="#">Download</a></li>
         <li><a href="#introduction">Introduction</a></li>
-        <li><a href="#examples">Examples</a></li>
+        <li class="heading"><a href="#examples">Examples</a></li>
+        <li><a href="#examples">Overview</a></li>
+        <li><a href="#laziness">Laziness</a></li>
+        <li><a href="#currying">Currying</a></li>
         
         <li class="heading"><a href="#Streams">Streams</a></li>
         
@@ -95,7 +98,7 @@
         and exception handling. Time to dive in!
       </p>
 
-      <h3 id="examples">Examples</h3>
+      <h2 id="examples">Examples</h2>
       <p>Converting to/from Highland Streams</p>
       <pre><code class="javascript">_([1,2,3,4]).toArray(function (xs) {
   // xs is [1,2,3,4]
@@ -116,20 +119,26 @@
       <p>Piping to/from Node streams</p>
       <pre><code class="javascript">var db = levelup('./mydb');
 
-db.createReadStream()
-  .pipe(_.filter(isBlogpost))
-  .pipe(fs.createWriteStream('blogposts'));</code></pre>
+var readStream = db.createReadStream();
+var writeStream = fs.createWriteStream('blogposts');
+
+// wrap a node stream and pipe to file
+_(readStream).filter(isBlogpost).pipe(writeStream);
+
+// Or, pipe in a node stream directly:
+readStream.pipe(_().filter(isBlogpost)).pipe(writeStream);</code></pre>
       <p>Handling events</p>
       <pre><code class="javascript">var clicks = _('click', button);</code></pre>
 
       
         <h2 id="Streams">Streams</h2>
 
+        <div class="doc-items">
         
           <div id=_(source) class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L367"><i class="fi-pencil"></i> Edit</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L367"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#_(source)"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_(source)</pre>
@@ -185,7 +194,7 @@ var through = _();</code></pre>
           <div id=nil class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L411"><i class="fi-pencil"></i> Edit</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L411"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#nil"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.nil</pre>
@@ -219,7 +228,7 @@ an example of detecting the end of a Stream:</p>
           <div id=pause class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L587"><i class="fi-pencil"></i> Edit</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L587"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pause"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.pause()</pre>
@@ -238,7 +247,7 @@ xs.pause();</code></pre>
           <div id=resume class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L648"><i class="fi-pencil"></i> Edit</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L648"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#resume"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.resume()</pre>
@@ -258,7 +267,7 @@ xs.resume();</code></pre>
           <div id=end class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L695"><i class="fi-pencil"></i> Edit</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L695"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#end"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.end()</pre>
@@ -279,7 +288,7 @@ you pipe in.</p>
           <div id=pipe class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L713"><i class="fi-pencil"></i> Edit</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L713"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pipe"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.pipe(dest)</pre>
@@ -319,7 +328,7 @@ source.pipe(through).pipe(dest);</code></pre>
           <div id=consume class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L833"><i class="fi-pencil"></i> Edit</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L833"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#consume"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.consume(f)</pre>
@@ -372,7 +381,7 @@ like a 'through' stream, handling values as they are read.</p>
           <div id=pull class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L896"><i class="fi-pencil"></i> Edit</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L896"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pull"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.pull(f)</pre>
@@ -408,7 +417,7 @@ some functions in the Highland library.</p>
           <div id=write class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L923"><i class="fi-pencil"></i> Edit</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L923"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#write"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.write(x)</pre>
@@ -450,7 +459,7 @@ xs.toArray(function (ys) {
           <div id=fork class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L963"><i class="fi-pencil"></i> Edit</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L963"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#fork"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.fork()</pre>
@@ -478,7 +487,7 @@ zs.resume();</code></pre>
           <div id=observe class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L993"><i class="fi-pencil"></i> Edit</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L993"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#observe"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.observe()</pre>
@@ -505,7 +514,7 @@ ys.resume();</code></pre>
           <div id=each class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1021"><i class="fi-pencil"></i> Edit</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1021"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#each"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.each(f)</pre>
@@ -540,7 +549,7 @@ error event (which will cause it to throw if unhandled).</p>
           <div id=each class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1052"><i class="fi-pencil"></i> Edit</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1052"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#each"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.toArray(f)</pre>
@@ -575,7 +584,7 @@ error event (which will cause it to throw if unhandled).</p>
           <div id=map class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1087"><i class="fi-pencil"></i> Edit</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1087"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#map"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.map(f)</pre>
@@ -607,7 +616,7 @@ value from the source.</p>
           <div id=take class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1118"><i class="fi-pencil"></i> Edit</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1118"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#take"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.take(n)</pre>
@@ -633,6 +642,8 @@ value from the source.</p>
             
           </div>
         
+        </div>
+
       
 
     </main>
