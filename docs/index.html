@@ -70,6 +70,8 @@
         
         <li><a href="#take">take</a></li>
         
+        <li><a href="#sequence">sequence</a></li>
+        
         
       </ul>
     </nav>
@@ -675,6 +677,35 @@ value from the source.</p>
 
             
             <pre><code class="javascript">_([1, 2, 3, 4]).take(2) // =&gt; 1, 2</code></pre>
+            
+          </div>
+        
+          <div id=sequence class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1174"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#sequence"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.sequence()</pre>
+            </div>
+
+            <p>Reads values from a Stream of Streams, emitting them on a Single output
+Stream. This can be thought of as a flatten, just one level deep. Often
+used for resolving asynchronous actions such as a HTTP request or reading
+a file.</p>
+
+            
+
+            
+            <pre><code class="javascript">var nums = _([
+    _([1, 2, 3]),
+    _([4, 5, 6])
+]);
+
+nums.sequence()  // =&gt; 1, 2, 3, 4, 5, 6
+
+// using sequence to read from files in series
+filenames.map(readFile).sequence()</code></pre>
             
           </div>
         

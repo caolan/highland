@@ -1171,6 +1171,28 @@
         });
     };
 
+    /**
+     * Reads values from a Stream of Streams, emitting them on a Single output
+     * Stream. This can be thought of as a flatten, just one level deep. Often
+     * used for resolving asynchronous actions such as a HTTP request or reading
+     * a file.
+     *
+     * @id sequence
+     * @section Streams
+     * @name Stream.sequence()
+     * @api public
+     *
+     * var nums = _([
+     *     _([1, 2, 3]),
+     *     _([4, 5, 6])
+     * ]);
+     *
+     * nums.sequence()  // => 1, 2, 3, 4, 5, 6
+     *
+     * // using sequence to read from files in series
+     * filenames.map(readFile).sequence()
+     */
+
     Stream.prototype.sequence = function () {
         function _nextStream(rest, push, next) {
             rest.pull(function (err, y) {
