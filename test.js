@@ -746,14 +746,12 @@ exports['observe'] = function (test) {
 // TODO: test redirect after fork, forked streams should transfer over
 // TODO: test redirect after observe, observed streams should transfer over
 
-/*
 exports['flatten'] = function (test) {
     _.flatten([1, [2, [3, 4], 5], [6]]).toArray(function (xs) {
         test.same(xs, [1,2,3,4,5,6]);
     });
     test.done();
 };
-*/
 
 exports['flatten - ArrayStream'] = function (test) {
     _([1, [2, [3, 4], 5], [6]]).flatten().toArray(function (xs) {

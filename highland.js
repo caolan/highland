@@ -720,7 +720,6 @@
      * adds a top-level _.foo(mystream) style export for Stream methods
      */
 
-    /*
     function exposeMethod(name) {
         var f = Stream.prototype[name];
         var n = f.length;
@@ -730,7 +729,6 @@
             return f.apply(s, args);
         });
     }
-    */
 
     /**
      * Used as an Error marker when writing to a Stream's incoming buffer
@@ -1489,6 +1487,7 @@
             });
         });
     };
+    exposeMethod('flatten');
 
 
 }));
