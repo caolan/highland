@@ -1209,50 +1209,58 @@
      */
 
     Stream.prototype.sequence = function () {
-        function _nextStream(rest, push, next) {
-            rest.pull(function (err, y) {
+        var original = this;
+        var curr = this;
+        return _(function (push, next) {
+            curr.pull(function (err, x) {
                 if (err) {
                     push(err);
-                    next();
+                    return next();
                 }
-                else if (y !== nil) {
-                    // move onto next stream
-                    next(_sequence(y, rest));
+                else if (Array.isArray(x)) {
+                    // just send all values from array directly
+                    x.forEach(function (y) {
+                        push(null, y);
+                    });
+                    return next();
                 }
-                else {
-                    // no more streams to consume
-                    push(null, nil);
-                }
-            });
-        }
-        function _sequence(curr, rest) {
-            return _(function (push, next) {
-                if (Array.isArray(curr)) {
-                    curr.forEach(function (x) {
+                else if (x instanceof Stream) {
+                    if (curr === original) {
+                        // switch to reading new stream
+                        curr = x;
+                        return next();
+                    }
+                    else {
+                        // sequence only goes 1 level deep
                         push(null, x);
-                    });
-                    _nextStream(rest, push, next);
+                        return next();
+                    }
                 }
-                else if (!(curr instanceof Stream)) {
-                    push(new Error('Expected Stream, got ' + (typeof curr)));
-                    _nextStream(rest, push, next);
+                else if (x === nil) {
+                    if (curr === original) {
+                        push(null, nil);
+                    }
+                    else {
+                        // resume reading from original
+                        curr = original;
+                        return next();
+                    }
                 }
                 else {
-                    curr.pull(function (err, x) {
-                        if (err || x !== nil) {
-                            push(err, x);
-                            next();
-                        }
-                        else {
-                            _nextStream(rest, push, next);
-                        }
-                    });
+                    if (curr === original) {
+                        // we shouldn't be getting non-stream (or array)
+                        // values from the top-level stream
+                        push(new Error(
+                            'Expected Stream, got ' + (typeof x)
+                        ));
+                        return next();
+                    }
+                    else {
+                        push(null, x);
+                        return next();
+                    }
                 }
             });
-        }
-        var self = this;
-        return _(function (push, next) {
-            return _nextStream(self, push, next);
         });
     };
 
