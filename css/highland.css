@@ -31,13 +31,6 @@ code {
 }
 
 nav {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 230px;
-    height: 100%;
-    overflow-y: scroll;
-    overflow-x: hidden;
     color: rgba(255, 255, 255, 0.7);
     background-color: #333;
 }
@@ -72,12 +65,43 @@ nav a:hover {
     color: #eee;
 }
 
-main {
-    position: absolute;
-    left: 230px;
-    top: 0;
-    padding: 1.618em;
+.highland-heading {
+    padding-top: 1.618em;
 }
+main {
+    padding-bottom: 1.618em;
+}
+
+@media only screen {
+    nav {
+        margin-bottom: 1.618em;
+        position: relative;
+        width: 100%;
+    }
+    .highland-heading, main {
+        margin-left: 0;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+}
+@media only screen and (min-width: 40.063em) {
+    nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 230px;
+        overflow-y: scroll;
+        overflow-x: hidden;
+        margin-bottom: 0;
+    }
+    .highland-heading, main {
+        margin-left: 230px;
+        padding-left: 1.618em;
+        padding-right: 1.618em;
+    }
+}
+
 
 .npm-install {
     padding: 2.618em 1.618em;
