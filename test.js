@@ -660,3 +660,63 @@ exports['observe'] = function (test) {
 
 // TODO: test redirect after fork, forked streams should transfer over
 // TODO: test redirect after observe, observed streams should transfer over
+
+/*
+exports['flatten'] = function (test) {
+    _.flatten([1, [2, [3, 4], 5], [6]]).toArray(function (xs) {
+        test.same(xs, [1,2,3,4,5,6]);
+    });
+    test.done();
+};
+*/
+
+exports['flatten - ArrayStream'] = function (test) {
+    _([1, [2, [3, 4], 5], [6]]).flatten().toArray(function (xs) {
+        test.same(xs, [1,2,3,4,5,6]);
+    });
+    test.done();
+};
+
+exports['flatten - GeneratorStream'] = function (test) {
+    var s3 = _(function (push, next) {
+        setTimeout(function () {
+            push(null, 3);
+            push(null, 4);
+            push(null, _.nil);
+        }, 200);
+    });
+    var s2 = _(function (push, next) {
+        setTimeout(function () {
+            push(null, 2);
+            push(null, s3);
+            push(null, 5);
+            push(null, _.nil);
+        }, 50);
+    });
+    var s1 = _(function (push, next) {
+        push(null, 1);
+        push(null, s2);
+        push(null, [6]);
+        push(null, _.nil);
+    });
+    s1.flatten().toArray(function (xs) {
+        test.same(xs, [1,2,3,4,5,6]);
+        test.done();
+    });
+};
+
+exports['flatten - nested GeneratorStreams'] = function (test) {
+    var s2 = _(function (push, next) {
+        push(null, 2);
+        push(null, _.nil);
+    });
+    var s1 = _(function (push, next) {
+        push(null, 1);
+        push(null, s2);
+        push(null, _.nil);
+    });
+    s1.flatten().toArray(function (xs) {
+        test.same(xs, [1, 2]);
+        test.done();
+    });
+};

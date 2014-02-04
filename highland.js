@@ -400,7 +400,7 @@
      * @id _(source)
      * @section Streams
      * @name _(source)
-     * @param {Array | Function | Readable Stream} source - (optional) Array or generator function to take values from from
+     * @param {Array | Function | Readable Stream} source - (optional) source to take values from from
      * @api public
      *
      * // from an Array
@@ -1253,6 +1253,40 @@
         var self = this;
         return _(function (push, next) {
             return _nextStream(self, push, next);
+        });
+    };
+
+    Stream.prototype.flatten = function () {
+        var curr = this;
+        var stack = [];
+        return _(function (push, next) {
+            curr.pull(function (err, x) {
+                if (err) {
+                    push(err);
+                    return next();
+                }
+                if (Array.isArray(x)) {
+                    x = _(x);
+                }
+                if (x instanceof Stream) {
+                    stack.push(curr);
+                    curr = x;
+                    next();
+                }
+                else if (x === nil) {
+                    if (stack.length) {
+                        curr = stack.pop();
+                        next();
+                    }
+                    else {
+                        push(null, nil);
+                    }
+                }
+                else {
+                    push(null, x);
+                    next();
+                }
+            });
         });
     };
 
