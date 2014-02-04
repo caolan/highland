@@ -393,11 +393,14 @@
      * to read from to next. For example: `next(other_stream)` - then any subsequent
      * calls will be made to the new source.
      *
+     * **Node Readable Stream -** Pass in a Node Readable Stream object to wrap
+     * it with the Highland API. Reading from the resulting Highland Stream will
+     * begin piping the data from the Node Stream to the Highland Stream.
+     *
      * @id _(source)
      * @section Streams
      * @name _(source)
-     * @param {Array | Function} source - (optional) Array or generator function to
-     *                                    take values from from
+     * @param {Array | Function | Readable Stream} source - (optional) Array or generator function to take values from from
      * @api public
      *
      * // from an Array
@@ -412,6 +415,9 @@
      *
      * // a stream with no source, can pipe node streams through it etc.
      * var through = _();
+     *
+     * // wrapping a Node Readable Stream so you can easily manipulate it
+     * _(readable).filter(hasSomething).pipe(writeable);
      */
 
     exports = module.exports = function (xs) {
