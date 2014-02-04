@@ -426,6 +426,13 @@
 
     var _ = exports;
 
+
+    // Save bytes in the minified (but not gzipped) version:
+    var ArrayProto = Array.prototype;
+
+    // Create quick reference variables for speed access to core prototypes.
+    var slice = ArrayProto.slice;
+
     /**
      * The end of stream marker. This is sent along the data channel of a Stream
      * to tell consumers that the Stream has ended. See the following map code for
@@ -455,6 +462,171 @@
 
     var nil = _.nil = {};
 
+    /**
+     * Transforms a function with specific arity (all arguments must be
+     * defined) in a way that it can be called as a chain of functions until
+     * the arguments list is saturated.
+     *
+     * This function is not itself curryable.
+     *
+     * @id curry
+     * @name curry(fn, [*arguments])
+     * @section Functions
+     * @param {Function} fn - the function to curry
+     * @param args.. - any number of arguments to pre-apply to the function
+     * @returns Function
+     * @api public
+     *
+     * fn = curry(function (a, b, c) {
+     *     return a + b + c;
+     * });
+     *
+     * fn(1)(2)(3) == fn(1, 2, 3)
+     * fn(1, 2)(3) == fn(1, 2, 3)
+     * fn(1)(2, 3) == fn(1, 2, 3)
+     */
+
+    _.curry = function (fn /* args... */) {
+        var args = slice.call(arguments);
+        return _.ncurry.apply(this, [fn.length].concat(args));
+    };
+
+    /**
+     * Same as `curry` but with a specific number of arguments. This can be
+     * useful when functions do not explicitly define all its parameters.
+     *
+     * This function is not itself curryable.
+     *
+     * @id ncurry
+     * @name ncurry(n, fn, [args...])
+     * @section Functions
+     * @param {Number} n - the number of arguments to wait for before apply fn
+     * @param {Function} fn - the function to curry
+     * @param args... - any number of arguments to pre-apply to the function
+     * @returns Function
+     * @api public
+     *
+     * fn = ncurry(3, function () {
+     *     return Array.prototype.join.call(arguments, '.');
+     * });
+     *
+     * fn(1, 2, 3) == '1.2.3';
+     * fn(1, 2)(3) == '1.2.3';
+     * fn(1)(2)(3) == '1.2.3';
+     */
+
+    _.ncurry = function (n, fn /* args... */) {
+        var largs = slice.call(arguments, 2);
+        if (largs.length >= n) {
+            return fn.apply(this, largs.slice(0, n));
+        }
+        return function () {
+            var args = largs.concat(slice.call(arguments));
+            if (args.length < n) {
+                return _.ncurry.apply(this, [n, fn].concat(args));
+            }
+            return fn.apply(this, args.slice(0, n));
+        }
+    };
+
+    /**
+     * Partially applies the function (regardless of whether it has had curry
+     * called on it). This will always postpone execution until at least the next
+     * call of the partially applied function.
+     *
+     * @id partial
+     * @name partial(fn, args...)
+     * @section Functions
+     * @param {Function} fn - function to partial apply
+     * @param args... - the arguments to apply to the function
+     * @api public
+     *
+     * var addAll = function () {
+     *     var args = Array.prototype.slice.call(arguments);
+     *     return foldl1(add, args);
+     * };
+     * var f = partial(addAll, 1, 2);
+     * f(3, 4) == 10
+     */
+
+    _.partial = function (f /* args... */) {
+        var args = slice.call(arguments, 1);
+        return function () {
+            return f.apply(this, args.concat(slice.call(arguments)));
+        };
+    };
+
+    /**
+     * Evaluates the function `fn` with the argument positions swapped. Only
+     * works with functions that accept two arguments.
+     *
+     * @id flip
+     * @name flip(fn, [x, y])
+     * @section Functions
+     * @param {Function} f - function to flip argument application for
+     * @param x - parameter to apply to the right hand side of f
+     * @param y - parameter to apply to the left hand side of f
+     * @api public
+     *
+     * div(2, 4) == 0.5
+     * flip(div, 2, 4) == 2
+     * flip(div)(2, 4) == 2
+     */
+
+    _.flip = _.curry(function (fn, x, y) { return fn(y, x); });
+
+    /**
+     * Creates a composite function, which is the application of function1 to
+     * the results of function2. You can pass an arbitrary number of arguments
+     * and have them composed. This means you can't partially apply the compose
+     * function itself.
+     *
+     * @id compose
+     * @name compose(fn1, fn2, ...)
+     * @section Functions
+     * @api public
+     *
+     * var add1 = add(1);
+     * var mul3 = mul(3);
+     *
+     * var add1mul3 = compose(mul3, add1);
+     * add1mul3(2) == 9
+     */
+
+    _.compose = function (/*functions...*/) {
+        var fns = slice.call(arguments).reverse();
+        return _.seq.apply(null, fns);
+    };
+
+    /**
+     * The reversed version of compose. Where arguments are in the order of
+     * application.
+     *
+     * @id seq
+     * @name seq(fn1, fn2, ...)
+     * @section Functions
+     * @api public
+     *
+     * var add1 = add(1);
+     * var mul3 = mul(3);
+     *
+     * var add1mul3 = seq(add1, mul3);
+     * add1mul3(2) == 9
+     */
+
+    _.seq = function () {
+        var fns = slice.call(arguments);
+        return function () {
+            if (!fns.length) {
+                return;
+            }
+            var r = fns[0].apply(this, arguments);
+            for (var i = 1; i < fns.length; i++) {
+                r = fns[i].call(this, r);
+            }
+            return r;
+        };
+    };
 
     /**
      * Actual Stream constructor wrapped the the main exported function

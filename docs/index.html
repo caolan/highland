@@ -87,6 +87,21 @@
         <li><a href="#flatten">flatten</a></li>
         
         
+        <li class="heading"><a href="#Functions">Functions</a></li>
+        
+        <li><a href="#curry">curry</a></li>
+        
+        <li><a href="#ncurry">ncurry</a></li>
+        
+        <li><a href="#partial">partial</a></li>
+        
+        <li><a href="#flip">flip</a></li>
+        
+        <li><a href="#compose">compose</a></li>
+        
+        <li><a href="#seq">seq</a></li>
+        
+        
       </ul>
     </nav>
 
@@ -286,7 +301,7 @@ _(readable).filter(hasSomething).pipe(writeable);</code></pre>
           <div id=nil class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L429"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L436"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#nil"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.nil</pre>
@@ -320,7 +335,7 @@ an example of detecting the end of a Stream:</p>
           <div id=pause class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L615"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L787"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pause"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.pause()</pre>
@@ -339,7 +354,7 @@ xs.pause();</code></pre>
           <div id=resume class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L676"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L848"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#resume"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.resume()</pre>
@@ -359,7 +374,7 @@ xs.resume();</code></pre>
           <div id=end class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L723"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L895"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#end"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.end()</pre>
@@ -380,7 +395,7 @@ you pipe in.</p>
           <div id=pipe class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L741"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L913"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pipe"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.pipe(dest)</pre>
@@ -420,7 +435,7 @@ source.pipe(through).pipe(dest);</code></pre>
           <div id=consume class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L861"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1033"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#consume"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.consume(f)</pre>
@@ -473,7 +488,7 @@ like a 'through' stream, handling values as they are read.</p>
           <div id=pull class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L924"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1096"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pull"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.pull(f)</pre>
@@ -509,7 +524,7 @@ some functions in the Highland library.</p>
           <div id=write class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L951"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1123"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#write"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.write(x)</pre>
@@ -551,7 +566,7 @@ xs.toArray(function (ys) {
           <div id=fork class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L991"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1163"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#fork"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.fork()</pre>
@@ -579,7 +594,7 @@ zs.resume();</code></pre>
           <div id=observe class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1021"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1193"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#observe"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.observe()</pre>
@@ -606,7 +621,7 @@ ys.resume();</code></pre>
           <div id=each class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1049"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1221"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#each"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.each(f)</pre>
@@ -641,7 +656,7 @@ error event (which will cause it to throw if unhandled).</p>
           <div id=toArray class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1080"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1252"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#toArray"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.toArray(f)</pre>
@@ -676,7 +691,7 @@ error event (which will cause it to throw if unhandled).</p>
           <div id=map class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1115"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1287"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#map"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.map(f)</pre>
@@ -708,7 +723,7 @@ value from the source.</p>
           <div id=take class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1146"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1318"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#take"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.take(n)</pre>
@@ -737,7 +752,7 @@ value from the source.</p>
           <div id=sequence class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1189"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1361"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#sequence"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.sequence()</pre>
@@ -766,7 +781,7 @@ filenames.map(readFile).sequence()</code></pre>
           <div id=flatten class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1259"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1439"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#flatten"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.flatten()</pre>
@@ -787,6 +802,242 @@ var nums = _(
 );
 
 nums.flatten();  // =&gt; 1, 2, 3, 4, 5, 6</code></pre>
+            
+          </div>
+        
+        </div>
+
+      
+        <h2 id="Functions">Functions</h2>
+
+        <div class="doc-items">
+        
+          <div id=curry class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L465"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#curry"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>curry(fn, [*arguments])</pre>
+            </div>
+
+            <p>Transforms a function with specific arity (all arguments must be
+defined) in a way that it can be called as a chain of functions until
+the arguments list is saturated.</p>
+
+<p>This function is not itself curryable.</p>
+
+            
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              
+                <li>
+                  <code>fn</code>
+                   - <em>Function</em>
+                   - the function to curry
+                </li>
+              
+                <li>
+                  <code>args..</code>
+                  
+                   - any number of arguments to pre-apply to the function
+                </li>
+              
+            </ul>
+            
+
+            
+            <pre><code class="javascript">fn = curry(function (a, b, c) {
+    return a + b + c;
+});
+
+fn(1)(2)(3) == fn(1, 2, 3)
+fn(1, 2)(3) == fn(1, 2, 3)
+fn(1)(2, 3) == fn(1, 2, 3)</code></pre>
+            
+          </div>
+        
+          <div id=ncurry class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L494"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#ncurry"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>ncurry(n, fn, [args...])</pre>
+            </div>
+
+            <p>Same as <code>curry</code> but with a specific number of arguments. This can be
+useful when functions do not explicitly define all its parameters.</p>
+
+<p>This function is not itself curryable.</p>
+
+            
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              
+                <li>
+                  <code>n</code>
+                   - <em>Number</em>
+                   - the number of arguments to wait for before apply fn
+                </li>
+              
+                <li>
+                  <code>fn</code>
+                   - <em>Function</em>
+                   - the function to curry
+                </li>
+              
+                <li>
+                  <code>args...</code>
+                  
+                   - any number of arguments to pre-apply to the function
+                </li>
+              
+            </ul>
+            
+
+            
+            <pre><code class="javascript">fn = ncurry(3, function () {
+    return Array.prototype.join.call(arguments, &#x27;.&#x27;);
+});
+
+fn(1, 2, 3) == &#x27;1.2.3&#x27;;
+fn(1, 2)(3) == &#x27;1.2.3&#x27;;
+fn(1)(2)(3) == &#x27;1.2.3&#x27;;</code></pre>
+            
+          </div>
+        
+          <div id=partial class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L532"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#partial"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>partial(fn, args...)</pre>
+            </div>
+
+            <p>Partially applies the function (regardless of whether it has had curry
+called on it). This will always postpone execution until at least the next
+call of the partially applied function.</p>
+
+            
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              
+                <li>
+                  <code>fn</code>
+                   - <em>Function</em>
+                   - function to partial apply
+                </li>
+              
+                <li>
+                  <code>args...</code>
+                  
+                   - the arguments to apply to the function
+                </li>
+              
+            </ul>
+            
+
+            
+            <pre><code class="javascript">var addAll = function () {
+    var args = Array.prototype.slice.call(arguments);
+    return foldl1(add, args);
+};
+var f = partial(addAll, 1, 2);
+f(3, 4) == 10</code></pre>
+            
+          </div>
+        
+          <div id=flip class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L559"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#flip"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>flip(fn, [x, y])</pre>
+            </div>
+
+            <p>Evaluates the function <code>fn</code> with the argument positions swapped. Only
+works with functions that accept two arguments.</p>
+
+            
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              
+                <li>
+                  <code>f</code>
+                   - <em>Function</em>
+                   - function to flip argument application for
+                </li>
+              
+                <li>
+                  <code>x</code>
+                  
+                   - parameter to apply to the right hand side of f
+                </li>
+              
+                <li>
+                  <code>y</code>
+                  
+                   - parameter to apply to the left hand side of f
+                </li>
+              
+            </ul>
+            
+
+            
+            <pre><code class="javascript">div(2, 4) == 0.5
+flip(div, 2, 4) == 2
+flip(div)(2, 4) == 2</code></pre>
+            
+          </div>
+        
+          <div id=compose class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L578"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#compose"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>compose(fn1, fn2, ...)</pre>
+            </div>
+
+            <p>Creates a composite function, which is the application of function1 to
+the results of function2. You can pass an arbitrary number of arguments
+and have them composed. This means you can't partially apply the compose
+function itself.</p>
+
+            
+
+            
+            <pre><code class="javascript">var add1 = add(1);
+var mul3 = mul(3);
+
+var add1mul3 = compose(mul3, add1);
+add1mul3(2) == 9</code></pre>
+            
+          </div>
+        
+          <div id=seq class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L601"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#seq"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>seq(fn1, fn2, ...)</pre>
+            </div>
+
+            <p>The reversed version of compose. Where arguments are in the order of
+application.</p>
+
+            
+
+            
+            <pre><code class="javascript">var add1 = add(1);
+var mul3 = mul(3);
+
+var add1mul3 = seq(add1, mul3);
+add1mul3(2) == 9</code></pre>
             
           </div>
         

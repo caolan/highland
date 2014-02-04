@@ -4,6 +4,91 @@ var EventEmitter = require('events').EventEmitter,
     _ = require('./highland');
 
 
+/**
+ * Functional utils
+ */
+
+exports['curry'] = function (test) {
+    var fn = _.curry(function (a, b, c, d) {
+        return a + b + c + d;
+    });
+    test.equal(fn(1,2,3,4), fn(1,2)(3,4));
+    test.equal(fn(1,2,3,4), fn(1)(2)(3)(4));
+    var fn2 = function (a, b, c, d) {
+        return a + b + c + d;
+    };
+    test.equal(_.curry(fn2)(1,2,3,4), _.curry(fn2,1,2,3,4));
+    test.equal(_.curry(fn2)(1,2,3,4), _.curry(fn2,1,2)(3,4));
+    test.done();
+};
+
+exports['ncurry'] = function (test) {
+    var fn = _.ncurry(3, function (a, b, c, d) {
+        return a + b + c + (d || 0);
+    });
+    test.equal(fn(1,2,3,4), 6);
+    test.equal(fn(1,2,3,4), fn(1,2)(3));
+    test.equal(fn(1,2,3,4), fn(1)(2)(3));
+    var fn2 = function () {
+        var args = Array.prototype.slice(arguments);
+        return args.reduce(function (a, b) { return a + b; }, 0);
+    };
+    test.equal(_.ncurry(3,fn2)(1,2,3,4), _.ncurry(3,fn2,1,2,3,4));
+    test.equal(_.ncurry(3,fn2)(1,2,3,4), _.ncurry(3,fn2,1,2)(3,4));
+    test.done();
+};
+
+exports['compose'] = function (test) {
+    function append(x) {
+        return function (str) {
+            return str + x;
+        };
+    }
+    var fn1 = append(':one');
+    var fn2 = append(':two');
+    var fn = _.compose(fn2, fn1);
+    test.equal(fn('zero'), 'zero:one:two');
+    fn = _.compose(fn1, fn2, fn1);
+    test.equal(fn('zero'), 'zero:one:two:one');
+    test.done();
+};
+
+exports['partial'] = function (test) {
+    var addAll = function () {
+        var args = Array.prototype.slice.call(arguments);
+        return args.reduce(function (a, b) { return a + b; }, 0);
+    };
+    var f = _.partial(addAll, 1, 2);
+    test.equal(f(3, 4), 10);
+    test.done();
+};
+
+exports['flip'] = function (test) {
+    var subtract = function (a, b) {
+        return a - b;
+    };
+    test.equal(subtract(4,2), 2);
+    test.equal(_.flip(subtract)(4,2), -2);
+    test.equal(_.flip(subtract, 4)(2), -2);
+    test.equal(_.flip(subtract, 4, 2), -2);
+    test.done();
+};
+
+exports['seq'] = function (test) {
+    function append(x) {
+        return function (str) {
+            return str + x;
+        };
+    }
+    var fn1 = append(':one');
+    var fn2 = append(':two');
+    var fn = _.seq(fn1, fn2);
+    test.equal(fn('zero'), 'zero:one:two');
+    // more than two args
+    test.equal(_.seq(fn1, fn2, fn1)('zero'), 'zero:one:two:one');
+    test.done();
+}
+
 /***** Streams *****/
 
 exports['if no consumers, buffer data'] = function (test) {
