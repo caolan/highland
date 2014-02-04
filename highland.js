@@ -1256,6 +1256,26 @@
         });
     };
 
+    /**
+     * Recursively reads values from a Stream which may contain nested Streams
+     * or Arrays. As values or errors are encountered, they are emitted on a
+     * single output Stream.
+     *
+     * @id flatten
+     * @section Streams
+     * @name Stream.flatten()
+     * @api public
+     *
+     * _([1, [2, 3], [[4]]]).flatten();  // => 1, 2, 3, 4
+     *
+     * var nums = _(
+     *     _([1, 2, 3]),
+     *     _([4, _([5, 6]) ])
+     * );
+     *
+     * nums.flatten();  // => 1, 2, 3, 4, 5, 6
+     */
+
     Stream.prototype.flatten = function () {
         var curr = this;
         var stack = [];
