@@ -417,6 +417,39 @@ exports['pipe to node stream with backpressure'] = function (test) {
     src.pipe(dest);
 };
 
+exports['wrap node stream and pipe'] = function (test) {
+    function doubled(x) {
+        return x * 2;
+    }
+    var xs = [];
+    var readable = streamify([1,2,3,4]);
+    var ys = _(readable).map(doubled);
+
+    var dest = new EventEmitter();
+    dest.writable = true;
+    dest.write = function (x) {
+        xs.push(x);
+        if (xs.length === 2) {
+            setImmediate(function () {
+                test.same(xs, [2,4]);
+                test.ok(ys.source.paused);
+                test.equal(readable._readableState.readingMore, false);
+                dest.emit('drain');
+            });
+            return false;
+        }
+    };
+    dest.end = function () {
+        test.same(xs, [2,4,6,8]);
+        test.done();
+    };
+    // make sure nothing starts until we pipe
+    test.same(xs, []);
+    test.same(ys._incoming, []);
+    test.same(ys.source._incoming, []);
+    ys.pipe(dest);
+};
+
 exports['attach data event handler'] = function (test) {
     var s = _([1,2,3,4]);
     var xs = [];

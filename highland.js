@@ -458,6 +458,8 @@
         EventEmitter.call(this);
         var self = this;
 
+        self.id = ('' + Math.random()).substr(2, 6);
+
         if (xs === undefined) {
             this._incoming = [];
         }
@@ -490,6 +492,13 @@
                 if (!self.paused) {
                     self.resume();
                 }
+            };
+        }
+        else if (isObject(xs)) {
+            this._incoming = [];
+            this._generator = function (push, next) {
+                delete self._generator;
+                xs.pipe(self);
             };
         }
         else {
