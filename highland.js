@@ -397,6 +397,10 @@
      * it with the Highland API. Reading from the resulting Highland Stream will
      * begin piping the data from the Node Stream to the Highland Stream.
      *
+     * **EventEmitter / jQuery Elements -** Pass in both an event name and an
+     * event emitter as the two arguments to the constructor and the first
+     * argument emitted to the event handler will be written to the new Stream.
+     *
      * @id _(source)
      * @section Streams
      * @name _(source)
@@ -418,6 +422,9 @@
      *
      * // wrapping a Node Readable Stream so you can easily manipulate it
      * _(readable).filter(hasSomething).pipe(writeable);
+     *
+     * // creating a stream from events
+     * _('click', btn).each(handleEvent);
      */
 
     exports = module.exports = function (/*optional*/xs, /*optional*/ee) {
