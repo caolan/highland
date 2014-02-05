@@ -1489,6 +1489,43 @@
     };
     exposeMethod('flatten');
 
+    /**
+     * Switches source to an alternate Stream if the current Stream is empty.
+     *
+     * @id otherwise
+     * @section Streams
+     * @name Stream.otherwise(ys)
+     * @param {Stream} ys - alternate stream to use if this stream is empty
+     * @api public
+     *
+     * _([1,2,3]).otherwise(['foo'])  // => 1, 2, 3
+     * _([]).otherwise(['foo'])       // => 'foo'
+     *
+     * _.otherwise(_(['foo']), _([1,2,3]))    // => 1, 2, 3
+     * _.otherwise(_(['foo']), _([]))         // => 'foo'
+     */
+
+    Stream.prototype.otherwise = function (ys) {
+        var xs = this;
+        return xs.consume(function (err, x, push, next) {
+            if (err) {
+                // got an error, just keep going
+                push(err);
+                next();
+            }
+            if (x === nil) {
+                // hit the end without redirecting to xs, use alternative
+                next(ys);
+            }
+            else {
+                // got a value, push it, then redirect to xs
+                push(null, x);
+                next(xs);
+            }
+        });
+    };
+    exposeMethod('otherwise');
+
 
 }));
 // End of Universal Module Definition

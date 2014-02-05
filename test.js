@@ -803,3 +803,60 @@ exports['flatten - nested GeneratorStreams'] = function (test) {
         test.done();
     });
 };
+
+exports['otherwise'] = function (test) {
+    _.otherwise(_([4,5,6]), _([1,2,3])).toArray(function (xs) {
+        test.same(xs, [1,2,3]);
+    });
+    _.otherwise(_([4,5,6]), _([])).toArray(function (xs) {
+        test.same(xs, [4,5,6]);
+    });
+    _.otherwise(_([]), _([1,2,3])).toArray(function (xs) {
+        test.same(xs, [1,2,3]);
+    });
+    _.otherwise(_([]), _([])).toArray(function (xs) {
+        test.same(xs, []);
+    });
+    // partial application
+    _.otherwise(_([4,5,6]))(_([1,2,3])).toArray(function (xs) {
+        test.same(xs, [1,2,3]);
+    });
+    test.done();
+};
+
+exports['otherwise - ArrayStream'] = function (test) {
+    _([1,2,3]).otherwise([4,5,6]).toArray(function (xs) {
+        test.same(xs, [1,2,3]);
+    });
+    _([]).otherwise([4,5,6]).toArray(function (xs) {
+        test.same(xs, [4,5,6]);
+    });
+    test.done();
+};
+
+exports['otherwise - GeneratorStream'] = function (test) {
+    var empty = _(function (push, next) {
+        setTimeout(function () {
+            push(null, _.nil);
+        }, 10);
+    });
+    var xs = _(function (push, next) {
+        setTimeout(function () {
+            push(null, 1);
+            push(null, _.nil);
+        }, 10);
+    });
+    var ys = _(function (push, next) {
+        setTimeout(function () {
+            push(null, 2);
+            push(null, _.nil);
+        }, 10);
+    });
+    xs.otherwise(ys).toArray(function (zs) {
+        test.same(zs, [1]);
+    });
+    empty.otherwise(ys).toArray(function (zs) {
+        test.same(zs, [2]);
+    });
+    test.done();
+};
