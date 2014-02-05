@@ -585,6 +585,25 @@ exports['multiple pull calls on async generator'] = function (test) {
     });
 };
 
+exports['wrap EventEmitter (or jQuery) on handler'] = function (test) {
+    var calls = [];
+    var ee = {
+        on: function (name, f) {
+            test.same(name, 'myevent');
+            f(1);
+            f(2);
+            setTimeout(function () {
+                f(3);
+                test.same(calls, [1, 2, 3]);
+                test.done();
+            }, 10);
+        }
+    };
+    _('myevent', ee).each(function (x) {
+        calls.push(x);
+    });
+};
+
 /*
 exports['sequence'] = function (test) {
     _.sequence([[1,2], [3], [[4],5]]).toArray(function (xs) {

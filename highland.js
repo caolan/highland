@@ -420,8 +420,8 @@
      * _(readable).filter(hasSomething).pipe(writeable);
      */
 
-    exports = module.exports = function (xs) {
-        return new Stream(xs);
+    exports = module.exports = function (/*optional*/xs, /*optional*/ee) {
+        return new Stream(xs, ee);
     };
 
     var _ = exports;
@@ -632,60 +632,13 @@
      * Actual Stream constructor wrapped the the main exported function
      */
 
-    function Stream(xs) {
+    function Stream(/*optional*/xs, /*optional*/ee) {
         EventEmitter.call(this);
         var self = this;
 
         self.id = ('' + Math.random()).substr(2, 6);
-
-        if (xs === undefined) {
-            this._incoming = [];
-        }
-        else if (Array.isArray(xs)) {
-            self._incoming = xs.concat([nil]);
-        }
-        else if (typeof xs === 'function') {
-            this._incoming = [];
-            this._generator = xs;
-            this._generator_push = function (err, x) {
-                self.write(err ? new StreamError(err): x);
-            };
-            this._generator_next = function (s) {
-                if (s) {
-                    // we MUST pause to get the redirect object into the _incoming
-                    // buffer otherwise it would be passed directly to _send(),
-                    // which does not handle StreamRedirect objects!
-                    var _paused = self.paused;
-                    if (!_paused) {
-                        self.pause();
-                    }
-                    self.write(new StreamRedirect(s));
-                    if (!_paused) {
-                        self.resume();
-                    }
-                }
-                else {
-                    self._generator_running = false;
-                }
-                if (!self.paused) {
-                    self.resume();
-                }
-            };
-        }
-        else if (isObject(xs)) {
-            this._incoming = [];
-            this._generator = function (push, next) {
-                delete self._generator;
-                xs.pipe(self);
-            };
-        }
-        else {
-            throw new Error(
-                'Unexpected argument type to Stream(): ' + (typeof xs)
-            );
-        }
-
         this.paused = true;
+        this._incoming = [];
         this._consumers = [];
         this._observers = [];
         this._send_events = false;
@@ -713,6 +666,56 @@
                 }
             }
         });
+
+        if (xs === undefined) {
+            // nothing else to do
+        }
+        else if (Array.isArray(xs)) {
+            self._incoming = xs.concat([nil]);
+        }
+        else if (typeof xs === 'function') {
+            this._generator = xs;
+            this._generator_push = function (err, x) {
+                self.write(err ? new StreamError(err): x);
+            };
+            this._generator_next = function (s) {
+                if (s) {
+                    // we MUST pause to get the redirect object into the _incoming
+                    // buffer otherwise it would be passed directly to _send(),
+                    // which does not handle StreamRedirect objects!
+                    var _paused = self.paused;
+                    if (!_paused) {
+                        self.pause();
+                    }
+                    self.write(new StreamRedirect(s));
+                    if (!_paused) {
+                        self.resume();
+                    }
+                }
+                else {
+                    self._generator_running = false;
+                }
+                if (!self.paused) {
+                    self.resume();
+                }
+            };
+        }
+        else if (isObject(xs)) {
+            this._generator = function (push, next) {
+                delete self._generator;
+                xs.pipe(self);
+            };
+        }
+        else if (typeof xs === 'string') {
+            ee.on(xs, function (x) {
+                self.write(x);
+            });
+        }
+        else {
+            throw new Error(
+                'Unexpected argument type to Stream(): ' + (typeof xs)
+            );
+        }
     }
     inherits(Stream, EventEmitter);
 
