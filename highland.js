@@ -640,6 +640,11 @@
      */
 
     function Stream(/*optional*/xs, /*optional*/ee) {
+        if (xs && xs instanceof Stream) {
+            // already a Stream
+            return xs;
+        }
+
         EventEmitter.call(this);
         var self = this;
 
@@ -985,6 +990,9 @@
      */
 
     Stream.prototype._redirect = function (to) {
+        // coerce to Stream
+        to = _(to);
+
         to._consumers = this._consumers.map(function (c) {
             c.source = to;
             return c;
@@ -1085,14 +1093,35 @@
             }
             _send.call(s, err, x);
         };
+        var async;
         var next_called;
-        var next = function () {
-            next_called = true;
+        var next = function (s2) {
+            if (s2) {
+                // we MUST pause to get the redirect object into the _incoming
+                // buffer otherwise it would be passed directly to _send(),
+                // which does not handle StreamRedirect objects!
+                var _paused = s.paused;
+                if (!_paused) {
+                    s.pause();
+                }
+                s.write(new StreamRedirect(s2));
+                if (!_paused) {
+                    s.resume();
+                }
+            }
+            else if (async) {
+                self.resume();
+            }
+            else {
+                next_called = true;
+            }
             //self.resume();
         };
         s._send = function (err, x) {
+            async = false;
             next_called = false;
             f(err, x, push, next);
+            async = true;
             if (!next_called) {
                 s.pause();
             }

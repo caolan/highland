@@ -91,6 +91,12 @@ exports['seq'] = function (test) {
 
 /***** Streams *****/
 
+exports['passing Stream to constructor returns original'] = function (test) {
+    var s = _([1,2,3]);
+    test.strictEqual(s, _(s));
+    test.done();
+};
+
 exports['if no consumers, buffer data'] = function (test) {
     var s = _();
     test.equal(s.paused, true);
@@ -202,6 +208,17 @@ exports['restart buffering incoming data on pause'] = function (test) {
     test.same(s2._incoming, []);
     test.same(vals, [1,2,3,4]);
     test.done();
+};
+
+exports['redirect from consumer'] = function (test) {
+    var s = _([1,2,3]);
+    var s2 = s.consume(function (err, x, push, next) {
+        next(_([4, 5, 6]));
+    });
+    s2.toArray(function (xs) {
+        test.same(xs, [4, 5, 6]);
+        test.done();
+    });
 };
 
 /*
@@ -824,6 +841,7 @@ exports['flatten - nested GeneratorStreams'] = function (test) {
 };
 
 exports['otherwise'] = function (test) {
+    test.expect(5);
     _.otherwise(_([4,5,6]), _([1,2,3])).toArray(function (xs) {
         test.same(xs, [1,2,3]);
     });
