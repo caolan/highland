@@ -965,3 +965,12 @@ exports['append - GeneratorStream'] = function (test) {
         test.done();
     });
 };
+
+/***** Objects *****/
+
+exports['values'] = function (test) {
+    _.values({foo: 1, bar: 2}).toArray(function (xs) {
+        test.same(xs, [1, 2]);
+        test.done();
+    });
+};

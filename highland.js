@@ -1590,6 +1590,15 @@
     };
     exposeMethod('append');
 
+    _.values = function (obj) {
+        var values = [];
+        for (var k in obj) {
+            if (obj.hasOwnProperty(k)) {
+                values.push(obj[k]);
+            }
+        }
+        return _(values);
+    };
 
 }));
 // End of Universal Module Definition
