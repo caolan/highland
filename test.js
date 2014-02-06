@@ -1013,11 +1013,42 @@ exports['reduce - GeneratorStream'] = function (test) {
     });
 };
 
-/***** Objects *****/
+exports['concat'] = function (test) {
+    test.expect(2);
+    _.concat([3,4], [1,2]).toArray(function (xs) {
+        test.same(xs, [1,2,3,4])
+    });
+    // partial application
+    _.concat([3,4])([1,2]).toArray(function (xs) {
+        test.same(xs, [1,2,3,4])
+    });
+    test.done();
+};
 
-exports['values'] = function (test) {
-    _.values({foo: 1, bar: 2}).toArray(function (xs) {
-        test.same(xs, [1, 2]);
+exports['concat - ArrayStream'] = function (test) {
+    _([1,2]).concat([3,4]).toArray(function (xs) {
+        test.same(xs, [1,2,3,4]);
+        test.done();
+    });
+};
+
+exports['concat - GeneratorStream'] = function (test) {
+    var s1 = _(function (push, next) {
+        setTimeout(function () {
+            push(null, 1);
+            push(null, 2);
+            push(null, _.nil);
+        }, 10);
+    });
+    var s2 = _(function (push, next) {
+        setTimeout(function () {
+            push(null, 3);
+            push(null, 4);
+            push(null, _.nil);
+        }, 10);
+    });
+    s1.concat(s2).toArray(function (xs) {
+        test.same(xs, [1,2,3,4]);
         test.done();
     });
 };

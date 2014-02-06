@@ -1608,6 +1608,24 @@
     };
     exposeMethod('reduce');
 
+    /**
+     * Be aware that in the top-level export, the args may be in the reverse
+     * order to what you'd expect _([a], [b]) => [b, a]
+     */
+
+    Stream.prototype.concat = function (ys) {
+        return this.consume(function (err, x, push, next) {
+            if (x === nil) {
+                next(ys);
+            }
+            else {
+                push(err, x);
+                next();
+            }
+        });
+    };
+    exposeMethod('concat');
+
     _.values = function (obj) {
         var values = [];
         for (var k in obj) {
