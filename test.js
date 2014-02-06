@@ -221,6 +221,36 @@ exports['redirect from consumer'] = function (test) {
     });
 };
 
+exports['async next from consumer'] = function (test) {
+    var calls = 0;
+    var s = _(function (push, next) {
+        calls++;
+        setTimeout(function () {
+            push(null, calls);
+            next();
+        }, 10);
+    });
+    s.id = 's';
+    var s2 = s.consume(function (err, x, push, next) {
+        if (x <= 3) {
+            setTimeout(function () {
+                // no further values should have been read
+                test.equal(calls, x);
+                next();
+            }, 50);
+        }
+        else {
+            push(null, _.nil);
+        }
+    });
+    s2.id = 's2';
+    s2.toArray(function (xs) {
+        test.same(xs, []);
+        test.equal(calls, 4);
+        test.done();
+    });
+};
+
 /*
 exports['each'] = function (test) {
     var calls = [];

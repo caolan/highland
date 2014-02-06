@@ -1110,12 +1110,11 @@
                 }
             }
             else if (async) {
-                self.resume();
+                s.resume();
             }
             else {
                 next_called = true;
             }
-            //self.resume();
         };
         s._send = function (err, x) {
             async = false;
