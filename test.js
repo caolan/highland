@@ -966,6 +966,53 @@ exports['append - GeneratorStream'] = function (test) {
     });
 };
 
+exports['reduce'] = function (test) {
+    test.expect(3);
+    function add(a, b) {
+        return a + b;
+    }
+    _.reduce(10, add, [1,2,3,4]).toArray(function (xs) {
+        test.same(xs, [20]);
+    });
+    // partial application
+    _.reduce(10, add)([1,2,3,4]).toArray(function (xs) {
+        test.same(xs, [20]);
+    });
+    _.reduce(10)(add)([1,2,3,4]).toArray(function (xs) {
+        test.same(xs, [20]);
+    });
+    test.done();
+};
+
+exports['reduce - ArrayStream'] = function (test) {
+    function add(a, b) {
+        return a + b;
+    }
+    _([1,2,3,4]).reduce(10, add).toArray(function (xs) {
+        test.same(xs, [20]);
+        test.done();
+    });
+};
+
+exports['reduce - GeneratorStream'] = function (test) {
+    function add(a, b) {
+        return a + b;
+    }
+    var s = _(function (push, next) {
+        setTimeout(function () {
+            push(null, 1);
+            push(null, 2);
+            push(null, 3);
+            push(null, 4);
+            push(null, _.nil);
+        }, 10);
+    });
+    s.reduce(10, add).toArray(function (xs) {
+        test.same(xs, [20]);
+        test.done();
+    });
+};
+
 /***** Objects *****/
 
 exports['values'] = function (test) {

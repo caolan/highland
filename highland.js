@@ -1590,6 +1590,24 @@
     };
     exposeMethod('append');
 
+    Stream.prototype.reduce = function (z, f) {
+        return this.consume(function (err, x, push, next) {
+            if (x === nil) {
+                push(null, z);
+                push(null, _.nil);
+            }
+            else if (err) {
+                push(err);
+                next();
+            }
+            else {
+                z = f(z, x);
+                next();
+            }
+        });
+    };
+    exposeMethod('reduce');
+
     _.values = function (obj) {
         var values = [];
         for (var k in obj) {
