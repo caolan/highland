@@ -222,6 +222,7 @@ exports['redirect from consumer'] = function (test) {
 };
 
 exports['async next from consumer'] = function (test) {
+    test.expect(5);
     var calls = 0;
     var s = _(function (push, next) {
         calls++;
@@ -479,6 +480,7 @@ exports['switch to alternate stream using next (async)'] = function (test) {
 };
 
 exports['lazily evalute stream'] = function (test) {
+    test.expect(2);
     var map_calls = [];
     function doubled(x) {
         map_calls.push(x);
@@ -527,6 +529,7 @@ exports['pipe highland stream to node stream'] = function (test) {
 };
 
 exports['pipe to node stream with backpressure'] = function (test) {
+    test.expect(3);
     var src = _([1,2,3,4]);
     var xs = [];
     var dest = new EventEmitter();
@@ -550,6 +553,7 @@ exports['pipe to node stream with backpressure'] = function (test) {
 };
 
 exports['wrap node stream and pipe'] = function (test) {
+    test.expect(7);
     function doubled(x) {
         return x * 2;
     }
@@ -663,8 +667,8 @@ exports['sequence'] = function (test) {
 exports['sequence - ArrayStream'] = function (test) {
     _([[1,2], [3], [[4],5]]).sequence().toArray(function (xs) {
         test.same(xs, [1,2,3,[4],5]);
+        test.done();
     });
-    test.done();
 };
 
 exports['sequence - GeneratorStream'] = function (test) {
@@ -711,8 +715,8 @@ exports['sequence - nested GeneratorStreams'] = function (test) {
     });
     _([s1]).sequence().toArray(function (xs) {
         test.same(xs, [1, s2]);
+        test.done();
     });
-    test.done();
 };
 
 /*
@@ -815,15 +819,15 @@ exports['observe'] = function (test) {
 exports['flatten'] = function (test) {
     _.flatten([1, [2, [3, 4], 5], [6]]).toArray(function (xs) {
         test.same(xs, [1,2,3,4,5,6]);
+        test.done();
     });
-    test.done();
 };
 
 exports['flatten - ArrayStream'] = function (test) {
     _([1, [2, [3, 4], 5], [6]]).flatten().toArray(function (xs) {
         test.same(xs, [1,2,3,4,5,6]);
+        test.done();
     });
-    test.done();
 };
 
 exports['flatten - GeneratorStream'] = function (test) {
@@ -892,6 +896,7 @@ exports['otherwise'] = function (test) {
 };
 
 exports['otherwise - ArrayStream'] = function (test) {
+    test.expect(2);
     _([1,2,3]).otherwise([4,5,6]).toArray(function (xs) {
         test.same(xs, [1,2,3]);
     });
@@ -902,6 +907,7 @@ exports['otherwise - ArrayStream'] = function (test) {
 };
 
 exports['otherwise - GeneratorStream'] = function (test) {
+    test.expect(2);
     var empty = _(function (push, next) {
         setTimeout(function () {
             push(null, _.nil);
@@ -921,14 +927,15 @@ exports['otherwise - GeneratorStream'] = function (test) {
     });
     xs.otherwise(ys).toArray(function (zs) {
         test.same(zs, [1]);
+        empty.otherwise(ys).toArray(function (zs) {
+            test.same(zs, [2]);
+            test.done();
+        });
     });
-    empty.otherwise(ys).toArray(function (zs) {
-        test.same(zs, [2]);
-    });
-    test.done();
 };
 
 exports['append'] = function (test) {
+    test.expect(2);
     _.append(4, [1,2,3]).toArray(function (xs) {
         test.same(xs, [1,2,3,4]);
     });
@@ -942,8 +949,8 @@ exports['append'] = function (test) {
 exports['append - ArrayStream'] = function (test) {
     _([1,2,3]).append(4).toArray(function (xs) {
         test.same(xs, [1,2,3,4]);
+        test.done();
     });
-    test.done();
 };
 
 exports['append - GeneratorStream'] = function (test) {
@@ -955,6 +962,6 @@ exports['append - GeneratorStream'] = function (test) {
     });
     s.append(4).toArray(function (xs) {
         test.same(xs, [1,2,3,4]);
+        test.done();
     });
-    test.done();
 };
