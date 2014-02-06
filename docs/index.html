@@ -88,6 +88,8 @@
         
         <li><a href="#otherwise">otherwise</a></li>
         
+        <li><a href="#append">append</a></li>
+        
         
         <li class="heading"><a href="#Functions">Functions</a></li>
         
@@ -844,6 +846,35 @@ _([]).otherwise([&#x27;foo&#x27;])       // =&gt; &#x27;foo&#x27;
 
 _.otherwise(_([&#x27;foo&#x27;]), _([1,2,3]))    // =&gt; 1, 2, 3
 _.otherwise(_([&#x27;foo&#x27;]), _([]))         // =&gt; &#x27;foo&#x27;</code></pre>
+            
+          </div>
+        
+          <div id=append class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1539"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#append"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.append(y)</pre>
+            </div>
+
+            <p>Adds a value to the end of a Stream.</p>
+
+            
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              
+                <li>
+                  <code>y</code>
+                  
+                   - the value to append to the Stream
+                </li>
+              
+            </ul>
+            
+
+            
+            <pre><code class="javascript">_([1, 2, 3]).append(4)  // =&gt; 1, 2, 3, 4</code></pre>
             
           </div>
         

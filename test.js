@@ -879,3 +879,34 @@ exports['otherwise - GeneratorStream'] = function (test) {
     });
     test.done();
 };
+
+exports['append'] = function (test) {
+    _.append(4, [1,2,3]).toArray(function (xs) {
+        test.same(xs, [1,2,3,4]);
+    });
+    // partial application
+    _.append(4)([1,2,3]).toArray(function (xs) {
+        test.same(xs, [1,2,3,4]);
+    });
+    test.done();
+};
+
+exports['append - ArrayStream'] = function (test) {
+    _([1,2,3]).append(4).toArray(function (xs) {
+        test.same(xs, [1,2,3,4]);
+    });
+    test.done();
+};
+
+exports['append - GeneratorStream'] = function (test) {
+    var s = _(function (push, next) {
+        push(null, 1);
+        push(null, 2);
+        push(null, 3);
+        push(null, _.nil);
+    });
+    s.append(4).toArray(function (xs) {
+        test.same(xs, [1,2,3,4]);
+    });
+    test.done();
+};

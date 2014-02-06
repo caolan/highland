@@ -1536,6 +1536,32 @@
     };
     exposeMethod('otherwise');
 
+    /**
+     * Adds a value to the end of a Stream.
+     *
+     * @id append
+     * @section Streams
+     * @name Stream.append(y)
+     * @param y - the value to append to the Stream
+     * @api public
+     *
+     * _([1, 2, 3]).append(4)  // => 1, 2, 3, 4
+     */
+
+    Stream.prototype.append = function (y) {
+        return this.consume(function (err, x, push, next) {
+            if (x === nil) {
+                push(null, y);
+                push(null, _.nil);
+            }
+            else {
+                push(err, x);
+                next();
+            }
+        });
+    };
+    exposeMethod('append');
+
 
 }));
 // End of Universal Module Definition
