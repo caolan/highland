@@ -1087,3 +1087,19 @@ exports['invoke - GeneratorStream'] = function (test) {
         test.done();
     });
 };
+
+
+/***** Utils *****/
+
+exports['log'] = function (test) {
+    var calls = [];
+    var _log = console.log;
+    console.log = function (x) {
+        calls.push(x);
+    };
+    _.log('foo');
+    _.log('bar');
+    test.same(calls, ['foo', 'bar']);
+    console.log = _log;
+    test.done();
+};

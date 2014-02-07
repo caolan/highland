@@ -112,6 +112,11 @@
         <li><a href="#seq">seq</a></li>
         
         
+        <li class="heading"><a href="#Utils">Utils</a></li>
+        
+        <li><a href="#log">log</a></li>
+        
+        
       </ul>
     </nav>
 
@@ -917,12 +922,18 @@ the memo and the next value.</p>
             
 
             
+            <pre><code class="javascript">var add = function (a, b) {
+    return a + b;
+};
+
+_([1, 2, 3, 4]).reduce(0, add)  // =&gt; 10</code></pre>
+            
           </div>
         
           <div id=concat class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1625"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1631"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#concat"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.concat(ys)</pre>
@@ -942,12 +953,15 @@ convention of other top-level exported functions which do <code>x</code> to <cod
             
 
             
+            <pre><code class="javascript">_([1, 2]).concat([3, 4])  // =&gt; 1, 2, 3, 4
+_.concat([3, 4], [1, 2])  // =&gt; 1, 2, 3, 4</code></pre>
+            
           </div>
         
           <div id=invoke class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1652"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1661"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#invoke"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.invoke(method, args)</pre>
@@ -1215,6 +1229,35 @@ var mul3 = mul(3);
 
 var add1mul3 = seq(add1, mul3);
 add1mul3(2) == 9</code></pre>
+            
+          </div>
+        
+        </div>
+
+      
+        <h2 id="Utils">Utils</h2>
+
+        <div class="doc-items">
+        
+          <div id=log class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1694"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#log"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>_.log(args..)</pre>
+            </div>
+
+            <p>Logs values to the console, a simple wrapper around <code>console.log</code> that
+it suitable for passing to other functions by reference without having to
+call <code>bind</code>.</p>
+
+            
+
+            
+            <pre><code class="javascript">_.log(&#x27;Hello, world!&#x27;);
+
+_([1, 2, 3, 4]).each(_.log);</code></pre>
             
           </div>
         

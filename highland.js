@@ -1602,6 +1602,12 @@
      * @param memo - the initial state of the reduction
      * @param {Function} iterator - the function which reduces the values
      * @api public
+     *
+     * var add = function (a, b) {
+     *     return a + b;
+     * };
+     *
+     * _([1, 2, 3, 4]).reduce(0, add)  // => 10
      */
 
     Stream.prototype.reduce = function (z, f) {
@@ -1634,6 +1640,9 @@
      * @name Stream.concat(ys)
      * @params {Stream | Array} ys - the values to concatenate onto this Stream
      * @api public
+     *
+     * _([1, 2]).concat([3, 4])  // => 1, 2, 3, 4
+     * _.concat([3, 4], [1, 2])  // => 1, 2, 3, 4
      */
 
     Stream.prototype.concat = function (ys) {
@@ -1681,6 +1690,21 @@
         }
         return _(values);
     };
+
+    /**
+     * Logs values to the console, a simple wrapper around `console.log` that
+     * it suitable for passing to other functions by reference without having to
+     * call `bind`.
+     *
+     * @id log
+     * @section Utils
+     * @name _.log(args..)
+     * @api public
+     *
+     * _.log('Hello, world!');
+     *
+     * _([1, 2, 3, 4]).each(_.log);
+     */
 
     _.log = function () {
         console.log.apply(console, arguments);
