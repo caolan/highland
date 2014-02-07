@@ -90,6 +90,8 @@
         
         <li><a href="#append">append</a></li>
         
+        <li><a href="#invoke">invoke</a></li>
+        
         
         <li class="heading"><a href="#Functions">Functions</a></li>
         
@@ -162,13 +164,13 @@ readStream.pipe(_().filter(isBlogpost)).pipe(writeStream);</code></pre>
 
       <h3 id="arrays">Arrays</h3>
       <p>To work with data in Arrays, just wrap it in <code>_()</code>. The Highland methods are then available on it:</p>
-      <pre><code class="javascript">var shouty = _(['foo', 'bar', 'baz']).invoke('toUpperCase');</code></pre>
+      <pre><code class="javascript">var shouty = _(['foo', 'bar', 'baz']).invoke('toUpperCase', []);</code></pre>
       <p>These methods return Stream objects, not Arrays, so you can chain together method calls:</p>
-      <pre><code class="javascript">_(['foo', 'bar', 'baz']).invoke('toUpperCase').map(function (x) {
+      <pre><code class="javascript">_(['foo', 'bar', 'baz']).invoke('toUpperCase', []).map(function (x) {
     return {name: x};
 });</code></pre>
       <p>When using the Highland APIs there is little reason to turn this back into an Array, but if you're calling an outside library you may need to convert it back:</p>
-      <pre><code class="javascript">_(['foo', 'bar', 'baz']).invoke('toUpperCase').toArray(function (xs) {
+      <pre><code class="javascript">_(['foo', 'bar', 'baz']).invoke('toUpperCase', []).toArray(function (xs) {
     // xs will now be ['FOO', 'BAR', 'BAZ]
 });</code></pre>
       <p>Passing a function to the <code>toArray</code> call may seem a little unfamiliar, but this enables an important trick in Highland. Now, without changing any of your existing code, you could swap out <code class="javascript">['foo', 'bar', 'baz']</code> for an asynchronous data source, and it would just work!</p>
@@ -192,7 +194,7 @@ readStream.pipe(_().filter(isBlogpost)).pipe(writeStream);</code></pre>
       <p>Since wrapping a callback is a fairly common thing to do, there is a convenience function:</p>
       <pre><code class="javascript">var getData = _.wrapCallback(fs.readFile);</code></pre>
       <p>Now we have a new asynchronous source, we can run the exact same code from the Array examples on it:</p>
-      <pre><code class="javascript">getData('myfile').invoke('toUpperCase').map(function (x) {
+      <pre><code class="javascript">getData('myfile').invoke('toUpperCase', []).map(function (x) {
     return {name: x};
 });</code></pre>
       <p>With Highland, we really can have one language to work with both synchronous and asynchronous data, whether it's from a Node Stream, an EventEmitter, a callback or an Array.</p>
@@ -874,6 +876,44 @@ _.otherwise(_([&#x27;foo&#x27;]), _([]))         // =&gt; &#x27;foo&#x27;</code>
 
             
             <pre><code class="javascript">_([1, 2, 3]).append(4)  // =&gt; 1, 2, 3, 4</code></pre>
+            
+          </div>
+        
+          <div id=invoke class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1629"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#invoke"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.invoke(method, args)</pre>
+            </div>
+
+            <p>Calls a named method on each object from the Stream - returning
+a new stream with the result of those calls.</p>
+
+            
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              
+                <li>
+                  <code>method</code>
+                   - <em>String</em>
+                   - the method name to call
+                </li>
+              
+                <li>
+                  <code>args</code>
+                   - <em>Array</em>
+                   - the arguments to call the method with
+                </li>
+              
+            </ul>
+            
+
+            
+            <pre><code class="javascript">_([&#x27;foo&#x27;, &#x27;bar&#x27;]).invoke(&#x27;toUpperCase&#x27;, [])  // =&gt; FOO, BAR
+
+filenames.map(readFile).sequence().invoke(&#x27;toString&#x27;, [&#x27;utf8&#x27;]);</code></pre>
             
           </div>
         

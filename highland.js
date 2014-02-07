@@ -1626,6 +1626,22 @@
     };
     exposeMethod('concat');
 
+    /**
+     * Calls a named method on each object from the Stream - returning
+     * a new stream with the result of those calls.
+     *
+     * @id invoke
+     * @section Streams
+     * @name Stream.invoke(method, args)
+     * @param {String} method - the method name to call
+     * @param {Array} args - the arguments to call the method with
+     * @api public
+     *
+     * _(['foo', 'bar']).invoke('toUpperCase', [])  // => FOO, BAR
+     *
+     * filenames.map(readFile).sequence().invoke('toString', ['utf8']);
+     */
+
     Stream.prototype.invoke = function (method, args) {
         return this.map(function (x) {
             return x[method].apply(x, args);
