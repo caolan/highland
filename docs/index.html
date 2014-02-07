@@ -92,6 +92,8 @@
         
         <li><a href="#reduce">reduce</a></li>
         
+        <li><a href="#concat">concat</a></li>
+        
         <li><a href="#invoke">invoke</a></li>
         
         
@@ -917,10 +919,35 @@ the memo and the next value.</p>
             
           </div>
         
+          <div id=concat class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1625"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#concat"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.concat(ys)</pre>
+            </div>
+
+            <p>Concatenates a Stream to the end of this Stream.</p>
+
+<p>Be aware that in the top-level export, the args may be in the reverse
+order to what you'd expect <code>_([a], [b]) =&gt; [b, a]</code>, as this follows the
+convention of other top-level exported functions which do <code>x</code> to <code>y</code>.</p>
+
+            
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              
+            </ul>
+            
+
+            
+          </div>
+        
           <div id=invoke class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1643"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1652"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#invoke"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.invoke(method, args)</pre>

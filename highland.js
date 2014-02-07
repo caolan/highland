@@ -1623,8 +1623,17 @@
     exposeMethod('reduce');
 
     /**
+     * Concatenates a Stream to the end of this Stream.
+     *
      * Be aware that in the top-level export, the args may be in the reverse
-     * order to what you'd expect _([a], [b]) => [b, a]
+     * order to what you'd expect `_([a], [b]) => [b, a]`, as this follows the
+     * convention of other top-level exported functions which do `x` to `y`.
+     *
+     * @id concat
+     * @section Streams
+     * @name Stream.concat(ys)
+     * @params {Stream | Array} ys - the values to concatenate onto this Stream
+     * @api public
      */
 
     Stream.prototype.concat = function (ys) {
