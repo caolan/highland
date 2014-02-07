@@ -1724,7 +1724,7 @@
      * are used).
      *
      * @id values
-     * @Section Objects
+     * @section Objects
      * @param {Object} obj - the object to return values from
      * @api public
      *
@@ -1741,7 +1741,7 @@
      * Returns keys from an Object as a Stream.
      *
      * @id keys
-     * @Section Objects
+     * @section Objects
      * @param {Object} obj - the object to return keys from
      * @api public
      *
@@ -1765,7 +1765,7 @@
      * are used).
      *
      * @id pairs
-     * @Section Objects
+     * @section Objects
      * @param {Object} obj - the object to return key/value pairs from
      * @api public
      *
