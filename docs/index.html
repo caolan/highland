@@ -90,6 +90,8 @@
         
         <li><a href="#append">append</a></li>
         
+        <li><a href="#reduce">reduce</a></li>
+        
         <li><a href="#invoke">invoke</a></li>
         
         
@@ -879,10 +881,46 @@ _.otherwise(_([&#x27;foo&#x27;]), _([]))         // =&gt; &#x27;foo&#x27;</code>
             
           </div>
         
+          <div id=reduce class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1593"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#reduce"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.reduce(memo, iterator)</pre>
+            </div>
+
+            <p>Boils down a Stream to a single value. The memo is the initial state
+of the reduction, and each successive step of it should be returned by
+the iterator function. The iterator is passed two arguments:
+the memo and the next value.</p>
+
+            
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              
+                <li>
+                  <code>memo</code>
+                  
+                   - the initial state of the reduction
+                </li>
+              
+                <li>
+                  <code>iterator</code>
+                   - <em>Function</em>
+                   - the function which reduces the values
+                </li>
+              
+            </ul>
+            
+
+            
+          </div>
+        
           <div id=invoke class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1629"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1643"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#invoke"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.invoke(method, args)</pre>

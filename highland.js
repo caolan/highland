@@ -1590,6 +1590,20 @@
     };
     exposeMethod('append');
 
+    /**
+     * Boils down a Stream to a single value. The memo is the initial state
+     * of the reduction, and each successive step of it should be returned by
+     * the iterator function. The iterator is passed two arguments:
+     * the memo and the next value.
+     *
+     * @id reduce
+     * @section Streams
+     * @name Stream.reduce(memo, iterator)
+     * @param memo - the initial state of the reduction
+     * @param {Function} iterator - the function which reduces the values
+     * @api public
+     */
+
     Stream.prototype.reduce = function (z, f) {
         return this.consume(function (err, x, push, next) {
             if (x === nil) {
