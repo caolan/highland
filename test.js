@@ -1161,6 +1161,61 @@ exports['invoke - GeneratorStream'] = function (test) {
     });
 };
 
+exports['map'] = function (test) {
+    test.expect(2);
+    function doubled(x) {
+        return x * 2;
+    }
+    _.map(doubled, [1, 2, 3, 4]).toArray(function (xs) {
+        test.same(xs, [2, 4, 6, 8]);
+    });
+    // partial application
+    _.map(doubled)([1, 2, 3, 4]).toArray(function (xs) {
+        test.same(xs, [2, 4, 6, 8]);
+    });
+    test.done();
+};
+
+exports['map - ArrayStream'] = function (test) {
+    function doubled(x) {
+        return x * 2;
+    }
+    _([1, 2, 3, 4]).map(doubled).toArray(function (xs) {
+        test.same(xs, [2, 4, 6, 8]);
+        test.done();
+    });
+};
+
+exports['map - GeneratorStream'] = function (test) {
+    function doubled(x) {
+        return x * 2;
+    }
+    var s = _(function (push, next) {
+        push(null, 1);
+        push(null, 2);
+        setTimeout(function () {
+            push(null, 3);
+            push(null, 4);
+            push(null, _.nil);
+        }, 10);
+    });
+    s.map(doubled).toArray(function (xs) {
+        test.same(xs, [2, 4, 6, 8]);
+        test.done();
+    });
+};
+
+exports['map to value'] = function (test) {
+    test.expect(2);
+    _.map('foo', [1, 2]).toArray(function (xs) {
+        test.same(xs, ['foo', 'foo']);
+    });
+    _([1, 2, 3]).map(1).toArray(function (xs) {
+        test.same(xs, [1,1,1]);
+    });
+    test.done();
+};
+
 
 /***** Objects *****/
 

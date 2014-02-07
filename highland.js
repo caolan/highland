@@ -1322,20 +1322,30 @@
 
     /**
      * Creates a new Stream of transformed values by applying a function to each
-     * value from the source.
+     * value from the source. The transformation function can be replaced with
+     * a non-function value for convenience, and it will emit that value
+     * for every data event on the source Stream.
      *
      * @id map
      * @section Streams
      * @name Stream.map(f)
-     * @param {Function} f - the transformation function
+     * @param f - the transformation function or value to map to
      * @api public
      *
      * var doubled = _([1, 2, 3, 4]).map(function (x) {
      *     return x * 2;
      * });
+     *
+     * _([1, 2, 3]).map('hi')  // => 'hi', 'hi', 'hi'
      */
 
     Stream.prototype.map = function (f) {
+        if (!isFunction(f)) {
+            var val = f;
+            f = function () {
+                return val;
+            };
+        }
         return this.consume(function (err, x, push, next) {
             if (err) {
                 push(err);
@@ -1350,6 +1360,7 @@
             }
         });
     };
+    exposeMethod('map');
 
     /**
      * Creates a new Stream with the first `n` values from the source.
