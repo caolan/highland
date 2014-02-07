@@ -1,6 +1,6 @@
 {
   "name": "highland",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "The high-level streams library",
   "main": "highland.js",
   "devDependencies": {
