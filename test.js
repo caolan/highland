@@ -1130,6 +1130,39 @@ exports['keys'] = function (test) {
     });
 };
 
+exports['pairs'] = function (test) {
+    var obj = {
+        foo: 1,
+        bar: 2,
+        baz: {qux: 3}
+    };
+    _.pairs(obj).toArray(function (xs) {
+        test.same(xs, [
+            ['foo', 1],
+            ['bar', 2],
+            ['baz', {qux: 3}]
+        ]);
+        test.done();
+    });
+};
+
+exports['pairs - lazy property access'] = function (test) {
+    var calls = [];
+    var obj = {
+        get foo() { calls.push('foo'); return 1; },
+        get bar() { calls.push('bar'); return 2; },
+        get baz() { calls.push('baz'); return {qux: 3}; }
+    };
+    _.pairs(obj).take(2).toArray(function (xs) {
+        test.same(calls, ['foo', 'bar']);
+        test.same(xs, [
+            ['foo', 1],
+            ['bar', 2]
+        ]);
+        test.done();
+    });
+};
+
 
 /***** Utils *****/
 

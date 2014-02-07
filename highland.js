@@ -1723,6 +1723,26 @@
     };
 
     /**
+     * Returns key/value pairs for an Object as a Stream. Reads properties
+     * lazily, so if you don't read from all keys on an object, not
+     * all properties will be read from (may have an effect where getters
+     * are used).
+     *
+     * @id pairs
+     * @Section Objects
+     * @param {Object} obj - the object to return key/value pairs from
+     * @api public
+     *
+     * _.pairs({foo: 1, bar: 2})  // => ['foo', 1], ['bar', 2]
+     */
+
+    _.pairs = function (obj) {
+        return _.keys(obj).map(function (k) {
+            return [k, obj[k]];
+        });
+    };
+
+    /**
      * Logs values to the console, a simple wrapper around `console.log` that
      * it suitable for passing to other functions by reference without having to
      * call `bind`.

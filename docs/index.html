@@ -118,6 +118,8 @@
         
         <li><a href="#keys">keys</a></li>
         
+        <li><a href="#pairs">pairs</a></li>
+        
         
         <li class="heading"><a href="#Utils">Utils</a></li>
         
@@ -1307,6 +1309,38 @@ are used).</p>
             
           </div>
         
+          <div id=pairs class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1725"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#pairs"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre></pre>
+            </div>
+
+            <p>Returns key/value pairs for an Object as a Stream. Reads properties
+lazily, so if you don't read from all keys on an object, not
+all properties will be read from (may have an effect where getters
+are used).</p>
+
+            
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              
+                <li>
+                  <code>obj</code>
+                   - <em>Object</em>
+                   - the object to return key/value pairs from
+                </li>
+              
+            </ul>
+            
+
+            
+            <pre><code class="javascript">_.pairs({foo: 1, bar: 2})  // =&gt; [&#x27;foo&#x27;, 1], [&#x27;bar&#x27;, 2]</code></pre>
+            
+          </div>
+        
         </div>
 
       
@@ -1317,7 +1351,7 @@ are used).</p>
           <div id=log class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1725"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1745"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#log"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.log(args..)</pre>
