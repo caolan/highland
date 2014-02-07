@@ -1103,6 +1103,18 @@ exports['values'] = function (test) {
     });
 };
 
+exports['keys'] = function (test) {
+    var obj = {
+        foo: 1,
+        bar: 2,
+        baz: 3
+    };
+    _.keys(obj).toArray(function (xs) {
+        test.same(xs, ['foo', 'bar', 'baz']);
+        test.done();
+    });
+};
+
 
 /***** Utils *****/
 

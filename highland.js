@@ -1703,6 +1703,27 @@
     };
 
     /**
+     * Returns keys from an Object as a Stream.
+     *
+     * @id keys
+     * @Section Objects
+     * @param {Object} obj - the object to return keys from
+     * @api public
+     *
+     * _.keys({foo: 1, bar: 2, baz: 3})  // => 'foo', 'bar', 'baz'
+     */
+
+    _.keys = function (obj) {
+        var keys = [];
+        for (var k in obj) {
+            if (obj.hasOwnProperty(k)) {
+                keys.push(k);
+            }
+        }
+        return _(keys);
+    };
+
+    /**
      * Logs values to the console, a simple wrapper around `console.log` that
      * it suitable for passing to other functions by reference without having to
      * call `bind`.
