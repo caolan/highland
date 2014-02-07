@@ -1610,6 +1610,7 @@
      * _([1, 2, 3, 4]).reduce(0, add)  // => 10
      */
 
+    // TODO: convert this to this.scan(z, f).last()
     Stream.prototype.reduce = function (z, f) {
         return this.consume(function (err, x, push, next) {
             if (x === nil) {
@@ -1627,6 +1628,41 @@
         });
     };
     exposeMethod('reduce');
+
+    /**
+     * Like [reduce](#reduce), but emits each intermediate value of the
+     * reduction as it is calculated.
+     *
+     * @id scan
+     * @section Streams
+     * @name Stream.scan(memo, iterator)
+     * @param memo - the initial state of the reduction
+     * @param {Function} iterator - the function which reduces the values
+     * @api public
+     *
+     * _([1, 2, 3, 4]).scan(0, add)  // => 0, 1, 3, 6, 10
+     */
+
+    Stream.prototype.scan = function (z, f) {
+        var self = this;
+        return _([z]).concat(
+            self.consume(function (err, x, push, next) {
+                if (x === nil) {
+                    push(null, _.nil);
+                }
+                else if (err) {
+                    push(err);
+                    next();
+                }
+                else {
+                    z = f(z, x);
+                    push(null, z);
+                    next();
+                }
+            })
+        );
+    };
+    exposeMethod('scan');
 
     /**
      * Concatenates a Stream to the end of this Stream.

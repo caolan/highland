@@ -1013,6 +1013,79 @@ exports['reduce - GeneratorStream'] = function (test) {
     });
 };
 
+exports['scan'] = function (test) {
+    test.expect(3);
+    function add(a, b) {
+        return a + b;
+    }
+    _.scan(10, add, [1,2,3,4]).toArray(function (xs) {
+        test.same(xs, [10, 11, 13, 16, 20]);
+    });
+    // partial application
+    _.scan(10, add)([1,2,3,4]).toArray(function (xs) {
+        test.same(xs, [10, 11, 13, 16, 20]);
+    });
+    _.scan(10)(add)([1,2,3,4]).toArray(function (xs) {
+        test.same(xs, [10, 11, 13, 16, 20]);
+    });
+    test.done();
+};
+
+exports['scan - ArrayStream'] = function (test) {
+    function add(a, b) {
+        return a + b;
+    }
+    _([1,2,3,4]).scan(10, add).toArray(function (xs) {
+        test.same(xs, [10, 11, 13, 16, 20]);
+        test.done();
+    });
+};
+
+exports['scan - GeneratorStream'] = function (test) {
+    function add(a, b) {
+        return a + b;
+    }
+    var s = _(function (push, next) {
+        setTimeout(function () {
+            push(null, 1);
+            push(null, 2);
+            push(null, 3);
+            push(null, 4);
+            push(null, _.nil);
+        }, 10);
+    });
+    s.scan(10, add).toArray(function (xs) {
+        test.same(xs, [10, 11, 13, 16, 20]);
+        test.done();
+    });
+};
+
+exports['scan - GeneratorStream lazy'] = function (test) {
+    var calls = [];
+    function add(a, b) {
+        calls.push([a, b]);
+        return a + b;
+    }
+    var s = _(function (push, next) {
+        setTimeout(function () {
+            push(null, 1);
+            push(null, 2);
+            push(null, 3);
+            push(null, 4);
+            push(null, _.nil);
+        }, 10);
+    });
+    s.scan(10, add).take(3).toArray(function (xs) {
+        test.same(calls, [
+            [10, 1],
+            [11, 2]
+        ]);
+        test.same(xs, [10, 11, 13]);
+        test.done();
+    });
+};
+
+
 exports['concat'] = function (test) {
     test.expect(2);
     _.concat([3,4], [1,2]).toArray(function (xs) {
