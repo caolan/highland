@@ -1808,5 +1808,21 @@
         console.log.apply(console, arguments);
     };
 
+    /**
+     * Add two values. Can be partially applied.
+     *
+     * @id add
+     * @section Operators
+     * @name add(a, b)
+     * @api public
+     *
+     * add(1, 2) === 3
+     * add(1)(5) === 6
+     */
+
+    _.add = _.curry(function (a, b) {
+        return a + b;
+    });
+
 }));
 // End of Universal Module Definition

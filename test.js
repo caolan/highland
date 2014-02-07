@@ -1306,3 +1306,11 @@ exports['log'] = function (test) {
     console.log = _log;
     test.done();
 };
+
+/***** Operators *****/
+
+exports['add'] = function (test) {
+    test.equal(_.add(1, 2), 3);
+    test.equal(_.add(3)(2), 5);
+    return test.done();
+};
