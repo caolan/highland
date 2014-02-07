@@ -1682,7 +1682,10 @@
     exposeMethod('invoke');
 
     /**
-     * Returns values from an Object as a Stream.
+     * Returns values from an Object as a Stream. Reads properties
+     * lazily, so if you don't read from all keys on an object, not
+     * all properties will be read from (may have an effect where getters
+     * are used).
      *
      * @id values
      * @Section Objects
