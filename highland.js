@@ -1626,6 +1626,13 @@
     };
     exposeMethod('concat');
 
+    Stream.prototype.invoke = function (method, args) {
+        return this.map(function (x) {
+            return x[method].apply(x, args);
+        });
+    };
+    exposeMethod('invoke');
+
     _.values = function (obj) {
         var values = [];
         for (var k in obj) {
@@ -1634,6 +1641,10 @@
             }
         }
         return _(values);
+    };
+
+    _.log = function () {
+        console.log.apply(console, arguments);
     };
 
 }));

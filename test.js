@@ -1052,3 +1052,38 @@ exports['concat - GeneratorStream'] = function (test) {
         test.done();
     });
 };
+
+exports['invoke'] = function (test) {
+    test.expect(2);
+    _.invoke('toString', [], [1,2,3,4]).toArray(function (xs) {
+        test.same(xs, ['1', '2', '3', '4']);
+    });
+    // partial application
+    _.invoke('toString')([])([1,2,3,4]).toArray(function (xs) {
+        test.same(xs, ['1', '2', '3', '4']);
+    });
+    test.done();
+};
+
+exports['invoke - ArrayStream'] = function (test) {
+    _([1,2,3,4]).invoke('toString', []).toArray(function (xs) {
+        test.same(xs, ['1','2','3','4']);
+        test.done();
+    });
+};
+
+exports['invoke - GeneratorStream'] = function (test) {
+    var s = _(function (push, next) {
+        push(null, 1);
+        push(null, 2);
+        setTimeout(function () {
+            push(null, 3);
+            push(null, 4);
+            push(null, _.nil);
+        }, 10);
+    });
+    s.invoke('toString', []).toArray(function (xs) {
+        test.same(xs, ['1','2','3','4']);
+        test.done();
+    });
+};
