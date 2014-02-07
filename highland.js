@@ -1693,13 +1693,9 @@
      */
 
     _.values = function (obj) {
-        var values = [];
-        for (var k in obj) {
-            if (obj.hasOwnProperty(k)) {
-                values.push(obj[k]);
-            }
-        }
-        return _(values);
+        return _.keys(obj).map(function (k) {
+            return obj[k];
+        });
     };
 
     /**

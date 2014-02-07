@@ -1091,6 +1091,7 @@ exports['invoke - GeneratorStream'] = function (test) {
 
 /***** Objects *****/
 
+// TODO: test lazy getting of values from obj keys (test using getters?)
 exports['values'] = function (test) {
     var obj = {
         foo: 1,
@@ -1099,6 +1100,20 @@ exports['values'] = function (test) {
     };
     _.values(obj).toArray(function (xs) {
         test.same(xs, [1, 2, 3]);
+        test.done();
+    });
+};
+
+exports['values - lazy property access'] = function (test) {
+    var calls = [];
+    var obj = {
+        get foo() { calls.push('foo'); return 1; },
+        get bar() { calls.push('bar'); return 2; },
+        get baz() { calls.push('baz'); return 3; }
+    };
+    _.values(obj).take(2).toArray(function (xs) {
+        test.same(calls, ['foo', 'bar']);
+        test.same(xs, [1, 2]);
         test.done();
     });
 };
