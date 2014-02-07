@@ -1681,6 +1681,17 @@
     };
     exposeMethod('invoke');
 
+    /**
+     * Returns values from an Object as a Stream.
+     *
+     * @id values
+     * @Section Objects
+     * @param {Object} obj - the object to return values from
+     * @api public
+     *
+     * _.values({foo: 1, bar: 2, baz: 3})  // => 1, 2, 3
+     */
+
     _.values = function (obj) {
         var values = [];
         for (var k in obj) {

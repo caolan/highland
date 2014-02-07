@@ -1089,6 +1089,21 @@ exports['invoke - GeneratorStream'] = function (test) {
 };
 
 
+/***** Objects *****/
+
+exports['values'] = function (test) {
+    var obj = {
+        foo: 1,
+        bar: 2,
+        baz: 3
+    };
+    _.values(obj).toArray(function (xs) {
+        test.same(xs, [1, 2, 3]);
+        test.done();
+    });
+};
+
+
 /***** Utils *****/
 
 exports['log'] = function (test) {
