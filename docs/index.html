@@ -185,13 +185,13 @@ readStream.pipe(_().filter(isBlogpost)).pipe(writeStream);</code></pre>
 
       <h3 id="arrays">Arrays</h3>
       <p>To work with data in Arrays, just wrap it in <code>_()</code>. The Highland methods are then available on it:</p>
-      <pre><code class="javascript">var shouty = _(['foo', 'bar', 'baz']).invoke('toUpperCase', []);</code></pre>
+<pre><code class="javascript">var shouty = _(['foo', 'bar', 'baz']).map(toUpperCase);</code></pre>
       <p>These methods return Stream objects, not Arrays, so you can chain together method calls:</p>
-      <pre><code class="javascript">_(['foo', 'bar', 'baz']).invoke('toUpperCase', []).map(function (x) {
+      <pre><code class="javascript">_(['foo', 'bar', 'baz']).map(toUpperCase).map(function (x) {
     return {name: x};
 });</code></pre>
       <p>When using the Highland APIs there is little reason to turn this back into an Array, but if you're calling an outside library you may need to convert it back:</p>
-      <pre><code class="javascript">_(['foo', 'bar', 'baz']).invoke('toUpperCase', []).toArray(function (xs) {
+      <pre><code class="javascript">_(['foo', 'bar', 'baz']).map(toUpperCase).toArray(function (xs) {
     // xs will now be ['FOO', 'BAR', 'BAZ]
 });</code></pre>
       <p>Passing a function to the <code>toArray</code> call may seem a little unfamiliar, but this enables an important trick in Highland. Now, without changing any of your existing code, you could swap out <code class="javascript">['foo', 'bar', 'baz']</code> for an asynchronous data source, and it would just work!</p>
@@ -215,7 +215,7 @@ readStream.pipe(_().filter(isBlogpost)).pipe(writeStream);</code></pre>
       <p>Since wrapping a callback is a fairly common thing to do, there is a convenience function:</p>
       <pre><code class="javascript">var getData = _.wrapCallback(fs.readFile);</code></pre>
       <p>Now we have a new asynchronous source, we can run the exact same code from the Array examples on it:</p>
-      <pre><code class="javascript">getData('myfile').invoke('toUpperCase', []).map(function (x) {
+      <pre><code class="javascript">getData('myfile').map(toUpperCase).map(function (x) {
     return {name: x};
 });</code></pre>
       <p>With Highland, we really can have one language to work with both synchronous and asynchronous data, whether it's from a Node Stream, an EventEmitter, a callback or an Array.</p>
