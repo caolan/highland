@@ -129,6 +129,11 @@
         <li><a href="#log">log</a></li>
         
         
+        <li class="heading"><a href="#Operators">Operators</a></li>
+        
+        <li><a href="#add">add</a></li>
+        
+        
       </ul>
     </nav>
 
@@ -1297,7 +1302,7 @@ add1mul3(2) == 9</code></pre>
                 <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1731"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#values"><i class="fi-link"></i> Link</a></li>
               </ul>
-              <pre></pre>
+              <pre>_.values(obj)</pre>
             </div>
 
             <p>Returns values from an Object as a Stream. Reads properties
@@ -1326,10 +1331,10 @@ are used).</p>
           <div id=keys class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1751"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1752"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#keys"><i class="fi-link"></i> Link</a></li>
               </ul>
-              <pre></pre>
+              <pre>_.keys(obj)</pre>
             </div>
 
             <p>Returns keys from an Object as a Stream.</p>
@@ -1355,10 +1360,10 @@ are used).</p>
           <div id=pairs class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1772"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1774"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pairs"><i class="fi-link"></i> Link</a></li>
               </ul>
-              <pre></pre>
+              <pre>_.pairs(obj)</pre>
             </div>
 
             <p>Returns key/value pairs for an Object as a Stream. Reads properties
@@ -1394,7 +1399,7 @@ are used).</p>
           <div id=log class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1792"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1795"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#log"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.log(args..)</pre>
@@ -1410,6 +1415,32 @@ call <code>bind</code>.</p>
             <pre><code class="javascript">_.log(&#x27;Hello, world!&#x27;);
 
 _([1, 2, 3, 4]).each(_.log);</code></pre>
+            
+          </div>
+        
+        </div>
+
+      
+        <h2 id="Operators">Operators</h2>
+
+        <div class="doc-items">
+        
+          <div id=add class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1814"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#add"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>add(a, b)</pre>
+            </div>
+
+            <p>Add two values. Can be partially applied.</p>
+
+            
+
+            
+            <pre><code class="javascript">add(1, 2) === 3
+add(1)(5) === 6</code></pre>
             
           </div>
         
