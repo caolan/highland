@@ -1792,6 +1792,15 @@
         });
     };
 
+    _.extend = function (a, b) {
+        for (var k in b) {
+            if (b.hasOwnProperty(k)) {
+                a[k] = b[k];
+            }
+        }
+        return a;
+    };
+
     /**
      * Logs values to the console, a simple wrapper around `console.log` that
      * it suitable for passing to other functions by reference without having to
