@@ -1363,6 +1363,39 @@
     exposeMethod('map');
 
     /**
+     * Creates a new Stream including only the values which pass a truth test.
+     *
+     * @id filter
+     * @section Streams
+     * @name Stream.filter(f)
+     * @param f - the truth test function
+     * @api public
+     *
+     * var evens = _([1, 2, 3, 4]).filter(function (x) {
+     *     return x % 2 === 0;
+     * });
+     */
+
+    Stream.prototype.filter = function (f) {
+        return this.consume(function (err, x, push, next) {
+            if (err) {
+                push(err);
+                next();
+            }
+            else if (x === nil) {
+                push(err, x);
+            }
+            else {
+                if (f(x)) {
+                    push(null, x);
+                }
+                next();
+            }
+        });
+    };
+    exposeMethod('filter');
+
+    /**
      * Creates a new Stream with the first `n` values from the source.
      *
      * @id take

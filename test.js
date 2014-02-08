@@ -1216,6 +1216,51 @@ exports['map to value'] = function (test) {
     test.done();
 };
 
+exports['filter'] = function (test) {
+    test.expect(2);
+    function isEven(x) {
+        return x % 2 === 0;
+    }
+    _.filter(isEven, [1, 2, 3, 4]).toArray(function (xs) {
+        test.same(xs, [2, 4]);
+    });
+    // partial application
+    _.filter(isEven)([1, 2, 3, 4]).toArray(function (xs) {
+        test.same(xs, [2, 4]);
+    });
+    test.done();
+};
+
+exports['filter - ArrayStream'] = function (test) {
+    function isEven(x) {
+        return x % 2 === 0;
+    }
+    _([1, 2, 3, 4]).filter(isEven).toArray(function (xs) {
+        test.same(xs, [2, 4]);
+        test.done();
+    });
+};
+
+exports['filter - GeneratorStream'] = function (test) {
+    function isEven(x) {
+        return x % 2 === 0;
+    }
+    var s = _(function (push, next) {
+        push(null, 1);
+        push(null, 2);
+        setTimeout(function () {
+            push(null, 3);
+            push(null, 4);
+            push(null, _.nil);
+        }, 10);
+    });
+    s.filter(isEven).toArray(function (xs) {
+        test.same(xs, [2, 4]);
+        test.done();
+    });
+};
+
+
 
 /***** Objects *****/
 
