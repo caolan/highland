@@ -1736,6 +1736,7 @@
      *
      * @id values
      * @section Objects
+     * @name _.values(obj)
      * @param {Object} obj - the object to return values from
      * @api public
      *
@@ -1753,6 +1754,7 @@
      *
      * @id keys
      * @section Objects
+     * @name _.keys(obj)
      * @param {Object} obj - the object to return keys from
      * @api public
      *
@@ -1777,6 +1779,7 @@
      *
      * @id pairs
      * @section Objects
+     * @name _.pairs(obj)
      * @param {Object} obj - the object to return key/value pairs from
      * @api public
      *
