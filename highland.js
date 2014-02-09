@@ -1303,6 +1303,7 @@
      * });
      */
 
+    // TODO: implement using collect()?
     Stream.prototype.toArray = function (f) {
         var self = this;
         var xs = [];
@@ -1704,6 +1705,41 @@
         });
     };
     exposeMethod('reduce1');
+
+    /**
+     * Groups all values into an Array and passes down the stream as a single
+     * data event. This is a bit like doing [toArray](#toArray), but instead
+     * of accepting a callback and causing a *thunk*, it passes the value on.
+     *
+     * @id collect
+     * @section Streams
+     * @name Stream.collect()
+     * @api public
+     *
+     * _(['foo', 'bar']).collect().toArray(function (xs) {
+     *     // xs will be [['foo', 'bar']]
+     * });
+     */
+
+    Stream.prototype.collect = function () {
+        var self = this;
+        var xs = [];
+        return this.consume(function (err, x, push, next) {
+            if (err) {
+                push(err);
+                next();
+            }
+            else if (x === nil) {
+                push(null, xs);
+                push(null, nil);
+            }
+            else {
+                xs.push(x);
+                next();
+            }
+        });
+    };
+    exposeMethod('collect');
 
     /**
      * Like [reduce](#reduce), but emits each intermediate value of the

@@ -1133,6 +1133,35 @@ exports['scan - GeneratorStream lazy'] = function (test) {
     });
 };
 
+exports['collect'] = function (test) {
+    _.collect([1,2,3,4]).toArray(function (xs) {
+        test.same(xs, [[1,2,3,4]]);
+        test.done();
+    });
+};
+
+exports['collect - ArrayStream'] = function (test) {
+    _([1,2,3,4]).collect().toArray(function (xs) {
+        test.same(xs, [[1,2,3,4]]);
+        test.done();
+    });
+};
+
+exports['collect - GeneratorStream'] = function (test) {
+    var s = _(function (push, next) {
+        setTimeout(function () {
+            push(null, 1);
+            push(null, 2);
+            push(null, 3);
+            push(null, 4);
+            push(null, _.nil);
+        }, 10);
+    });
+    s.collect().toArray(function (xs) {
+        test.same(xs, [[1,2,3,4]]);
+        test.done();
+    });
+};
 
 exports['concat'] = function (test) {
     test.expect(2);
