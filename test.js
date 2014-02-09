@@ -1013,6 +1013,54 @@ exports['reduce - GeneratorStream'] = function (test) {
     });
 };
 
+exports['reduce1'] = function (test) {
+    test.expect(3);
+    function add(a, b) {
+        return a + b;
+    }
+    _.reduce1(add, [1,2,3,4]).toArray(function (xs) {
+        test.same(xs, [10]);
+    });
+    // partial application
+    _.reduce1(add)([1,2,3,4]).toArray(function (xs) {
+        test.same(xs, [10]);
+    });
+    _.reduce1(add)([1,2,3,4]).toArray(function (xs) {
+        test.same(xs, [10]);
+    });
+    test.done();
+};
+
+exports['reduce1 - ArrayStream'] = function (test) {
+    function add(a, b) {
+        return a + b;
+    }
+    _([1,2,3,4]).reduce1(add).toArray(function (xs) {
+        test.same(xs, [10]);
+        test.done();
+    });
+};
+
+exports['reduce1 - GeneratorStream'] = function (test) {
+    function add(a, b) {
+        return a + b;
+    }
+    var s = _(function (push, next) {
+        setTimeout(function () {
+            push(null, 1);
+            push(null, 2);
+            push(null, 3);
+            push(null, 4);
+            push(null, _.nil);
+        }, 10);
+    });
+    s.reduce1(add).toArray(function (xs) {
+        test.same(xs, [10]);
+        test.done();
+    });
+};
+
+
 exports['scan'] = function (test) {
     test.expect(3);
     function add(a, b) {
@@ -1336,6 +1384,12 @@ exports['pairs - lazy property access'] = function (test) {
     });
 };
 
+// TODO: failing case in another program - consume stream and switch to
+// new async source using next, then follow the consume with flatten()
+//
+// in fact, a simple .consume().flatten() failed with async sub-source to be
+// flattened, but curiously, it worked by doing .consume().map().flatten()
+// where the map() was just map(function (x) { return x; })
 
 /***** Utils *****/
 

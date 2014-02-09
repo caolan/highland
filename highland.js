@@ -1674,6 +1674,38 @@
     exposeMethod('reduce');
 
     /**
+     * Same as [reduce](#reduce), but uses the first element as the initial
+     * state instead of passing in a `memo` value.
+     *
+     * @id reduce1
+     * @section Streams
+     * @name Stream.reduce1(iterator)
+     * @param {Function} iterator - the function which reduces the values
+     * @api public
+     *
+     * _([1, 2, 3, 4]).reduce1(add)  // => 10
+     */
+
+    Stream.prototype.reduce1 = function (f) {
+        var self = this;
+        return _(function (push, next) {
+            self.pull(function (err, x) {
+                if (err) {
+                    push(err);
+                    next();
+                }
+                if (x === nil) {
+                    push(null, nil);
+                }
+                else {
+                    next(self.reduce(x, f));
+                }
+            });
+        });
+    };
+    exposeMethod('reduce1');
+
+    /**
      * Like [reduce](#reduce), but emits each intermediate value of the
      * reduction as it is calculated.
      *
