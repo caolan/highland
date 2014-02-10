@@ -766,6 +766,9 @@
      */
 
     Stream.prototype._send = function (err, x) {
+        if (x === nil) {
+            this.ended = true;
+        }
         if (this._consumers.length) {
             for (var i = 0, len = this._consumers.length; i < len; i++) {
                 var c = this._consumers[i];
@@ -1571,6 +1574,75 @@
         });
     };
     exposeMethod('flatten');
+
+    Stream.prototype.parallel = function (n) {
+        var buffers = [];
+        var running = 0;
+        var self = this;
+        var ondata = null;
+        return _(function (push, next) {
+            ondata = null;
+            // make sure we're reading from 'n' streams
+            var len = buffers.length;
+            if (!self.ended && running < n) {
+                var i = 0;
+                self.take(n - running).each(function (x) {
+                    running++;
+                    var target = buffers[len + i] = [];
+                    i++;
+                    x.consume(function (err, x, _push, _next) {
+                        if (x === nil) {
+                            running--;
+                            target.push([null, nil]);
+                        }
+                        else {
+                            target.push([err, x]);
+                            _next();
+                        }
+                        if (target === buffers[0] && ondata) {
+                            ondata();
+                        }
+                    }).resume();
+                });
+            }
+            // check if we have buffered data we can send
+            if (buffers.length) {
+                if (buffers[0].length) {
+                    var args = buffers[0].shift();
+                    var err = args[0];
+                    var x = args[1];
+                    if (x === nil) {
+                        // stream finished, move on to next one
+                        buffers.shift();
+                    }
+                    else {
+                        push(err, x);
+                    }
+                    next();
+                }
+                else {
+                    // waiting for more data from first stream
+                    ondata = function () {
+                        ondata = null;
+                        next();
+                    };
+                }
+            }
+            else if (self.ended && running === 0) {
+                // totally done
+                push(null, nil);
+                return;
+            }
+            else {
+                // waiting for more streams to read
+                ondata = function () {
+                    ondata = null;
+                    next();
+                };
+            }
+        });
+    };
+    exposeMethod('parallel');
 
     /**
      * Switches source to an alternate Stream if the current Stream is empty.
