@@ -1572,6 +1572,18 @@ exports['pairs - lazy property access'] = function (test) {
     });
 };
 
+exports['extend'] = function (test) {
+    var a = {a: 1, b: {num: 2, test: 'test'}};
+    var b = _.extend({b: {num: 'foo'}, c: 3}, a);
+    test.same(a, {a: 1, b: {num: 2, test: 'test'}});
+    test.same(b, {a: 1, b: {num: 'foo'}, c: 3});
+    // partial application
+    var c = _.extend({b: 'baz'})(a);
+    test.same(a, {a: 1, b: {num: 2, test: 'test'}});
+    test.same(c, {a: 1, b: 'baz'});
+    test.done();
+};
+
 // TODO: failing case in another program - consume stream and switch to
 // new async source using next, then follow the consume with flatten()
 //

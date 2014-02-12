@@ -1989,14 +1989,44 @@
         });
     };
 
-    _.extend = function (a, b) {
-        for (var k in b) {
-            if (b.hasOwnProperty(k)) {
-                a[k] = b[k];
+    /**
+     * Creates a new object (shallow clone) which the properties of one
+     * object extended by another. **Note:** The arguments are in the reverse
+     * order of other libraries such as underscore. This is so it follows the
+     * convention of other functions in this library and so you can more
+     * meaningfully partially apply it.
+     *
+     * @id extend
+     * @section Objects
+     * @name _.extend(a, b)
+     * @param {Object} a - the properties to extend b with
+     * @param {Object} b - the original properties to start with
+     * @api public
+     *
+     * _.extend({name: 'bar'}, {name: 'foo', price: 20})
+     * // => {name: 'bar', price: 20}
+     *
+     * // example of partial application
+     * var publish = _.extend({published: true});
+     *
+     * publish({title: 'test post'})
+     * // => {title: 'test post', published: true}
+     */
+
+    _.extend = _.curry(function (extensions, target) {
+        var obj = {};
+        for (var k in target) {
+            if (target.hasOwnProperty(k)) {
+                obj[k] = target[k];
             }
         }
-        return a;
-    };
+        for (var k in extensions) {
+            if (extensions.hasOwnProperty(k)) {
+                obj[k] = extensions[k];
+            }
+        }
+        return obj;
+    });
 
     /**
      * Logs values to the console, a simple wrapper around `console.log` that
