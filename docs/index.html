@@ -136,6 +136,8 @@
         
         <li><a href="#log">log</a></li>
         
+        <li><a href="#wrapCallback">wrapCallback</a></li>
+        
         
         <li class="heading"><a href="#Operators">Operators</a></li>
         
@@ -1544,6 +1546,44 @@ _([1, 2, 3, 4]).each(_.log);</code></pre>
             
           </div>
         
+          <div id=wrapCallback class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L2019"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#wrapCallback"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>_.wrapCallback(f)</pre>
+            </div>
+
+            <p>Wraps a node-style async function which accepts a callback, transforming
+it to a function which accepts the same arguments minus the callback and
+returns a Highland Stream instead. Only the first argument to the
+callback (or an error) will be pushed onto the Stream.</p>
+
+            
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              
+                <li>
+                  <code>f</code>
+                   - <em>Function</em>
+                   - the node-style function to wrap
+                </li>
+              
+            </ul>
+            
+
+            
+            <pre><code class="javascript">var fs = require(&#x27;fs&#x27;);
+
+var readFile = _.wrapCallback(fs.readFile);
+
+readFile(&#x27;example.txt&#x27;).apply(function (data) {
+    // data is now the contents of example.txt
+});</code></pre>
+            
+          </div>
+        
         </div>
 
       
@@ -1554,7 +1594,7 @@ _([1, 2, 3, 4]).each(_.log);</code></pre>
           <div id=add class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L2019"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L2058"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#add"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.add(a, b)</pre>

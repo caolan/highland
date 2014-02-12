@@ -1596,6 +1596,30 @@ exports['log'] = function (test) {
     test.done();
 };
 
+exports['wrapCallback'] = function (test) {
+    var f = function (a, b, cb) {
+        setTimeout(function () {
+            cb(null, a + b);
+        }, 10);
+    };
+    _.wrapCallback(f)(1, 2).toArray(function (xs) {
+        test.same(xs, [3]);
+        test.done();
+    });
+};
+
+exports['wrapCallback - errors'] = function (test) {
+    var f = function (a, b, cb) {
+        cb(new Error('boom'));
+    };
+    test.throws(function () {
+        _.wrapCallback(f)(1, 2).toArray(function () {
+            test.ok(false, "this shouldn't be called");
+        });
+    });
+    test.done();
+};
+
 /***** Operators *****/
 
 exports['add'] = function (test) {

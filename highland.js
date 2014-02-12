@@ -2017,6 +2017,45 @@
     };
 
     /**
+     * Wraps a node-style async function which accepts a callback, transforming
+     * it to a function which accepts the same arguments minus the callback and
+     * returns a Highland Stream instead. Only the first argument to the
+     * callback (or an error) will be pushed onto the Stream.
+     *
+     * @id wrapCallback
+     * @section Utils
+     * @name _.wrapCallback(f)
+     * @param {Function} f - the node-style function to wrap
+     * @api public
+     *
+     * var fs = require('fs');
+     *
+     * var readFile = _.wrapCallback(fs.readFile);
+     *
+     * readFile('example.txt').apply(function (data) {
+     *     // data is now the contents of example.txt
+     * });
+     */
+
+    _.wrapCallback = function (f) {
+        return function () {
+            var args = slice.call(arguments);
+            return _(function (push, next) {
+                var cb = function (err, x) {
+                    if (err) {
+                        push(err);
+                    }
+                    else {
+                        push(null, x);
+                    }
+                    push(null, nil);
+                };
+                f.apply(null, args.concat([cb]));
+            });
+        };
+    };
+
+    /**
      * Add two values. Can be partially applied.
      *
      * @id add
