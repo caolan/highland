@@ -294,7 +294,6 @@ exports['apply - GeneratorStream'] = function (test) {
     });
 };
 
-/*
 exports['each'] = function (test) {
     var calls = [];
     _.each(function (x) {
@@ -308,7 +307,6 @@ exports['each'] = function (test) {
     test.same(calls, [1,2,3,1,2,3]);
     test.done();
 };
-*/
 
 exports['each - ArrayStream'] = function (test) {
     var calls = [];

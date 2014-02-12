@@ -1287,6 +1287,7 @@
             }
         }).resume();
     };
+    exposeMethod('each');
 
     /**
      * Applies results from a Stream as arguments to a function
