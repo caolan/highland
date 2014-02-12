@@ -25,6 +25,8 @@
 // this is because we've set jshint to ignore the section which defines them
 /* global EventEmitter: false */
 /* global inherits: false */
+/* global isObject: false */
+/* global isFunction: false */
 
 /**
  * Universal module definition, supports CommonJS (Node.js),
@@ -533,7 +535,7 @@
                 return _.ncurry.apply(this, [n, fn].concat(args));
             }
             return fn.apply(this, args.slice(0, n));
-        }
+        };
     };
 
     /**
@@ -713,7 +715,7 @@
             };
         }
         else if (isObject(xs)) {
-            this._generator = function (push, next) {
+            this._generator = function () {
                 delete self._generator;
                 xs.pipe(self);
             };
@@ -1922,7 +1924,6 @@
      */
 
     Stream.prototype.collect = function () {
-        var self = this;
         var xs = [];
         return this.consume(function (err, x, push, next) {
             if (err) {
@@ -2220,7 +2221,7 @@
     _.wrapCallback = function (f) {
         return function () {
             var args = slice.call(arguments);
-            return _(function (push, next) {
+            return _(function (push) {
                 var cb = function (err, x) {
                     if (err) {
                         push(err);
