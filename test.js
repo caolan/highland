@@ -252,6 +252,48 @@ exports['async next from consumer'] = function (test) {
     });
 };
 
+exports['apply'] = function (test) {
+    test.expect(8);
+    var fn = function (a, b, c) {
+        test.equal(arguments.length, 3);
+        test.equal(a, 1);
+        test.equal(b, 2);
+        test.equal(c, 3);
+    };
+    _.apply(fn, [1, 2, 3]);
+    // partial application
+    _.apply(fn)([1, 2, 3]);
+    test.done();
+};
+
+exports['apply - ArrayStream'] = function (test) {
+    _([1,2,3]).apply(function (a, b, c) {
+        test.equal(arguments.length, 3);
+        test.equal(a, 1);
+        test.equal(b, 2);
+        test.equal(c, 3);
+        test.done();
+    });
+};
+
+exports['apply - GeneratorStream'] = function (test) {
+    var s = _(function (push, next) {
+        push(null, 1);
+        setTimeout(function () {
+            push(null, 2);
+            push(null, 3);
+            push(null, _.nil);
+        }, 10);
+    });
+    s.apply(function (a, b, c) {
+        test.equal(arguments.length, 3);
+        test.equal(a, 1);
+        test.equal(b, 2);
+        test.equal(c, 3);
+        test.done();
+    });
+};
+
 /*
 exports['each'] = function (test) {
     var calls = [];

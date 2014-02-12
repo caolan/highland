@@ -1289,6 +1289,29 @@
     };
 
     /**
+     * Applies results from a Stream as arguments to a function
+     *
+     * @id apply
+     * @section Streams
+     * @name Stream.apply(f)
+     * @param {Function} f - the function to apply arguments to
+     * @api public
+     *
+     * _([1, 2, 3]).apply(function (a, b, c) {
+     *     // a === 1
+     *     // b === 2
+     *     // c === 3
+     * });
+     */
+
+    Stream.prototype.apply = function (f) {
+        return this.toArray(function (args) {
+            f.apply(null, args);
+        });
+    };
+    exposeMethod('apply');
+
+    /**
      * Collects all values from a Stream into an Array and calls a function with
      * once with the result. This function causes a **thunk**.
      *

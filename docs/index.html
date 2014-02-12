@@ -77,6 +77,8 @@
         
         <li><a href="#each">each</a></li>
         
+        <li><a href="#apply">apply</a></li>
+        
         <li><a href="#toArray">toArray</a></li>
         
         <li><a href="#map">map</a></li>
@@ -381,7 +383,7 @@ an example of detecting the end of a Stream:</p>
           <div id=pause class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L800"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L803"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pause"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.pause()</pre>
@@ -400,7 +402,7 @@ xs.pause();</code></pre>
           <div id=resume class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L861"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L864"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#resume"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.resume()</pre>
@@ -420,7 +422,7 @@ xs.resume();</code></pre>
           <div id=end class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L908"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L911"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#end"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.end()</pre>
@@ -441,7 +443,7 @@ you pipe in.</p>
           <div id=pipe class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L926"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L929"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pipe"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.pipe(dest)</pre>
@@ -481,7 +483,7 @@ source.pipe(through).pipe(dest);</code></pre>
           <div id=consume class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1049"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1052"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#consume"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.consume(f)</pre>
@@ -534,7 +536,7 @@ like a 'through' stream, handling values as they are read.</p>
           <div id=pull class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1132"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1135"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pull"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.pull(f)</pre>
@@ -570,7 +572,7 @@ some functions in the Highland library.</p>
           <div id=write class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1159"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1162"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#write"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.write(x)</pre>
@@ -612,7 +614,7 @@ xs.toArray(function (ys) {
           <div id=fork class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1199"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1202"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#fork"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.fork()</pre>
@@ -640,7 +642,7 @@ zs.resume();</code></pre>
           <div id=observe class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1229"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1232"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#observe"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.observe()</pre>
@@ -667,7 +669,7 @@ ys.resume();</code></pre>
           <div id=each class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1257"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1260"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#each"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.each(f)</pre>
@@ -699,10 +701,43 @@ error event (which will cause it to throw if unhandled).</p>
             
           </div>
         
+          <div id=apply class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1291"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#apply"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.apply(f)</pre>
+            </div>
+
+            <p>Applies results from a Stream as arguments to a function</p>
+
+            
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+              
+                <li>
+                  <code>f</code>
+                   - <em>Function</em>
+                   - the function to apply arguments to
+                </li>
+              
+            </ul>
+            
+
+            
+            <pre><code class="javascript">_([1, 2, 3]).apply(function (a, b, c) {
+    // a === 1
+    // b === 2
+    // c === 3
+});</code></pre>
+            
+          </div>
+        
           <div id=toArray class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1288"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1314"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#toArray"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.toArray(f)</pre>
@@ -737,7 +772,7 @@ error event (which will cause it to throw if unhandled).</p>
           <div id=map class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1324"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1350"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#map"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.map(f)</pre>
@@ -773,7 +808,7 @@ _([1, 2, 3]).map(&#x27;hi&#x27;)  // =&gt; &#x27;hi&#x27;, &#x27;hi&#x27;, &#x27
           <div id=filter class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1366"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1392"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#filter"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.filter(f)</pre>
@@ -804,7 +839,7 @@ _([1, 2, 3]).map(&#x27;hi&#x27;)  // =&gt; &#x27;hi&#x27;, &#x27;hi&#x27;, &#x27
           <div id=take class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1399"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1425"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#take"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.take(n)</pre>
@@ -833,7 +868,7 @@ _([1, 2, 3]).map(&#x27;hi&#x27;)  // =&gt; &#x27;hi&#x27;, &#x27;hi&#x27;, &#x27
           <div id=sequence class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1442"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1468"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#sequence"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.sequence()</pre>
@@ -862,7 +897,7 @@ filenames.map(readFile).sequence()</code></pre>
           <div id=flatten class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1520"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1546"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#flatten"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.flatten()</pre>
@@ -889,7 +924,7 @@ nums.flatten();  // =&gt; 1, 2, 3, 4, 5, 6</code></pre>
           <div id=otherwise class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1575"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1670"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#otherwise"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.otherwise(ys)</pre>
@@ -922,7 +957,7 @@ _.otherwise(_([&#x27;foo&#x27;]), _([]))         // =&gt; &#x27;foo&#x27;</code>
           <div id=append class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1612"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1707"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#append"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.append(y)</pre>
@@ -951,7 +986,7 @@ _.otherwise(_([&#x27;foo&#x27;]), _([]))         // =&gt; &#x27;foo&#x27;</code>
           <div id=reduce class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1638"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1733"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#reduce"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.reduce(memo, iterator)</pre>
@@ -993,7 +1028,7 @@ _([1, 2, 3, 4]).reduce(0, add)  // =&gt; 10</code></pre>
           <div id=reduce1 class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1677"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1772"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#reduce1"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.reduce1(iterator)</pre>
@@ -1023,7 +1058,7 @@ state instead of passing in a <code>memo</code> value.</p>
           <div id=collect class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1709"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1804"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#collect"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.collect()</pre>
@@ -1045,7 +1080,7 @@ of accepting a callback and causing a <em>thunk</em>, it passes the value on.</p
           <div id=scan class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1744"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1839"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#scan"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.scan(memo, iterator)</pre>
@@ -1081,7 +1116,7 @@ reduction as it is calculated.</p>
           <div id=concat class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1779"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1874"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#concat"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.concat(ys)</pre>
@@ -1109,7 +1144,7 @@ _.concat([3, 4], [1, 2])  // =&gt; 1, 2, 3, 4</code></pre>
           <div id=invoke class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1809"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1904"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#invoke"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.invoke(method, args)</pre>
@@ -1390,7 +1425,7 @@ add1mul3(2) == 9</code></pre>
           <div id=values class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1832"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1927"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#values"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.values(obj)</pre>
@@ -1422,7 +1457,7 @@ are used).</p>
           <div id=keys class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1853"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1948"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#keys"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.keys(obj)</pre>
@@ -1451,7 +1486,7 @@ are used).</p>
           <div id=pairs class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1875"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1970"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pairs"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.pairs(obj)</pre>
@@ -1490,7 +1525,7 @@ are used).</p>
           <div id=log class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1905"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L2000"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#log"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.log(args..)</pre>
@@ -1519,10 +1554,10 @@ _([1, 2, 3, 4]).each(_.log);</code></pre>
           <div id=add class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L1924"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L2019"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#add"><i class="fi-link"></i> Link</a></li>
               </ul>
-              <pre>add(a, b)</pre>
+              <pre>_.add(a, b)</pre>
             </div>
 
             <p>Add two values. Can be partially applied.</p>
