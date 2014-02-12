@@ -1998,7 +1998,7 @@
      *
      * @id add
      * @section Operators
-     * @name add(a, b)
+     * @name _.add(a, b)
      * @api public
      *
      * add(1, 2) === 3
