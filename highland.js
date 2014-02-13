@@ -1391,6 +1391,27 @@
     exposeMethod('map');
 
     /**
+     * Creates a new Stream of values by applying each item in a Stream to an
+     * iterator function which may return a Stream. Each item on these result
+     * Streams are then emitted on a single output Stream.
+     *
+     * The same as calling `stream.map(f).flatten()`.
+     *
+     * @id flatMap
+     * @section Streams
+     * @name Stream.flatMap(f)
+     * @param {Function} f - the iterator function
+     * @api public
+     *
+     * filenames.flatMap(readFile)
+     */
+
+    Stream.prototype.flatMap = function (f) {
+        return this.map(f).flatten();
+    };
+    exposeMethod('flatMap');
+
+    /**
      * Creates a new Stream including only the values which pass a truth test.
      *
      * @id filter

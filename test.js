@@ -1333,6 +1333,60 @@ exports['map to value'] = function (test) {
     test.done();
 };
 
+exports['flatMap'] = function (test) {
+    var f = function (x) {
+        return _(function (push, next) {
+            setTimeout(function () {
+                push(null, x * 2);
+                push(null, _.nil);
+            }, 10);
+        });
+    };
+    _.flatMap(f, [1,2,3,4]).toArray(function (xs) {
+        test.same(xs, [2,4,6,8]);
+        test.done();
+    });
+};
+
+exports['flatMap - ArrayStream'] = function (test) {
+    var f = function (x) {
+        return _(function (push, next) {
+            setTimeout(function () {
+                push(null, x * 2);
+                push(null, _.nil);
+            }, 10);
+        });
+    };
+    _([1,2,3,4]).flatMap(f).toArray(function (xs) {
+        test.same(xs, [2,4,6,8]);
+        test.done();
+    });
+};
+
+exports['flatMap - GeneratorStream'] = function (test) {
+    var f = function (x) {
+        return _(function (push, next) {
+            setTimeout(function () {
+                push(null, x * 2);
+                push(null, _.nil);
+            }, 10);
+        });
+    };
+    var s = _(function (push, next) {
+        push(null, 1);
+        push(null, 2);
+        setTimeout(function () {
+            push(null, 3);
+            push(null, 4);
+            push(null, _.nil);
+        }, 10);
+    });
+    s.flatMap(f).toArray(function (xs) {
+        test.same(xs, [2,4,6,8]);
+        test.done();
+    });
+};
+
 exports['filter'] = function (test) {
     test.expect(2);
     function isEven(x) {
