@@ -1377,7 +1377,6 @@ exports['filter - GeneratorStream'] = function (test) {
     });
 };
 
-/*
 exports['flatFilter'] = function (test) {
     var f = function (x) {
         return _(function (push, next) {
@@ -1431,7 +1430,6 @@ exports['flatFilter - GeneratorStream'] = function (test) {
         test.done();
     });
 };
-*/
 
 exports['zip'] = function (test) {
     test.expect(2);

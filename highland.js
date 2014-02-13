@@ -1423,11 +1423,34 @@
     };
     exposeMethod('filter');
 
-    /*
+    /**
+     * Filters using a predicate which returns a Stream. If you need to check
+     * against an asynchronous data source when filtering a Stream, this can
+     * be convenient. The Stream returned from the filter function should have
+     * a Boolean as it's first value (all other values on the Stream will be
+     * disregarded).
+     *
+     * @id flatFilter
+     * @section Streams
+     * @name Stream.flatFilter(f)
+     * @param {Function} f - the truth test function which returns a Stream
+     * @api public
+     *
+     * var checkExists = _.wrapCallback(fs.exists);
+     * filenames.flatFilter(checkExists)
+     */
+
     Stream.prototype.flatFilter = function (f) {
+        var ys = this.map(_.seq(f, _.take(1))).flatten();
+        return ys.zip(this.observe())
+            .filter(function (pair) {
+                return pair[0];
+            })
+            .map(function (pair) {
+                return pair[1];
+            });
     };
     exposeMethod('flatFilter');
-    */
 
     /**
      * Takes two Streams and returns a Stream of corresponding pairs.
@@ -1516,6 +1539,7 @@
             }
         });
     };
+    exposeMethod('take');
 
     /**
      * Reads values from a Stream of Streams, emitting them on a Single output
