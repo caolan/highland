@@ -1377,6 +1377,108 @@ exports['filter - GeneratorStream'] = function (test) {
     });
 };
 
+/*
+exports['flatFilter'] = function (test) {
+    var f = function (x) {
+        return _(function (push, next) {
+            setTimeout(function () {
+                push(null, x % 2 === 0);
+                push(null, _.nil);
+            }, 10);
+        });
+    };
+    _.flatFilter(f, [1,2,3,4]).toArray(function (xs) {
+        test.same(xs, [2,4]);
+        test.done();
+    });
+};
+
+exports['flatFilter - ArrayStream'] = function (test) {
+    var f = function (x) {
+        return _(function (push, next) {
+            setTimeout(function () {
+                push(null, x % 2 === 0);
+                push(null, _.nil);
+            }, 10);
+        });
+    };
+    _([1,2,3,4]).flatFilter(f).toArray(function (xs) {
+        test.same(xs, [2,4]);
+        test.done();
+    });
+};
+
+exports['flatFilter - GeneratorStream'] = function (test) {
+    var f = function (x) {
+        return _(function (push, next) {
+            setTimeout(function () {
+                push(null, x % 2 === 0);
+                push(null, _.nil);
+            }, 10);
+        });
+    };
+    var s = _(function (push, next) {
+        push(null, 1);
+        setTimeout(function () {
+            push(null, 2);
+            push(null, 3);
+            push(null, 4);
+            push(null, _.nil);
+        }, 10);
+    });
+    s.flatFilter(f).toArray(function (xs) {
+        test.same(xs, [2,4]);
+        test.done();
+    });
+};
+*/
+
+exports['zip'] = function (test) {
+    test.expect(2);
+    _.zip([1,2,3], ['a', 'b', 'c']).toArray(function (xs) {
+        test.same(xs, [['a',1], ['b',2], ['c',3]]);
+    });
+    // partial application
+    _.zip([1,2,3,4,5])(['a', 'b', 'c']).toArray(function (xs) {
+        test.same(xs, [['a',1], ['b',2], ['c',3]]);
+    });
+    test.done();
+};
+
+exports['zip - ArrayStream'] = function (test) {
+    _(['a', 'b', 'c']).zip([1,2,3,]).toArray(function (xs) {
+        test.same(xs, [['a',1], ['b',2], ['c',3]]);
+        test.done();
+    });
+};
+
+exports['zip - GeneratorStream'] = function (test) {
+    var s1 = _(function (push, next) {
+        push(null, 'a');
+        setTimeout(function () {
+            push(null, 'b');
+            setTimeout(function () {
+                push(null, 'c');
+                push(null, _.nil);
+            }, 10);
+        }, 10);
+    });
+    var s2 = _(function (push, next) {
+        setTimeout(function () {
+            push(null, 1);
+            push(null, 2);
+            setTimeout(function () {
+                push(null, 3);
+                push(null, _.nil);
+            }, 50);
+        }, 50);
+    });
+    s1.zip(s2).toArray(function (xs) {
+        test.same(xs, [['a',1], ['b',2], ['c',3]]);
+        test.done();
+    });
+};
+
 exports['parallel'] = function (test) {
     var calls = [];
     var s1 = _(function (push, next) {

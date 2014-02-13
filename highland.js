@@ -1423,6 +1423,57 @@
     };
     exposeMethod('filter');
 
+    /*
+    Stream.prototype.flatFilter = function (f) {
+    };
+    exposeMethod('flatFilter');
+    */
+
+    /**
+     * Takes two Streams and returns a Stream of corresponding pairs.
+     *
+     * @id zip
+     * @section Streams
+     * @name Stream.zip(ys)
+     * @param {Array | Stream} ys - the other stream to combine values with
+     * @api public
+     *
+     * _(['a', 'b', 'c']).zip([1, 2, 3])  // => ['a', 1], ['b', 2], ['c', 3]
+     */
+
+    Stream.prototype.zip = function (ys) {
+        ys = _(ys);
+        var xs = this;
+        var returned = 0;
+        var z = [];
+        function nextValue(index, max, src, push, next) {
+            src.pull(function (err, x) {
+                if (err) {
+                    push(null, err);
+                    nextValue(index, max, src, push, next);
+                }
+                else if (x === _.nil) {
+                    push(null, nil);
+                }
+                else {
+                    returned++;
+                    z[index] = x;
+                    if (returned === max) {
+                        push(null, z);
+                        next();
+                    }
+                }
+            });
+        }
+        return _(function (push, next) {
+            returned = 0;
+            z = [];
+            nextValue(0, 2, xs, push, next);
+            nextValue(1, 2, ys, push, next);
+        });
+    };
+    exposeMethod('zip');
+
     /**
      * Creates a new Stream with the first `n` values from the source.
      *
