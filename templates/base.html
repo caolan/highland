@@ -81,34 +81,36 @@
       <h2 id="examples">Examples</h2>
       <p>Converting to/from Highland Streams</p>
       <pre><code class="javascript">_([1,2,3,4]).toArray(function (xs) {
-  // xs is [1,2,3,4]
+    // xs is [1,2,3,4]
 });</code></pre>
       <p>Mapping over a Stream</p>
       <pre><code class="javascript">var doubled = _([1,2,3,4]).map(function (x) {
-  return x * 2;
+    return x * 2;
 });</code></pre>
       <p>Reading files in parallel (4 at once)</p>
       <pre><code class="javascript">var data = filenames.map(readFile).parallel(4);</code></pre>
       <p>Handling errors</p>
-      <pre><code class="javascript">filenames
-  .map(readFile)
-  .parallel(4)
-  .errors(function (err, rethrow) {
+      <pre><code class="javascript">data.errors(function (err, rethrow) {
     // handle or rethrow error
-  });</code></pre>
-      <p>Piping to/from Node streams</p>
-      <pre><code class="javascript">var db = levelup('./mydb');
-
-var readStream = db.createReadStream();
-var writeStream = fs.createWriteStream('blogposts');
+});</code></pre>
+      <p>Piping to a Node Stream</p>
+      <pre><code class="javascript">data.pipe(output);</code></pre>
+      <p>Piping in data from Node Streams</p>
+      <pre><code class="javascript">var output = fs.createWriteStream('output');
+var docs = db.createReadStream();
 
 // wrap a node stream and pipe to file
-_(readStream).filter(isBlogpost).pipe(writeStream);
+_(docs).filter(isBlogpost).pipe(output);
 
-// Or, pipe in a node stream directly:
-readStream.pipe(_().filter(isBlogpost)).pipe(writeStream);</code></pre>
+// or, pipe in a node stream directly:
+docs.pipe(_().filter(isBlogpost)).pipe(output);</code></pre>
       <p>Handling events</p>
-      <pre><code class="javascript">var clicks = _('click', button);</code></pre>
+      <pre><code class="javascript">var clicks = _('click', btn).map(1);
+var counter = clicks.scan(0, _.add);
+
+counter.each(function (n) {
+    $('#count').text(n);
+});</code></pre>
 
       <h3 id="arrays">Arrays</h3>
       <p>To work with data in Arrays, just wrap it in <code>_()</code>. The Highland methods are then available on it:</p>
