@@ -1735,13 +1735,28 @@ exports['pairs - lazy property access'] = function (test) {
 
 exports['extend'] = function (test) {
     var a = {a: 1, b: {num: 2, test: 'test'}};
-    var b = _.extend({b: {num: 'foo'}, c: 3}, a);
-    test.same(a, {a: 1, b: {num: 2, test: 'test'}});
-    test.same(b, {a: 1, b: {num: 'foo'}, c: 3});
+    test.equal(a, _.extend({b: {num: 'foo'}, c: 3}, a));
+    test.same(a, {a: 1, b: {num: 'foo'}, c: 3});
     // partial application
-    var c = _.extend({b: 'baz'})(a);
-    test.same(a, {a: 1, b: {num: 2, test: 'test'}});
-    test.same(c, {a: 1, b: 'baz'});
+    test.equal(a, _.extend({b: 'baz'})(a));
+    test.same(a, {a: 1, b: 'baz', c: 3});
+    test.done();
+};
+
+exports['get'] = function (test) {
+    var a = {foo: 'bar', baz: 123};
+    test.equal(_.get('foo', a), 'bar');
+    test.equal(_.get('baz')(a), 123);
+    test.done();
+};
+
+exports['set'] = function (test) {
+    var a = {foo: 'bar', baz: 123};
+    test.equal(_.set('foo', 'asdf', a), a);
+    test.equal(a.foo, 'asdf');
+    test.equal(_.set('wibble', 'wobble')(a), a);
+    test.equal(a.wibble, 'wobble');
+    test.same(a, {foo: 'asdf', baz: 123, wibble: 'wobble'});
     test.done();
 };
 

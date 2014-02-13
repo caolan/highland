@@ -2094,17 +2094,16 @@
     };
 
     /**
-     * Creates a new object (shallow clone) which the properties of one
-     * object extended by another. **Note:** The arguments are in the reverse
-     * order of other libraries such as underscore. This is so it follows the
-     * convention of other functions in this library and so you can more
-     * meaningfully partially apply it.
+     * Extends one object with the properties of another. **Note:** The
+     * arguments are in the reverse order of other libraries such as
+     * underscore. This is so it follows the convention of other functions in
+     * this library and so you can more meaningfully partially apply it.
      *
      * @id extend
      * @section Objects
      * @name _.extend(a, b)
      * @param {Object} a - the properties to extend b with
-     * @param {Object} b - the original properties to start with
+     * @param {Object} b - the original object to extend
      * @api public
      *
      * _.extend({name: 'bar'}, {name: 'foo', price: 20})
@@ -2118,17 +2117,63 @@
      */
 
     _.extend = _.curry(function (extensions, target) {
-        var obj = {};
-        for (var k in target) {
-            if (target.hasOwnProperty(k)) {
-                obj[k] = target[k];
-            }
-        }
         for (var k in extensions) {
             if (extensions.hasOwnProperty(k)) {
-                obj[k] = extensions[k];
+                target[k] = extensions[k];
             }
         }
+        return target;
+    });
+
+    /**
+     * Returns a property from an object.
+     *
+     * @id get
+     * @section Objects
+     * @name _.get(prop, obj)
+     * @param {String} prop - the property to return
+     * @param {Object} obj - the object to read properties from
+     * @api public
+     *
+     * var obj = {foo: 'bar', baz: 123};
+     * _.get('foo', obj) // => 'bar'
+     *
+     * // making use of partial application
+     * var posts = [
+     *   {title: 'one'},
+     *   {title: 'two'},
+     *   {title: 'three'}
+     * ];
+     *
+     * _(posts).map(_.get('title'))  // => 'one', 'two', 'three'
+     */
+
+    _.get = _.curry(function (prop, obj) {
+        return obj[prop];
+    });
+
+    /**
+     * Updates a property on an object, returning the updated object.
+     *
+     * @id set
+     * @section Objects
+     * @name _.set(prop, value, obj)
+     * @param {String} prop - the property to return
+     * @param value - the value to set the property to
+     * @param {Object} obj - the object to set properties on
+     * @api public
+     *
+     * var obj = {foo: 'bar', baz: 123};
+     * _.set('foo', 'wheeee', obj) // => {foo: 'wheeee', baz: 123}
+     *
+     * // making use of partial application
+     * var publish = _.set('published', true);
+     *
+     * publish({title: 'example'})  // => {title: 'example', published: true}
+     */
+
+    _.set = _.curry(function (prop, val, obj) {
+        obj[prop] = val;
         return obj;
     });
 
