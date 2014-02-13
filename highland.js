@@ -1094,7 +1094,12 @@
                 // ended, remove consumer from source
                 self._removeConsumer(s);
             }
-            _send.call(s, err, x);
+            if (s.paused) {
+                s._incoming.push(x);
+            }
+            else {
+                _send.call(s, err, x);
+            }
         };
         var async;
         var next_called;
@@ -1462,13 +1467,16 @@
      */
 
     Stream.prototype.flatFilter = function (f) {
-        var ys = this.map(_.seq(f, _.take(1))).flatten();
-        return ys.zip(this.observe())
+        var xs = this.observe();
+        var ys = this.flatMap(function (x) {
+            return f(x).take(1);
+        });
+        return xs.zip(ys)
             .filter(function (pair) {
-                return pair[0];
+                return pair[1];
             })
             .map(function (pair) {
-                return pair[1];
+                return pair[0];
             });
     };
     exposeMethod('flatFilter');

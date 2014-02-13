@@ -294,6 +294,18 @@ exports['apply - GeneratorStream'] = function (test) {
     });
 };
 
+exports['take 1'] = function (test) {
+    test.expect(2);
+    var s = _([1]).take(1);
+    s.pull(function (err, x) {
+        test.equal(x, 1);
+    });
+    s.pull(function (err, x) {
+        test.equal(x, _.nil);
+    });
+    test.done();
+};
+
 exports['each'] = function (test) {
     var calls = [];
     _.each(function (x) {
@@ -1433,12 +1445,7 @@ exports['filter - GeneratorStream'] = function (test) {
 
 exports['flatFilter'] = function (test) {
     var f = function (x) {
-        return _(function (push, next) {
-            setTimeout(function () {
-                push(null, x % 2 === 0);
-                push(null, _.nil);
-            }, 10);
-        });
+        return _([x % 2 === 0]);
     };
     _.flatFilter(f, [1,2,3,4]).toArray(function (xs) {
         test.same(xs, [2,4]);
@@ -1498,7 +1505,7 @@ exports['zip'] = function (test) {
 };
 
 exports['zip - ArrayStream'] = function (test) {
-    _(['a', 'b', 'c']).zip([1,2,3,]).toArray(function (xs) {
+    _(['a', 'b', 'c']).zip([1,2,3]).toArray(function (xs) {
         test.same(xs, [['a',1], ['b',2], ['c',3]]);
         test.done();
     });
