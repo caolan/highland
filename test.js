@@ -1630,6 +1630,74 @@ exports['flatFilter - GeneratorStream'] = function (test) {
     });
 };
 
+exports['where'] = function (test) {
+    test.expect(2);
+    var xs = [
+        {type: 'foo', name: 'wibble'},
+        {type: 'foo', name: 'wobble'},
+        {type: 'bar', name: '123'},
+        {type: 'bar', name: 'asdf'},
+        {type: 'baz', name: 'asdf'}
+    ];
+    _.where({type: 'foo'}, xs).toArray(function (xs) {
+        test.same(xs, [
+            {type: 'foo', name: 'wibble'},
+            {type: 'foo', name: 'wobble'}
+        ]);
+    });
+    // partial application
+    _.where({type: 'bar', name: 'asdf'})(xs).toArray(function (xs) {
+        test.same(xs, [
+            {type: 'bar', name: 'asdf'}
+        ]);
+    });
+    test.done();
+};
+
+exports['where - ArrayStream'] = function (test) {
+    test.expect(2);
+    var xs = [
+        {type: 'foo', name: 'wibble'},
+        {type: 'foo', name: 'wobble'},
+        {type: 'bar', name: '123'},
+        {type: 'bar', name: 'asdf'},
+        {type: 'baz', name: 'asdf'}
+    ];
+    _(xs).where({type: 'foo'}).toArray(function (xs) {
+        test.same(xs, [
+            {type: 'foo', name: 'wibble'},
+            {type: 'foo', name: 'wobble'}
+        ]);
+    });
+    // partial application
+    _(xs).where({type: 'bar', name: 'asdf'}).toArray(function (xs) {
+        test.same(xs, [
+            {type: 'bar', name: 'asdf'}
+        ]);
+    });
+    test.done();
+};
+
+exports['where - GeneratorStream'] = function (test) {
+    var xs = _(function (push, next) {
+        push(null, {type: 'foo', name: 'wibble'});
+        push(null, {type: 'foo', name: 'wobble'});
+        setTimeout(function () {
+            push(null, {type: 'bar', name: '123'});
+            push(null, {type: 'bar', name: 'asdf'});
+            push(null, {type: 'baz', name: 'asdf'});
+            push(null, _.nil);
+        }, 10);
+    });
+    _(xs).where({name: 'asdf'}).toArray(function (xs) {
+        test.same(xs, [
+            {type: 'bar', name: 'asdf'},
+            {type: 'baz', name: 'asdf'}
+        ]);
+        test.done();
+    });
+};
+
 exports['zip'] = function (test) {
     test.expect(2);
     _.zip([1,2,3], ['a', 'b', 'c']).toArray(function (xs) {

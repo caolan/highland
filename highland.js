@@ -1557,6 +1557,46 @@
     exposeMethod('flatFilter');
 
     /**
+     * A convenient form of filter, which returns all objects from a Stream
+     * match a set of property values.
+     *
+     * @id where
+     * @section Streams
+     * @name Stream.where(props)
+     * @param {Object} props - the properties to match against
+     * @api public
+     *
+     * var docs = [
+     *     {type: 'blogpost', title: 'foo'},
+     *     {type: 'blogpost', title: 'bar'},
+     *     {type: 'comment', title: 'foo'}
+     * ];
+     *
+     * _(docs).where({title: 'foo'})
+     * // => {type: 'blogpost', title: 'foo'}
+     * // => {type: 'comment', title: 'foo'}
+     *
+     * // example with partial application
+     * var getBlogposts = _.where({type: 'blogpost'});
+     *
+     * getBlogposts(docs)
+     * // => {type: 'blogpost', title: 'foo'}
+     * // => {type: 'blogpost', title: 'bar'}
+     */
+
+    Stream.prototype.where = function (props) {
+        return this.filter(function (x) {
+            for (var k in props) {
+                if (x[k] !== props[k]) {
+                    return false;
+                }
+            }
+            return true;
+        });
+    };
+    exposeMethod('where');
+
+    /**
      * Takes two Streams and returns a Stream of corresponding pairs.
      *
      * @id zip
