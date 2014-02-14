@@ -845,14 +845,12 @@ exports['wrap EventEmitter (or jQuery) on handler'] = function (test) {
     });
 };
 
-/*
 exports['sequence'] = function (test) {
     _.sequence([[1,2], [3], [[4],5]]).toArray(function (xs) {
         test.same(xs, [1,2,3,[4],5]);
     });
     test.done();
 };
-*/
 
 exports['sequence - ArrayStream'] = function (test) {
     _([[1,2], [3], [[4],5]]).sequence().toArray(function (xs) {
@@ -909,7 +907,6 @@ exports['sequence - nested GeneratorStreams'] = function (test) {
     });
 };
 
-/*
 exports['sequence - series alias'] = function (test) {
     test.equal(_.sequence, _.series);
     var s1 = _([1,2,3]);
@@ -918,7 +915,6 @@ exports['sequence - series alias'] = function (test) {
     test.equal(s2.sequence, s2.series);
     test.done();
 };
-*/
 
 exports['fork'] = function (test) {
     var s = _([1,2,3,4]);

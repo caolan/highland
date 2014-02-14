@@ -1762,6 +1762,21 @@
             });
         });
     };
+    exposeMethod('sequence');
+
+    /**
+     * An alias for the [sequence](#sequence) method.
+     *
+     * @id series
+     * @section Streams
+     * @name Stream.series()
+     * @api public
+     *
+     * filenames.map(readFile).series()
+     */
+
+    Stream.prototype.series = Stream.prototype.sequence;
+    _.series = _.sequence;
 
     /**
      * Recursively reads values from a Stream which may contain nested Streams
