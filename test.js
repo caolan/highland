@@ -91,6 +91,24 @@ exports['seq'] = function (test) {
 
 /***** Streams *****/
 
+exports['async consume'] = function (test) {
+    _([1,2,3,4]).consume(function (err, x, push, next) {
+        if (x === _.nil) {
+            push(null, _.nil);
+        }
+        else {
+            setTimeout(function(){
+                push(null, x*10);
+                next();
+            }, 10);
+        }
+    })
+    .toArray(function (xs) {
+        test.same(xs, [10, 20, 30, 40]);
+        test.done();
+    });
+};
+
 exports['passing Stream to constructor returns original'] = function (test) {
     var s = _([1,2,3]);
     test.strictEqual(s, _(s));

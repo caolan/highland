@@ -653,6 +653,7 @@
         self.id = ('' + Math.random()).substr(2, 6);
         this.paused = true;
         this._incoming = [];
+        this._outgoing = [];
         this._consumers = [];
         this._observers = [];
         this._send_events = false;
@@ -810,6 +811,7 @@
      */
 
     Stream.prototype.pause = function () {
+        //console.log([this.id, 'pause']);
         this.paused = true;
         if (this.source) {
             this.source._checkBackPressure();
@@ -859,6 +861,31 @@
     };
 
     /**
+     * Starts pull values out of the incoming buffer and sending them downstream,
+     * this will exit early if this causes a downstream consumer to pause.
+     */
+
+    Stream.prototype._sendOutgoing = function () {
+        var len = this._outgoing.length;
+        var i = 0;
+        while (i < len && !this.paused) {
+            var x = this._outgoing[i];
+            if (x instanceof StreamError) {
+                Stream.prototype._send.call(this, x.error);
+            }
+            else if (x instanceof StreamRedirect) {
+                this._redirect(x.to);
+            }
+            else {
+                Stream.prototype._send.call(this, null, x);
+            }
+            i++;
+        }
+        // remove processed data from _outgoing buffer
+        this._outgoing.splice(0, i);
+    };
+
+    /**
      * Resumes a paused Stream. This will either read from the Stream's incoming
      * buffer or request more data from an upstream source.
      *
@@ -872,6 +899,7 @@
      */
 
     Stream.prototype.resume = function () {
+        //console.log([this.id, 'resume']);
         if (this._resume_running) {
             // already processing _incoming buffer, ignore resume call
             this._repeat_resume = true;
@@ -882,6 +910,9 @@
             // use a repeat flag to avoid recursing resume() calls
             this._repeat_resume = false;
             this.paused = false;
+
+            // send values from outgoing buffer first
+            this._sendOutgoing();
 
             // send values from incoming buffer before reading from source
             this._readFromBuffer();
@@ -1085,14 +1116,21 @@
     Stream.prototype.consume = function (f) {
         var self = this;
         var s = new Stream();
+        var _write = s.write;
         var _send = s._send;
         var push = function (err, x) {
+            //console.log(['push', err, x, s.paused]);
             if (x === nil) {
                 // ended, remove consumer from source
                 self._removeConsumer(s);
             }
             if (s.paused) {
-                s._incoming.push(x);
+                if (err) {
+                    s._outgoing.push(new StreamError(x));
+                }
+                else {
+                    s._outgoing.push(x);
+                }
             }
             else {
                 _send.call(s, err, x);
@@ -1101,6 +1139,7 @@
         var async;
         var next_called;
         var next = function (s2) {
+            //console.log(['next', async]);
             if (s2) {
                 // we MUST pause to get the redirect object into the _incoming
                 // buffer otherwise it would be passed directly to _send(),
