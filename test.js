@@ -116,6 +116,27 @@ exports['passing Stream to constructor returns original'] = function (test) {
     test.done();
 };
 
+exports['constructor from promise'] = function (test) {
+    _(Promise.resolve(3)).toArray(function (xs) {
+        test.same(xs, [3]);
+        test.done();
+    });
+};
+
+exports['constructor from promise - errors'] = function (test) {
+    var errs = [];
+    _(Promise.reject(new Error('boom')))
+        .errors(function (err) {
+            errs.push(err);
+        })
+        .toArray(function (xs) {
+            test.equal(errs[0].message, 'boom');
+            test.equal(errs.length, 1);
+            test.same(xs, []);
+            test.done();
+        });
+};
+
 exports['if no consumers, buffer data'] = function (test) {
     var s = _();
     test.equal(s.paused, true);
@@ -2339,27 +2360,6 @@ exports['wrapCallback - errors'] = function (test) {
         });
     });
     test.done();
-};
-
-exports['fromPromise'] = function (test) {
-    _.fromPromise(Promise.resolve(3)).toArray(function (xs) {
-        test.same(xs, [3]);
-        test.done();
-    });
-};
-
-exports['fromPromise - errors'] = function (test) {
-    var errs = [];
-    _.fromPromise(Promise.reject(new Error('boom')))
-        .errors(function (err) {
-            errs.push(err);
-        })
-        .toArray(function (xs) {
-            test.equal(errs[0].message, 'boom');
-            test.equal(errs.length, 1);
-            test.same(xs, []);
-            test.done();
-        });
 };
 
 /***** Operators *****/

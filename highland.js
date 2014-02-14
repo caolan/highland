@@ -716,10 +716,26 @@
             };
         }
         else if (isObject(xs)) {
-            this._generator = function () {
-                delete self._generator;
-                xs.pipe(self);
-            };
+            if (isFunction(xs.then)) {
+                // probably a promise
+                return _(function (push) {
+                    xs.then(function (value) {
+                        push(null, value);
+                        return push(null, nil);
+                    },
+                    function (err) {
+                        push(err);
+                        return push(null, nil);
+                    });
+                });
+            }
+            else {
+                // assume it's a pipeable stream as a source
+                this._generator = function () {
+                    delete self._generator;
+                    xs.pipe(self);
+                };
+            }
         }
         else if (typeof xs === 'string') {
             ee.on(xs, function (x) {
@@ -2551,28 +2567,6 @@
                 f.apply(null, args.concat([cb]));
             });
         };
-    };
-
-    /**
-     * Converts a promise into a stream to support compatibility with promise
-     * based libraries.
-     *
-     * @id fromPromise
-     * @section Utils
-     * @name _.fromPromise(promise)
-     * @param  {Promise} promise - The A+ promise to convert
-     * @api public
-     */
-    _.fromPromise = function(promise) {
-        return _(function (push) {
-            promise.then(function(value) {
-                push(null, value);
-                return push(null, nil);
-            }, function(err) {
-                push(err);
-                return push(null, nil);
-            });
-        });
     };
 
     /**
