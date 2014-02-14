@@ -1126,7 +1126,7 @@
             }
             if (s.paused) {
                 if (err) {
-                    s._outgoing.push(new StreamError(x));
+                    s._outgoing.push(new StreamError(err));
                 }
                 else {
                     s._outgoing.push(x);

@@ -2349,12 +2349,17 @@ exports['fromPromise'] = function (test) {
 };
 
 exports['fromPromise - errors'] = function (test) {
-    test.throws(function () {
-        _.fromPromise(Promise.reject(new Error('boom'))).toArray(function () {
-            test.ok(false, "this shouldn't be called");
+    var errs = [];
+    _.fromPromise(Promise.reject(new Error('boom')))
+        .errors(function (err) {
+            errs.push(err);
+        })
+        .toArray(function (xs) {
+            test.equal(errs[0].message, 'boom');
+            test.equal(errs.length, 1);
+            test.same(xs, []);
+            test.done();
         });
-    });
-    test.done();
 };
 
 /***** Operators *****/
