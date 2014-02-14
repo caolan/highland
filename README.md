@@ -68,7 +68,7 @@ var docs = db.createReadStream();
 _(docs).filter(isBlogpost).pipe(output);
 
 // or, pipe in a node stream directly:
-docs.pipe(_().filter(isBlogpost)).pipe(output);</code></pre>
+docs.pipe(_().filter(isBlogpost)).pipe(output);
 ```
 
 Handling events
