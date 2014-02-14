@@ -2554,6 +2554,28 @@
     };
 
     /**
+     * Converts a promise into a stream to support compatibility with promise
+     * based libraries.
+     *
+     * @id fromPromise
+     * @section Utils
+     * @name _.fromPromise(promise)
+     * @param  {Promise} promise - The A+ promise to convert
+     * @api public
+     */
+    _.fromPromise = function(promise) {
+        return _(function (push) {
+            promise.then(function(value) {
+                push(null, value);
+                return push(null, nil);
+            }, function(err) {
+                push(err);
+                return push(null, nil);
+            });
+        });
+    };
+
+    /**
      * Add two values. Can be partially applied.
      *
      * @id add

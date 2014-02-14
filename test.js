@@ -1,6 +1,7 @@
 var EventEmitter = require('events').EventEmitter,
     streamify = require('stream-array'),
     concat = require('concat-stream'),
+    Promise = require('es6-promise').Promise,
     _ = require('./highland');
 
 
@@ -2334,6 +2335,22 @@ exports['wrapCallback - errors'] = function (test) {
     };
     test.throws(function () {
         _.wrapCallback(f)(1, 2).toArray(function () {
+            test.ok(false, "this shouldn't be called");
+        });
+    });
+    test.done();
+};
+
+exports['fromPromise'] = function (test) {
+    _.fromPromise(Promise.resolve(3)).toArray(function (xs) {
+        test.same(xs, [3]);
+        test.done();
+    });
+};
+
+exports['fromPromise - errors'] = function (test) {
+    test.throws(function () {
+        _.fromPromise(Promise.reject(new Error('boom'))).toArray(function () {
             test.ok(false, "this shouldn't be called");
         });
     });
