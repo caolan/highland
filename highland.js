@@ -774,16 +774,11 @@
         if (this._consumers.length) {
             for (var i = 0, len = this._consumers.length; i < len; i++) {
                 var c = this._consumers[i];
-                if (c.paused) {
-                    if (err) {
-                        c.write(new StreamError(err));
-                    }
-                    else {
-                        c.write(x);
-                    }
+                if (err) {
+                    c.write(new StreamError(err));
                 }
                 else {
-                    c._send(err, x);
+                    c.write(x);
                 }
             }
         }
@@ -2175,6 +2170,38 @@
         });
     };
     exposeMethod('invoke');
+
+    /**
+     * Ensures that only one data event is push downstream (or into the buffer)
+     * every `ms` milliseconds, any other values are dropped.
+     *
+     * @id throttle
+     * @section Streams
+     * @name Stream.throttle(ms)
+     * @param {Number} ms - the minimum milliseconds between each value
+     * @api public
+     *
+     * _('mousemove', document).throttle(1000);
+     */
+
+    Stream.prototype.throttle = function (ms) {
+        var s = new Stream();
+        var last = 0;
+        var _write = s.write;
+        s.write = function (x) {
+            var now = new Date().getTime();
+            if (x instanceof StreamError || x === nil) {
+                return _write.apply(this, arguments);
+            }
+            else if (now - ms >= last) {
+                last = now;
+                return _write.apply(this, arguments);
+            }
+        };
+        this._addConsumer(s);
+        return s;
+    };
+    exposeMethod('throttle');
 
     /**
      * Returns values from an Object as a Stream. Reads properties

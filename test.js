@@ -1928,6 +1928,81 @@ exports['parallel - GeneratorStream'] = function (test) {
     });
 };
 
+exports['throttle'] = function (test) {
+    function delay(push, ms, x) {
+        setTimeout(function () {
+            push(null, x);
+        }, ms);
+    }
+    var s = _(function (push, next) {
+        delay(push, 10, 1);
+        delay(push, 20, 1);
+        delay(push, 30, 1);
+        delay(push, 40, 1);
+        delay(push, 50, 1);
+        delay(push, 60, 1);
+        delay(push, 70, 1);
+        delay(push, 80, 1);
+        delay(push, 90, _.nil);
+    });
+    _.throttle(50, s).toArray(function (xs) {
+        test.same(xs, [1, 1]);
+        test.done();
+    });
+};
+
+exports['throttle - let errors through regardless'] = function (test) {
+    function delay(push, ms, err, x) {
+        setTimeout(function () {
+            push(err, x);
+        }, ms);
+    }
+    var s = _(function (push, next) {
+        delay(push, 10, null, 1);
+        delay(push, 20, null, 1);
+        delay(push, 30, null, 1);
+        delay(push, 30, 'foo');
+        delay(push, 30, 'bar');
+        delay(push, 40, null, 1);
+        delay(push, 50, null, 1);
+        delay(push, 60, null, 1);
+        delay(push, 70, null, 1);
+        delay(push, 80, null, 1);
+        delay(push, 90, null, _.nil);
+    });
+    var errs = [];
+    s.throttle(50).errors(function (err) {
+        errs.push(err);
+    }).toArray(function (xs) {
+        test.same(xs, [1, 1]);
+        test.same(errs, ['foo', 'bar']);
+        test.done();
+    });
+};
+
+exports['throttle - GeneratorStream'] = function (test) {
+    function delay(push, ms, x) {
+        setTimeout(function () {
+            push(null, x);
+        }, ms);
+    }
+    var s = _(function (push, next) {
+        delay(push, 10, 1);
+        delay(push, 20, 1);
+        delay(push, 30, 1);
+        delay(push, 40, 1);
+        delay(push, 50, 1);
+        delay(push, 60, 1);
+        delay(push, 70, 1);
+        delay(push, 80, 1);
+        delay(push, 90, _.nil);
+    });
+    s.throttle(30).toArray(function (xs) {
+        test.same(xs, [1, 1, 1]);
+        test.done();
+    });
+};
+
 
 /***** Objects *****/
 
