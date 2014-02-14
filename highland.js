@@ -1197,7 +1197,7 @@
         }
         else {
             if (x instanceof StreamError) {
-                this._send(x);
+                this._send(x.error);
             }
             else {
                 this._send(null, x);
@@ -1263,6 +1263,43 @@
         this._observers.push(s);
         return s;
     };
+
+    /**
+     * Extracts errors from a Stream and applies them to an error handler
+     * function. Returns a new Stream with the errors removed (unless the error
+     * handler chooses to rethrow them using `push`). Errors can also be
+     * transformed and put back onto the Stream as values.
+     *
+     * @id errors
+     * @section Streams
+     * @name Stream.errors(f)
+     * @param {Function} f - the function to pass all errors to
+     * @api public
+     *
+     * getDocument.errors(function (err, push) {
+     *     if (err.statusCode === 404) {
+     *         // not found, return empty doc
+     *         push(null, {});
+     *     }
+     *     else {
+     *         // otherwise, re-throw the error
+     *         push(err);
+     *     }
+     * });
+     */
+
+    Stream.prototype.errors = function (f) {
+        return this.consume(function (err, x, push, next) {
+            if (err) {
+                f(err, push);
+            }
+            else {
+                push(null, x);
+            }
+            next();
+        });
+    };
+    exposeMethod('errors');
 
     /**
      * Iterates over every value from the Stream, calling the iterator function

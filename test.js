@@ -252,6 +252,88 @@ exports['async next from consumer'] = function (test) {
     });
 };
 
+exports['errors'] = function (test) {
+    var errs = [];
+    var err1 = new Error('one');
+    var err2 = new Error('two');
+    var s = _(function (push, next) {
+        push(err1);
+        push(null, 1);
+        push(err2);
+        push(null, 2);
+        push(null, _.nil);
+    });
+    var f = function (err, rethrow) {
+        errs.push(err);
+    };
+    _.errors(f, s).toArray(function (xs) {
+        test.same(xs, [1, 2]);
+        test.same(errs, [err1, err2]);
+        test.done();
+    });
+};
+
+exports['errors - rethrow'] = function (test) {
+    var errs = [];
+    var err1 = new Error('one');
+    var err2 = new Error('two');
+    var s = _(function (push, next) {
+        push(err1);
+        push(null, 1);
+        push(err2);
+        push(null, 2);
+        push(null, _.nil);
+    });
+    var f = function (err, rethrow) {
+        errs.push(err);
+        if (err.message === 'two') {
+            rethrow(err);
+        }
+    };
+    test.throws(function () {
+        _.errors(f)(s).toArray(function () {
+            test.ok(false, 'should not be called');
+        });
+    }, 'two');
+    test.done();
+};
+
+exports['errors - ArrayStream'] = function (test) {
+    var errs = [];
+    var f = function (err, rethrow) {
+        errs.push(err);
+    };
+    // kinda pointless
+    _([1,2]).errors(f).toArray(function (xs) {
+        test.same(xs, [1, 2]);
+        test.same(errs, []);
+        test.done();
+    });
+};
+
+exports['errors - GeneratorStream'] = function (test) {
+    var errs = [];
+    var err1 = new Error('one');
+    var err2 = new Error('two');
+    var s = _(function (push, next) {
+        push(err1);
+        push(null, 1);
+        setTimeout(function () {
+            push(err2);
+            push(null, 2);
+            push(null, _.nil);
+        }, 10);
+    });
+    var f = function (err, rethrow) {
+        errs.push(err);
+    };
+    s.errors(f).toArray(function (xs) {
+        test.same(xs, [1, 2]);
+        test.same(errs, [err1, err2]);
+        test.done();
+    });
+};
+
 exports['apply'] = function (test) {
     test.expect(8);
     var fn = function (a, b, c) {
