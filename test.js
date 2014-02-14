@@ -2078,6 +2078,102 @@ exports['debounce - let errors through regardless'] = function (test) {
     });
 };
 
+exports['latest'] = function (test) {
+    test.expect(1);
+    function delay(push, ms, x) {
+        setTimeout(function () {
+            push(null, x);
+        }, ms);
+    }
+    var s = _(function (push, next) {
+        delay(push, 10, 1);
+        delay(push, 20, 1);
+        delay(push, 30, 1);
+        delay(push, 40, 1);
+        delay(push, 50, 1);
+        delay(push, 60, 1);
+        delay(push, 70, 1);
+        delay(push, 80, 'last');
+        delay(push, 90, _.nil);
+    });
+    var s2 = _.latest(s);
+    var s3 = s2.consume(function (err, x, push, next) {
+        push(err, x);
+        setTimeout(next, 60);
+    });
+    s3.toArray(function (xs) {
+        // values at 0s, 60s, 120s
+        test.same(xs, [1, 1, 'last']);
+        test.done();
+    });
+};
+
+exports['latest - GeneratorStream'] = function (test) {
+    test.expect(1);
+    function delay(push, ms, x) {
+        setTimeout(function () {
+            push(null, x);
+        }, ms);
+    }
+    var s = _(function (push, next) {
+        delay(push, 10, 1);
+        delay(push, 20, 1);
+        delay(push, 30, 1);
+        delay(push, 40, 1);
+        delay(push, 50, 1);
+        delay(push, 60, 1);
+        delay(push, 70, 1);
+        delay(push, 80, 'last');
+        delay(push, 90, _.nil);
+    });
+    var s2 = s.latest();
+    var s3 = s2.consume(function (err, x, push, next) {
+        push(err, x);
+        setTimeout(next, 60);
+    });
+    s3.toArray(function (xs) {
+        // values at 0s, 60s, 120s
+        test.same(xs, [1, 1, 'last']);
+        test.done();
+    });
+};
+
+exports['latest - let errors pass through'] = function (test) {
+    test.expect(2);
+    function delay(push, ms, err, x) {
+        setTimeout(function () {
+            push(err, x);
+        }, ms);
+    }
+    var s = _(function (push, next) {
+        delay(push, 10, null, 1);
+        delay(push, 20, null, 1);
+        delay(push, 30, null, 1);
+        delay(push, 30, 'foo', 1);
+        delay(push, 30, 'bar', 1);
+        delay(push, 40, null, 1);
+        delay(push, 50, null, 1);
+        delay(push, 60, null, 1);
+        delay(push, 70, null, 1);
+        delay(push, 80, null, 'last');
+        delay(push, 90, null, _.nil);
+    });
+    var errs = [];
+    var s2 = s.latest().errors(function (err) {
+        errs.push(err);
+    });
+    var s3 = s2.consume(function (err, x, push, next) {
+        push(err, x);
+        setTimeout(next, 60);
+    });
+    s3.toArray(function (xs) {
+        // values at 0s, 60s, 120s
+        test.same(xs, [1, 1, 'last']);
+        test.same(errs, ['foo', 'bar']);
+        test.done();
+    });
+};
+
 
 /***** Objects *****/
 

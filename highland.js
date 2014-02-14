@@ -844,7 +844,7 @@
         while (i < len && !this.paused) {
             var x = this._incoming[i];
             if (x instanceof StreamError) {
-                this._send(x);
+                this._send(x.error);
             }
             else if (x instanceof StreamRedirect) {
                 this._redirect(x.to);
@@ -2253,6 +2253,60 @@
         return s;
     };
     exposeMethod('debounce');
+
+    /**
+     * Creates a new Stream, which when read from, only returns the last
+     * seen value from the source. The source stream does not experience
+     * back-pressure. Useful if you're using a Stream to model a changing
+     * property which you need to query periodically.
+     *
+     * @id latest
+     * @section Streams
+     * @name Stream.latest()
+     * @api public
+     *
+     * // slowThing will always get the last known mouse position
+     * // when it asks for more data from the mousePosition stream
+     * mousePosition.latest().map(slowThing)
+     */
+
+    Stream.prototype.latest = function () {
+        var s = new Stream();
+        var nothing = {};
+        var last = nothing;
+        var _write = s.write;
+        s.pause = function () {
+            this.paused = true;
+            // do not force parent to checkBackpressure
+        };
+        s.write = function (x) {
+            if (x instanceof StreamError) {
+                // pass errors straight through
+                _write.call(this, x);
+            }
+            else if (x === nil) {
+                _write.call(this, x);
+            }
+            else {
+                if (this.paused) {
+                    this._incoming = this._incoming.filter(function (x) {
+                        // remove any existing values from buffer
+                        return x instanceof StreamError || x === nil;
+                    });
+                    this._incoming.push(x);
+                }
+                else {
+                    _write.call(this, x);
+                }
+            }
+            // never push back
+            return true;
+        };
+        this._addConsumer(s);
+        s.resume();
+        return s;
+    };
+    exposeMethod('latest');
 
     /**
      * Returns values from an Object as a Stream. Reads properties
