@@ -41,7 +41,7 @@ var doubled = _([1,2,3,4]).map(function (x) {
 Reading files in parallel (4 at once)
 
 ```javascript
-var data = filenames.map(readFile).parallel(4);
+var data = _(filenames).map(readFile).parallel(4);
 ```
 
 Handling errors
