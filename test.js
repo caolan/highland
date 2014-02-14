@@ -2003,6 +2003,81 @@ exports['throttle - GeneratorStream'] = function (test) {
     });
 };
 
+exports['debounce'] = function (test) {
+    function delay(push, ms, x) {
+        setTimeout(function () {
+            push(null, x);
+        }, ms);
+    }
+    var s = _(function (push, next) {
+        delay(push, 10, 1);
+        delay(push, 20, 1);
+        delay(push, 30, 1);
+        delay(push, 40, 1);
+        delay(push, 150, 1);
+        delay(push, 160, 1);
+        delay(push, 170, 1);
+        delay(push, 180, 'last');
+        delay(push, 190, _.nil);
+    });
+    _.debounce(100, s).toArray(function (xs) {
+        test.same(xs, [1, 'last']);
+        test.done();
+    });
+};
+
+exports['debounce - GeneratorStream'] = function (test) {
+    function delay(push, ms, x) {
+        setTimeout(function () {
+            push(null, x);
+        }, ms);
+    }
+    var s = _(function (push, next) {
+        delay(push, 10, 1);
+        delay(push, 20, 1);
+        delay(push, 30, 1);
+        delay(push, 40, 1);
+        delay(push, 150, 1);
+        delay(push, 160, 1);
+        delay(push, 170, 1);
+        delay(push, 180, 'last');
+        delay(push, 190, _.nil);
+    });
+    s.debounce(100).toArray(function (xs) {
+        test.same(xs, [1, 'last']);
+        test.done();
+    });
+};
+
+exports['debounce - let errors through regardless'] = function (test) {
+    function delay(push, ms, err, x) {
+        setTimeout(function () {
+            push(err, x);
+        }, ms);
+    }
+    var s = _(function (push, next) {
+        delay(push, 10, null, 1);
+        delay(push, 20, null, 1);
+        delay(push, 30, null, 1);
+        delay(push, 30, 'foo');
+        delay(push, 30, 'bar');
+        delay(push, 40, null, 1);
+        delay(push, 150, null, 1);
+        delay(push, 260, null, 1);
+        delay(push, 270, null, 1);
+        delay(push, 280, null, 'last');
+        delay(push, 290, null, _.nil);
+    });
+    var errs = [];
+    s.debounce(100).errors(function (err) {
+        errs.push(err);
+    }).toArray(function (xs) {
+        test.same(xs, [1, 1, 'last']);
+        test.same(errs, ['foo', 'bar']);
+        test.done();
+    });
+};
+
 
 /***** Objects *****/
 

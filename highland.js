@@ -2204,6 +2204,57 @@
     exposeMethod('throttle');
 
     /**
+     * Holds off pushing data events downstream until there has been no more
+     * data for `ms` milliseconds. Sends the last value that occurred before
+     * the delay, discarding all other values.
+     *
+     * @id debounce
+     * @section Streams
+     * @name Stream.debounce(ms)
+     * @param {Number} ms - the milliseconds to wait before sending data
+     * @api public
+     *
+     * // sends last keyup event after user has stopped typing for 1 second
+     * $('keyup', textbox).debounce(1000);
+     */
+
+    Stream.prototype.debounce = function (ms) {
+        var s = new Stream();
+        var t = null;
+        var nothing = {};
+        var last = nothing;
+        var _write = s.write;
+        s.write = function (x) {
+            if (x instanceof StreamError) {
+                // let errors through regardless
+                return _write.apply(this, arguments);
+            }
+            else if (x === nil) {
+                if (t) {
+                    clearTimeout(t);
+                }
+                if (last !== nothing) {
+                    _write.call(s, last);
+                }
+                return _write.apply(this, arguments);
+            }
+            else {
+                last = x;
+                if (t) {
+                    clearTimeout(t);
+                }
+                t = setTimeout(function () {
+                    _write.call(s, last);
+                }, ms);
+                return !this.paused;
+            }
+        };
+        this._addConsumer(s);
+        return s;
+    };
+    exposeMethod('debounce');
+
+    /**
      * Returns values from an Object as a Stream. Reads properties
      * lazily, so if you don't read from all keys on an object, not
      * all properties will be read from (may have an effect where getters
