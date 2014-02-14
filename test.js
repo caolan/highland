@@ -334,6 +334,62 @@ exports['errors - GeneratorStream'] = function (test) {
     });
 };
 
+exports['stopOnError'] = function (test) {
+    var errs = [];
+    var err1 = new Error('one');
+    var err2 = new Error('two');
+    var s = _(function (push, next) {
+        push(null, 1);
+        push(err1);
+        push(null, 2);
+        push(err2);
+        push(null, _.nil);
+    });
+    var f = function (err, rethrow) {
+        errs.push(err);
+    };
+    _.stopOnError(f, s).toArray(function (xs) {
+        test.same(xs, [1]);
+        test.same(errs, [err1]);
+        test.done();
+    });
+};
+
+exports['stopOnError - ArrayStream'] = function (test) {
+    var errs = [];
+    var f = function (err, rethrow) {
+        errs.push(err);
+    };
+    _([1,2,3,4]).stopOnError(f).toArray(function (xs) {
+        test.same(xs, [1,2,3,4]);
+        test.same(errs, []);
+        test.done();
+    });
+};
+
+exports['stopOnError - GeneratorStream'] = function (test) {
+    var errs = [];
+    var err1 = new Error('one');
+    var err2 = new Error('two');
+    var s = _(function (push, next) {
+        push(null, 1);
+        setTimeout(function () {
+            push(err1);
+            push(null, 2);
+            push(err2);
+            push(null, _.nil);
+        }, 10);
+    });
+    var f = function (err, rethrow) {
+        errs.push(err);
+    };
+    s.stopOnError(f).toArray(function (xs) {
+        test.same(xs, [1]);
+        test.same(errs, [err1]);
+        test.done();
+    });
+};
+
 exports['apply'] = function (test) {
     test.expect(8);
     var fn = function (a, b, c) {

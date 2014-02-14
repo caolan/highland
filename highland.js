@@ -1292,14 +1292,50 @@
         return this.consume(function (err, x, push, next) {
             if (err) {
                 f(err, push);
+                next();
+            }
+            else if (x === nil) {
+                push(null, nil);
             }
             else {
                 push(null, x);
+                next();
             }
-            next();
         });
     };
     exposeMethod('errors');
+
+    /**
+     * Like the [errors](#errors) method, but emits a Stream end marker after
+     * an Error is encountered.
+     *
+     * @id stopOnError
+     * @section Streams
+     * @name Stream.stopOnError(f)
+     * @param {Function} f - the function to handle an error
+     * @api public
+     *
+     * brokenStream.stopOnError(function (err) {
+     *     console.error('Something broke: ' + err);
+     * });
+     */
+
+    Stream.prototype.stopOnError = function (f) {
+        return this.consume(function (err, x, push, next) {
+            if (err) {
+                f(err, push);
+                push(null, nil);
+            }
+            else if (x === nil) {
+                push(null, nil);
+            }
+            else {
+                push(null, x);
+                next();
+            }
+        });
+    };
+    exposeMethod('stopOnError');
 
     /**
      * Iterates over every value from the Stream, calling the iterator function
