@@ -1864,6 +1864,74 @@ exports['parallel - n === 2'] = function (test) {
     });
 };
 
+exports['parallel - ArrayStream'] = function (test) {
+    var calls = [];
+    var s1 = _(function (push, next) {
+        setTimeout(function () {
+            calls.push(1);
+            push(null, 1);
+            push(null, _.nil);
+        }, 150);
+    });
+    var s2 = _(function (push, next) {
+        setTimeout(function () {
+            calls.push(2);
+            push(null, 2);
+            push(null, _.nil);
+        }, 100);
+    });
+    var s3 = _(function (push, next) {
+        setTimeout(function () {
+            calls.push(3);
+            push(null, 3);
+            push(null, _.nil);
+        }, 50);
+    });
+    _([s1, s2, s3]).parallel(2).toArray(function (xs) {
+        test.same(calls, [2, 1, 3]);
+        test.same(xs, [1, 2, 3]);
+        test.done();
+    });
+};
+
+exports['parallel - GeneratorStream'] = function (test) {
+    var calls = [];
+    var s1 = _(function (push, next) {
+        setTimeout(function () {
+            calls.push(1);
+            push(null, 1);
+            push(null, _.nil);
+        }, 150);
+    });
+    var s2 = _(function (push, next) {
+        setTimeout(function () {
+            calls.push(2);
+            push(null, 2);
+            push(null, _.nil);
+        }, 100);
+    });
+    var s3 = _(function (push, next) {
+        setTimeout(function () {
+            calls.push(3);
+            push(null, 3);
+            push(null, _.nil);
+        }, 50);
+    });
+    var s = _(function (push, next) {
+        push(null, s1);
+        setTimeout(function () {
+            push(null, s2);
+            push(null, s3);
+            push(null, _.nil);
+        }, 10);
+    });
+    s.parallel(2).toArray(function (xs) {
+        test.same(calls, [2, 1, 3]);
+        test.same(xs, [1, 2, 3]);
+        test.done();
+    });
+};
+
 
 /***** Objects *****/
 

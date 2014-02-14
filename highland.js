@@ -1818,6 +1818,24 @@
     };
     exposeMethod('flatten');
 
+    /**
+     * Takes a Stream of Streams and reads from them in parallel, buffering
+     * the results until they can be returned to the consumer in their original
+     * order.
+     *
+     * @id parallel
+     * @section Streams
+     * @name Stream.parallel(n)
+     * @param {Number} n - the maximum number of concurrent reads/buffers
+     * @api public
+     *
+     * var readFile = _.wrapCallback(fs.readFile);
+     * var filenames = _(['foo.txt', 'bar.txt', 'baz.txt']);
+     *
+     * // read from up to 10 files at once
+     * filenames.map(readFile).parallel(10);
+     */
+
     Stream.prototype.parallel = function (n) {
         var buffers = [];
         var running = 0;
