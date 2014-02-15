@@ -2362,6 +2362,22 @@ exports['wrapCallback - errors'] = function (test) {
     test.done();
 };
 
+exports['fromPromise'] = function (test) {
+    _.fromPromise(Promise.resolve(3)).toArray(function (xs) {
+        test.same(xs, [3]);
+        test.done();
+    });
+};
+
+exports['fromPromise - errors'] = function (test) {
+    test.throws(function () {
+        _.fromPromise(Promise.reject(new Error('boom'))).toArray(function () {
+            test.ok(false, "this shouldn't be called");
+        });
+    });
+    test.done();
+};
+
 /***** Operators *****/
 
 exports['add'] = function (test) {
