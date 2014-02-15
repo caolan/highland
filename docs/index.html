@@ -266,7 +266,8 @@ counter.each(function (n) {
       <pre><code class="javascript">getData('myfile').map(toUpperCase).map(function (x) {
     return {name: x};
 });</code></pre>
-      <p>With Highland, we really can have one language to work with both synchronous and asynchronous data, whether it's from a Node Stream, an EventEmitter, a callback or an Array.</p>
+      <p>With Highland, we really can have one language to work with both synchronous and asynchronous data, whether it's from a Node Stream, an EventEmitter, a callback or an Array. You can even wrap ES6 or jQuery promises:</p>
+      <pre><code class="javascript">var foo = _($.getJSON('/api/foo'));</code></pre>
 
       <h3 id="laziness">Laziness</h3>
       <p>When you call <code>map</code> in Highland, it doesn't go off and immediately map over all your data. Rather it defines your intention, and the hard work occurs as you pull data from the Stream. This is 'lazy evaluation' and it's what enables Highland to manage back-pressure and also the sequencing of asynchronous actions, such as reading from a file.</p>
