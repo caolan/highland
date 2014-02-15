@@ -403,10 +403,13 @@
      * event emitter as the two arguments to the constructor and the first
      * argument emitted to the event handler will be written to the new Stream.
      *
+     * **Promise -** Accepts an ES6 / jQuery style promise and returns a
+     * Highland Stream which will emit a single value (or an error).
+     *
      * @id _(source)
      * @section Streams
      * @name _(source)
-     * @param {Array | Function | Readable Stream} source - (optional) source to take values from from
+     * @param {Array | Function | Readable Stream | Promise} source - (optional) source to take values from from
      * @api public
      *
      * // from an Array
@@ -427,6 +430,9 @@
      *
      * // creating a stream from events
      * _('click', btn).each(handleEvent);
+     *
+     * // from a Promise object
+     * var foo = _($.getJSON('/api/foo'));
      */
 
     exports = module.exports = function (/*optional*/xs, /*optional*/ee) {
