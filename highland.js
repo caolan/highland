@@ -1663,6 +1663,25 @@
     exposeMethod('find');
 
     /**
+     * Filters a Stream to drop all non-truthy values.
+     *
+     * @id compact
+     * @section Streams
+     * @name Stream.compact()
+     * @api public
+     *
+     * var compacted = _([0, 1, false, 3, null, undefined, 6]).compact();
+     * // => [1, 3, 6]
+     */
+
+    Stream.prototype.compact = function () {
+        return this.filter(function (x) {
+            return x;
+        });
+    };
+    exposeMethod('compact');
+
+    /**
      * A convenient form of filter, which returns all objects from a Stream
      * match a set of property values.
      *
