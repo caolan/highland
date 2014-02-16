@@ -816,6 +816,24 @@ exports['wrap node stream and pipe'] = function (test) {
     ys.pipe(dest);
 };
 
+exports['pipe highland stream to stdout'] = function (test) {
+    test.expect(1)
+    var src = _(['']);
+    test.doesNotThrow(function () {
+        src.pipe(process.stdout);
+    })
+    test.done()
+}
+
+exports['pipe highland stream to stderr'] = function (test) {
+    test.expect(1)
+    var src = _(['']);
+    test.doesNotThrow(function () {
+        src.pipe(process.stderr);
+    })
+    test.done()
+}
+
 exports['attach data event handler'] = function (test) {
     var s = _([1,2,3,4]);
     var xs = [];
