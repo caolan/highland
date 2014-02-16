@@ -91,7 +91,7 @@
     return x * 2;
 });</code></pre>
       <p>Reading files in parallel (4 at once)</p>
-      <pre><code class="javascript">var data = filenames.map(readFile).parallel(4);</code></pre>
+      <pre><code class="javascript">var data = _(filenames).map(readFile).parallel(4);</code></pre>
       <p>Handling errors</p>
       <pre><code class="javascript">data.errors(function (err, rethrow) {
     // handle or rethrow error
