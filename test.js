@@ -1666,6 +1666,21 @@ exports['flatFilter - GeneratorStream'] = function (test) {
     });
 };
 
+exports['compact'] = function (test) {
+    test.expect(1);
+    _.compact([1, false, 3, undefined, null, 6]).toArray(function (xs) {
+        test.same(xs, [1, 3, 6]);
+    });
+    test.done();
+};
+
+exports['compact - ArrayStream'] = function (test) {
+    _([1, false, 3, undefined, null, 6]).compact().toArray(function (xs) {
+        test.same(xs, [1, 3, 6]);
+        test.done();
+    });
+};
+
 exports['where'] = function (test) {
     test.expect(2);
     var xs = [
