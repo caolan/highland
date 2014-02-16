@@ -11,7 +11,7 @@ module.exports = function (grunt) {
             },
             all: [
                 'Gruntfile.js',
-                'highland.js'
+                'lib/**/*.js'
             ]
         },
 
@@ -32,8 +32,8 @@ module.exports = function (grunt) {
 
         watch: {
             all: {
-                files: ['highland.js'],
-                tasks: ['test', 'docs']
+                files: ['lib/index.js'],
+                tasks: ['test']
             }
         },
 
@@ -56,6 +56,6 @@ module.exports = function (grunt) {
     grunt.loadTasks('./tasks');
 
     grunt.registerTask('test', ['jshint:all', 'nodeunit:all']);
-    grunt.registerTask('default', ['docs']);
+    grunt.registerTask('default', ['browserify', 'docs']);
 
 };
