@@ -1613,6 +1613,56 @@
     exposeMethod('flatFilter');
 
     /**
+     * A convenient form of filter, which returns the first object from a
+     * Stream that passes the provided truth test
+     *
+     * @id find
+     * @section Streams
+     * @name Stream.find(f)
+     * @param {Function} f - the truth test function which returns a Stream
+     * @api public
+     *
+     * var docs = [
+     *     {type: 'blogpost', title: 'foo'},
+     *     {type: 'blogpost', title: 'bar'},
+     *     {type: 'comment', title: 'foo'}
+     * ];
+     *
+     * var f = function (x) {
+     *     return x.type == 'blogpost';
+     * };
+     *
+     * _(docs).find(f);
+     * // => [{type: 'blogpost', title: 'foo'}]
+     *
+     * // example with partial application
+     * var firstBlogpost = _.find(f);
+     *
+     * firstBlogpost(docs)
+     * // => [{type: 'blogpost', title: 'foo'}]
+     */
+
+    Stream.prototype.find = function (f) {
+        return this.consume(function (err, x, push, next) {
+            if (err) {
+                push(err);
+                next();
+            }
+            else if (x === nil) {
+                push(err, x);
+            }
+            else {
+                if (f(x)) {
+                    push(null, x);
+                    this.end();
+                }
+                next();
+            }
+        }.bind(this));
+    };
+    exposeMethod('find');
+
+    /**
      * A convenient form of filter, which returns all objects from a Stream
      * match a set of property values.
      *
