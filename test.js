@@ -2,7 +2,7 @@ var EventEmitter = require('events').EventEmitter,
     streamify = require('stream-array'),
     concat = require('concat-stream'),
     Promise = require('es6-promise').Promise,
-    _ = require('./lib');
+    _ = require('./highland');
 
 
 /**
@@ -1662,6 +1662,87 @@ exports['flatFilter - GeneratorStream'] = function (test) {
     });
     s.flatFilter(f).toArray(function (xs) {
         test.same(xs, [2,4]);
+        test.done();
+    });
+};
+
+exports['find'] = function (test) {
+    test.expect(2);
+    var xs = [
+        {type: 'foo', name: 'wibble'},
+        {type: 'foo', name: 'wobble'},
+        {type: 'bar', name: '123'},
+        {type: 'bar', name: 'asdf'},
+        {type: 'baz', name: 'asdf'}
+    ];
+    var f = function (x) {
+        return x.type == 'bar';
+    };
+    _.find(f, xs).toArray(function (xs) {
+        test.same(xs, [{type: 'bar', name: '123'}]);
+    });
+
+    // partial application
+    _.find(f)(xs).toArray(function (xs) {
+        test.same(xs, [{type: 'bar', name: '123'}]);
+    });
+
+    test.done();
+};
+
+exports['find - ArrayStream'] = function (test) {
+    test.expect(2);
+    var xs = [
+        {type: 'foo', name: 'wibble'},
+        {type: 'foo', name: 'wobble'},
+        {type: 'bar', name: '123'},
+        {type: 'bar', name: 'asdf'},
+        {type: 'baz', name: 'asdf'}
+    ];
+    var f = function (x) {
+        return x.type == 'bar';
+    };
+    _(xs).find(f).toArray(function (xs) {
+        test.same(xs, [{type: 'bar', name: '123'}]);
+    });
+    // partial application
+    _(xs).find(f).toArray(function (xs) {
+        test.same(xs, [{type: 'bar', name: '123'}]);
+    });
+    test.done();
+};
+
+exports['find - GeneratorStream'] = function (test) {
+    var xs = _(function (push, next) {
+        push(null, {type: 'foo', name: 'wibble'});
+        push(null, {type: 'foo', name: 'wobble'});
+        setTimeout(function () {
+            push(null, {type: 'bar', name: '123'});
+            push(null, {type: 'bar', name: 'asdf'});
+            push(null, {type: 'baz', name: 'asdf'});
+            push(null, _.nil);
+        }, 10);
+    });
+    var f = function (x) {
+        return x.type == 'baz';
+    };
+    _(xs).find(f).toArray(function (xs) {
+        test.same(xs, [{type: 'baz', name: 'asdf'}]);
+        test.done();
+    });
+};
+
+exports['compact'] = function (test) {
+    test.expect(1);
+    _.compact([0, 1, false, 3, undefined, null, 6]).toArray(function (xs) {
+        test.same(xs, [1, 3, 6]);
+    });
+    test.done();
+};
+
+exports['compact - ArrayStream'] = function (test) {
+    _([0, 1, false, 3, undefined, null, 6]).compact().toArray(function (xs) {
+        test.same(xs, [1, 3, 6]);
         test.done();
     });
 };
