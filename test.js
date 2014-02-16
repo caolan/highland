@@ -2,7 +2,7 @@ var EventEmitter = require('events').EventEmitter,
     streamify = require('stream-array'),
     concat = require('concat-stream'),
     Promise = require('es6-promise').Promise,
-    _ = require('./highland');
+    _ = require('./lib');
 
 
 /**
