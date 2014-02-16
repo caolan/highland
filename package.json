@@ -14,9 +14,11 @@
     "grunt-contrib-jshint": "~0.8.0",
     "grunt-contrib-watch": "~0.5.3",
     "grunt-contrib-nodeunit": "~0.3.0",
-    "es6-promise": "~0.1.1"
+    "es6-promise": "~0.1.1",
+    "browserify": "~3.30.1"
   },
   "scripts": {
-    "test": "node node_modules/.bin/nodeunit test.js"
+    "test": "nodeunit test.js",
+    "build": "browserify -e lib/index.js -o highland.js -s highland"
   }
 }
