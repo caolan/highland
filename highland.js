@@ -1620,7 +1620,7 @@
      * @name Stream.compact()
      * @api public
      *
-     * var compacted = _([1, false, 3, null, undefined, 6]).compact();
+     * var compacted = _([0, 1, false, 3, null, undefined, 6]).compact();
      * // => [1, 3, 6]
      */
 
