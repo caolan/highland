@@ -1654,7 +1654,7 @@
             else {
                 if (f(x)) {
                     push(null, x);
-                    this.end();
+                    push(null, nil);
                 }
                 next();
             }
