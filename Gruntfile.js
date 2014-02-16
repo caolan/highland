@@ -15,6 +15,17 @@ module.exports = function (grunt) {
             ]
         },
 
+        browserify: {
+            all: {
+                files: {
+                    'dist/highland.js': ['lib/index.js']
+                },
+                options: {
+                    standalone: 'highland'
+                }
+            }
+        },
+
         nodeunit: {
             all: ['test.js']
         },
@@ -38,6 +49,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-nodeunit');
+    grunt.loadNpmTasks('grunt-browserify');
     grunt.loadNpmTasks('grunt-gh-pages');
 
     // custom tasks

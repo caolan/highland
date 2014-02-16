@@ -4,7 +4,7 @@ var handlebars = require('handlebars'),
     fs = require('fs');
 
 
-var src_file = path.resolve(__dirname, '../highland.js');
+var src_file = path.resolve(__dirname, '../lib/index.js');
 var tmpl_file = path.resolve(__dirname, '../docs/templates/base.html');
 var out_file = path.resolve(__dirname, '../docs/index.html');
 
