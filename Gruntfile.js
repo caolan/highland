@@ -16,18 +16,28 @@ module.exports = function (grunt) {
         },
 
         browserify: {
-            all: {
+            main: {
                 files: {
                     'dist/highland.js': ['lib/index.js']
                 },
                 options: {
                     standalone: 'highland'
                 }
+            },
+            'test-browser': {
+                files: {
+                    'test/browser.js': ['test/testling.js']
+                },
+                options: {
+                    ignore: [
+                        './node_modules/nodeunit/lib/reporters/index.js'
+                    ]
+                }
             }
         },
 
         nodeunit: {
-            all: ['test.js']
+            all: ['test/test.js']
         },
 
         watch: {
@@ -56,6 +66,6 @@ module.exports = function (grunt) {
     grunt.loadTasks('./tasks');
 
     grunt.registerTask('test', ['jshint:all', 'nodeunit:all']);
-    grunt.registerTask('default', ['browserify', 'docs']);
+    grunt.registerTask('default', ['browserify:main', 'docs']);
 
 };
