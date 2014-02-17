@@ -1,0 +1,29 @@
+{
+  "name": "highland",
+  "version": "1.8.1",
+  "homepage": "https://github.com/caolan/highland",
+  "authors": [
+    "Caolan McMahon"
+  ],
+  "description": "The high-level streams library.",
+  "main": "dist/highland.js",
+  "keywords": [
+    "streams",
+    "async",
+    "events",
+    "pipe"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "Contributing.md",
+    "Gruntfile.js",
+    "bench",
+    "docs",
+    "node_modules",
+    "bower_components",
+    "tasks",
+    "test.js",
+    "test"
+  ]
+}
