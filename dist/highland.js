@@ -1,4 +1,5 @@
 !function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.highland=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+(function (process){
 /**
  * Highland: the high-level streams library
  *
@@ -6,27 +7,19 @@
  * http://github.com/caolan/highland
  * Copyright (c) Caolan McMahon
  *
- *
  */
 
 
-var inherits = _dereq_("util").inherits;
+var inherits = _dereq_('util').inherits;
 var EventEmitter = _dereq_('events').EventEmitter;
 
-function isFunction(arg) {
-  return typeof arg === 'function';
-}
 
-function isNumber(arg) {
-  return typeof arg === 'number';
+function isFunction(arg) {
+    return typeof arg === 'function';
 }
 
 function isObject(arg) {
-  return typeof arg === 'object' && arg !== null;
-}
-
-function isUndefined(arg) {
-  return arg === void 0;
+    return typeof arg === 'object' && arg !== null;
 }
 
 
@@ -89,9 +82,11 @@ function isUndefined(arg) {
  * var foo = _($.getJSON('/api/foo'));
  */
 
-var _ = exports = module.exports = function (/*optional*/xs, /*optional*/ee) {
+exports = module.exports = function (/*optional*/xs, /*optional*/ee) {
     return new Stream(xs, ee);
 };
+
+var _ = exports;
 
 
 // Save bytes in the minified (but not gzipped) version:
@@ -653,13 +648,19 @@ Stream.prototype.end = function () {
 
 Stream.prototype.pipe = function (dest) {
     var self = this;
+
+    // stdout and stderr are special case writables that cannot be closed
+    var canClose = dest !== process.stdout && dest !== process.stderr;
+
     var s = self.consume(function (err, x, push, next) {
         if (err) {
             self.emit('error', err);
             return;
         }
         if (x === nil) {
-            dest.end();
+            if (canClose) {
+                dest.end();
+            }
         }
         else if (dest.write(x) !== false) {
             next();
@@ -790,7 +791,6 @@ Stream.prototype._removeConsumer = function (s) {
 Stream.prototype.consume = function (f) {
     var self = this;
     var s = new Stream();
-    var _write = s.write;
     var _send = s._send;
     var push = function (err, x) {
         //console.log(['push', err, x, s.paused]);
@@ -2054,8 +2054,6 @@ exposeMethod('debounce');
 
 Stream.prototype.latest = function () {
     var s = new Stream();
-    var nothing = {};
-    var last = nothing;
     var _write = s.write;
     s.pause = function () {
         this.paused = true;
@@ -2312,7 +2310,8 @@ _.add = _.curry(function (a, b) {
     return a + b;
 });
 
-},{"events":2,"util":6}],2:[function(_dereq_,module,exports){
+}).call(this,_dereq_("/home/caolan/projects/highland/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"))
+},{"/home/caolan/projects/highland/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":4,"events":2,"util":6}],2:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
