@@ -91,6 +91,20 @@ exports['seq'] = function (test) {
 }
 
 /***** Streams *****/
+exports['nil defines end'] = function (test) {
+    _([1,_.nil,3]).toArray(function (xs) {
+        test.same(xs, [1]);
+        test.done();
+    });
+};
+
+exports['nil should not equate to any empty object'] = function (test) {
+    var s = [1,{},3];
+    _(s).toArray(function (xs) {
+        test.same(xs, s);
+        test.done();
+    });
+};
 
 exports['async consume'] = function (test) {
     _([1,2,3,4]).consume(function (err, x, push, next) {
