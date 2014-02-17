@@ -1591,6 +1591,18 @@ exports['flatMap - GeneratorStream'] = function (test) {
     });
 };
 
+exports['pluck'] = function(test) {
+    var a = _([
+            {type: 'blogpost', title: 'foo'},
+            {type: 'blogpost', title: 'bar'},
+            {type: 'asdf', title: 'baz'}
+            ]);
+    a.pluck('title').toArray(function (xs) {
+        test.same(xs, ['foo', 'bar', 'baz']);
+        test.done();
+    });
+};
+
 exports['filter'] = function (test) {
     test.expect(2);
     function isEven(x) {
