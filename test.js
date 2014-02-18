@@ -1605,30 +1605,26 @@ exports['flatMap - GeneratorStream'] = function (test) {
     });
 };
 
-exports['pluck'] = function(test) {
+exports['pluck'] = function (test) {
     var a = _([
-            {type: 'blogpost', title: 'foo'},
-            {type: 'blogpost', title: 'bar'},
-            {type: 'asdf', title: 'baz'}
-            ]);
+        {type: 'blogpost', title: 'foo'},
+        {type: 'blogpost', title: 'bar'},
+        {type: 'asdf', title: 'baz'}
+    ]);
     a.pluck('title').toArray(function (xs) {
         test.same(xs, ['foo', 'bar', 'baz']);
         test.done();
     });
 };
 
-exports['pluck - non-object argument'] = function(test) {
-    var a = _([
-            1,
-            {type: 'blogpost', title: 'foo'}
-        ]);
+exports['pluck - non-object argument'] = function (test) {
+    var a = _([1, {type: 'blogpost', title: 'foo'}]);
     test.throws(function () {
-        // Won't see throw without double invocation. Test rig bug?
         a.pluck('title').toArray(function (xs) {
-            console.log(xs);
             test.ok(false, "shouldn't be called");
         });
-    }, 'Expected Object, got array');
+    },
+    'Expected Object, got array');
     test.done();
 };
 
