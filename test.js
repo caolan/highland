@@ -91,6 +91,20 @@ exports['seq'] = function (test) {
 }
 
 /***** Streams *****/
+
+exports['isStream'] = function (test) {
+    test.ok(!_.isStream());
+    test.ok(!_.isStream(undefined));
+    test.ok(!_.isStream(null));
+    test.ok(!_.isStream(123));
+    test.ok(!_.isStream({}));
+    test.ok(!_.isStream([]));
+    test.ok(!_.isStream('foo'));
+    test.ok(_.isStream(_()));
+    test.ok(_.isStream(_().map(_.get('foo'))));
+    test.done();
+};
+
 exports['nil defines end'] = function (test) {
     _([1,_.nil,3]).toArray(function (xs) {
         test.same(xs, [1]);
