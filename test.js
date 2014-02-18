@@ -1619,13 +1619,15 @@ exports['pluck'] = function(test) {
 
 exports['pluck - non-object argument'] = function(test) {
     var a = _([
-            [1],
+            1,
             {type: 'blogpost', title: 'foo'}
         ]);
     test.throws(function () {
         // Won't see throw without double invocation. Test rig bug?
-        a.pluck('title');
-        a.pluck('title');
+        a.pluck('title').toArray(function (xs) {
+            console.log(xs);
+            test.ok(false, "shouldn't be called");
+        });
     }, 'Expected Object, got array');
     test.done();
 };
