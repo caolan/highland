@@ -3,6 +3,13 @@
   "version": "1.8.1",
   "description": "The high-level streams library",
   "main": "lib/index.js",
+  "files": ["lib"],
+  "homepage": "http://highlandjs.org/",
+  "bugs": "https://github.com/caolan/highland/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/caolan/highland.git"
+  },
   "devDependencies": {
     "nodeunit": "~0.8.1",
     "stream-array": "~0.1.3",
