@@ -1824,15 +1824,18 @@ exports['find - GeneratorStream'] = function (test) {
         _.group(s, primatives).toArray(function (xs){
             test.same(xs, [pexpectedUndefined]);
         });
-        _.group('', primatives).toArray(function (xs){
-            test.same(xs, [pexpectedUndefined]);
+        test.throws(function () {
+          _.group(null, primatives).toArray(_.log);
         });
 
         // partial application
         _.group(pf)(primatives).toArray(function (xs) {
             test.same(xs, [pexpected]);
         });
-        test.throws(_.group(s)(xs).toArray.bind(null, function(){}))
+        test.throws(function () {
+          _.group(null)(primatives).toArray(_.log);
+        });
+
         test.done();
     };
 
