@@ -1801,6 +1801,121 @@ exports['find - GeneratorStream'] = function (test) {
     });
 };
 
+
+
+(function (exports) {
+
+    var xs = [
+        {type: 'foo', name: 'wibble'},
+        {type: 'foo', name: 'wobble'},
+        {type: 'bar', name: '123'},
+        {type: 'bar', name: 'asdf'},
+        {type: 'baz', name: 'asdf'}
+    ];
+
+    var expected = {
+        'foo': [{type: 'foo', name: 'wibble'}, {type: 'foo', name: 'wobble'}],
+        'bar': [{type: 'bar', name: '123'}, {type: 'bar', name: 'asdf'}],
+        'baz': [{type: 'baz', name: 'asdf'}]
+    };
+
+    var primatives = [1,2,3,'cat'];
+
+    var pexpected = {1: [1], 2: [2], 3: [3], 'cat': ['cat']};
+    var pexpectedUndefined = { 'undefined': [ 1, 2, 3, 'cat' ] };
+
+    var f = function (x) {
+        return x.type;
+    };
+
+    var pf = function (o) { return o };
+
+    var s = 'type';
+
+    exports['group'] = function (test) {
+        test.expect(4);
+
+        _.group(f, xs).toArray(function (xs) {
+            test.same(xs, [expected]);
+        });
+        _.group(s, xs).toArray(function (xs) {
+            test.same(xs, [expected]);
+        });
+
+        // partial application
+        _.group(f)(xs).toArray(function (xs) {
+            test.same(xs, [expected]);
+        });
+        _.group(s)(xs).toArray(function (xs) {
+            test.same(xs, [expected]);
+        });
+        test.done();
+    };
+
+    exports['group - primatives'] = function (test) {
+        test.expect(5);
+
+        _.group(pf, primatives).toArray(function (xs) {
+            test.same(xs, [pexpected]);
+        });
+        _.group(s, primatives).toArray(function (xs){
+            test.same(xs, [pexpectedUndefined]);
+        });
+        test.throws(function () {
+          _.group(null, primatives).toArray(_.log);
+        });
+
+        // partial application
+        _.group(pf)(primatives).toArray(function (xs) {
+            test.same(xs, [pexpected]);
+        });
+        test.throws(function () {
+          _.group(null)(primatives).toArray(_.log);
+        });
+
+        test.done();
+    };
+
+    exports['group - ArrayStream'] = function (test) {
+        test.expect(4);
+
+        _(xs).group(f).toArray(function (xs) {
+            test.same(xs, [expected]);
+        });
+        _(xs).group(s).toArray(function (xs) {
+            test.same(xs, [expected]);
+        });
+        // partial application
+        _(xs).group(f).toArray(function (xs) {
+            test.same(xs, [expected]);
+        });
+        _(xs).group(s).toArray(function (xs) {
+            test.same(xs, [expected]);
+        });
+        test.done();
+    };
+
+    exports['group - GeneratorStream'] = function (test) {
+        var generator = _(function (push, next) {
+            push(null, xs[0]);
+            push(null, xs[1]);
+            setTimeout(function () {
+                push(null, xs[2]);
+                push(null, xs[3]);
+                push(null, xs[4]);
+                push(null, _.nil);
+            }, 10);
+        });
+
+        _(generator).group(f).toArray(function (result) {
+            test.same(result, [expected]);
+            test.done();
+        });
+    };
+
+}(exports));
+
+
 exports['compact'] = function (test) {
     test.expect(1);
     _.compact([0, 1, false, 3, undefined, null, 6]).toArray(function (xs) {
