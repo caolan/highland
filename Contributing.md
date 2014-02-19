@@ -25,6 +25,25 @@ Code changes
 6. Send a pull request \o/
 
 
+Running the tests
+------------
+
+To run the linter and nodeunit tests in Node.js, use the grunt task:
+
+    grunt test
+
+To run tests in a browser, first build the browser-test bundle.
+
+    grunt browserify:test-browser
+    # now visit test/browser.html in your browser
+
+The package.json has also been set-up to run tests with testling, localy this
+will use whatever headless browser it can find on your system.
+
+    npm install -g testling
+    testling
+
+
 Editing docs
 ------------
 

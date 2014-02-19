@@ -2,7 +2,7 @@ var EventEmitter = require('events').EventEmitter,
     streamify = require('stream-array'),
     concat = require('concat-stream'),
     Promise = require('es6-promise').Promise,
-    _ = require('./lib/index');
+    _ = require('../lib/index');
 
 
 /**
