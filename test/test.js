@@ -844,22 +844,25 @@ exports['wrap node stream and pipe'] = function (test) {
     ys.pipe(dest);
 };
 
-exports['pipe highland stream to stdout'] = function (test) {
-    test.expect(1)
-    var src = _(['']);
-    test.doesNotThrow(function () {
-        src.pipe(process.stdout);
-    })
-    test.done()
-}
+// ignore these tests in non-node.js environments
+if (typeof process !== 'undefined') {
+    exports['pipe highland stream to stdout'] = function (test) {
+        test.expect(1)
+        var src = _(['']);
+        test.doesNotThrow(function () {
+            src.pipe(process.stdout);
+        })
+        test.done()
+    }
 
-exports['pipe highland stream to stderr'] = function (test) {
-    test.expect(1)
-    var src = _(['']);
-    test.doesNotThrow(function () {
-        src.pipe(process.stderr);
-    })
-    test.done()
+    exports['pipe highland stream to stderr'] = function (test) {
+        test.expect(1)
+        var src = _(['']);
+        test.doesNotThrow(function () {
+            src.pipe(process.stderr);
+        })
+        test.done()
+    }
 }
 
 exports['attach data event handler'] = function (test) {
