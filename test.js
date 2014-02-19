@@ -2479,6 +2479,20 @@ exports['latest - let errors pass through'] = function (test) {
     });
 };
 
+exports['last'] = function (test) {
+    test.expect(3);
+    _([1,2,3,4]).last().toArray(function (xs) {
+        test.same(xs, [4]);
+    });
+    _.last([1,2,3,4]).toArray(function (xs) {
+        test.same(xs, [4]);
+    });
+    _.last([]).toArray(function (xs) {
+        test.same(xs, []);
+    });
+    test.done();
+};
+
 
 /***** Objects *****/
 
