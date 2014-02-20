@@ -1,5 +1,5 @@
 var underscore = require('./underscore');
-var highland = require('../highland');
+var highland = require('../lib/index');
 var lodash = require('./lodash');
 
 
