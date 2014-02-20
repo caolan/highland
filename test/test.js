@@ -845,7 +845,7 @@ exports['wrap node stream and pipe'] = function (test) {
 };
 
 // ignore these tests in non-node.js environments
-if (typeof process !== 'undefined') {
+if (typeof process !== 'undefined' && process.stdout) {
     exports['pipe highland stream to stdout'] = function (test) {
         test.expect(1)
         var src = _(['']);
@@ -854,7 +854,10 @@ if (typeof process !== 'undefined') {
         })
         test.done()
     }
+}
 
+// ignore these tests in non-node.js environments
+if (typeof process !== 'undefined' && process.stderr) {
     exports['pipe highland stream to stderr'] = function (test) {
         test.expect(1)
         var src = _(['']);
