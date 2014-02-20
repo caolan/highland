@@ -1,16 +1,24 @@
-<script src="./browser.js"></script>
+<html>
+<head>
+<title>Highland Browser Tests</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../node_modules/nodeunit/share/nodeunit.css" />
+</head>
+
+<body>
+<script src="./bundle.js"></script>
 <script>
-if (!window.testsuiteLoaded) {
-    document.write('<h1>ERROR: ./browser.js not found</h1>');
+if (!window.nodeunit) {
+    document.write('<h1>ERROR: ./bundle.js not found</h1>');
+    document.write('<p>Try running <kbd>grunt browserify:test-browser</kbd></p>');
 }
 </script>
 
-<h1>Open the dev console to see results</h1>
-
-<hr />
-
 <h3>TODO</h3>
 <ul>
-<li>test <kbd>dist/highland.js</kbd> instead of the testling bundle</li>
-<li>Have the formatter output to the DOM</li>
+<li>test <kbd>dist/highland.js</kbd> instead of a different bundle</li>
 </ul>
+
+<hr />
+</body>
+</html>

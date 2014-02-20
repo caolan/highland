@@ -26,12 +26,7 @@ module.exports = function (grunt) {
             },
             'test-browser': {
                 files: {
-                    'test/browser.js': ['test/testling.js']
-                },
-                options: {
-                    ignore: [
-                        './node_modules/nodeunit/lib/reporters/index.js'
-                    ]
+                    'test/bundle.js': ['test/browser.js']
                 }
             }
         },

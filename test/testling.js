@@ -1,5 +1,3 @@
-global.testsuiteLoaded = true;
-
 var nodeunit = require('nodeunit-tape');
 
 var tests = {

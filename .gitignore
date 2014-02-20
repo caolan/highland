@@ -1,4 +1,4 @@
 .idea
 /node_modules
 /.grunt
-test/browser.js
+test/bundle.js
