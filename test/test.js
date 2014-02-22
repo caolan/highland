@@ -1411,6 +1411,78 @@ exports['scan - GeneratorStream lazy'] = function (test) {
     });
 };
 
+exports['scan1'] = function (test) {
+    test.expect(3);
+    function add(a, b) {
+        return a + b;
+    }
+    _.scan1( add, [1,2,3,4]).toArray(function (xs) {
+        test.same(xs, [1, 3, 6, 10]);
+    });
+    // partial application
+    _.scan1(add)([1,2,3,4]).toArray(function (xs) {
+        test.same(xs, [1, 3, 6, 10]);
+    });
+    _.scan1(add)([1,2,3,4]).toArray(function (xs) {
+        test.same(xs, [1, 3, 6, 10]);
+    });
+    test.done();
+};
+
+exports['scan1 - ArrayStream'] = function (test) {
+    function add(a, b) {
+        return a + b;
+    }
+    _([1,2,3,4]).scan1(add).toArray(function (xs) {
+        test.same(xs, [1, 3, 6, 10]);
+        test.done();
+    });
+};
+
+exports['scan1 - GeneratorStream'] = function (test) {
+    function add(a, b) {
+        return a + b;
+    }
+    var s = _(function (push, next) {
+        setTimeout(function () {
+            push(null, 1);
+            push(null, 2);
+            push(null, 3);
+            push(null, 4);
+            push(null, _.nil);
+        }, 10);
+    });
+    s.scan1(add).toArray(function (xs) {
+        test.same(xs, [1, 3, 6, 10]);
+        test.done();
+    });
+};
+
+exports['scan1 - GeneratorStream lazy'] = function (test) {
+    var calls = [];
+    function add(a, b) {
+        calls.push([a, b]);
+        return a + b;
+    }
+    var s = _(function (push, next) {
+        setTimeout(function () {
+            push(null, 1);
+            push(null, 2);
+            push(null, 3);
+            push(null, 4);
+            push(null, _.nil);
+        }, 10);
+    });
+    s.scan1(add).take(3).toArray(function (xs) {
+        test.same(calls, [
+            [1, 2],
+            [3, 3]
+        ]);
+        test.same(xs, [1, 3, 6]);
+        test.done();
+    });
+};
+
 exports['collect'] = function (test) {
     _.collect([1,2,3,4]).toArray(function (xs) {
         test.same(xs, [[1,2,3,4]]);
