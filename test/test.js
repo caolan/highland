@@ -1316,7 +1316,7 @@ exports['reduce - GeneratorStream'] = function (test) {
 };
 
 exports['reduce1'] = function (test) {
-    test.expect(3);
+    test.expect(4);
     function add(a, b) {
         return a + b;
     }
@@ -1329,6 +1329,10 @@ exports['reduce1'] = function (test) {
     });
     _.reduce1(add)([1,2,3,4]).toArray(function (xs) {
         test.same(xs, [10]);
+    });
+    // single argument
+    _.reduce1(add, [1]).toArray(function (xs) {
+        test.same(xs, [1]);
     });
     test.done();
 };
@@ -1436,11 +1440,11 @@ exports['scan - GeneratorStream lazy'] = function (test) {
 };
 
 exports['scan1'] = function (test) {
-    test.expect(3);
+    test.expect(4);
     function add(a, b) {
         return a + b;
     }
-    _.scan1( add, [1,2,3,4]).toArray(function (xs) {
+    _.scan1(add, [1,2,3,4]).toArray(function (xs) {
         test.same(xs, [1, 3, 6, 10]);
     });
     // partial application
@@ -1449,6 +1453,10 @@ exports['scan1'] = function (test) {
     });
     _.scan1(add)([1,2,3,4]).toArray(function (xs) {
         test.same(xs, [1, 3, 6, 10]);
+    });
+    // single argument
+    _.scan1(add, [1]).toArray(function (xs) {
+        test.same(xs, [1]);
     });
     test.done();
 };
