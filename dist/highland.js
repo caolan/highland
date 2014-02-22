@@ -1,5 +1,5 @@
 !function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.highland=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
-(function (process){
+(function (process,global){
 /**
  * Highland: the high-level streams library
  *
@@ -13,13 +13,16 @@
 var inherits = _dereq_('util').inherits;
 var EventEmitter = _dereq_('events').EventEmitter;
 
-
 function isFunction(arg) {
     return typeof arg === 'function';
 }
 
 function isObject(arg) {
     return typeof arg === 'object' && arg !== null;
+}
+
+function isString(value) {
+    return typeof value === 'string';
 }
 
 
@@ -122,6 +125,21 @@ var slice = ArrayProto.slice;
  * };
  */
 
+// set up a getter to access a global nil object in cases where
+// you have multiple Highland instances installed (and talking to each other)
+if (Object.defineProperty && typeof global !== 'undefined') {
+    Object.defineProperty(_, 'nil', {
+        get: function () {
+            return global.__highland_nil__;
+        },
+        set: function (x) {
+            // only set if not already created
+            if (!global.__highland_nil__) {
+                global.__highland_nil__ = x;
+            }
+        }
+    });
+}
 var nil = _.nil = {};
 
 /**
@@ -295,7 +313,7 @@ _.seq = function () {
  */
 
 function Stream(/*optional*/xs, /*optional*/ee) {
-    if (xs && xs instanceof Stream) {
+    if (xs && _.isStream(xs)) {
         // already a Stream
         return xs;
     }
@@ -303,13 +321,23 @@ function Stream(/*optional*/xs, /*optional*/ee) {
     EventEmitter.call(this);
     var self = this;
 
+    // used to detect Highland Streams using isStream(x), this
+    // will work even in cases where npm has installed multiple
+    // versions, unlike an instanceof check
+    self.__HighlandStream__ = true;
+
     self.id = ('' + Math.random()).substr(2, 6);
     this.paused = true;
     this._incoming = [];
     this._outgoing = [];
     this._consumers = [];
     this._observers = [];
+    this._destructors = [];
     this._send_events = false;
+    this.source = null;
+
+    // Old-style node Stream.pipe() checks for this
+    this.writable = true;
 
     self.on('newListener', function (ev) {
         if (ev === 'data') {
@@ -422,6 +450,7 @@ function exposeMethod(name) {
  */
 
 function StreamError(err) {
+    this.__HighlandStreamError__ = true;
     this.error = err;
 }
 
@@ -430,8 +459,34 @@ function StreamError(err) {
  */
 
 function StreamRedirect(to) {
+    this.__HighlandStreamRedirect__ = true;
     this.to = to;
 }
+
+/**
+ * Returns true if `x` is a Highland Stream.
+ *
+ * @id isStream
+ * @section Streams
+ * @name _.isStream(x)
+ * @param x - the object to test
+ * @api public
+ *
+ * _.isStream('foo')  // => false
+ * _.isStream(_([1,2,3]))  // => true
+ */
+
+_.isStream = function (x) {
+    return isObject(x) && x.__HighlandStream__;
+};
+
+_._isStreamError = function (x) {
+    return isObject(x) && x.__HighlandStreamError__;
+};
+
+_._isStreamRedirect = function (x) {
+    return isObject(x) && x.__HighlandStreamRedirect__;
+};
 
 /**
  * Sends errors / data to consumers, observers and event handlers
@@ -514,10 +569,10 @@ Stream.prototype._readFromBuffer = function () {
     var i = 0;
     while (i < len && !this.paused) {
         var x = this._incoming[i];
-        if (x instanceof StreamError) {
+        if (_._isStreamError(x)) {
             this._send(x.error);
         }
-        else if (x instanceof StreamRedirect) {
+        else if (_._isStreamRedirect(x)) {
             this._redirect(x.to);
         }
         else {
@@ -539,10 +594,10 @@ Stream.prototype._sendOutgoing = function () {
     var i = 0;
     while (i < len && !this.paused) {
         var x = this._outgoing[i];
-        if (x instanceof StreamError) {
+        if (_._isStreamError(x)) {
             Stream.prototype._send.call(this, x.error);
         }
-        else if (x instanceof StreamRedirect) {
+        else if (_._isStreamRedirect(x)) {
             this._redirect(x.to);
         }
         else {
@@ -666,11 +721,48 @@ Stream.prototype.pipe = function (dest) {
             next();
         }
     });
-    dest.on('drain', function () {
-        s.resume();
+
+    dest.on('drain', onConsumerDrain);
+
+    // Since we don't keep a reference to piped-to streams,
+    // save a callback that will unbind the event handler.
+    this._destructors.push(function () {
+        dest.removeListener('drain', onConsumerDrain);
     });
+
     s.resume();
     return dest;
+
+    function onConsumerDrain() {
+        s.resume();
+    }
+};
+
+/**
+ * Destroys a stream by unlinking it from any consumers and sources. This will
+ * stop all consumers from receiving events from this stream and removes this
+ * stream as a consumer of any source stream.
+ *
+ * This function calls end() on the stream and unlinks it from any piped-to streams.
+ *
+ * @id pipe
+ * @section Streams
+ * @name Stream.destroy()
+ * @api public
+ */
+
+Stream.prototype.destroy = function () {
+    var self = this;
+    this.end();
+    _(this._consumers).each(function (consumer) {
+        self._removeConsumer(consumer);
+    });
+    if (this.source) {
+        this.source._removeConsumer(this);
+    }
+    _(this._destructors).each(function (destructor) {
+        destructor();
+    });
 };
 
 /**
@@ -904,7 +996,7 @@ Stream.prototype.write = function (x) {
         this._incoming.push(x);
     }
     else {
-        if (x instanceof StreamError) {
+        if (_._isStreamError(x)) {
             this._send(x.error);
         }
         else {
@@ -1200,6 +1292,50 @@ Stream.prototype.flatMap = function (f) {
 exposeMethod('flatMap');
 
 /**
+ * Retrieves values associated with a given property from all elements in
+ * the collection.
+ *
+ * @id pluck
+ * @section Streams
+ * @name Stream.pluck(property)
+ * @param {String} prop - the property to which values should be associated
+ * @api public
+ *
+ * var docs = [
+ *     {type: 'blogpost', title: 'foo'},
+ *     {type: 'blogpost', title: 'bar'},
+ *     {type: 'comment', title: 'baz'}
+ * ];
+ *
+ * _(docs).pluck('title').toArray(function (xs) {
+ *    // xs is now ['foo', 'bar', 'baz']
+ * });
+ */
+
+Stream.prototype.pluck = function (prop) {
+    return this.consume(function (err, x, push, next) {
+        if (err) {
+            push(err);
+            next();
+        }
+        else if (x === nil) {
+            push(err, x);
+        }
+        else if (isObject(x)) {
+            push(null, x[prop]);
+            next();
+        }
+        else {
+            push(new Error(
+                'Expected Object, got ' + (typeof x)
+            ));
+            next();
+        }
+    });
+};
+exposeMethod('pluck');
+
+/**
  * Creates a new Stream including only the values which pass a truth test.
  *
  * @id filter
@@ -1313,6 +1449,45 @@ Stream.prototype.find = function (f) {
     }.bind(this));
 };
 exposeMethod('find');
+
+/**
+ * A convenient form of reduce, which groups items based on a function or property name
+ *
+ * @id group
+ * @section Streams
+ * @name Stream.group(f)
+ * @param {Function|String} f - the function or property name on which to group,
+ *                              toString() is called on the result of a function.
+ * @api public
+ *
+ * var docs = [
+ *     {type: 'blogpost', title: 'foo'},
+ *     {type: 'blogpost', title: 'bar'},
+ *     {type: 'comment', title: 'foo'}
+ * ];
+ *
+ * var f = function (x) {
+ *     return x.type;
+ * };
+ *
+ * _(docs).group(f); OR _(docs).group('type');
+ * // => {
+ * // =>    'blogpost': [{type: 'blogpost', title: 'foo'}, {type: 'blogpost', title: 'bar'}]
+ * // =>    'comment': [{type: 'comment', title: 'foo'}]
+ * // =>  }
+ *
+ */
+
+Stream.prototype.group = function (f) {
+    var lambda = isString(f) ? _.get(f) : f;
+    return this.reduce({}, function (m, o) {
+        var key = lambda(o);
+        if (!m.hasOwnProperty(key)) { m[key] = []; }
+        m[key].push(o);
+        return m;
+    }.bind(this));
+};
+exposeMethod('group');
 
 /**
  * Filters a Stream to drop all non-truthy values.
@@ -1463,6 +1638,39 @@ Stream.prototype.take = function (n) {
 exposeMethod('take');
 
 /**
+ * Drops all values from the Stream apart from the last one (if any).
+ *
+ * @id last
+ * @section Streams
+ * @name Stream.last()
+ * @api public
+ *
+ * _([1, 2, 3, 4]).last()  // => 4
+ */
+
+Stream.prototype.last = function () {
+    var nothing = {};
+    var prev = nothing;
+    return this.consume(function (err, x, push, next) {
+        if (err) {
+            push(err);
+            next();
+        }
+        else if (x === nil) {
+            if (prev !== nothing) {
+                push(null, prev);
+            }
+            push(null, nil);
+        }
+        else {
+            prev = x;
+            next();
+        }
+    });
+};
+exposeMethod('last');
+
+/**
  * Reads values from a Stream of Streams, emitting them on a Single output
  * Stream. This can be thought of as a flatten, just one level deep. Often
  * used for resolving asynchronous actions such as a HTTP request or reading
@@ -1500,7 +1708,7 @@ Stream.prototype.sequence = function () {
                 });
                 return next();
             }
-            else if (x instanceof Stream) {
+            else if (_.isStream(x)) {
                 if (curr === original) {
                     // switch to reading new stream
                     curr = x;
@@ -1587,7 +1795,7 @@ Stream.prototype.flatten = function () {
             if (Array.isArray(x)) {
                 x = _(x);
             }
-            if (x instanceof Stream) {
+            if (_.isStream(x)) {
                 stack.push(curr);
                 curr = x;
                 next();
@@ -1901,6 +2109,38 @@ Stream.prototype.scan = function (z, f) {
 exposeMethod('scan');
 
 /**
+ * Same as [scan](#scan), but uses the first element as the initial
+ * state instead of passing in a `memo` value.
+ *
+ * @id scan1
+ * @section Streams
+ * @name Stream.scan1(iterator)
+ * @param {Function} iterator - the function which reduces the values
+ * @api public
+ *
+ * _([1, 2, 3, 4]).scan1(add)  // => 1, 3, 6, 10
+ */
+
+Stream.prototype.scan1 = function (f) {
+    var self = this;
+    return _(function (push, next) {
+        self.pull(function (err, x) {
+            if (err) {
+                push(err);
+                next();
+            }
+            if (x === nil) {
+                push(null, nil);
+            }
+            else {
+                next(self.scan(x, f));
+            }
+        });
+    });
+};
+exposeMethod('scan1');
+
+/**
  * Concatenates a Stream to the end of this Stream.
  *
  * Be aware that in the top-level export, the args may be in the reverse
@@ -1972,7 +2212,7 @@ Stream.prototype.throttle = function (ms) {
     var _write = s.write;
     s.write = function (x) {
         var now = new Date().getTime();
-        if (x instanceof StreamError || x === nil) {
+        if (_._isStreamError(x) || x === nil) {
             return _write.apply(this, arguments);
         }
         else if (now - ms >= last) {
@@ -2007,7 +2247,7 @@ Stream.prototype.debounce = function (ms) {
     var last = nothing;
     var _write = s.write;
     s.write = function (x) {
-        if (x instanceof StreamError) {
+        if (_._isStreamError(x)) {
             // let errors through regardless
             return _write.apply(this, arguments);
         }
@@ -2060,7 +2300,7 @@ Stream.prototype.latest = function () {
         // do not force parent to checkBackpressure
     };
     s.write = function (x) {
-        if (x instanceof StreamError) {
+        if (_._isStreamError(x)) {
             // pass errors straight through
             _write.call(this, x);
         }
@@ -2071,7 +2311,7 @@ Stream.prototype.latest = function () {
             if (this.paused) {
                 this._incoming = this._incoming.filter(function (x) {
                     // remove any existing values from buffer
-                    return x instanceof StreamError || x === nil;
+                    return _._isStreamError(x) || x === nil;
                 });
                 this._incoming.push(x);
             }
@@ -2310,7 +2550,7 @@ _.add = _.curry(function (a, b) {
     return a + b;
 });
 
-}).call(this,_dereq_("/home/caolan/projects/highland/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"))
+}).call(this,_dereq_("/home/caolan/projects/highland/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"/home/caolan/projects/highland/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":4,"events":2,"util":6}],2:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
