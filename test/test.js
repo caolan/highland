@@ -1,4 +1,5 @@
 var EventEmitter = require('events').EventEmitter,
+    Stream = require('stream'),
     streamify = require('stream-array'),
     concat = require('concat-stream'),
     Promise = require('es6-promise').Promise,
@@ -753,6 +754,29 @@ exports['lazily evalute stream'] = function (test) {
     test.done();
 };
 
+
+exports['pipe old-style node stream to highland stream'] = function (test) {
+    var xs = [];
+    var src = streamify([1,2,3,4]);
+    var s1 = _();
+    var s2 = s1.consume(function (err, x, push, next) {
+        xs.push(x);
+        next();
+    });
+    Stream.prototype.pipe.call(src, s1);
+    setTimeout(function () {
+        test.same(s1._incoming, [1]);
+        test.same(s2._incoming, []);
+        test.same(xs, []);
+        s2.resume();
+        setTimeout(function () {
+            test.same(s1._incoming, []);
+            test.same(s2._incoming, []);
+            test.same(xs, [1,2,3,4,_.nil]);
+            test.done();
+        }, 100);
+    }, 100);
+};
 
 exports['pipe node stream to highland stream'] = function (test) {
     var xs = [];
