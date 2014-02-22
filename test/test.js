@@ -1586,6 +1586,54 @@ exports['concat - GeneratorStream'] = function (test) {
     });
 };
 
+exports['merge'] = function (test) {
+    test.expect(2);
+    _.merge([3,4], [1,2]).toArray(function (xs) {
+        test.same(xs, [1,3,2,4]);
+    });
+    // partial application
+    _.merge([3,4])([1,2]).toArray(function (xs) {
+        test.same(xs, [1,3,2,4]);
+    });
+    test.done();
+};
+
+exports['merge - ArrayStream'] = function (test) {
+    _([1,2]).merge([3,4]).toArray(function (xs) {
+        test.same(xs, [1,3,2,4]);
+        test.done();
+    });
+};
+
+exports['merge - GeneratorStream'] = function (test) {
+    var s1 = _(function (push, next) {
+        push(null, 1);
+        setTimeout(function () {
+            push(null, 2);
+        }, 20);
+        setTimeout(function () {
+            push(null, 3);
+            push(null, _.nil);
+        }, 40);
+    });
+    var s2 = _(function (push, next) {
+        setTimeout(function () {
+            push(null, 4);
+        }, 10);
+        setTimeout(function () {
+            push(null, 5);
+        }, 30);
+        setTimeout(function () {
+            push(null, 6);
+            push(null, _.nil);
+        }, 50);
+    });
+    s1.merge(s2).toArray(function (xs) {
+        test.same(xs, [1,4,2,5,3,6]);
+        test.done();
+    });
+};
+
 exports['invoke'] = function (test) {
     test.expect(2);
     _.invoke('toString', [], [1,2,3,4]).toArray(function (xs) {
