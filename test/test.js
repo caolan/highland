@@ -1481,21 +1481,60 @@ exports['concat - GeneratorStream'] = function (test) {
     });
 };
 
-exports['merge'] = function (test) {
-    test.expect(2);
-    _.merge([3,4], [1,2]).toArray(function (xs) {
-        test.same(xs, [1,3,2,4]);
+exports['merge - ArrayStream'] = function (test) {
+    var s1 = _(function (push, next) {
+        push(null, 1);
+        setTimeout(function () {
+            push(null, 2);
+        }, 20);
+        setTimeout(function () {
+            push(null, 3);
+            push(null, _.nil);
+        }, 40);
     });
-    // partial application
-    _.merge([3,4])([1,2]).toArray(function (xs) {
-        test.same(xs, [1,3,2,4]);
+    var s2 = _(function (push, next) {
+        setTimeout(function () {
+            push(null, 4);
+        }, 10);
+        setTimeout(function () {
+            push(null, 5);
+        }, 30);
+        setTimeout(function () {
+            push(null, 6);
+            push(null, _.nil);
+        }, 50);
     });
-    test.done();
+    _.merge([s1, s2]).toArray(function (xs) {
+        test.same(xs, [1,4,2,5,3,6]);
+        test.done();
+    });
 };
 
 exports['merge - ArrayStream'] = function (test) {
-    _([1,2]).merge([3,4]).toArray(function (xs) {
-        test.same(xs, [1,3,2,4]);
+    var s1 = _(function (push, next) {
+        push(null, 1);
+        setTimeout(function () {
+            push(null, 2);
+        }, 20);
+        setTimeout(function () {
+            push(null, 3);
+            push(null, _.nil);
+        }, 40);
+    });
+    var s2 = _(function (push, next) {
+        setTimeout(function () {
+            push(null, 4);
+        }, 10);
+        setTimeout(function () {
+            push(null, 5);
+        }, 30);
+        setTimeout(function () {
+            push(null, 6);
+            push(null, _.nil);
+        }, 50);
+    });
+    _([s1, s2]).merge().toArray(function (xs) {
+        test.same(xs, [1,4,2,5,3,6]);
         test.done();
     });
 };
@@ -1523,7 +1562,15 @@ exports['merge - GeneratorStream'] = function (test) {
             push(null, _.nil);
         }, 50);
     });
-    s1.merge(s2).toArray(function (xs) {
+    var s = _(function (push, next) {
+        push(null, s1);
+
+        setTimeout(function() {
+            push(null, s2);
+            push(null, _.nil);
+        }, 5);
+    });
+    s.merge().toArray(function (xs) {
         test.same(xs, [1,4,2,5,3,6]);
         test.done();
     });
