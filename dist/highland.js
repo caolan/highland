@@ -1401,6 +1401,25 @@ Stream.prototype.flatFilter = function (f) {
 exposeMethod('flatFilter');
 
 /**
+ * The inverse of [filter](#filter).
+ *
+ * @id reject
+ * @section Streams
+ * @name Stream.reject(f)
+ * @param {Function} f - the truth test function
+ * @api public
+ *
+ * var odds = _([1, 2, 3, 4]).reject(function (x) {
+ *     return x % 2 === 0;
+ * });
+ */
+
+Stream.prototype.reject = function (f) {
+    return this.filter(_.compose(_.not, f));
+};
+exposeMethod('reject');
+
+/**
  * A convenient form of filter, which returns the first object from a
  * Stream that passes the provided truth test
  *
@@ -2208,7 +2227,7 @@ exposeMethod('invoke');
 
 Stream.prototype.throttle = function (ms) {
     var s = new Stream();
-    var last = 0;
+    var last = 0 - ms;
     var _write = s.write;
     s.write = function (x) {
         var now = new Date().getTime();
@@ -2549,6 +2568,24 @@ _.wrapCallback = function (f) {
 _.add = _.curry(function (a, b) {
     return a + b;
 });
+
+/**
+ * Perform logical negation on a value. If `x` is truthy then returns false,
+ * otherwise returns true.
+ *
+ * @id not
+ * @section Operators
+ * @name _.not(x)
+ * @param x - the value to negate
+ * @api public
+ *
+ * _.not(true)   // => false
+ * _.not(false)  // => true
+ */
+
+_.not = function (x) {
+    return !x;
+};
 
 }).call(this,_dereq_("/home/caolan/projects/highland/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"/home/caolan/projects/highland/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":4,"events":2,"util":6}],2:[function(_dereq_,module,exports){
