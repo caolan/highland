@@ -29,11 +29,11 @@
       <p>The high-level streams library for Node.js and the browser.</p>
       <pre class="npm-install">$ npm install highland</pre>
       <p class="show-for-small-only">
-        <a class="button small" href="#">Download</a>
+        <a class="button small" href="https://raw.github.com/caolan/highland/master/dist/highland.js">Download</a>
         <a class="button small" href="https://github.com/caolan/highland"><i style="margin-right: 3px" class="fi-social-github"></i> Source code</a>
       </p>
       <p class="show-for-medium-up">
-        <a class="button" href="#">Download</a>
+        <a class="button" href="https://raw.github.com/caolan/highland/master/dist/highland.js">Download</a>
         <a class="button" href="https://github.com/caolan/highland"><i style="margin-right: 3px" class="fi-social-github"></i> Source code</a>
       </p>
     </div>
@@ -77,6 +77,9 @@
         synchronous and asynchronous data sources at will, without having to
         re-write your code. Time to dive in!
       </p>
+      <p>
+        Made by <a href="http://twitter.com/caolan">@caolan</a>, with help and patience from friends - <a href="http://gittip.com/caolan">Leave a tip</a> or <a href="https://github.com/caolan/highland">fork this</a> :)
+      </p>
 
       <h2 id="examples">Examples</h2>
       <p>Converting to/from Highland Streams</p>
@@ -88,7 +91,7 @@
     return x * 2;
 });</code></pre>
       <p>Reading files in parallel (4 at once)</p>
-      <pre><code class="javascript">var data = filenames.map(readFile).parallel(4);</code></pre>
+      <pre><code class="javascript">var data = _(filenames).map(readFile).parallel(4);</code></pre>
       <p>Handling errors</p>
       <pre><code class="javascript">data.errors(function (err, rethrow) {
     // handle or rethrow error
@@ -147,7 +150,8 @@ counter.each(function (n) {
       <pre><code class="javascript">getData('myfile').map(toUpperCase).map(function (x) {
     return {name: x};
 });</code></pre>
-      <p>With Highland, we really can have one language to work with both synchronous and asynchronous data, whether it's from a Node Stream, an EventEmitter, a callback or an Array.</p>
+      <p>With Highland, we really can have one language to work with both synchronous and asynchronous data, whether it's from a Node Stream, an EventEmitter, a callback or an Array. You can even wrap ES6 or jQuery promises:</p>
+      <pre><code class="javascript">var foo = _($.getJSON('/api/foo'));</code></pre>
 
       <h3 id="laziness">Laziness</h3>
       <p>When you call <code>map</code> in Highland, it doesn't go off and immediately map over all your data. Rather it defines your intention, and the hard work occurs as you pull data from the Stream. This is 'lazy evaluation' and it's what enables Highland to manage back-pressure and also the sequencing of asynchronous actions, such as reading from a file.</p>
@@ -167,6 +171,20 @@ var nums = _(['1', '2', '3']).map(function (x) {
       <pre><code class="javascript">filenames.map(readFile).series();
 filenames.map(readFile).parallel(10)</code></pre>
 
+      <h3 id="backpressure">Back-pressure</h3>
+      <p>Since Highland is designed to play nicely with Node Streams, it also support back-pressure. This means that a fast source will not overwhelm a slow consumer.</p>
+      <pre><code class="javascript">fastSource.map(slowThing)</code></pre>
+      <p>In the above example, <code>fastSource</code> will be paused while <code>slowThing</code> does it's processing.</p>
+      <p>Some streams (such as those based on events) cannot be paused. In these cases data is buffered util the consumer is ready to handle it. If you expect a non-pausable source to be consumed by a slow consumer, then you should use methods such as <a href="#throttle">throttle</a> or <a href="#latest">latest</a> to selectively drop data and regulate the flow.</p>
+      <p>Occasionally, you'll need to split Streams in your program. At this point, Highland will force you to choose between sharing back-pressure with the new consumer, or letting the existing consumer regulate backpressure and have the new consumer simply observe values as they arrive. Attempting to add two consumers to a Stream without calling <a href="#fork">fork</a> or <a href="#observe">observe</a> will throw an error.</p>
+      <pre><code class="javascript">// shared back-pressure
+source.map(output1);
+source.fork().map(output2);
+
+// let the first handle backpressure and the second simply observe
+source.map(output);
+source.observe().map(_.log);</code></pre>
+
       <h3 id="currying">Currying</h3>
       <p>As well as calling functions as methods on the Stream object, Highland also exports them at the top-level.</p>
       <pre><code class="javascript">mystream.map(doubled)
@@ -183,7 +201,27 @@ var getBlogposts = _.filter(function (doc) {
 // now we can use the new function by completing it's arguments
 getBlogposts(data); // => new Stream of blogposts</code></pre>
       <p>You can curry your own functions too:</p>
-      <pre><code class="javascript">var myCurrableFn = _.curry(fn);</code></pre>
+      <pre><code class="javascript">var myCurryableFn = _.curry(fn);</code></pre>
+
+      <h3 id="events">Events</h3>
+      <p>Streams can used to handle events as well as data, control-flow and error propagation. This is often a convenient way to filter and combine events into groups, a common goal on dynamically updated sites.</p>
+      <pre><code class="javascript">var inbox = _('message', client).where({recipient: 'me'});</code></pre>
+      <p>If you expect to receive a lot of events, and perform an async process on each of them, then you should sample the events instead of buffering all of them.</p>
+      <pre><code class="javascript">// get a frequent event source
+var text = _('keyup', $('#searchbox'));
+
+// Regulate event stream:
+// - wait until no keyup events for 1s
+// - when read from, only return the latest value
+var searches = text.debounce(1000).latest();
+
+// map the search events to an AJAX request
+var results = searches.map(searchRequest);
+
+// for each response, display it
+results.each(function (result) {
+    // display result
+});</code></pre>
 
       {{#each sections}}
         <h2 id="{{name}}">{{name}}</h2>
@@ -193,7 +231,7 @@ getBlogposts(data); // => new Stream of blogposts</code></pre>
           <div id={{id}} class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/highland.js#L{{line}}"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/master/lib/index.js#L{{line}}"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#{{id}}"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>{{name}}</pre>
@@ -233,26 +271,16 @@ getBlogposts(data); // => new Stream of blogposts</code></pre>
       hljs.initHighlightingOnLoad();
     </script>
 
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-    <!-- Start Open Web Analytics Tracker -->
-    <script type="text/javascript">
-      //<![CDATA[
-      var owa_baseUrl = 'http://owa.cyberdelia.org.uk/';
-      var owa_cmds = owa_cmds || [];
-      owa_cmds.push(['setSiteId', '319057ce1186ed2e85224e2f531916d9']);
-      owa_cmds.push(['trackPageView']);
-      owa_cmds.push(['trackClicks']);
-      owa_cmds.push(['trackDomStream']);
+      ga('create', 'UA-48082396-1', 'highlandjs.org');
+      ga('send', 'pageview');
 
-      (function() {
-        var _owa = document.createElement('script'); _owa.type = 'text/javascript'; _owa.async = true;
-        owa_baseUrl = ('https:' == document.location.protocol ? window.owa_baseSecUrl || owa_baseUrl.replace(/http:/, 'https:') : owa_baseUrl );
-        _owa.src = owa_baseUrl + 'modules/base/js/owa.tracker-combined-min.js';
-        var _owa_s = document.getElementsByTagName('script')[0]; _owa_s.parentNode.insertBefore(_owa, _owa_s);
-      }());
-      //]]>
     </script>
-    <!-- End Open Web Analytics Code -->
 
   </body>
 </html>
