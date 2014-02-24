@@ -1846,6 +1846,50 @@ exports['flatFilter - GeneratorStream'] = function (test) {
     });
 };
 
+exports['reject'] = function (test) {
+    test.expect(2);
+    function isEven(x) {
+        return x % 2 === 0;
+    }
+    _.reject(isEven, [1, 2, 3, 4]).toArray(function (xs) {
+        test.same(xs, [1, 3]);
+    });
+    // partial application
+    _.reject(isEven)([1, 2, 3, 4]).toArray(function (xs) {
+        test.same(xs, [1, 3]);
+    });
+    test.done();
+};
+
+exports['reject - ArrayStream'] = function (test) {
+    function isEven(x) {
+        return x % 2 === 0;
+    }
+    _([1, 2, 3, 4]).reject(isEven).toArray(function (xs) {
+        test.same(xs, [1, 3]);
+        test.done();
+    });
+};
+
+exports['reject - GeneratorStream'] = function (test) {
+    function isEven(x) {
+        return x % 2 === 0;
+    }
+    var s = _(function (push, next) {
+        push(null, 1);
+        push(null, 2);
+        setTimeout(function () {
+            push(null, 3);
+            push(null, 4);
+            push(null, _.nil);
+        }, 10);
+    });
+    s.reject(isEven).toArray(function (xs) {
+        test.same(xs, [1, 3]);
+        test.done();
+    });
+};
+
 exports['find'] = function (test) {
     test.expect(2);
     var xs = [
@@ -2790,5 +2834,17 @@ exports['wrapCallback - errors'] = function (test) {
 exports['add'] = function (test) {
     test.equal(_.add(1, 2), 3);
     test.equal(_.add(3)(2), 5);
+    return test.done();
+};
+
+exports['not'] = function (test) {
+    test.equal(_.not(true), false);
+    test.equal(_.not(123), false);
+    test.equal(_.not("asdf"), false);
+    test.equal(_.not(false), true);
+    test.equal(_.not(0), true);
+    test.equal(_.not(""), true);
+    test.equal(_.not(null), true);
+    test.equal(_.not(undefined), true);
     return test.done();
 };
