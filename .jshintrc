@@ -1,4 +1,8 @@
 {
+  "globals": {
+    "window": false
+  },
+
   "predef": [
     "console",
     "angular"
