@@ -2190,6 +2190,78 @@ Stream.prototype.concat = function (ys) {
 exposeMethod('concat');
 
 /**
+ * Takes a Stream of Streams and merges their values and errors into a
+ * single new Stream. The merged stream ends when all source streams have
+ * ended.
+ *
+ * Note that no guarantee is made with respect to the order in which
+ * values for each stream end up in the merged stream. Values in the
+ * merged stream will, however, respect the order they were emitted from
+ * their respective streams.
+ *
+ * @id merge
+ * @section Streams
+ * @name Stream.merge()
+ * @api public
+ *
+ * var txt = _(['foo.txt', 'bar.txt']).map(readFile)
+ * var md = _(['baz.md']).map(readFile)
+ *
+ * _([txt, md]).merge();
+ * // => contents of foo.txt, bar.txt and baz.txt in the order they were read
+ */
+
+Stream.prototype.merge = function () {
+    var self = this;
+    var ended = 0;
+    var total = 0;
+    var toread = [];
+    var reading_srcs = false;
+    return _(function (push, next) {
+        if (!self.ended && !reading_srcs) {
+            reading_srcs = true;
+            self.pull(function (err, x) {
+                if (err) {
+                    push(err);
+                }
+                else if (x !== nil) {
+                    total++;
+                    toread.push(x);
+                }
+                reading_srcs = false;
+                next();
+            });
+        }
+        while (toread.length) {
+            (function (src) {
+                src.pull(function (err, x) {
+                    if (err) {
+                        toread.push(src);
+                        push(err);
+                        next();
+                    }
+                    else if (x === nil) {
+                        ended++;
+                        if (self.ended && ended === total) {
+                            push(null, nil);
+                        }
+                        else {
+                            next();
+                        }
+                    }
+                    else {
+                        toread.push(src);
+                        push(null, x);
+                        next();
+                    }
+                });
+            })(toread.shift());
+        }
+    });
+};
+exposeMethod('merge');
+
+/**
  * Calls a named method on each object from the Stream - returning
  * a new stream with the result of those calls.
  *
