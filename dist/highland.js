@@ -1,5 +1,5 @@
 !function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.highland=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
-(function (process){
+(function (process,global){
 /**
  * Highland: the high-level streams library
  *
@@ -132,11 +132,17 @@ var slice = ArrayProto.slice;
 
 // set up a global nil object in cases where you have multiple Highland
 // instances installed (often via npm)
-var global = typeof global === 'undefined' ? this : global;
-if (!global.nil) {
-    global.nil = {};
+var _global = this;
+if (typeof global !== 'undefined') {
+    _global = global;
 }
-var nil = _.nil = global.nil;
+else if (typeof window !== 'undefined') {
+    _global = window;
+}
+if (!_global.nil) {
+    _global.nil = {};
+}
+var nil = _.nil = _global.nil;
 
 /**
  * Transforms a function with specific arity (all arguments must be
@@ -2655,7 +2661,7 @@ _.not = function (x) {
     return !x;
 };
 
-}).call(this,_dereq_("/home/caolan/projects/highland/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"))
+}).call(this,_dereq_("/home/caolan/projects/highland/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"/home/caolan/projects/highland/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":4,"events":2,"util":6}],2:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
