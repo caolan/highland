@@ -1586,153 +1586,166 @@ exports['concat - GeneratorStream'] = function (test) {
     });
 };
 
-exports['merge'] = function (test) {
-    var s1 = _(function (push, next) {
-        push(null, 1);
-        setTimeout(function () {
-            push(null, 2);
-        }, 20);
-        setTimeout(function () {
-            push(null, 3);
-            push(null, _.nil);
-        }, 40);
-    });
-    var s2 = _(function (push, next) {
-        setTimeout(function () {
-            push(null, 4);
-        }, 10);
-        setTimeout(function () {
-            push(null, 5);
-        }, 30);
-        setTimeout(function () {
-            push(null, 6);
-            push(null, _.nil);
-        }, 50);
-    });
-    _.merge([s1, s2]).toArray(function (xs) {
-        test.same(xs, [1,4,2,5,3,6]);
-        test.done();
-    });
-};
-
-exports['merge - ArrayStream'] = function (test) {
-    var s1 = _(function (push, next) {
-        push(null, 1);
-        setTimeout(function () {
-            push(null, 2);
-        }, 20);
-        setTimeout(function () {
-            push(null, 3);
-            push(null, _.nil);
-        }, 40);
-    });
-    var s2 = _(function (push, next) {
-        setTimeout(function () {
-            push(null, 4);
-        }, 10);
-        setTimeout(function () {
-            push(null, 5);
-        }, 30);
-        setTimeout(function () {
-            push(null, 6);
-            push(null, _.nil);
-        }, 50);
-    });
-    _([s1, s2]).merge().toArray(function (xs) {
-        test.same(xs, [1,4,2,5,3,6]);
-        test.done();
-    });
-};
-
-exports['merge - GeneratorStream'] = function (test) {
-    var s1 = _(function (push, next) {
-        push(null, 1);
-        setTimeout(function () {
-            push(null, 2);
-        }, 20);
-        setTimeout(function () {
-            push(null, 3);
-            push(null, _.nil);
-        }, 40);
-    });
-    var s2 = _(function (push, next) {
-        setTimeout(function () {
-            push(null, 4);
-        }, 10);
-        setTimeout(function () {
-            push(null, 5);
-        }, 30);
-        setTimeout(function () {
-            push(null, 6);
-            push(null, _.nil);
-        }, 50);
-    });
-    var s = _(function (push, next) {
-        push(null, s1);
-        setTimeout(function() {
-            push(null, s2);
-            push(null, _.nil);
-        }, 5);
-    });
-    s.merge().toArray(function (xs) {
-        test.same(xs, [1,4,2,5,3,6]);
-        test.done();
-    });
-};
-
-exports['merge - pull from all streams in parallel'] = function (test) {
-    var s1 = _(function (push, next) {
-        setTimeout(function () {
+exports['merge'] = {
+    setUp: function (callback) {
+        this.clock = sinon.useFakeTimers();
+        callback();
+    },
+    tearDown: function (callback) {
+        this.clock.restore();
+        callback();
+    },
+    'top-level': function (test) {
+        var s1 = _(function (push, next) {
             push(null, 1);
-        }, 40);
-        setTimeout(function () {
-            push(null, 2);
-            push(null, _.nil);
-        }, 80);
-    });
-    var s2 = _(function (push, next) {
-        setTimeout(function () {
-            push(null, 3);
-        }, 10);
-        setTimeout(function () {
-            push(null, 4);
-        }, 20);
-        setTimeout(function () {
-            push(null, 5);
-            push(null, _.nil);
-        }, 30);
-    });
-    _([s1, s2]).merge().toArray(function (xs) {
-        test.same(xs, [3,4,5,1,2]);
-        test.done();
-    });
-};
-
-exports['merge - consume lazily'] = function (test) {
-    var counter1 = 0;
-    var s1 = _(function (push, next) {
-        counter1++;
-        setTimeout(function () {
-            push(null, counter1);
-            next();
-        }, 50);
-    });
-    var counter2 = 0;
-    var s2 = _(function (push, next) {
-        counter2++;
-        setTimeout(function () {
-            push(null, counter2);
-            next();
-        }, 120);
-    });
-    _([s1, s2]).merge().take(4).toArray(function (xs) {
-        test.same(xs, [1, 2, 1, 3]);
-        setTimeout(function () {
-            test.equal(counter1, 3);
-            test.equal(counter2, 2);
+            setTimeout(function () {
+                push(null, 2);
+            }, 20);
+            setTimeout(function () {
+                push(null, 3);
+                push(null, _.nil);
+            }, 40);
+        });
+        var s2 = _(function (push, next) {
+            setTimeout(function () {
+                push(null, 4);
+            }, 10);
+            setTimeout(function () {
+                push(null, 5);
+            }, 30);
+            setTimeout(function () {
+                push(null, 6);
+                push(null, _.nil);
+            }, 50);
+        });
+        _.merge([s1, s2]).toArray(function (xs) {
+            test.same(xs, [1,4,2,5,3,6]);
             test.done();
-        }, 500);
-    });
+        });
+        this.clock.tick(100);
+    },
+    'ArrayStream': function (test) {
+        var s1 = _(function (push, next) {
+            push(null, 1);
+            setTimeout(function () {
+                push(null, 2);
+            }, 20);
+            setTimeout(function () {
+                push(null, 3);
+                push(null, _.nil);
+            }, 40);
+        });
+        var s2 = _(function (push, next) {
+            setTimeout(function () {
+                push(null, 4);
+            }, 10);
+            setTimeout(function () {
+                push(null, 5);
+            }, 30);
+            setTimeout(function () {
+                push(null, 6);
+                push(null, _.nil);
+            }, 50);
+        });
+        _([s1, s2]).merge().toArray(function (xs) {
+            test.same(xs, [1,4,2,5,3,6]);
+            test.done();
+        });
+        this.clock.tick(100);
+    },
+    'GeneratorStream': function (test) {
+        var s1 = _(function (push, next) {
+            push(null, 1);
+            setTimeout(function () {
+                push(null, 2);
+            }, 20);
+            setTimeout(function () {
+                push(null, 3);
+                push(null, _.nil);
+            }, 40);
+        });
+        var s2 = _(function (push, next) {
+            setTimeout(function () {
+                push(null, 4);
+            }, 10);
+            setTimeout(function () {
+                push(null, 5);
+            }, 30);
+            setTimeout(function () {
+                push(null, 6);
+                push(null, _.nil);
+            }, 50);
+        });
+        var s = _(function (push, next) {
+            push(null, s1);
+            setTimeout(function() {
+                push(null, s2);
+                push(null, _.nil);
+            }, 5);
+        });
+        s.merge().toArray(function (xs) {
+            test.same(xs, [1,4,2,5,3,6]);
+            test.done();
+        });
+        this.clock.tick(100);
+    },
+    'pull from all streams in parallel': function (test) {
+        var s1 = _(function (push, next) {
+            setTimeout(function () {
+                push(null, 1);
+            }, 40);
+            setTimeout(function () {
+                push(null, 2);
+                push(null, _.nil);
+            }, 80);
+        });
+        var s2 = _(function (push, next) {
+            setTimeout(function () {
+                push(null, 3);
+            }, 10);
+            setTimeout(function () {
+                push(null, 4);
+            }, 20);
+            setTimeout(function () {
+                push(null, 5);
+                push(null, _.nil);
+            }, 30);
+        });
+        _([s1, s2]).merge().toArray(function (xs) {
+            test.same(xs, [3,4,5,1,2]);
+            test.done();
+        });
+        this.clock.tick(100);
+    },
+    'consume lazily': function (test) {
+        var counter1 = 0;
+        var s1 = _(function (push, next) {
+            counter1++;
+            setTimeout(function () {
+                push(null, counter1);
+                next();
+            }, 50);
+        });
+        var counter2 = 0;
+        var s2 = _(function (push, next) {
+            counter2++;
+            setTimeout(function () {
+                push(null, counter2);
+                next();
+            }, 120);
+        });
+        var self = this;
+        _([s1, s2]).merge().take(4).toArray(function (xs) {
+            test.same(xs, [1, 2, 1, 3]);
+            setTimeout(function () {
+                test.equal(counter1, 3);
+                test.equal(counter2, 2);
+                test.done();
+            }, 500);
+            self.clock.tick(500);
+        });
+        this.clock.tick(500);
+    }
 };
 
 exports['invoke'] = function (test) {
