@@ -1745,6 +1745,28 @@ exports['merge'] = {
             self.clock.tick(500);
         });
         this.clock.tick(500);
+    },
+    'read from sources as soon as they are available': function (test) {
+        test.expect(2);
+        var s1 = _([1, 2, 3]);
+        var s2 = _([4, 5, 6]);
+        var srcs = _(function (push, next) {
+            setTimeout(function () { push(null, s1); }, 100);
+            setTimeout(function () { push(null, s2); }, 200);
+            setTimeout(function () { push(null, _.nil); }, 300);
+        });
+        var xs = [];
+        srcs.merge().each(function (x) {
+            xs.push(x);
+        });
+        setTimeout(function () {
+            test.same(xs.slice(), [1, 2, 3]);
+        }, 150);
+        setTimeout(function () {
+            test.same(xs.slice(), [1, 2, 3, 4, 5, 6]);
+            test.done();
+        }, 400);
+        this.clock.tick(400);
     }
 };
 
