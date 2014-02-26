@@ -1,5 +1,5 @@
 !function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.highland=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
-(function (process,global){
+(function (process){
 /**
  * Highland: the high-level streams library
  *
@@ -100,8 +100,13 @@ var slice = ArrayProto.slice;
 
 /**
  * The end of stream marker. This is sent along the data channel of a Stream
- * to tell consumers that the Stream has ended. See the following map code for
- * an example of detecting the end of a Stream:
+ * to tell consumers that the Stream has ended. See the example map code for
+ * an example of detecting the end of a Stream.
+ *
+ * Note: `nil` is setup as a global where possible. This makes it convenient
+ * to access, but more importantly lets Streams from different Highland
+ * instances work together and detect end-of-stream properly. This is mostly
+ * useful for NPM where you may have many different Highland versions installed.
  *
  * @id nil
  * @section Streams
@@ -125,22 +130,13 @@ var slice = ArrayProto.slice;
  * };
  */
 
-// set up a getter to access a global nil object in cases where
-// you have multiple Highland instances installed (and talking to each other)
-if (Object.defineProperty && typeof global !== 'undefined') {
-    Object.defineProperty(_, 'nil', {
-        get: function () {
-            return global.__highland_nil__;
-        },
-        set: function (x) {
-            // only set if not already created
-            if (!global.__highland_nil__) {
-                global.__highland_nil__ = x;
-            }
-        }
-    });
+// set up a global nil object in cases where you have multiple Highland
+// instances installed (often via npm)
+var global = typeof global === 'undefined' ? this : global;
+if (!global.nil) {
+    global.nil = {};
 }
-var nil = _.nil = {};
+var nil = _.nil = global.nil;
 
 /**
  * Transforms a function with specific arity (all arguments must be
@@ -2659,7 +2655,7 @@ _.not = function (x) {
     return !x;
 };
 
-}).call(this,_dereq_("/home/caolan/projects/highland/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+}).call(this,_dereq_("/home/caolan/projects/highland/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"))
 },{"/home/caolan/projects/highland/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":4,"events":2,"util":6}],2:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
