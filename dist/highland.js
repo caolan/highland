@@ -1659,6 +1659,7 @@ Stream.prototype.take = function (n) {
 exposeMethod('take');
 
 /**
+<<<<<<< HEAD
  * Drops all values from the Stream apart from the last one (if any).
  *
  * @id last
@@ -1690,6 +1691,49 @@ Stream.prototype.last = function () {
     });
 };
 exposeMethod('last');
+=======
+ * Creates a new Stream with the first `n` values discarded from the source.
+ *
+ * @id drop
+ * @section Streams
+ * @name Stream.drop(n)
+ * @param {Number} n - integer representing number of values to discard from source
+ * @api public
+ *
+ * _([1, 2, 3, 4]).drop2) // => 3, 4
+ */
+
+Stream.prototype.drop = function (n) {
+    if (n === 0) {
+        return _([]);
+    }
+    return this.consume(function (err, x, shift, next) {
+        if (err) {
+            shift(err);
+            if (n > 0) {
+                next();
+            }
+            else {
+                shift(null, nil);
+            }
+        }
+        else if (x === nil) {
+            shift(null, nil);
+        }
+        else {
+            n--;
+            shift(null, x);
+            if (n > 0) {
+                next();
+            }
+            else {
+                shift(null, nil);
+            }
+        }
+    });
+};
+exposeMethod('drop');
+>>>>>>> Failing tests and bad attempt at writing drop()
 
 /**
  * Reads values from a Stream of Streams, emitting them on a Single output
