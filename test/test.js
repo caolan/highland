@@ -514,11 +514,11 @@ exports['take 1'] = function (test) {
     test.done();
 };
 
-exports['drop'] = function (test) {
+exports['head'] = function (test) {
     test.expect(2);
-    var s = _([1]).drop(1);
+    var s = _([2, 1]).head();
     s.pull(function (err, x) {
-        test.equal(x, 1);
+        test.equal(2, x);
     });
     s.pull(function (err, x) {
         test.equal(x, _.nil);
