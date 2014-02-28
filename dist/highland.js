@@ -1660,6 +1660,7 @@ exposeMethod('take');
 
 /**
 <<<<<<< HEAD
+<<<<<<< HEAD
  * Drops all values from the Stream apart from the last one (if any).
  *
  * @id last
@@ -1691,7 +1692,7 @@ Stream.prototype.last = function () {
     });
 };
 exposeMethod('last');
-=======
+/*
  * Creates a new Stream with the first `n` values discarded from the source.
  *
  * @id drop
@@ -1733,7 +1734,6 @@ Stream.prototype.drop = function (n) {
     });
 };
 exposeMethod('drop');
->>>>>>> Failing tests and bad attempt at writing drop()
 
 /**
  * Reads values from a Stream of Streams, emitting them on a Single output
