@@ -1463,6 +1463,49 @@ Stream.prototype.take = function (n) {
 exposeMethod('take');
 
 /**
+ * Creates a new Stream with the first `n` values discarded from the source.
+ *
+ * @id drop
+ * @section Streams
+ * @name Stream.drop(n)
+ * @param {Number} n - integer representing number of values to discard from source
+ * @api public
+ *
+ * _([1, 2, 3, 4]).drop2) // => 3, 4
+ */
+
+Stream.prototype.drop = function (n) {
+    if (n === 0) {
+        return _([]);
+    }
+    return this.consume(function (err, x, shift, next) {
+        if (err) {
+            shift(err);
+            if (n > 0) {
+                next();
+            }
+            else {
+                shift(null, nil);
+            }
+        }
+        else if (x === nil) {
+            shift(null, nil);
+        }
+        else {
+            n--;
+            shift(null, x);
+            if (n > 0) {
+                next();
+            }
+            else {
+                shift(null, nil);
+            }
+        }
+    });
+};
+exposeMethod('drop');
+
+/**
  * Reads values from a Stream of Streams, emitting them on a Single output
  * Stream. This can be thought of as a flatten, just one level deep. Often
  * used for resolving asynchronous actions such as a HTTP request or reading

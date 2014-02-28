@@ -512,6 +512,18 @@ exports['take 1'] = function (test) {
     test.done();
 };
 
+exports['drop'] = function (test) {
+    test.expect(2);
+    var s = _([1]).drop(1);
+    s.pull(function (err, x) {
+        test.equal(x, 1);
+    });
+    s.pull(function (err, x) {
+        test.equal(x, _.nil);
+    });
+    test.done();
+};
+
 exports['each'] = function (test) {
     var calls = [];
     _.each(function (x) {
