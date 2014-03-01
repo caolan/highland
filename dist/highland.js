@@ -1658,7 +1658,7 @@ Stream.prototype.take = function (n) {
 };
 exposeMethod('take');
 
-/*
+/**
  * Creates a new Stream with only the first value from the source.
  *
  * @id head
