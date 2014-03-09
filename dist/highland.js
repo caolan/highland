@@ -13,18 +13,6 @@
 var inherits = _dereq_('util').inherits;
 var EventEmitter = _dereq_('events').EventEmitter;
 
-function isFunction(arg) {
-    return typeof arg === 'function';
-}
-
-function isObject(arg) {
-    return typeof arg === 'object' && arg !== null;
-}
-
-function isString(value) {
-    return typeof value === 'string';
-}
-
 
 /**
  * The Stream constructor, accepts an array of values or a generator function
@@ -93,10 +81,30 @@ var _ = exports;
 
 
 // Save bytes in the minified (but not gzipped) version:
-var ArrayProto = Array.prototype;
+var ArrayProto = Array.prototype,
+    ObjProto = Object.prototype;
 
 // Create quick reference variables for speed access to core prototypes.
-var slice = ArrayProto.slice;
+var slice = ArrayProto.slice,
+    toString = ObjProto.toString;
+
+
+_.isFunction = function (x) {
+    return typeof x === 'function';
+};
+
+_.isObject = function (x) {
+    return typeof x === 'object' && x !== null;
+};
+
+_.isString = function (x) {
+    return typeof x === 'string';
+};
+
+_.isArray = Array.isArray || function (x) {
+    return toString.call(x) === '[object Array]';
+};
+
 
 /**
  * The end of stream marker. This is sent along the data channel of a Stream
@@ -398,8 +406,8 @@ function Stream(/*optional*/xs, /*optional*/ee) {
             }
         };
     }
-    else if (isObject(xs)) {
-        if (isFunction(xs.then)) {
+    else if (_.isObject(xs)) {
+        if (_.isFunction(xs.then)) {
             // probably a promise
             return _(function (push) {
                 xs.then(function (value) {
@@ -479,15 +487,15 @@ function StreamRedirect(to) {
  */
 
 _.isStream = function (x) {
-    return isObject(x) && x.__HighlandStream__;
+    return _.isObject(x) && x.__HighlandStream__;
 };
 
 _._isStreamError = function (x) {
-    return isObject(x) && x.__HighlandStreamError__;
+    return _.isObject(x) && x.__HighlandStreamError__;
 };
 
 _._isStreamRedirect = function (x) {
-    return isObject(x) && x.__HighlandStreamRedirect__;
+    return _.isObject(x) && x.__HighlandStreamRedirect__;
 };
 
 /**
@@ -1250,7 +1258,7 @@ Stream.prototype.toArray = function (f) {
  */
 
 Stream.prototype.map = function (f) {
-    if (!isFunction(f)) {
+    if (!_.isFunction(f)) {
         var val = f;
         f = function () {
             return val;
@@ -1323,7 +1331,7 @@ Stream.prototype.pluck = function (prop) {
         else if (x === nil) {
             push(err, x);
         }
-        else if (isObject(x)) {
+        else if (_.isObject(x)) {
             push(null, x[prop]);
             next();
         }
@@ -1500,7 +1508,7 @@ exposeMethod('find');
  */
 
 Stream.prototype.group = function (f) {
-    var lambda = isString(f) ? _.get(f) : f;
+    var lambda = _.isString(f) ? _.get(f) : f;
     return this.reduce({}, function (m, o) {
         var key = lambda(o);
         if (!m.hasOwnProperty(key)) { m[key] = []; }
