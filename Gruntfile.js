@@ -47,6 +47,22 @@ module.exports = function (grunt) {
                 base: 'docs'
             },
             src: ['**']
+        },
+
+        bump: {
+            versions: {
+                options: {
+                    files: ['package.json', 'bower.json'],
+                    updateConfigs: ['pkg'],
+                    pushTo: 'origin',
+                    commit: true,
+                    commitMessage: 'Release %VERSION%',
+                    commitFiles: ['package.json', 'bower.json'],
+                    createTag: true,
+                    tagName: '%VERSION%',
+                    tagMessage: 'Version %VERSION%'
+                }
+            }
         }
 
     });
@@ -56,6 +72,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-nodeunit');
     grunt.loadNpmTasks('grunt-browserify');
     grunt.loadNpmTasks('grunt-gh-pages');
+    grunt.loadNpmTasks('grunt-bump');
 
     // custom tasks
     grunt.loadTasks('./tasks');
