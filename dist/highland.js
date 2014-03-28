@@ -1215,8 +1215,8 @@ exposeMethod('apply');
  * @param {Function} f - the callback to provide the completed Array to
  * @api public
  *
- * _([1, 2, 3, 4]).each(function (x) {
- *     // will be called 4 times with x being 1, 2, 3 and 4
+ * _([1, 2, 3, 4]).toArray(function (x) {
+ *     // parameter x will be [1,2,3,4]
  * });
  */
 
