@@ -1379,6 +1379,28 @@ exports['reduce1 - GeneratorStream'] = function (test) {
     });
 };
 
+exports['reduce1 - GeneratorStream - pass errors through'] = function (test) {
+    test.expect(2);
+    function add(a, b) {
+        return a + b;
+    }
+    var s = _(function (push, next) {
+        setTimeout(function () {
+            push('fail');
+            push(null, 1);
+            push(null, 2);
+            push(null, _.nil);
+        }, 10);
+    });
+    s.reduce1(add).errors(function(error) {
+        test.same(error, 'fail');
+        // swallow error
+    }).toArray(function (xs) {
+        test.same(xs, [3]);
+        test.done();
+    });
+};
+
 
 exports['scan'] = function (test) {
     test.expect(3);
