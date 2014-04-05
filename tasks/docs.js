@@ -26,7 +26,18 @@ module.exports = function (grunt) {
                         items: []
                     };
                 }
-                sections[c.section].items.push(c);
+                var items = sections[c.section].items,
+                    containsId = function (id) {
+                        return function (x) { return x.id === id; };
+                    },
+                    contains = function () {
+                        return items.filter(containsId(c.id)).length > 0;
+                    };
+
+                if (contains(items, c)) {
+                    throw new Error('Duplicate id:' + c.id);
+                }
+                items.push(c);
             });
 
             var tmpl_src = fs.readFileSync(tmpl_file).toString();
