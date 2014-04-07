@@ -755,7 +755,7 @@ Stream.prototype.pipe = function (dest) {
  *
  * This function calls end() on the stream and unlinks it from any piped-to streams.
  *
- * @id pipe
+ * @id destroy
  * @section Streams
  * @name Stream.destroy()
  * @api public
