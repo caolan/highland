@@ -3006,6 +3006,25 @@ exports['through - stream and function'] = function (test) {
     });
 };
 
+exports['pipeline'] = function (test) {
+    var parser = through(
+        function (data) {
+            this.queue(JSON.parse(data));
+        },
+        function () {
+            this.queue(null);
+        }
+    );
+    var doubler = _.map(function (x) {
+        return x * 2;
+    });
+    var s = _.pipeline(parser, doubler);
+    _(['1','2','3','4']).pipe(s).toArray(function (xs) {
+        test.same(xs, [2,4,6,8]);
+        test.done();
+    });
+};
+
 
 /***** Objects *****/
 
