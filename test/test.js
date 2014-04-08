@@ -1,4 +1,5 @@
 var EventEmitter = require('events').EventEmitter,
+    through = require('through'),
     sinon = require('sinon'),
     Stream = require('stream'),
     streamify = require('stream-array'),
@@ -2917,6 +2918,70 @@ exports['last'] = function (test) {
         test.same(xs, []);
     });
     test.done();
+};
+
+exports['through - function'] = function (test) {
+    var s = _.through(function (s) {
+        return s
+            .filter(function (x) {
+                return x % 2;
+            })
+            .map(function (x) {
+                return x * 2;
+            });
+    }, [1,2,3,4]);
+    s.toArray(function (xs) {
+        test.same(xs, [2, 6]);
+        test.done();
+    });
+};
+
+exports['through - function - ArrayStream'] = function (test) {
+    var s = _([1,2,3,4]).through(function (s) {
+        return s
+            .filter(function (x) {
+                return x % 2;
+            })
+            .map(function (x) {
+                return x * 2;
+            });
+    })
+    .through(function (s) {
+        return s.map(function (x) {
+            return x + 1;
+        });
+    });
+    s.toArray(function (xs) {
+        test.same(xs, [3, 7]);
+        test.done();
+    });
+};
+
+exports['through - stream'] = function (test) {
+    var parser = through(
+        function (data) {
+            this.queue(JSON.parse(data));
+        },
+        function () {
+            this.queue(null);
+        }
+    );
+    var s = _.through(parser, ['1','2','3','4']);
+    s.toArray(function (xs) {
+        test.same(xs, [1,2,3,4]);
+        test.done();
+    });
+};
+
+exports['through - stream - ArrayStream'] = function (test) {
+    var parser = through(function (data) {
+        this.queue(JSON.parse(data));
+    });
+    var s = _(['1','2','3','4']).through(parser);
+    s.toArray(function (xs) {
+        test.same(xs, [1,2,3,4]);
+        test.done();
+    });
 };
 
 
