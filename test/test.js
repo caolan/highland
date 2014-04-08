@@ -2984,6 +2984,28 @@ exports['through - stream - ArrayStream'] = function (test) {
     });
 };
 
+exports['through - stream and function'] = function (test) {
+    var parser = through(
+        function (data) {
+            this.queue(JSON.parse(data));
+        },
+        function () {
+            this.queue(null);
+        }
+    );
+    var s = _(['1','2','3','4'])
+        .through(parser)
+        .through(function (s) {
+            return s.map(function (x) {
+                return x * 2;
+            });
+        });
+    s.toArray(function (xs) {
+        test.same(xs, [2,4,6,8]);
+        test.done();
+    });
+};
+
 
 /***** Objects *****/
 
