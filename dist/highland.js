@@ -41,6 +41,10 @@ var EventEmitter = _dereq_('events').EventEmitter;
  * event emitter as the two arguments to the constructor and the first
  * argument emitted to the event handler will be written to the new Stream.
  *
+ * You can also pass as an optional third parameter a function, an array of strings
+ * or a number. In this case the event handler will try to wrap the arguments emitted
+ * to it and write this object to the new stream.
+ *
  * **Promise -** Accepts an ES6 / jQuery style promise and returns a
  * Highland Stream which will emit a single value (or an error).
  *
@@ -69,12 +73,15 @@ var EventEmitter = _dereq_('events').EventEmitter;
  * // creating a stream from events
  * _('click', btn).each(handleEvent);
  *
+ * // creating a stream from events with mapping
+ * _('request', httpServer, ['req', 'res']).each(handleEvent);
+ *
  * // from a Promise object
  * var foo = _($.getJSON('/api/foo'));
  */
 
-exports = module.exports = function (/*optional*/xs, /*optional*/ee) {
-    return new Stream(xs, ee);
+exports = module.exports = function (/*optional*/xs, /*optional*/ee, /*optional*/ mappingHint) {
+    return new Stream(xs, ee, mappingHint);
 };
 
 var _ = exports;
@@ -104,6 +111,28 @@ _.isString = function (x) {
 _.isArray = Array.isArray || function (x) {
     return toString.call(x) === '[object Array]';
 };
+
+// setImmediate implementation with browser and older node fallbacks
+if (typeof setImmediate === 'undefined') {
+    if (typeof process === 'undefined' || !(process.nextTick)) {
+        _.setImmediate = function (fn) {
+            setTimeout(fn, 0);
+        };
+    }
+    else {
+        // use nextTick on old node versions
+        _.setImmediate = process.nextTick;
+    }
+}
+else if (process === 'undefined') {
+    // modern browser - but not a direct alias for IE10 compatibility
+    _.setImmediate = function (fn) {
+        setImmediate(fn);
+    };
+}
+else {
+    _.setImmediate = setImmediate;
+}
 
 
 /**
@@ -322,7 +351,7 @@ _.seq = function () {
  * Actual Stream constructor wrapped the the main exported function
  */
 
-function Stream(/*optional*/xs, /*optional*/ee) {
+function Stream(/*optional*/xs, /*optional*/ee, /*optional*/mappingHint) {
     if (xs && _.isStream(xs)) {
         // already a Stream
         return xs;
@@ -352,7 +381,7 @@ function Stream(/*optional*/xs, /*optional*/ee) {
     self.on('newListener', function (ev) {
         if (ev === 'data') {
             self._send_events = true;
-            setImmediate(self.resume.bind(self));
+            _.setImmediate(self.resume.bind(self));
         }
         else if (ev === 'end') {
             // this property avoids us checking the length of the
@@ -429,8 +458,30 @@ function Stream(/*optional*/xs, /*optional*/ee) {
         }
     }
     else if (typeof xs === 'string') {
-        ee.on(xs, function (x) {
-            self.write(x);
+        var mappingHintType = (typeof mappingHint);
+        var mapper;
+
+        if (mappingHintType === 'function') {
+            mapper = mappingHint;
+        } else if (mappingHintType === 'number') {
+            mapper = function () {
+                return slice.call(arguments, 0, mappingHint);
+            };
+        } else if (_.isArray(mappingHint)) {
+            mapper = function () {
+                var args = arguments;
+                return mappingHint.reduce(function (ctx, hint, idx) {
+                    ctx[hint] = args[idx];
+                    return ctx;
+                }, {});
+            };
+        } else {
+            mapper = function (x) { return x; };
+        }
+
+        ee.on(xs, function () {
+            var ctx = mapper.apply(this, arguments);
+            self.write(ctx);
         });
     }
     else {
