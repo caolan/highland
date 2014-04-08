@@ -974,6 +974,48 @@ exports['wrap EventEmitter (or jQuery) on handler'] = function (test) {
     });
 };
 
+exports['wrap EventEmitter (or jQuery) on handler with args wrapping by function'] = function (test) {
+    var ee = {
+        on: function (name, f) {
+            test.same(name, 'myevent');
+            f(1, 2, 3);
+        }
+    };
+    function mapper(){
+        return Array.prototype.slice.call(arguments);
+    }
+    _('myevent', ee, mapper).each(function (x) {
+        test.same(x, [1, 2, 3]);
+        test.done();
+    });
+};
+
+exports['wrap EventEmitter (or jQuery) on handler with args wrapping by number'] = function (test) {
+    var ee = {
+        on: function (name, f) {
+            test.same(name, 'myevent');
+            f(1, 2, 3);
+        }
+    };
+    _('myevent', ee, 2).each(function (x) {
+        test.same(x, [1, 2]);
+        test.done();
+    });
+};
+
+exports['wrap EventEmitter (or jQuery) on handler with args wrapping by array'] = function (test) {
+    var ee = {
+        on: function (name, f) {
+            test.same(name, 'myevent');
+            f(1, 2, 3);
+        }
+    };
+    _('myevent', ee, ['one', 'two', 'three']).each(function (x) {
+        test.same(x, {'one': 1, 'two': 2, 'three': 3});
+        test.done()
+    });
+};
+
 exports['sequence'] = function (test) {
     _.sequence([[1,2], [3], [[4],5]]).toArray(function (xs) {
         test.same(xs, [1,2,3,[4],5]);
