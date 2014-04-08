@@ -832,7 +832,7 @@ exports['pipe to node stream with backpressure'] = function (test) {
     dest.write = function (x) {
         xs.push(x);
         if (xs.length === 2) {
-            setImmediate(function () {
+            _.setImmediate(function () {
                 test.same(xs, [1,2]);
                 test.ok(src.paused);
                 dest.emit('drain');
@@ -861,7 +861,7 @@ exports['wrap node stream and pipe'] = function (test) {
     dest.write = function (x) {
         xs.push(x);
         if (xs.length === 2) {
-            setImmediate(function () {
+            _.setImmediate(function () {
                 test.same(xs, [2,4]);
                 test.ok(ys.source.paused);
                 test.equal(readable._readableState.readingMore, false);
