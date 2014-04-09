@@ -3018,8 +3018,15 @@ exports['pipeline'] = function (test) {
     var doubler = _.map(function (x) {
         return x * 2;
     });
-    var s = _.pipeline(parser, doubler);
-    _(['1','2','3','4']).pipe(s).toArray(function (xs) {
+    var parseDouble = _.pipeline(parser, doubler);
+    var s = _(function (push, next) {
+        push(null, 1);
+        setTimeout(function () { push(null, 2); }, 10);
+        setTimeout(function () { push(null, 3); }, 20);
+        setTimeout(function () { push(null, 4); }, 30);
+        setTimeout(function () { push(null, _.nil); }, 40);
+    });
+    s.pipe(parseDouble).toArray(function (xs) {
         test.same(xs, [2,4,6,8]);
         test.done();
     });
