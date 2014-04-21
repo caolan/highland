@@ -106,7 +106,8 @@ var docs = db.createReadStream();
 _(docs).filter(isBlogpost).pipe(output);
 
 // or, pipe in a node stream directly:
-docs.pipe(_().filter(isBlogpost)).pipe(output);</code></pre>
+var through = _.pipeline(_.filter(isBlogpost));
+docs.pipe(through).pipe(output);</code></pre>
       <p>Handling events</p>
       <pre><code class="javascript">var clicks = _('click', btn).map(1);
 var counter = clicks.scan(0, _.add);
