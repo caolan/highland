@@ -124,7 +124,8 @@ if (typeof setImmediate === 'undefined') {
         _.setImmediate = process.nextTick;
     }
 }
-else if (typeof process === 'undefined' || !(process.stdout) /*browserify*/) {
+// check no process.stdout to detect browserify
+else if (typeof process === 'undefined' || !(process.stdout)) {
     // modern browser - but not a direct alias for IE10 compatibility
     _.setImmediate = function (fn) {
         setImmediate(fn);
@@ -1765,6 +1766,107 @@ Stream.prototype.last = function () {
     });
 };
 exposeMethod('last');
+
+/**
+ * Passes the current Stream to a function, returning the result. Can also
+ * be used to pipe the current Stream through another Stream. It will always
+ * return a Highland Stream (instead of the piped to target directly as in
+ * Node.js).
+ *
+ * @id through
+ * @section Streams
+ * @name Stream.through(target)
+ * @api public
+ *
+ * function oddDoubler(s) {
+ *     return s.filter(function (x) {
+ *         return x % 2; // odd numbers only
+ *     })
+ *     .map(function (x) {
+ *         return x * 2;
+ *     });
+ * }
+ *
+ * _([1, 2, 3, 4]).through(oddDoubler).toArray(function (xs) {
+ *     // xs will be [2, 6]
+ * });
+ *
+ * // Can also be used with Node Through Streams
+ * _(filenames).through(jsonParser).map(function (obj) {
+ *     // ...
+ * });
+ */
+
+Stream.prototype.through = function (target) {
+    if (_.isFunction(target)) {
+        return target(this);
+    }
+    else {
+        var output = _();
+        target.pause();
+        this.pipe(target).pipe(output);
+        return output;
+    }
+};
+exposeMethod('through');
+
+/**
+ * Creates a 'Through Stream', which passes data through a pipeline
+ * of functions or other through Streams. This is particularly useful
+ * when combined with partial application of Highland functions to expose a
+ * Node-compatible Through Stream.
+ *
+ * This is not a method on a Stream, and it only exposed at the top-level
+ * as `_.pipeline`. It takes an arbitrary number of arguments.
+ *
+ * @id pipeline
+ * @section Streams
+ * @name _.pipeline(...)
+ * @api public
+ *
+ * var through = _.pipeline(
+ *     _.map(parseJSON),
+ *     _.filter(isBlogpost),
+ *     _.reduce(collectCategories)
+ *     _.through(otherPipeline)
+ * );
+ *
+ * readStream.pipe(through).pipe(outStream);
+ *
+ * // Alternatively, you can use pipeline to manipulate a stream in
+ * // the chained method call style:
+ *
+ * var through2 = _.pipeline(function (s) {
+ *     return s.map(parseJSON).filter(isBlogpost); // etc.
+ * });
+ */
+
+_.pipeline = function (/*through...*/) {
+    var start = _(arguments[0]);
+    var rest = slice.call(arguments, 1);
+    var end = rest.reduce(function (src, dest) {
+        return src.through(dest);
+    }, start);
+    var wrapper = _(function (push, next) {
+        end.pull(function (err, x) {
+            if (err) {
+                wrapper._send(err);
+                next();
+            }
+            else if (x === nil) {
+                wrapper._send(null, nil);
+            }
+            else {
+                wrapper._send(null, x);
+                next();
+            }
+        });
+    });
+    wrapper.write = function (x) {
+        start.write(x);
+    };
+    return wrapper;
+};
 
 /**
  * Reads values from a Stream of Streams, emitting them on a Single output
