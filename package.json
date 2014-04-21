@@ -33,7 +33,7 @@
     "nodeunit-tape": "~0.2.0",
     "sinon": "~1.8.2",
     "grunt-bump": "0.0.13",
-    "through": "^2.3.4"
+    "through": "~2.3.4"
   },
   "scripts": {
     "test": "nodeunit test/test.js"
