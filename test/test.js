@@ -3032,6 +3032,26 @@ exports['pipeline'] = function (test) {
     });
 };
 
+exports['pipeline - single through function'] = function (test) {
+    var src = streamify([1,2,3,4]);
+    var through = _.pipeline(function (s) {
+        return s
+            .filter(function (x) {
+                return x % 2;
+            })
+            .map(function (x) {
+                return x * 2;
+            })
+            .map(function (x) {
+                return x + 10;
+            });
+    });
+    src.pipe(through).toArray(function (xs) {
+        test.same(xs, [12, 16]);
+        test.done();
+    });
+};
+
 
 /***** Objects *****/
 
