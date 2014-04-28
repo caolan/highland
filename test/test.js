@@ -3052,6 +3052,15 @@ exports['pipeline - single through function'] = function (test) {
     });
 };
 
+exports['pipeline - no arguments'] = function (test) {
+    var src = streamify([1,2,3,4]);
+    var through = _.pipeline();
+    src.pipe(through).toArray(function (xs) {
+        test.same(xs, [1,2,3,4]);
+        test.done();
+    });
+};
+
 
 /***** Objects *****/
 
