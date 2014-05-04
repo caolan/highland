@@ -2439,6 +2439,73 @@ exports['zip - GeneratorStream'] = function (test) {
     });
 };
 
+exports['pack'] = function (test) {
+    test.expect(5);
+    _.pack(3, [1,2,3,4,5,6,7,8,9,0]).toArray(function (xs) {
+        test.same(xs, [[1,2,3], [4,5,6], [7,8,9], [0]]);
+    });
+
+    _.pack(3, [1,2,3]).toArray(function (xs) {
+        test.same(xs, [[1,2,3]]);
+    });
+
+    _.pack(2, [1,2,3]).toArray(function (xs) {
+        test.same(xs, [[1,2],[3]]);
+    });
+
+    _.pack(1, [1,2,3]).toArray(function (xs) {
+        test.same(xs, [[1],[2],[3]]);
+    });
+
+    _.pack(0, [1,2,3]).toArray(function (xs) {
+        test.same(xs, [[1,2,3]]);
+    });
+
+    test.done();
+};
+
+exports['pack - ArrayStream'] = function (test) {
+    test.expect(5);
+    _([1,2,3,4,5,6,7,8,9,0]).pack(3).toArray(function (xs) {
+        test.same(xs, [[1,2,3], [4,5,6], [7,8,9], [0]]);
+    });
+
+    _([1,2,3]).pack(4).toArray(function (xs) {
+        test.same(xs, [[1,2,3]]);
+    });
+
+    _([1,2,3]).pack(2).toArray(function (xs) {
+        test.same(xs, [[1,2],[3]]);
+    });
+
+    _([1,2,3]).pack(1).toArray(function (xs) {
+        test.same(xs, [[1],[2],[3]]);
+    });
+
+    _([1,2,3]).pack(0).toArray(function (xs) {
+        test.same(xs, [[1,2,3]]);
+    });
+
+    test.done();
+};
+
+exports['pack - GeneratorStream'] = function (test) {
+    var s1 = _(function (push, next) {
+        push(null, 1);
+        setTimeout(function () {
+            push(null, 2);
+            setTimeout(function () {
+                push(null, 3);
+                push(null, _.nil);
+            }, 10);
+        }, 10);
+    });
+    s1.pack(1).toArray(function (xs) {
+        test.same(xs, [[1], [2], [3]]);
+        test.done();
+    });
+}
+
 exports['parallel'] = function (test) {
     var calls = [];
     var s1 = _(function (push, next) {
