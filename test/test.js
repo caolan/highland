@@ -752,6 +752,22 @@ exports['take 1'] = function (test) {
     test.done();
 };
 
+exports['drop'] = function (test) {
+    test.expect(3);
+    var s = _([1,2,3,4]).drop(2);
+    s.pull(function (err, x) {
+        test.equal(x, 3);
+    });
+    s.pull(function (err, x) {
+        test.equal(x, 4);
+    });
+    s.pull(function (err, x) {
+        test.equal(x, _.nil);
+    });
+    test.done();
+};
+
+
 exports['head'] = function (test) {
     test.expect(2);
     var s = _([2, 1]).head();
