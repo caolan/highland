@@ -406,7 +406,7 @@ function Stream(/*optional*/xs, /*optional*/ee, /*optional*/mappingHint) {
     if (xs === undefined) {
         // nothing else to do
     }
-    else if (Array.isArray(xs)) {
+    else if (_.isArray(xs)) {
         self._incoming = xs.concat([nil]);
     }
     else if (typeof xs === 'function') {
@@ -1911,7 +1911,7 @@ Stream.prototype.sequence = function () {
                 push(err);
                 return next();
             }
-            else if (Array.isArray(x)) {
+            else if (_.isArray(x)) {
                 // just send all values from array directly
                 x.forEach(function (y) {
                     push(null, y);
@@ -2002,7 +2002,7 @@ Stream.prototype.flatten = function () {
                 push(err);
                 return next();
             }
-            if (Array.isArray(x)) {
+            if (_.isArray(x)) {
                 x = _(x);
             }
             if (_.isStream(x)) {
@@ -2999,7 +2999,10 @@ EventEmitter.prototype.addListener = function(type, listener) {
                     'leak detected. %d listeners added. ' +
                     'Use emitter.setMaxListeners() to increase limit.',
                     this._events[type].length);
-      console.trace();
+      if (typeof console.trace === 'function') {
+        // not supported in IE 10
+        console.trace();
+      }
     }
   }
 
