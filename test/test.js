@@ -2439,6 +2439,73 @@ exports['zip - GeneratorStream'] = function (test) {
     });
 };
 
+exports['batch'] = function (test) {
+    test.expect(5);
+    _.batch(3, [1,2,3,4,5,6,7,8,9,0]).toArray(function (xs) {
+        test.same(xs, [[1,2,3], [4,5,6], [7,8,9], [0]]);
+    });
+
+    _.batch(3, [1,2,3]).toArray(function (xs) {
+        test.same(xs, [[1,2,3]]);
+    });
+
+    _.batch(2, [1,2,3]).toArray(function (xs) {
+        test.same(xs, [[1,2],[3]]);
+    });
+
+    _.batch(1, [1,2,3]).toArray(function (xs) {
+        test.same(xs, [[1],[2],[3]]);
+    });
+
+    _.batch(0, [1,2,3]).toArray(function (xs) {
+        test.same(xs, [[1,2,3]]);
+    });
+
+    test.done();
+};
+
+exports['batch - ArrayStream'] = function (test) {
+    test.expect(5);
+    _([1,2,3,4,5,6,7,8,9,0]).batch(3).toArray(function (xs) {
+        test.same(xs, [[1,2,3], [4,5,6], [7,8,9], [0]]);
+    });
+
+    _([1,2,3]).batch(4).toArray(function (xs) {
+        test.same(xs, [[1,2,3]]);
+    });
+
+    _([1,2,3]).batch(2).toArray(function (xs) {
+        test.same(xs, [[1,2],[3]]);
+    });
+
+    _([1,2,3]).batch(1).toArray(function (xs) {
+        test.same(xs, [[1],[2],[3]]);
+    });
+
+    _([1,2,3]).batch(0).toArray(function (xs) {
+        test.same(xs, [[1,2,3]]);
+    });
+
+    test.done();
+};
+
+exports['batch - GeneratorStream'] = function (test) {
+    var s1 = _(function (push, next) {
+        push(null, 1);
+        setTimeout(function () {
+            push(null, 2);
+            setTimeout(function () {
+                push(null, 3);
+                push(null, _.nil);
+            }, 10);
+        }, 10);
+    });
+    s1.batch(1).toArray(function (xs) {
+        test.same(xs, [[1], [2], [3]]);
+        test.done();
+    });
+}
+
 exports['parallel'] = function (test) {
     var calls = [];
     var s1 = _(function (push, next) {
