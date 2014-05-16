@@ -1675,6 +1675,46 @@ Stream.prototype.zip = function (ys) {
 exposeMethod('zip');
 
 /**
+ * Takes one Stream and batches incoming data into arrays of given length
+ *
+ * @id batch
+ * @section Streams
+ * @name Stream.batch(n)
+ * @param {Number} n - length of the array to batch
+ * @api public
+ *
+ * _([1, 2, 3, 4, 5]).batch(2)  // => [1, 2], [3, 4], [5]
+ */
+
+Stream.prototype.batch = function (n) {
+    var batched = [];
+
+    return this.consume(function (err, x, push, next) {
+        if (err) {
+            push(err);
+            next();
+        }
+        if (x === nil) {
+            if (batched.length > 0) {
+                push(null, batched);
+            }
+
+            push(null, nil);
+        } else {
+            batched.push(x);
+
+            if (batched.length === n) {
+                push(null, batched);
+                batched = [];
+            }
+
+            next();
+        }
+    });
+};
+exposeMethod('batch');
+
+/**
  * Creates a new Stream with the first `n` values from the source.
  *
  * @id take
@@ -2999,10 +3039,7 @@ EventEmitter.prototype.addListener = function(type, listener) {
                     'leak detected. %d listeners added. ' +
                     'Use emitter.setMaxListeners() to increase limit.',
                     this._events[type].length);
-      if (typeof console.trace === 'function') {
-        // not supported in IE 10
-        console.trace();
-      }
+      console.trace();
     }
   }
 
