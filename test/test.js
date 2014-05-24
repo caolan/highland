@@ -1671,6 +1671,13 @@ exports['concat - ArrayStream'] = function (test) {
     });
 };
 
+exports['concat - piped ArrayStream'] = function (test) {
+    _.concat(streamify([3,4]).pipe(through()), streamify([1,2])).toArray(function (xs) {
+        test.same(xs, [1,2,3,4]);
+        test.done();
+    });  
+};
+
 exports['concat - GeneratorStream'] = function (test) {
     var s1 = _(function (push, next) {
         setTimeout(function () {
