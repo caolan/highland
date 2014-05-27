@@ -1,6 +1,18 @@
 !function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.highland=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 (function (process,global){
 /**
+Streams
+    @section Stream Objects
+    @section Transforms
+    @section Higher-order Streams
+    @section Consumption
+what about pipe? go for consumtion because:
+- its thunking,
+- it does not explicitly return a highland stream
+- its for kompatibility with node api
+*/
+
+/**
  * Highland: the high-level streams library
  *
  * Highland may be freely distributed under the Apache 2.0 license.
@@ -49,7 +61,7 @@ var EventEmitter = _dereq_('events').EventEmitter;
  * Highland Stream which will emit a single value (or an error).
  *
  * @id _(source)
- * @section Streams
+ * @section Stream Objects
  * @name _(source)
  * @param {Array | Function | Readable Stream | Promise} source - (optional) source to take values from from
  * @api public
@@ -147,7 +159,7 @@ else {
  * useful for NPM where you may have many different Highland versions installed.
  *
  * @id nil
- * @section Streams
+ * @section Utils
  * @name _.nil
  * @api public
  *
@@ -529,7 +541,7 @@ function StreamRedirect(to) {
  * Returns true if `x` is a Highland Stream.
  *
  * @id isStream
- * @section Streams
+ * @section Utils
  * @name _.isStream(x)
  * @param x - the object to test
  * @api public
@@ -588,7 +600,7 @@ Stream.prototype._send = function (err, x) {
  * Pauses the stream. All Highland Streams start in the paused state.
  *
  * @id pause
- * @section Streams
+ * @section Stream Objects
  * @name Stream.pause()
  * @api public
  *
@@ -676,7 +688,7 @@ Stream.prototype._sendOutgoing = function () {
  * buffer or request more data from an upstream source.
  *
  * @id resume
- * @section Streams
+ * @section Stream Objects
  * @name Stream.resume()
  * @api public
  *
@@ -729,7 +741,7 @@ Stream.prototype.resume = function () {
  * you pipe in.
  *
  * @id end
- * @section Streams
+ * @section Stream Objects
  * @name Stream.end()
  * @api public
  *
@@ -750,7 +762,7 @@ Stream.prototype.end = function () {
  * This function returns the destination so you can chain together pipe calls.
  *
  * @id pipe
- * @section Streams
+ * @section Consumption
  * @name Stream.pipe(dest)
  * @param {Writable Stream} dest - the destination to write all data to
  * @api public
@@ -808,7 +820,7 @@ Stream.prototype.pipe = function (dest) {
  * This function calls end() on the stream and unlinks it from any piped-to streams.
  *
  * @id destroy
- * @section Streams
+ * @section Stream Objects
  * @name Stream.destroy()
  * @api public
  */
@@ -915,7 +927,7 @@ Stream.prototype._removeConsumer = function (s) {
  * like a 'through' stream, handling values as they are read.
  *
  * @id consume
- * @section Streams
+ * @section Transforms
  * @name Stream.consume(f)
  * @param {Function} f - the function to handle errors and values
  * @api public
@@ -1010,7 +1022,7 @@ Stream.prototype.consume = function (f) {
  * some functions in the Highland library.
  *
  * @id pull
- * @section Streams
+ * @section Consumption
  * @name Stream.pull(f)
  * @param {Function} f - the function to handle data
  * @api public
@@ -1038,7 +1050,7 @@ Stream.prototype.pull = function (f) {
  * functions which treat Highland Streams as a [Node Writable Stream](http://nodejs.org/api/stream.html#stream_class_stream_writable).
  *
  * @id write
- * @section Streams
+ * @section Stream Objects
  * @name Stream.write(x)
  * @param x - the value to write to the Stream
  * @api public
@@ -1074,7 +1086,7 @@ Stream.prototype.write = function (x) {
  * from it's source as fast as the slowest consumer can handle them.
  *
  * @id fork
- * @section Streams
+ * @section Higher-order Streams
  * @name Stream.fork()
  * @api public
  *
@@ -1106,7 +1118,7 @@ Stream.prototype.fork = function () {
  * buffer and cause memory issues. Where possible, you should use [fork](#fork).
  *
  * @id observe
- * @section Streams
+ * @section Higher-order Streams
  * @name Stream.observe()
  * @api public
  *
@@ -1133,7 +1145,7 @@ Stream.prototype.observe = function () {
  * transformed and put back onto the Stream as values.
  *
  * @id errors
- * @section Streams
+ * @section Transforms
  * @name Stream.errors(f)
  * @param {Function} f - the function to pass all errors to
  * @api public
@@ -1172,7 +1184,7 @@ exposeMethod('errors');
  * an Error is encountered.
  *
  * @id stopOnError
- * @section Streams
+ * @section Transforms
  * @name Stream.stopOnError(f)
  * @param {Function} f - the function to handle an error
  * @api public
@@ -1207,7 +1219,7 @@ exposeMethod('stopOnError');
  * error event (which will cause it to throw if unhandled).
  *
  * @id each
- * @section Streams
+ * @section Consumption
  * @name Stream.each(f)
  * @param {Function} f - the iterator function
  * @api public
@@ -1235,7 +1247,7 @@ exposeMethod('each');
  * Applies results from a Stream as arguments to a function
  *
  * @id apply
- * @section Streams
+ * @section Consumption
  * @name Stream.apply(f)
  * @param {Function} f - the function to apply arguments to
  * @api public
@@ -1262,7 +1274,7 @@ exposeMethod('apply');
  * error event (which will cause it to throw if unhandled).
  *
  * @id toArray
- * @section Streams
+ * @section Consumption
  * @name Stream.toArray(f)
  * @param {Function} f - the callback to provide the completed Array to
  * @api public
@@ -1297,7 +1309,7 @@ Stream.prototype.toArray = function (f) {
  * for every data event on the source Stream.
  *
  * @id map
- * @section Streams
+ * @section Transforms
  * @name Stream.map(f)
  * @param f - the transformation function or value to map to
  * @api public
@@ -1340,7 +1352,7 @@ exposeMethod('map');
  * The same as calling `stream.map(f).flatten()`.
  *
  * @id flatMap
- * @section Streams
+ * @section Higher-order Streams
  * @name Stream.flatMap(f)
  * @param {Function} f - the iterator function
  * @api public
@@ -1358,7 +1370,7 @@ exposeMethod('flatMap');
  * the collection.
  *
  * @id pluck
- * @section Streams
+ * @section Transforms
  * @name Stream.pluck(property)
  * @param {String} prop - the property to which values should be associated
  * @api public
@@ -1401,7 +1413,7 @@ exposeMethod('pluck');
  * Creates a new Stream including only the values which pass a truth test.
  *
  * @id filter
- * @section Streams
+ * @section Transforms
  * @name Stream.filter(f)
  * @param f - the truth test function
  * @api public
@@ -1438,7 +1450,7 @@ exposeMethod('filter');
  * disregarded).
  *
  * @id flatFilter
- * @section Streams
+ * @section Higher-order Streams
  * @name Stream.flatFilter(f)
  * @param {Function} f - the truth test function which returns a Stream
  * @api public
@@ -1466,7 +1478,7 @@ exposeMethod('flatFilter');
  * The inverse of [filter](#filter).
  *
  * @id reject
- * @section Streams
+ * @section Transforms
  * @name Stream.reject(f)
  * @param {Function} f - the truth test function
  * @api public
@@ -1486,7 +1498,7 @@ exposeMethod('reject');
  * Stream that passes the provided truth test
  *
  * @id find
- * @section Streams
+ * @section Transforms
  * @name Stream.find(f)
  * @param {Function} f - the truth test function which returns a Stream
  * @api public
@@ -1535,7 +1547,7 @@ exposeMethod('find');
  * A convenient form of reduce, which groups items based on a function or property name
  *
  * @id group
- * @section Streams
+ * @section Transforms
  * @name Stream.group(f)
  * @param {Function|String} f - the function or property name on which to group,
  *                              toString() is called on the result of a function.
@@ -1574,7 +1586,7 @@ exposeMethod('group');
  * Filters a Stream to drop all non-truthy values.
  *
  * @id compact
- * @section Streams
+ * @section Transforms
  * @name Stream.compact()
  * @api public
  *
@@ -1594,7 +1606,7 @@ exposeMethod('compact');
  * match a set of property values.
  *
  * @id where
- * @section Streams
+ * @section Transforms
  * @name Stream.where(props)
  * @param {Object} props - the properties to match against
  * @api public
@@ -1633,7 +1645,7 @@ exposeMethod('where');
  * Takes two Streams and returns a Stream of corresponding pairs.
  *
  * @id zip
- * @section Streams
+ * @section Higher-order Streams
  * @name Stream.zip(ys)
  * @param {Array | Stream} ys - the other stream to combine values with
  * @api public
@@ -1678,7 +1690,7 @@ exposeMethod('zip');
  * Takes one Stream and batches incoming data into arrays of given length
  *
  * @id batch
- * @section Streams
+ * @section Transforms
  * @name Stream.batch(n)
  * @param {Number} n - length of the array to batch
  * @api public
@@ -1718,7 +1730,7 @@ exposeMethod('batch');
  * Creates a new Stream with the first `n` values from the source.
  *
  * @id take
- * @section Streams
+ * @section Transforms
  * @name Stream.take(n)
  * @param {Number} n - integer representing number of values to read from source
  * @api public
@@ -1726,7 +1738,6 @@ exposeMethod('batch');
  * _([1, 2, 3, 4]).take(2) // => 1, 2
  */
 
-// TODO: test that errors don't count in take 'n' calls
 Stream.prototype.take = function (n) {
     if (n === 0) {
         return _([]);
@@ -1762,7 +1773,7 @@ exposeMethod('take');
  * Creates a new Stream with only the first value from the source.
  *
  * @id head
- * @section Streams
+ * @section Transforms
  * @name Stream.head()
  * @api public
  *
@@ -1778,7 +1789,7 @@ exposeMethod('head');
  * Drops all values from the Stream apart from the last one (if any).
  *
  * @id last
- * @section Streams
+ * @section Transforms
  * @name Stream.last()
  * @api public
  *
@@ -1814,7 +1825,7 @@ exposeMethod('last');
  * Node.js).
  *
  * @id through
- * @section Streams
+ * @section Higher-order Streams
  * @name Stream.through(target)
  * @api public
  *
@@ -1860,7 +1871,7 @@ exposeMethod('through');
  * as `_.pipeline`. It takes an arbitrary number of arguments.
  *
  * @id pipeline
- * @section Streams
+ * @section Higher-order Streams
  * @name _.pipeline(...)
  * @api public
  *
@@ -1927,7 +1938,7 @@ _.pipeline = function (/*through...*/) {
  * a file.
  *
  * @id sequence
- * @section Streams
+ * @section Higher-order Streams
  * @name Stream.sequence()
  * @api public
  *
@@ -1952,14 +1963,18 @@ Stream.prototype.sequence = function () {
                 return next();
             }
             else if (_.isArray(x)) {
-                // just send all values from array directly
-                x.forEach(function (y) {
-                    push(null, y);
-                });
+                if (onOriginalStream()) {
+                    // just send all values from array directly
+                    x.forEach(function (y) {
+                        push(null, y);
+                    });
+                } else {
+                    push(null, x);
+                }
                 return next();
             }
             else if (_.isStream(x)) {
-                if (curr === original) {
+                if (onOriginalStream()) {
                     // switch to reading new stream
                     curr = x;
                     return next();
@@ -1971,7 +1986,7 @@ Stream.prototype.sequence = function () {
                 }
             }
             else if (x === nil) {
-                if (curr === original) {
+                if (onOriginalStream()) {
                     push(null, nil);
                 }
                 else {
@@ -1981,7 +1996,7 @@ Stream.prototype.sequence = function () {
                 }
             }
             else {
-                if (curr === original) {
+                if (onOriginalStream()) {
                     // we shouldn't be getting non-stream (or array)
                     // values from the top-level stream
                     push(new Error(
@@ -1996,6 +2011,10 @@ Stream.prototype.sequence = function () {
             }
         });
     });
+
+    function onOriginalStream() {
+        return curr === original;
+    }
 };
 exposeMethod('sequence');
 
@@ -2003,7 +2022,7 @@ exposeMethod('sequence');
  * An alias for the [sequence](#sequence) method.
  *
  * @id series
- * @section Streams
+ * @section Higher-order Streams
  * @name Stream.series()
  * @api public
  *
@@ -2019,7 +2038,7 @@ _.series = _.sequence;
  * single output Stream.
  *
  * @id flatten
- * @section Streams
+ * @section Higher-order Streams
  * @name Stream.flatten()
  * @api public
  *
@@ -2074,7 +2093,7 @@ exposeMethod('flatten');
  * order.
  *
  * @id parallel
- * @section Streams
+ * @section Higher-order Streams
  * @name Stream.parallel(n)
  * @param {Number} n - the maximum number of concurrent reads/buffers
  * @api public
@@ -2159,7 +2178,7 @@ exposeMethod('parallel');
  * Switches source to an alternate Stream if the current Stream is empty.
  *
  * @id otherwise
- * @section Streams
+ * @section Higher-order Streams
  * @name Stream.otherwise(ys)
  * @param {Stream} ys - alternate stream to use if this stream is empty
  * @api public
@@ -2196,7 +2215,7 @@ exposeMethod('otherwise');
  * Adds a value to the end of a Stream.
  *
  * @id append
- * @section Streams
+ * @section Transforms
  * @name Stream.append(y)
  * @param y - the value to append to the Stream
  * @api public
@@ -2225,7 +2244,7 @@ exposeMethod('append');
  * the memo and the next value.
  *
  * @id reduce
- * @section Streams
+ * @section Transforms
  * @name Stream.reduce(memo, iterator)
  * @param memo - the initial state of the reduction
  * @param {Function} iterator - the function which reduces the values
@@ -2262,7 +2281,7 @@ exposeMethod('reduce');
  * state instead of passing in a `memo` value.
  *
  * @id reduce1
- * @section Streams
+ * @section Transforms
  * @name Stream.reduce1(iterator)
  * @param {Function} iterator - the function which reduces the values
  * @api public
@@ -2295,7 +2314,7 @@ exposeMethod('reduce1');
  * of accepting a callback and causing a *thunk*, it passes the value on.
  *
  * @id collect
- * @section Streams
+ * @section Transforms
  * @name Stream.collect()
  * @api public
  *
@@ -2328,7 +2347,7 @@ exposeMethod('collect');
  * reduction as it is calculated.
  *
  * @id scan
- * @section Streams
+ * @section Transforms
  * @name Stream.scan(memo, iterator)
  * @param memo - the initial state of the reduction
  * @param {Function} iterator - the function which reduces the values
@@ -2363,7 +2382,7 @@ exposeMethod('scan');
  * state instead of passing in a `memo` value.
  *
  * @id scan1
- * @section Streams
+ * @section Transforms
  * @name Stream.scan1(iterator)
  * @param {Function} iterator - the function which reduces the values
  * @api public
@@ -2398,7 +2417,7 @@ exposeMethod('scan1');
  * convention of other top-level exported functions which do `x` to `y`.
  *
  * @id concat
- * @section Streams
+ * @section Higher-order Streams
  * @name Stream.concat(ys)
  * @params {Stream | Array} ys - the values to concatenate onto this Stream
  * @api public
@@ -2431,7 +2450,7 @@ exposeMethod('concat');
  * their respective streams.
  *
  * @id merge
- * @section Streams
+ * @section Higher-order Streams
  * @name Stream.merge()
  * @api public
  *
@@ -2497,7 +2516,7 @@ exposeMethod('merge');
  * a new stream with the result of those calls.
  *
  * @id invoke
- * @section Streams
+ * @section Transforms
  * @name Stream.invoke(method, args)
  * @param {String} method - the method name to call
  * @param {Array} args - the arguments to call the method with
@@ -2520,7 +2539,7 @@ exposeMethod('invoke');
  * every `ms` milliseconds, any other values are dropped.
  *
  * @id throttle
- * @section Streams
+ * @section Transforms
  * @name Stream.throttle(ms)
  * @param {Number} ms - the minimum milliseconds between each value
  * @api public
@@ -2553,7 +2572,7 @@ exposeMethod('throttle');
  * the delay, discarding all other values.
  *
  * @id debounce
- * @section Streams
+ * @section Transforms
  * @name Stream.debounce(ms)
  * @param {Number} ms - the milliseconds to wait before sending data
  * @api public
@@ -2605,7 +2624,7 @@ exposeMethod('debounce');
  * property which you need to query periodically.
  *
  * @id latest
- * @section Streams
+ * @section Transforms
  * @name Stream.latest()
  * @api public
  *
@@ -3039,7 +3058,10 @@ EventEmitter.prototype.addListener = function(type, listener) {
                     'leak detected. %d listeners added. ' +
                     'Use emitter.setMaxListeners() to increase limit.',
                     this._events[type].length);
-      console.trace();
+      if (typeof console.trace === 'function') {
+        // not supported in IE 10
+        console.trace();
+      }
     }
   }
 
