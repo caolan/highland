@@ -1,18 +1,6 @@
 !function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.highland=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 (function (process,global){
 /**
-Streams
-    @section Stream Objects
-    @section Transforms
-    @section Higher-order Streams
-    @section Consumption
-what about pipe? go for consumtion because:
-- its thunking,
-- it does not explicitly return a highland stream
-- its for kompatibility with node api
-*/
-
-/**
  * Highland: the high-level streams library
  *
  * Highland may be freely distributed under the Apache 2.0 license.
@@ -464,10 +452,7 @@ function Stream(/*optional*/xs, /*optional*/ee, /*optional*/mappingHint) {
         }
         else {
             // assume it's a pipeable stream as a source
-            this._generator = function () {
-                delete self._generator;
-                xs.pipe(self);
-            };
+            xs.pipe(self);
         }
     }
     else if (typeof xs === 'string') {
@@ -2427,6 +2412,7 @@ exposeMethod('scan1');
  */
 
 Stream.prototype.concat = function (ys) {
+    ys = _(ys);
     return this.consume(function (err, x, push, next) {
         if (x === nil) {
             next(ys);
