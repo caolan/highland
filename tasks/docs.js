@@ -43,7 +43,7 @@ module.exports = function (grunt) {
                 return x.api === 'public';
             });
 
-            comments.sort(groupBySectionsInSectionOrder);
+            comments.sort(groupBySectionsInSectionsOrder);
 
             var sections = {},
               containsId = function (id) {
