@@ -1678,6 +1678,42 @@ exports['concat - piped ArrayStream'] = function (test) {
     });  
 };
 
+exports['concat - piped ArrayStream - paused'] = function (test) {
+    var s1 = streamify([1,2]);
+    var s2 = streamify([3,4]);
+    s2.pause();
+    s1.pause();
+
+    var _resume1 = s1.resume;
+    var resume_called1 = false;
+    s1.resume = function () {
+        resume_called1 = true;
+        return _resume1.apply(this, arguments);
+    };
+    test.strictEqual(s1._readableState.flowing, false);
+    test.strictEqual(resume_called1, false);
+
+    var _resume2 = s2.resume;
+    var resume_called2 = false;
+    s2.resume = function () {
+        resume_called2 = true;
+        return _resume2.apply(this, arguments);
+    };
+    test.strictEqual(s2._readableState.flowing, false);
+    test.strictEqual(resume_called2, false);
+
+    var s3 = _.concat(s2, s1);
+    test.strictEqual(s1._readableState.flowing, false);
+    test.strictEqual(resume_called1, false);
+    test.strictEqual(s2._readableState.flowing, false);
+    test.strictEqual(resume_called2, false);
+
+    s3.toArray(function (xs) {
+        test.same(xs, [1,2,3,4]);
+        test.done();
+    });
+};
+
 exports['concat - GeneratorStream'] = function (test) {
     var s1 = _(function (push, next) {
         setTimeout(function () {
