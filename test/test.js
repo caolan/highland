@@ -2063,6 +2063,17 @@ exports['flatMap - GeneratorStream'] = function (test) {
     });
 };
 
+exports['flatMap - map to Stream of Array'] = function (test) {
+    test.expect(1);
+    var f = function (x) {
+        return _([[x]]);
+    };
+    var s = _([1,2,3,4]).flatMap(f).toArray(function (xs) {
+        test.same(xs, [[1],[2],[3],[4]]);
+        test.done();
+    });
+};
+
 exports['pluck'] = function (test) {
     var a = _([
         {type: 'blogpost', title: 'foo'},
