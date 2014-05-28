@@ -1331,10 +1331,8 @@ exposeMethod('map');
 
 /**
  * Creates a new Stream of values by applying each item in a Stream to an
- * iterator function which may return a Stream. Each item on these result
- * Streams are then emitted on a single output Stream.
- *
- * The same as calling `stream.map(f).flatten()`.
+ * iterator function which must return a (possibly empty) Stream. Each item on
+ * these result Streams are then emitted on a single output Stream.
  *
  * @id flatMap
  * @section Higher-order Streams
@@ -1346,7 +1344,7 @@ exposeMethod('map');
  */
 
 Stream.prototype.flatMap = function (f) {
-    return this.map(f).flatten();
+    return this.map(f).sequence();
 };
 exposeMethod('flatMap');
 
