@@ -2510,6 +2510,33 @@ exports['zip'] = function (test) {
     test.done();
 };
 
+exports['zip - source emits error'] = function (test) {
+    test.expect(4);
+    var err = new Error('error');
+    var s1 = _([1,2]);
+    var s2 = _(function (push) {
+        push(null, 'a');
+        push(err);
+        push(null, 'b');
+        push(null, _.nil);
+    });
+
+    var s = s1.zip(s2);
+    s.pull(function (err, x) {
+        test.deepEqual(x, [1, 'a']);
+    });
+    s.pull(function (err, x) {
+        test.equal(err.message, 'error');
+    });
+    s.pull(function (err, x) {
+        test.deepEqual(x, [2, 'b']);
+    });
+    s.pull(function (err, x) {
+        test.equal(x, _.nil);
+    });
+    test.done();
+};
+
 exports['zip - ArrayStream'] = function (test) {
     _(['a', 'b', 'c']).zip([1,2,3]).toArray(function (xs) {
         test.same(xs, [['a',1], ['b',2], ['c',3]]);
