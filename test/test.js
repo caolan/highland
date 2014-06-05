@@ -11,29 +11,29 @@ var EventEmitter = require('events').EventEmitter,
 /**
  * Useful function to use in tests.
  */
-function valueEquals(test, val) {
+function valueEquals(test, expected) {
     return function (err, x) {
         if (err) {
-            test.equal(null, err, 'Expected a value to be emitted.');
+            test.equal(err, null, 'Expected a value to be emitted.');
         } else {
-            test.equal(val, x, 'Incorrect value emitted.');
+            test.equal(x, expected, 'Incorrect value emitted.');
         }
     };
 }
 
-function errorEquals(test, msg) {
+function errorEquals(test, expectedMsg) {
     return function (err, x) {
         if (err) {
-            test.equal(msg, err.message, 'Error emitted with incorrect message.');
+            test.equal(err.message, expectedMsg, 'Error emitted with incorrect message.');
         } else {
-            test.notEqual(null, err, 'No error emitted.');
+            test.notEqual(err, null, 'No error emitted.');
         }
     };
 }
 
 function anyError(test) {
     return function (err, x) {
-        test.notEqual(null, err, 'No error emitted.');
+        test.notEqual(err, null, 'No error emitted.');
     };
 }
 
