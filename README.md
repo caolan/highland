@@ -24,6 +24,12 @@ Made by <a href="http://twitter.com/caolan">@caolan</a>, with help and patience 
 
 ## Examples
 
+Usage as a Node.js module
+
+```javascript
+var _ = require('highland');
+```
+
 Converting to/from Highland Streams
 
 ```javascript
