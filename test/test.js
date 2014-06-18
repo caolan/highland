@@ -1675,7 +1675,7 @@ exports['concat - piped ArrayStream'] = function (test) {
     _.concat(streamify([3,4]).pipe(through()), streamify([1,2])).toArray(function (xs) {
         test.same(xs, [1,2,3,4]);
         test.done();
-    });  
+    });
 };
 
 exports['concat - piped ArrayStream - paused'] = function (test) {
@@ -2005,6 +2005,29 @@ exports['map to value'] = function (test) {
     });
     _([1, 2, 3]).map(1).toArray(function (xs) {
         test.same(xs, [1,1,1]);
+    });
+    test.done();
+};
+
+exports['doto'] = function (test) {
+    test.expect(4);
+
+    var seen;
+    function record(x) {
+        seen.push(x * 2);
+    }
+
+    seen = [];
+    _.doto(record, [1, 2, 3, 4]).toArray(function (xs) {
+        test.same(xs, [1, 2, 3, 4]);
+        test.same(seen, [2, 4, 6, 8]);
+    });
+
+    // partial application
+    seen = [];
+    _.doto(record)([1, 2, 3, 4]).toArray(function (xs) {
+        test.same(xs, [1, 2, 3, 4]);
+        test.same(seen, [2, 4, 6, 8]);
     });
     test.done();
 };
