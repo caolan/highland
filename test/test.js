@@ -1675,7 +1675,7 @@ exports['concat - piped ArrayStream'] = function (test) {
     _.concat(streamify([3,4]).pipe(through()), streamify([1,2])).toArray(function (xs) {
         test.same(xs, [1,2,3,4]);
         test.done();
-    });  
+    });
 };
 
 exports['concat - piped ArrayStream - paused'] = function (test) {
@@ -3232,6 +3232,26 @@ exports['pipeline - no arguments'] = function (test) {
         test.done();
     });
 };
+
+exports['pipeline - backpressure'] = function (test) {
+    var i = 0;
+    var src = _(function(push, next) {
+        if (i < 10000) {
+            push(null, ++i);
+            next();
+        } else {
+            push(null, _.nil);
+        }
+    });
+    var through = _.pipeline(
+        _.map(_.wrapCallback(function(){})),
+        _.series
+    );
+    src.pipe(through).toArray();
+
+    test.equal(i, 1);
+    test.done();
+}
 
 
 /***** Objects *****/
