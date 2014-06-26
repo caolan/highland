@@ -2711,7 +2711,15 @@ exports['chain - map to Stream of Array'] = function (test) {
     });
 };
 
-exports['chain - left identity'] = function (test) {
+exports['of'] = function (test) {
+    test.expect(1);
+    _.of(1).toArray(function (xs) {
+        test.same(xs, [1]);
+        test.done();
+    });
+};
+
+exports['monad - left identity'] = function (test) {
     test.expect(1);
     var f = function (x) {
         return _([x, x * 2, x * 3]);
@@ -2725,7 +2733,7 @@ exports['chain - left identity'] = function (test) {
     });
 };
 
-exports['chain - right identity'] = function (test) {
+exports['monad - right identity'] = function (test) {
     test.expect(1);
 
     _([1, 2, 3]).chain(_.of).toArray(function (xs) {
