@@ -2646,6 +2646,71 @@ exports['flatMap - map to Stream of Array'] = function (test) {
     });
 };
 
+exports['chain'] = function (test) {
+    var f = function (x) {
+        return _(function (push, next) {
+            setTimeout(function () {
+                push(null, x * 2);
+                push(null, _.nil);
+            }, 10);
+        });
+    };
+    _.chain(f, [1,2,3,4]).toArray(function (xs) {
+        test.same(xs, [2,4,6,8]);
+        test.done();
+    });
+};
+
+exports['chain - ArrayStream'] = function (test) {
+    var f = function (x) {
+        return _(function (push, next) {
+            setTimeout(function () {
+                push(null, x * 2);
+                push(null, _.nil);
+            }, 10);
+        });
+    };
+    _([1,2,3,4]).chain(f).toArray(function (xs) {
+        test.same(xs, [2,4,6,8]);
+        test.done();
+    });
+};
+
+exports['chain - GeneratorStream'] = function (test) {
+    var f = function (x) {
+        return _(function (push, next) {
+            setTimeout(function () {
+                push(null, x * 2);
+                push(null, _.nil);
+            }, 10);
+        });
+    };
+    var s = _(function (push, next) {
+        push(null, 1);
+        push(null, 2);
+        setTimeout(function () {
+            push(null, 3);
+            push(null, 4);
+            push(null, _.nil);
+        }, 10);
+    });
+    s.chain(f).toArray(function (xs) {
+        test.same(xs, [2,4,6,8]);
+        test.done();
+    });
+};
+
+exports['chain - map to Stream of Array'] = function (test) {
+    test.expect(1);
+    var f = function (x) {
+        return _([[x]]);
+    };
+    var s = _([1,2,3,4]).chain(f).toArray(function (xs) {
+        test.same(xs, [[1],[2],[3],[4]]);
+        test.done();
+    });
+};
+
 exports['pluck'] = function (test) {
     var a = _([
         {type: 'blogpost', title: 'foo'},
