@@ -2711,6 +2711,20 @@ exports['chain - map to Stream of Array'] = function (test) {
     });
 };
 
+exports['chain - left identity'] = function (test) {
+    test.expect(1);
+    var f = function (x) {
+        return _([x, x * 2, x * 3]);
+    };
+
+    _.of(2).chain(f).toArray(function (xs) {
+        f(2).toArray(function (ys) {
+            test.same(xs, ys);
+            test.done();
+        });
+    });
+};
+
 exports['pluck'] = function (test) {
     var a = _([
         {type: 'blogpost', title: 'foo'},
