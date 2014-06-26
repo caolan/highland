@@ -2725,6 +2725,16 @@ exports['chain - left identity'] = function (test) {
     });
 };
 
+exports['chain - right identity'] = function (test) {
+    test.expect(1);
+
+    _([1, 2, 3]).chain(_.of).toArray(function (xs) {
+        test.same(xs, [1, 2, 3]);
+        test.done();
+    });
+};
+
+
 exports['pluck'] = function (test) {
     var a = _([
         {type: 'blogpost', title: 'foo'},
