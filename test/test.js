@@ -2711,6 +2711,24 @@ exports['chain - map to Stream of Array'] = function (test) {
     });
 };
 
+exports['chain - associativity'] = function (test) {
+    test.expect(1);
+    var f = function (x) {
+        return _([x * 2]);
+    };
+    var g = function (x) {
+        return _([x + 3]);
+    };
+    _([1, 2, 3, 4]).chain(f).chain(g).toArray(function (xs) {
+        _([1, 2, 3, 4]).chain(function (x) {
+            return f(x).chain(g);
+        }).toArray(function (ys) {
+            test.same(xs, ys);
+            test.done();
+        });
+    });
+};
+
 exports['of'] = function (test) {
     test.expect(1);
     _.of(1).toArray(function (xs) {
