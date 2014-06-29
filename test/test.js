@@ -1305,11 +1305,20 @@ exports['otherwise'] = function (test) {
 };
 
 exports['otherwise - ArrayStream'] = function (test) {
-    test.expect(2);
+    test.expect(5);
     _([1,2,3]).otherwise([4,5,6]).toArray(function (xs) {
         test.same(xs, [1,2,3]);
     });
     _([]).otherwise([4,5,6]).toArray(function (xs) {
+        test.same(xs, [4,5,6]);
+    });
+    _([4,5,6]).otherwise([]).otherwise([]).toArray(function (xs) {
+        test.same(xs, [4,5,6]);
+    });
+    _([]).otherwise([4,5,6]).otherwise([]).toArray(function (xs) {
+        test.same(xs, [4,5,6]);
+    });
+    _([]).otherwise([]).otherwise([4,5,6]).toArray(function (xs) {
         test.same(xs, [4,5,6]);
     });
     test.done();
