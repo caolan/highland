@@ -1324,6 +1324,26 @@ exports['otherwise - ArrayStream'] = function (test) {
     test.done();
 };
 
+exports['otherwise - Redirect'] = function(test) {
+    test.expect(3);
+    _(function (push, next) {
+        next(_([1,2,3]));
+    }).otherwise([]).toArray(function (xs) {
+        test.same(xs, [1,2,3]);
+    });
+    _(function (push, next) {
+        next(_([1,2,3]));
+    }).otherwise([4,5,6]).toArray(function (xs) {
+        test.same(xs, [1,2,3]);
+    });
+    _(function (push, next) {
+        next(_([]));
+    }).otherwise([4,5,6]).toArray(function (xs) {
+        test.same(xs, [4,5,6]);
+    });
+    test.done();
+};
+
 exports['otherwise - GeneratorStream'] = function (test) {
     test.expect(2);
     var empty = _(function (push, next) {
