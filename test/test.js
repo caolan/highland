@@ -922,6 +922,19 @@ exports['wrap node stream and pipe'] = function (test) {
     ys.pipe(dest);
 };
 
+exports['wrap node stream with error'] = function (test) {
+    test.expect(1);
+    var readable = streamify([1,2,3,4]);
+    var err = new Error('nope');
+    var xs = _(readable);
+    readable.emit('error', err);
+
+    xs.stopOnError(function (e) {
+        test.strictEqual(err, e);
+        test.done();
+    }).each(function () {});
+};
+
 // ignore these tests in non-node.js environments
 if (typeof process !== 'undefined' && process.stdout) {
     exports['pipe highland stream to stdout'] = function (test) {
