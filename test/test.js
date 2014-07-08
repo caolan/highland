@@ -398,6 +398,31 @@ exports['errors - rethrow'] = function (test) {
     test.done();
 };
 
+exports['errors - rethrows + forwarding different stream'] = function (test) {
+    test.expect(1);
+    var err1 = new Error('one');
+    var s = _(function (push, next) {
+        push(err1);
+        push(null, _.nil);
+    }).errors(function (err, push) { push(err); });
+
+    var s2 = _(function (push, next) {
+        s.pull(function (err, val) {
+            push(err, val);
+            if (val !== _.nil)
+                next();
+        });
+    });
+
+    test.throws(function () {
+        s2.toArray(function () {
+            test.ok(false, 'should not be called');
+        });
+    }, 'one');
+    test.done();
+};
+
+
 exports['errors - argument function throws'] = function (test) {
     test.expect(4);
     var err1 = new Error('one');
@@ -473,6 +498,30 @@ exports['stopOnError'] = function (test) {
         test.same(errs, [err1]);
         test.done();
     });
+};
+
+exports['stopOnError - rethrows + forwarding different stream'] = function (test) {
+    test.expect(1);
+    var err1 = new Error('one');
+    var s = _(function (push, next) {
+        push(err1);
+        push(null, _.nil);
+    }).stopOnError(function (err, push) { push(err); });
+
+    var s2 = _(function (push, next) {
+        s.pull(function (err, val) {
+            push(err, val);
+            if (val !== _.nil)
+                next();
+        });
+    });
+
+    test.throws(function () {
+        s2.toArray(function () {
+            test.ok(false, 'should not be called');
+        });
+    }, 'one');
+    test.done();
 };
 
 exports['stopOnError - argument function throws'] = function (test) {
