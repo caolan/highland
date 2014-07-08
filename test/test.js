@@ -422,27 +422,6 @@ exports['errors - rethrows + forwarding different stream'] = function (test) {
     test.done();
 };
 
-
-exports['errors - argument function throws'] = function (test) {
-    test.expect(4);
-    var err1 = new Error('one');
-    var err2 = new Error('two');
-    var s = _(function (push, next) {
-        push(null, 1);
-        push(err1);
-        push(null, 2);
-        push(null, _.nil);
-    }).errors(function () {
-        throw err2;
-    });
-
-    s.pull(valueEquals(test, 1));
-    s.pull(errorEquals(test, 'two'));
-    s.pull(valueEquals(test, 2));
-    s.pull(valueEquals(test, _.nil));
-    test.done();
-};
-
 exports['errors - ArrayStream'] = function (test) {
     var errs = [];
     var f = function (err, rethrow) {
@@ -521,25 +500,6 @@ exports['stopOnError - rethrows + forwarding different stream'] = function (test
             test.ok(false, 'should not be called');
         });
     }, 'one');
-    test.done();
-};
-
-exports['stopOnError - argument function throws'] = function (test) {
-    test.expect(3);
-    var err1 = new Error('one');
-    var err2 = new Error('two');
-    var s = _(function (push) {
-        push(null, 1);
-        push(err1);
-        push(null, 2);
-        push(null, _.nil);
-    }).stopOnError(function () {
-        throw err2;
-    });
-
-    s.pull(valueEquals(test, 1));
-    s.pull(errorEquals(test, 'two'));
-    s.pull(valueEquals(test, _.nil));
     test.done();
 };
 
