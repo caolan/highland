@@ -30,6 +30,22 @@ Usage as a Node.js module
 var _ = require('highland');
 ```
 
+Usage in a browser
+
+Highland will be accessible in ``window.highland`` thus calling ``highland([1,2,3,4])`` will create you a stream.
+
+If you would like to use ``_`` instead you have to create a new file ``highland.browser.js``:
+
+```javascript
+(function() {
+    var root = this;
+    var _ = require('./lib/index.js');
+    root._ = _;
+}.call(window));
+```
+
+and convert it with browserify: ``browserify highland.js -o highland.browser.js``. You can now load ``highland.brwoser.js`` in the browser and have ``_`` available. Note that this conflicts with libraries such as Underscoe.js.
+
 Converting to/from Highland Streams
 
 ```javascript
