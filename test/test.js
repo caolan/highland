@@ -1860,29 +1860,22 @@ exports['concat - piped ArrayStream - paused'] = function (test) {
     s2.pause();
     s1.pause();
 
-    var _resume1 = s1.resume;
-    var resume_called1 = false;
-    s1.resume = function () {
-        resume_called1 = true;
-        return _resume1.apply(this, arguments);
-    };
-    test.strictEqual(s1._readableState.flowing, false);
-    test.strictEqual(resume_called1, false);
-
-    var _resume2 = s2.resume;
-    var resume_called2 = false;
-    s2.resume = function () {
-        resume_called2 = true;
-        return _resume2.apply(this, arguments);
-    };
-    test.strictEqual(s2._readableState.flowing, false);
-    test.strictEqual(resume_called2, false);
+    test.strictEqual(s1._readableState.buffer.length, 0);
+    test.strictEqual(s1._readableState.reading, false);
+    test.strictEqual(s2._readableState.buffer.length, 0);
+    test.strictEqual(s2._readableState.reading, false);
 
     var s3 = _.concat(s2, s1);
-    test.strictEqual(s1._readableState.flowing, false);
-    test.strictEqual(resume_called1, false);
-    test.strictEqual(s2._readableState.flowing, false);
-    test.strictEqual(resume_called2, false);
+    test.ok(
+        s1._readableState.buffer[0] === 1 || // node 0.11.x
+        s1._readableState.buffer.length === 0 // node 0.10.x
+    );
+    test.strictEqual(s1._readableState.reading, false);
+    test.ok(
+        s2._readableState.buffer[0] === 3 || // node 0.11.x
+        s2._readableState.buffer.length === 0 // node 0.10.x
+    );
+    test.strictEqual(s2._readableState.reading, false);
 
     s3.toArray(function (xs) {
         test.same(xs, [1,2,3,4]);
