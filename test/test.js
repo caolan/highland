@@ -398,23 +398,27 @@ exports['errors - rethrow'] = function (test) {
     test.done();
 };
 
-exports['errors - argument function throws'] = function (test) {
-    test.expect(4);
+exports['errors - rethrows + forwarding different stream'] = function (test) {
+    test.expect(1);
     var err1 = new Error('one');
-    var err2 = new Error('two');
     var s = _(function (push, next) {
-        push(null, 1);
         push(err1);
-        push(null, 2);
         push(null, _.nil);
-    }).errors(function () {
-        throw err2;
+    }).errors(function (err, push) { push(err); });
+
+    var s2 = _(function (push, next) {
+        s.pull(function (err, val) {
+            push(err, val);
+            if (val !== _.nil)
+                next();
+        });
     });
 
-    s.pull(valueEquals(test, 1));
-    s.pull(errorEquals(test, 'two'));
-    s.pull(valueEquals(test, 2));
-    s.pull(valueEquals(test, _.nil));
+    test.throws(function () {
+        s2.toArray(function () {
+            test.ok(false, 'should not be called');
+        });
+    }, 'one');
     test.done();
 };
 
@@ -475,22 +479,27 @@ exports['stopOnError'] = function (test) {
     });
 };
 
-exports['stopOnError - argument function throws'] = function (test) {
-    test.expect(3);
+exports['stopOnError - rethrows + forwarding different stream'] = function (test) {
+    test.expect(1);
     var err1 = new Error('one');
-    var err2 = new Error('two');
-    var s = _(function (push) {
-        push(null, 1);
+    var s = _(function (push, next) {
         push(err1);
-        push(null, 2);
         push(null, _.nil);
-    }).stopOnError(function () {
-        throw err2;
+    }).stopOnError(function (err, push) { push(err); });
+
+    var s2 = _(function (push, next) {
+        s.pull(function (err, val) {
+            push(err, val);
+            if (val !== _.nil)
+                next();
+        });
     });
 
-    s.pull(valueEquals(test, 1));
-    s.pull(errorEquals(test, 'two'));
-    s.pull(valueEquals(test, _.nil));
+    test.throws(function () {
+        s2.toArray(function () {
+            test.ok(false, 'should not be called');
+        });
+    }, 'one');
     test.done();
 };
 
