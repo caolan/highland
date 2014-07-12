@@ -61,6 +61,15 @@ module.exports = function (grunt) {
                 tagName: '%VERSION%',
                 tagMessage: 'Version %VERSION%'
             }
+        },
+        'npm-publish': {
+            options: {
+                // list of tasks that are required before publishing
+                requires: [],
+                // if the workspace is dirty, abort publishing
+                // (to avoid publishing local changes)
+                abortIfDirty: true,
+            }
         }
 
     });
@@ -71,11 +80,35 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-browserify');
     grunt.loadNpmTasks('grunt-gh-pages');
     grunt.loadNpmTasks('grunt-bump');
+    grunt.loadNpmTasks('grunt-npm');
 
     // custom tasks
     grunt.loadTasks('./tasks');
 
+    grunt.registerTask('release:patch', [
+        'test',
+        'build',
+        'bump:patch',
+        'npm-publish',
+        'gh-pages'
+    ]);
+    grunt.registerTask('release:minor', [
+        'test',
+        'build',
+        'bump:minor',
+        'npm-publish',
+        'gh-pages'
+    ]);
+    grunt.registerTask('release:major', [
+        'test',
+        'build',
+        'bump:major',
+        'npm-publish',
+        'gh-pages'
+    ]);
+
     grunt.registerTask('test', ['jshint:all', 'nodeunit:all']);
-    grunt.registerTask('default', ['browserify:main', 'docs']);
+    grunt.registerTask('build', ['browserify:main', 'docs']);
+    grunt.registerTask('default', ['build']);
 
 };
