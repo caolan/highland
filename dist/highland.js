@@ -13,7 +13,6 @@
 var inherits = _dereq_('util').inherits;
 var EventEmitter = _dereq_('events').EventEmitter;
 
-
 /**
  * The Stream constructor, accepts an array of values or a generator function
  * as an optional argument. This is typically the entry point to the Highland
@@ -374,6 +373,7 @@ function Stream(/*optional*/xs, /*optional*/ee, /*optional*/mappingHint) {
     this._observers = [];
     this._destructors = [];
     this._send_events = false;
+    this._delegate = null;
     this.source = null;
 
     // Old-style node Stream.pipe() checks for this
@@ -451,6 +451,10 @@ function Stream(/*optional*/xs, /*optional*/ee, /*optional*/mappingHint) {
             });
         }
         else {
+            // write any errors into the stream
+            xs.on('error', function (err) {
+                self.write(new StreamError(err));
+            });
             // assume it's a pipeable stream as a source
             xs.pipe(self);
         }
@@ -850,6 +854,10 @@ Stream.prototype._redirect = function (to) {
     // coerce to Stream
     to = _(to);
 
+    while (to._delegate) {
+        to = to._delegate;
+    }
+
     to._consumers = this._consumers.map(function (c) {
         c.source = to;
         return c;
@@ -869,6 +877,8 @@ Stream.prototype._redirect = function (to) {
         this.pause();
         to._checkBackPressure();
     }
+
+    this._delegate = to;
 };
 
 /**
@@ -1322,12 +1332,48 @@ Stream.prototype.map = function (f) {
             push(err, x);
         }
         else {
-            push(null, f(x));
+            var fnVal, fnErr;
+            try {
+                fnVal = f(x);
+            } catch (e) {
+                fnErr = e;
+            }
+            push(fnErr, fnVal);
             next();
         }
     });
 };
 exposeMethod('map');
+
+/**
+ * Creates a new Stream which applies a function to each value from the source
+ * and re-emits the source value. Useful when you want to mutate the value or
+ * perform side effects
+ *
+ * @id doto
+ * @section Transforms
+ * @name Stream.doto(f)
+ * @param f - the function to apply
+ * @api public
+ *
+ * var appended = _([[1], [2], [3], [4]]).doto(function (x) {
+ *     x.push(1);
+ * });
+ *
+ * _([1, 2, 3]).doto(console.log)
+ * // 1
+ * // 2
+ * // 3
+ * // => 1, 2, 3
+ */
+
+Stream.prototype.doto = function (f) {
+    return this.map(function (x) {
+        f(x);
+        return x;
+    });
+};
+exposeMethod('doto');
 
 /**
  * Creates a new Stream of values by applying each item in a Stream to an
@@ -1416,7 +1462,16 @@ Stream.prototype.filter = function (f) {
             push(err, x);
         }
         else {
-            if (f(x)) {
+            var fnVal, fnErr;
+            try {
+                fnVal = f(x);
+            } catch (e) {
+                fnErr = e;
+            }
+
+            if (fnErr) {
+                push(fnErr);
+            } else if (fnVal) {
                 push(null, x);
             }
             next();
@@ -1443,17 +1498,19 @@ exposeMethod('filter');
  */
 
 Stream.prototype.flatFilter = function (f) {
-    var xs = this.observe();
-    var ys = this.flatMap(function (x) {
-        return f(x).take(1);
-    });
-    return xs.zip(ys)
-        .filter(function (pair) {
-            return pair[1];
-        })
-        .map(function (pair) {
-            return pair[0];
+    return this.flatMap(function (x) {
+        return f(x).take(1).otherwise(errorStream())
+        .flatMap(function (bool) {
+            return _(bool ? [x] : []);
         });
+    });
+
+    function errorStream() {
+        return _(function (push) {
+            push(new Error('Stream returned by function was empty.'));
+            push(null, _.nil);
+        });
+    }
 };
 exposeMethod('flatFilter');
 
@@ -1507,22 +1564,7 @@ exposeMethod('reject');
  */
 
 Stream.prototype.find = function (f) {
-    return this.consume(function (err, x, push, next) {
-        if (err) {
-            push(err);
-            next();
-        }
-        else if (x === nil) {
-            push(err, x);
-        }
-        else {
-            if (f(x)) {
-                push(null, x);
-                push(null, nil);
-            }
-            next();
-        }
-    }.bind(this));
+    return this.filter(f).take(1);
 };
 exposeMethod('find');
 
@@ -1644,7 +1686,7 @@ Stream.prototype.zip = function (ys) {
     function nextValue(index, max, src, push, next) {
         src.pull(function (err, x) {
             if (err) {
-                push(null, err);
+                push(err);
                 nextValue(index, max, src, push, next);
             }
             else if (x === _.nil) {
@@ -2226,6 +2268,9 @@ exposeMethod('append');
  * the iterator function. The iterator is passed two arguments:
  * the memo and the next value.
  *
+ * If the iterator throws an error, the reduction stops and the resulting
+ * stream will emit that error instead of a value.
+ *
  * @id reduce
  * @section Transforms
  * @name Stream.reduce(memo, iterator)
@@ -2240,8 +2285,10 @@ exposeMethod('append');
  * _([1, 2, 3, 4]).reduce(0, add)  // => 10
  */
 
-// TODO: convert this to this.scan(z, f).last()
 Stream.prototype.reduce = function (z, f) {
+    // This can't be implemented with scan(), because we don't know if the
+    // errors that we see from the scan were thrown by the iterator or just
+    // passed through from the source stream.
     return this.consume(function (err, x, push, next) {
         if (x === nil) {
             push(null, z);
@@ -2252,7 +2299,14 @@ Stream.prototype.reduce = function (z, f) {
             next();
         }
         else {
-            z = f(z, x);
+            try {
+                z = f(z, x);
+            } catch (e) {
+                push(e);
+                push(null, _.nil);
+                return;
+            }
+
             next();
         }
     });
@@ -2329,6 +2383,10 @@ exposeMethod('collect');
  * Like [reduce](#reduce), but emits each intermediate value of the
  * reduction as it is calculated.
  *
+ * If the iterator throws an error, the scan will stop and the stream will
+ * emit that error. Any intermediate values that were produced before the
+ * error will still be emitted.
+ *
  * @id scan
  * @section Transforms
  * @name Stream.scan(memo, iterator)
@@ -2351,7 +2409,14 @@ Stream.prototype.scan = function (z, f) {
                 next();
             }
             else {
-                z = f(z, x);
+                try {
+                    z = f(z, x);
+                } catch (e) {
+                    push(e);
+                    push(null, _.nil);
+                    return;
+                }
+
                 push(null, z);
                 next();
             }
