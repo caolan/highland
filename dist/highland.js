@@ -1007,6 +1007,7 @@ Stream.prototype.consume = function (f) {
     self._addConsumer(s);
     return s;
 };
+exposeMethod('consume');
 
 /**
  * Consumes a single item from the Stream. Unlike consume, this function will
