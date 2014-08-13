@@ -11,11 +11,13 @@ var EventEmitter = require('events').EventEmitter,
 /**
  * Useful function to use in tests.
  */
+
 function valueEquals(test, expected) {
     return function (err, x) {
         if (err) {
             test.equal(err, null, 'Expected a value to be emitted.');
-        } else {
+        }
+        else {
             test.equal(x, expected, 'Incorrect value emitted.');
         }
     };
@@ -24,8 +26,13 @@ function valueEquals(test, expected) {
 function errorEquals(test, expectedMsg) {
     return function (err, x) {
         if (err) {
-            test.equal(err.message, expectedMsg, 'Error emitted with incorrect message.');
-        } else {
+            test.equal(
+                err.message,
+                expectedMsg,
+                'Error emitted with incorrect message.'
+            );
+        }
+        else {
             test.notEqual(err, null, 'No error emitted.');
         }
     };
