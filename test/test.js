@@ -3119,6 +3119,35 @@ exports['parallel - GeneratorStream'] = function (test) {
     });
 };
 
+exports['parallel consume from async generator'] = function (test) {
+    function delay(push, ms, x) {
+        setTimeout(function () {
+            push(null, x);
+        }, ms);
+    }
+    var source = _(function (push, next) {
+        //console.log('source read');
+        delay(push, 100, 1);
+        delay(push, 200, 2);
+        delay(push, 300, 3);
+        delay(push, 400, 4);
+        delay(push, 500, 5);
+        delay(push, 600, _.nil);
+    });
+    var doubler = function (x) {
+        //console.log(['doubler call', x]);
+        return _(function (push, next) {
+            //console.log('doubler read');
+            delay(push, 50, x * 2);
+            delay(push, 100, _.nil);
+        });
+    };
+    source.map(doubler).parallel(3).toArray(function (xs) {
+        test.same(xs, [2, 4, 6, 8, 10]);
+        test.done();
+    });
+};
+
 exports['throttle'] = {
     setUp: function (callback) {
         this.clock = sinon.useFakeTimers();
