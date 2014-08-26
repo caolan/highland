@@ -1377,6 +1377,57 @@ Stream.prototype.doto = function (f) {
 exposeMethod('doto');
 
 /**
+ * Limits number of values through the stream to a maximum of 'num' values
+ * per 'ms'. Errors are not limited but allowed to pass through as soon as
+ * they are read from the source.
+ *
+ * @id ratelimit
+ * @section Transforms
+ * @name Stream.ratelimit(num, ms)
+ * @param {Number} num - the number of operations to perform per 'ms'
+ * @parma {Number} ms - the window of time to limit the operations in
+ *                      (in miliseconds)
+ * @api public
+ *
+ * _([1, 2, 3, 4, 5]).ratelimit(2, 100);
+ *
+ * // after 0ms => 1, 2
+ * // after 100ms => 1, 2, 3, 4
+ * // after 200ms => 1, 2, 3, 4, 5
+ */
+
+Stream.prototype.ratelimit = function (num, ms) {
+    if (num < 1) {
+        throw new Error('Invalid number of operations per ms: ' + num);
+    }
+    var sent = 0;
+    return this.consume(function (err, x, push, next) {
+        if (err) {
+            push(err);
+            next();
+        }
+        else if (x === nil) {
+            push(null, nil);
+        }
+        else {
+            if (sent < num) {
+                sent++;
+                push(null, x);
+                next();
+            }
+            else {
+                setTimeout(function () {
+                    sent = 1;
+                    push(null, x);
+                    next();
+                }, ms);
+            }
+        }
+    });
+};
+exposeMethod('ratelimit');
+
+/**
  * Creates a new Stream of values by applying each item in a Stream to an
  * iterator function which must return a (possibly empty) Stream. Each item on
  * these result Streams are then emitted on a single output Stream.
