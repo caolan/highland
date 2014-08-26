@@ -44,6 +44,43 @@ function anyError(test) {
     };
 }
 
+exports['ratelimit'] = {
+    setUp: function (callback) {
+        this.clock = sinon.useFakeTimers();
+        callback();
+    },
+    tearDown: function (callback) {
+        this.clock.restore();
+        callback();
+    },
+    'async generator': function (test) {
+        function delay(push, ms, x) {
+            setTimeout(function () {
+                push(null, x);
+            }, ms);
+        }
+        var source = _(function (push, next) {
+            delay(push, 10, 1);
+            delay(push, 20, 2);
+            delay(push, 30, 3);
+            delay(push, 40, 4);
+            delay(push, 50, 5);
+            delay(push, 60, _.nil);
+        })
+        var results = [];
+        source.ratelimit(2, 100).each(function (x) {
+            results.push(x);
+        });
+        this.clock.tick(100);
+        test.same(results, [1, 2]);
+        this.clock.tick(150);
+        test.same(results, [1, 2, 3, 4]);
+        this.clock.tick(1000);
+        test.same(results, [1, 2, 3, 4, 5]);
+        test.done();
+    }
+};
+
 /**
  * Functional utils
  */
