@@ -53,6 +53,15 @@ exports['ratelimit'] = {
         this.clock.restore();
         callback();
     },
+    'invalid num per ms': function (test) {
+        test.throws(function () {
+            _([1,2,3]).ratelimit(-10, 0);
+        });
+        test.throws(function () {
+            _([1,2,3]).ratelimit(0, 0);
+        });
+        test.done();
+    },
     'async generator': function (test) {
         function delay(push, ms, x) {
             setTimeout(function () {
@@ -71,9 +80,67 @@ exports['ratelimit'] = {
         source.ratelimit(2, 100).each(function (x) {
             results.push(x);
         });
-        this.clock.tick(100);
+        this.clock.tick(10);
+        test.same(results, [1]);
+        this.clock.tick(89);
         test.same(results, [1, 2]);
-        this.clock.tick(150);
+        this.clock.tick(51);
+        test.same(results, [1, 2, 3, 4]);
+        this.clock.tick(1000);
+        test.same(results, [1, 2, 3, 4, 5]);
+        test.done();
+    },
+    'toplevel - async generator': function (test) {
+        function delay(push, ms, x) {
+            setTimeout(function () {
+                push(null, x);
+            }, ms);
+        }
+        var source = _(function (push, next) {
+            delay(push, 10, 1);
+            delay(push, 20, 2);
+            delay(push, 30, 3);
+            delay(push, 40, 4);
+            delay(push, 50, 5);
+            delay(push, 60, _.nil);
+        })
+        var results = [];
+        _.ratelimit(2, 100, source).each(function (x) {
+            results.push(x);
+        });
+        this.clock.tick(10);
+        test.same(results, [1]);
+        this.clock.tick(89);
+        test.same(results, [1, 2]);
+        this.clock.tick(51);
+        test.same(results, [1, 2, 3, 4]);
+        this.clock.tick(1000);
+        test.same(results, [1, 2, 3, 4, 5]);
+        test.done();
+    },
+    'toplevel - partial application, async generator': function (test) {
+        function delay(push, ms, x) {
+            setTimeout(function () {
+                push(null, x);
+            }, ms);
+        }
+        var source = _(function (push, next) {
+            delay(push, 10, 1);
+            delay(push, 20, 2);
+            delay(push, 30, 3);
+            delay(push, 40, 4);
+            delay(push, 50, 5);
+            delay(push, 60, _.nil);
+        })
+        var results = [];
+        _.ratelimit(2)(100)(source).each(function (x) {
+            results.push(x);
+        });
+        this.clock.tick(10);
+        test.same(results, [1]);
+        this.clock.tick(89);
+        test.same(results, [1, 2]);
+        this.clock.tick(51);
         test.same(results, [1, 2, 3, 4]);
         this.clock.tick(1000);
         test.same(results, [1, 2, 3, 4, 5]);
