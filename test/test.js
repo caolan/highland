@@ -2196,6 +2196,16 @@ exports['merge'] = {
             test.done();
         }, 400);
         this.clock.tick(400);
+    },
+    'github issue #124: detect late end of stream': function(test) {
+      var s = _([1,2,3])
+              .map(function(x) { return _([x]) })
+              .merge()
+
+      s.toArray(function(xs) {
+        test.same(xs, [1,2,3]);
+        test.done();
+      })
     }
 };
 
