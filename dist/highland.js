@@ -556,6 +556,7 @@ _._isStreamRedirect = function (x) {
  */
 
 Stream.prototype._send = function (err, x) {
+    //console.log(['_send', this.id, err, x]);
     if (x === nil) {
         this.ended = true;
     }
@@ -598,7 +599,7 @@ Stream.prototype._send = function (err, x) {
  */
 
 Stream.prototype.pause = function () {
-    //console.log([this.id, 'pause']);
+    //console.log(['pause', this.id]);
     this.paused = true;
     if (this.source) {
         this.source._checkBackPressure();
@@ -628,6 +629,7 @@ Stream.prototype._checkBackPressure = function () {
  */
 
 Stream.prototype._readFromBuffer = function () {
+    //console.log(['_readFromBuffer', this.id, this.paused, this._incoming]);
     var len = this._incoming.length;
     var i = 0;
     while (i < len && !this.paused) {
@@ -653,6 +655,7 @@ Stream.prototype._readFromBuffer = function () {
  */
 
 Stream.prototype._sendOutgoing = function () {
+    //console.log(['_sendOutgoing', this.id, this.paused, this._outgoing]);
     var len = this._outgoing.length;
     var i = 0;
     while (i < len && !this.paused) {
@@ -686,8 +689,9 @@ Stream.prototype._sendOutgoing = function () {
  */
 
 Stream.prototype.resume = function () {
-    //console.log([this.id, 'resume']);
+    //console.log(['resume', this.id]);
     if (this._resume_running) {
+        //console.log(['resume already processing _incoming buffer, ignore resume call']);
         // already processing _incoming buffer, ignore resume call
         this._repeat_resume = true;
         return;
@@ -708,10 +712,12 @@ Stream.prototype.resume = function () {
         if (!this.paused) {
             // ask parent for more data
             if (this.source) {
+                //console.log(['ask parent for more data']);
                 this.source._checkBackPressure();
             }
             // run _generator to fill up _incoming buffer
             else if (this._generator) {
+                //console.log(['run generator to fill up _incoming buffer']);
                 this._runGenerator();
             }
             else {
@@ -835,6 +841,7 @@ Stream.prototype.destroy = function () {
  */
 
 Stream.prototype._runGenerator = function () {
+    //console.log(['_runGenerator', this.id]);
     // if _generator already running, exit
     if (this._generator_running) {
         return;
@@ -851,6 +858,7 @@ Stream.prototype._runGenerator = function () {
  */
 
 Stream.prototype._redirect = function (to) {
+    //console.log(['_redirect', this.id, '=>', to.id]);
     // coerce to Stream
     to = _(to);
 
@@ -862,14 +870,20 @@ Stream.prototype._redirect = function (to) {
         c.source = to;
         return c;
     });
+
     // TODO: copy _observers
     this._consumers = [];
-    this.consume = function () {
-        return to.consume.apply(to, arguments);
-    };
-    this._removeConsumer = function () {
-        return to._removeConsumer.apply(to, arguments);
-    };
+    //[this.consume = function () {
+    //    return to.consume.apply(to, arguments);
+    //};
+    //this._removeConsumer = function () {
+    //    return to._removeConsumer.apply(to, arguments);
+    //};
+
+    // this will cause a memory leak as long as the root object is around
+    to._delegate_source = this._delegate_source || this;
+    to._delegate_source._delegate = to;
+
     if (this.paused) {
         to.pause();
     }
@@ -877,8 +891,6 @@ Stream.prototype._redirect = function (to) {
         this.pause();
         to._checkBackPressure();
     }
-
-    this._delegate = to;
 };
 
 /**
@@ -904,13 +916,17 @@ Stream.prototype._addConsumer = function (s) {
  */
 
 Stream.prototype._removeConsumer = function (s) {
-    this._consumers = this._consumers.filter(function (c) {
+    var src = this;
+    while (src._delegate) {
+        src = src._delegate;
+    }
+    src._consumers = src._consumers.filter(function (c) {
         return c !== s;
     });
-    if (s.source === this) {
+    if (s.source === src) {
         s.source = null;
     }
-    this._checkBackPressure();
+    src._checkBackPressure();
 };
 
 /**
@@ -951,6 +967,9 @@ Stream.prototype._removeConsumer = function (s) {
 
 Stream.prototype.consume = function (f) {
     var self = this;
+    while (self._delegate) {
+        self = self._delegate;
+    }
     var s = new Stream();
     var _send = s._send;
     var push = function (err, x) {
@@ -1186,7 +1205,7 @@ exposeMethod('errors');
  * @api public
  *
  * brokenStream.stopOnError(function (err) {
- *     console.error('Something broke: ' + err);
+ *     //console.error('Something broke: ' + err);
  * });
  */
 
@@ -1284,7 +1303,8 @@ exposeMethod('apply');
 Stream.prototype.toArray = function (f) {
     var self = this;
     var xs = [];
-    return this.consume(function (err, x, push, next) {
+    var s = this.consume(function (err, x, push, next) {
+        //console.log(['toArray consume', err, x]);
         if (err) {
             self.emit('error', err);
         }
@@ -1295,7 +1315,9 @@ Stream.prototype.toArray = function (f) {
             xs.push(x);
             next();
         }
-    }).resume();
+    });
+    s.id = 'toArray:' + s.id;
+    s.resume();
 };
 
 /**
@@ -1377,16 +1399,15 @@ Stream.prototype.doto = function (f) {
 exposeMethod('doto');
 
 /**
- * Limits number of values through the stream to a maximum of 'num' values
- * per 'ms'. Errors are not limited but allowed to pass through as soon as
+ * Limits number of values through the stream to a maximum of number of values
+ * per window. Errors are not limited but allowed to pass through as soon as
  * they are read from the source.
  *
  * @id ratelimit
  * @section Transforms
  * @name Stream.ratelimit(num, ms)
- * @param {Number} num - the number of operations to perform per 'ms'
- * @parma {Number} ms - the window of time to limit the operations in
- *                      (in miliseconds)
+ * @param {Number} num - the number of operations to perform per window
+ * @param {Number} ms - the window of time to limit the operations in (in ms)
  * @api public
  *
  * _([1, 2, 3, 4, 5]).ratelimit(2, 100);
@@ -1819,7 +1840,7 @@ Stream.prototype.take = function (n) {
     if (n === 0) {
         return _([]);
     }
-    return this.consume(function (err, x, push, next) {
+    var s = this.consume(function (err, x, push, next) {
         if (err) {
             push(err);
             if (n > 0) {
@@ -1843,6 +1864,8 @@ Stream.prototype.take = function (n) {
             }
         }
     });
+    s.id = 'take:' + s.id;
+    return s;
 };
 exposeMethod('take');
 
