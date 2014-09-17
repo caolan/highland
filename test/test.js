@@ -44,114 +44,7 @@ function anyError(test) {
     };
 }
 
-exports['ratelimit'] = {
-    setUp: function (callback) {
-        this.clock = sinon.useFakeTimers();
-        callback();
-    },
-    tearDown: function (callback) {
-        this.clock.restore();
-        callback();
-    },
-    'invalid num per ms': function (test) {
-        test.throws(function () {
-            _([1,2,3]).ratelimit(-10, 0);
-        });
-        test.throws(function () {
-            _([1,2,3]).ratelimit(0, 0);
-        });
-        test.done();
-    },
-    'async generator': function (test) {
-        function delay(push, ms, x) {
-            setTimeout(function () {
-                push(null, x);
-            }, ms);
-        }
-        var source = _(function (push, next) {
-            delay(push, 10, 1);
-            delay(push, 20, 2);
-            delay(push, 30, 3);
-            delay(push, 40, 4);
-            delay(push, 50, 5);
-            delay(push, 60, _.nil);
-        })
-        var results = [];
-        source.ratelimit(2, 100).each(function (x) {
-            results.push(x);
-        });
-        this.clock.tick(10);
-        test.same(results, [1]);
-        this.clock.tick(89);
-        test.same(results, [1, 2]);
-        this.clock.tick(51);
-        test.same(results, [1, 2, 3, 4]);
-        this.clock.tick(1000);
-        test.same(results, [1, 2, 3, 4, 5]);
-        test.done();
-    },
-    'toplevel - async generator': function (test) {
-        function delay(push, ms, x) {
-            setTimeout(function () {
-                push(null, x);
-            }, ms);
-        }
-        var source = _(function (push, next) {
-            delay(push, 10, 1);
-            delay(push, 20, 2);
-            delay(push, 30, 3);
-            delay(push, 40, 4);
-            delay(push, 50, 5);
-            delay(push, 60, _.nil);
-        })
-        var results = [];
-        _.ratelimit(2, 100, source).each(function (x) {
-            results.push(x);
-        });
-        this.clock.tick(10);
-        test.same(results, [1]);
-        this.clock.tick(89);
-        test.same(results, [1, 2]);
-        this.clock.tick(51);
-        test.same(results, [1, 2, 3, 4]);
-        this.clock.tick(1000);
-        test.same(results, [1, 2, 3, 4, 5]);
-        test.done();
-    },
-    'toplevel - partial application, async generator': function (test) {
-        function delay(push, ms, x) {
-            setTimeout(function () {
-                push(null, x);
-            }, ms);
-        }
-        var source = _(function (push, next) {
-            delay(push, 10, 1);
-            delay(push, 20, 2);
-            delay(push, 30, 3);
-            delay(push, 40, 4);
-            delay(push, 50, 5);
-            delay(push, 60, _.nil);
-        })
-        var results = [];
-        _.ratelimit(2)(100)(source).each(function (x) {
-            results.push(x);
-        });
-        this.clock.tick(10);
-        test.same(results, [1]);
-        this.clock.tick(89);
-        test.same(results, [1, 2]);
-        this.clock.tick(51);
-        test.same(results, [1, 2, 3, 4]);
-        this.clock.tick(1000);
-        test.same(results, [1, 2, 3, 4, 5]);
-        test.done();
-    }
-};
-
-/**
- * Functional utils
- */
-
+/*
 exports['curry'] = function (test) {
     var fn = _.curry(function (a, b, c, d) {
         return a + b + c + d;
@@ -233,8 +126,6 @@ exports['seq'] = function (test) {
     test.done();
 }
 
-/***** Streams *****/
-
 exports['isStream'] = function (test) {
     test.ok(!_.isStream());
     test.ok(!_.isStream(undefined));
@@ -265,6 +156,7 @@ exports['nil should not equate to any empty object'] = function (test) {
 
 exports['async consume'] = function (test) {
     _([1,2,3,4]).consume(function (err, x, push, next) {
+        console.log(['consume got', err, x, 'nil?', x === _.nil]);
         if (x === _.nil) {
             push(null, _.nil);
         }
@@ -905,7 +797,10 @@ exports['adding multiple consumers should error'] = function (test) {
     });
     test.done();
 };
+*/
 
+// TODO: come up with a non-leaky solution to this API problem
+/*
 exports['switch to alternate stream using next'] = function (test) {
     var s2_gen_calls = 0;
     var s2 = _(function (push, next) {
@@ -924,14 +819,17 @@ exports['switch to alternate stream using next'] = function (test) {
     test.equal(s1_gen_calls, 0);
     test.equal(s2_gen_calls, 0);
     s1.take(1).toArray(function (xs) {
+        console.log(['first toArray got', xs]);
         test.equal(s1_gen_calls, 1);
         test.equal(s2_gen_calls, 0);
         test.same(xs, [1]);
         s1.take(1).toArray(function (xs) {
+            console.log(['second toArray got', xs]);
             test.equal(s1_gen_calls, 1);
             test.equal(s2_gen_calls, 1);
             test.same(xs, [2]);
             s1.take(1).toArray(function (xs) {
+                console.log(['third toArray got', xs]);
                 test.equal(s1_gen_calls, 1);
                 test.equal(s2_gen_calls, 1);
                 test.same(xs, []);
@@ -940,7 +838,40 @@ exports['switch to alternate stream using next'] = function (test) {
         });
     });
 };
+*/
 
+exports['switch to alternate stream using next produce error when reading from original source'] = function (test) {
+    var s2_gen_calls = 0;
+    var s2 = _(function (push, next) {
+        s2_gen_calls++;
+        push(null, 2);
+        push(null, _.nil);
+    });
+    s2.id = 's2';
+    var s1_gen_calls = 0;
+    var s1 = _(function (push, next) {
+        s1_gen_calls++;
+        push(null, 1);
+        next(s2);
+    });
+    s1.id = 's1';
+    test.equal(s1_gen_calls, 0);
+    test.equal(s2_gen_calls, 0);
+    s1.take(1).toArray(function (xs) {
+        console.log(['first toArray got', xs]);
+        test.equal(s1_gen_calls, 1);
+        test.equal(s2_gen_calls, 0);
+        test.same(xs, [1]);
+        s1.take(1).toArray(function (xs) {});
+        test.throws(function () {
+            s1.take(1).toArray(function (xs) {});
+        });
+        test.done();
+    });
+};
+
+// TODO: come up with a non-leaky solution to this API problem
+/*
 exports['switch to alternate stream using next (async)'] = function (test) {
     var s2_gen_calls = 0;
     var s2 = _(function (push, next) {
@@ -979,6 +910,44 @@ exports['switch to alternate stream using next (async)'] = function (test) {
         });
     });
 };
+*/
+
+exports['switch to alternate stream using next (async) - produces error'] = function (test) {
+    var s2_gen_calls = 0;
+    var s2 = _(function (push, next) {
+        s2_gen_calls++;
+        setTimeout(function () {
+            push(null, 2);
+            push(null, _.nil);
+        }, 10);
+    });
+    s2.id = 's2';
+    var s1_gen_calls = 0;
+    var s1 = _(function (push, next) {
+        s1_gen_calls++;
+        setTimeout(function () {
+            push(null, 1);
+            next(s2);
+        }, 10);
+    });
+    s1.id = 's1';
+    test.equal(s1_gen_calls, 0);
+    test.equal(s2_gen_calls, 0);
+    s1.take(1).toArray(function (xs) {
+        test.equal(s1_gen_calls, 1);
+        test.equal(s2_gen_calls, 0);
+        test.same(xs, [1]);
+        s1.take(1).toArray(function (xs) {
+            test.equal(s1_gen_calls, 1);
+            test.equal(s2_gen_calls, 1);
+            test.same(xs, [2]);
+            test.throws(function () {
+                s1.take(1).toArray(function (xs) {});
+            });
+            test.done();
+        });
+    });
+};
 
 exports['lazily evalute stream'] = function (test) {
     test.expect(2);
@@ -995,7 +964,6 @@ exports['lazily evalute stream'] = function (test) {
     test.same(JSON.stringify(map_calls), JSON.stringify([1, 2]));
     test.done();
 };
-
 
 exports['pipe old-style node stream to highland stream'] = function (test) {
     var xs = [];
@@ -1162,7 +1130,9 @@ exports['attach data event handler'] = function (test) {
 exports['multiple pull calls on async generator'] = function (test) {
     var calls = 0;
     function countdown(n) {
+        console.log(['countdown', n]);
         var s = _(function (push, next) {
+            console.log(['countdown generator', n]);
             calls++;
             if (n === 0) {
                 push(null, _.nil);
@@ -1179,7 +1149,14 @@ exports['multiple pull calls on async generator'] = function (test) {
     }
     var s = countdown(3);
     var s2 = _(function (push, next) {
+        console.log(['s2 generator']);
+        //
+        //
+        // XXX: this is causing an error after s has redirected!
+        //
+        //
         s.pull(function (err, x) {
+            console.log(['s.pull callback', err, x]);
             if (err || x !== _.nil) {
                 push(err, x);
                 next();
@@ -1191,12 +1168,14 @@ exports['multiple pull calls on async generator'] = function (test) {
     });
     s2.id = 's2';
     s2.toArray(function (xs) {
+        console.log(['s2.toArray callback', xs]);
         test.same(xs, [3,2,1]);
         test.same(calls, 4);
         test.done();
     });
 };
 
+/*
 exports['wrap EventEmitter (or jQuery) on handler'] = function (test) {
     var calls = [];
     var ee = {
@@ -3338,6 +3317,110 @@ exports['throttle'] = {
     }
 };
 
+exports['ratelimit'] = {
+    setUp: function (callback) {
+        this.clock = sinon.useFakeTimers();
+        callback();
+    },
+    tearDown: function (callback) {
+        this.clock.restore();
+        callback();
+    },
+    'invalid num per ms': function (test) {
+        test.throws(function () {
+            _([1,2,3]).ratelimit(-10, 0);
+        });
+        test.throws(function () {
+            _([1,2,3]).ratelimit(0, 0);
+        });
+        test.done();
+    },
+    'async generator': function (test) {
+        function delay(push, ms, x) {
+            setTimeout(function () {
+                push(null, x);
+            }, ms);
+        }
+        var source = _(function (push, next) {
+            delay(push, 10, 1);
+            delay(push, 20, 2);
+            delay(push, 30, 3);
+            delay(push, 40, 4);
+            delay(push, 50, 5);
+            delay(push, 60, _.nil);
+        })
+        var results = [];
+        source.ratelimit(2, 100).each(function (x) {
+            results.push(x);
+        });
+        this.clock.tick(10);
+        test.same(results, [1]);
+        this.clock.tick(89);
+        test.same(results, [1, 2]);
+        this.clock.tick(51);
+        test.same(results, [1, 2, 3, 4]);
+        this.clock.tick(1000);
+        test.same(results, [1, 2, 3, 4, 5]);
+        test.done();
+    },
+    'toplevel - async generator': function (test) {
+        function delay(push, ms, x) {
+            setTimeout(function () {
+                push(null, x);
+            }, ms);
+        }
+        var source = _(function (push, next) {
+            delay(push, 10, 1);
+            delay(push, 20, 2);
+            delay(push, 30, 3);
+            delay(push, 40, 4);
+            delay(push, 50, 5);
+            delay(push, 60, _.nil);
+        })
+        var results = [];
+        _.ratelimit(2, 100, source).each(function (x) {
+            results.push(x);
+        });
+        this.clock.tick(10);
+        test.same(results, [1]);
+        this.clock.tick(89);
+        test.same(results, [1, 2]);
+        this.clock.tick(51);
+        test.same(results, [1, 2, 3, 4]);
+        this.clock.tick(1000);
+        test.same(results, [1, 2, 3, 4, 5]);
+        test.done();
+    },
+    'toplevel - partial application, async generator': function (test) {
+        function delay(push, ms, x) {
+            setTimeout(function () {
+                push(null, x);
+            }, ms);
+        }
+        var source = _(function (push, next) {
+            delay(push, 10, 1);
+            delay(push, 20, 2);
+            delay(push, 30, 3);
+            delay(push, 40, 4);
+            delay(push, 50, 5);
+            delay(push, 60, _.nil);
+        })
+        var results = [];
+        _.ratelimit(2)(100)(source).each(function (x) {
+            results.push(x);
+        });
+        this.clock.tick(10);
+        test.same(results, [1]);
+        this.clock.tick(89);
+        test.same(results, [1, 2]);
+        this.clock.tick(51);
+        test.same(results, [1, 2, 3, 4]);
+        this.clock.tick(1000);
+        test.same(results, [1, 2, 3, 4, 5]);
+        test.done();
+    }
+};
+
 exports['debounce'] = {
     setUp: function (callback) {
         this.clock = sinon.useFakeTimers();
@@ -3687,8 +3770,6 @@ exports['pipeline - no arguments'] = function (test) {
 };
 
 
-/***** Objects *****/
-
 // TODO: test lazy getting of values from obj keys (test using getters?)
 exports['values'] = function (test) {
     var obj = {
@@ -3795,8 +3876,6 @@ exports['set'] = function (test) {
 // flattened, but curiously, it worked by doing .consume().map().flatten()
 // where the map() was just map(function (x) { return x; })
 
-/***** Utils *****/
-
 exports['log'] = function (test) {
     var calls = [];
     var _log = console.log;
@@ -3834,8 +3913,6 @@ exports['wrapCallback - errors'] = function (test) {
     test.done();
 };
 
-/***** Operators *****/
-
 exports['add'] = function (test) {
     test.equal(_.add(1, 2), 3);
     test.equal(_.add(3)(2), 5);
@@ -3853,3 +3930,4 @@ exports['not'] = function (test) {
     test.equal(_.not(undefined), true);
     return test.done();
 };
+*/
