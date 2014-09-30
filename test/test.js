@@ -148,10 +148,6 @@ exports['ratelimit'] = {
     }
 };
 
-/**
- * Functional utils
- */
-
 exports['curry'] = function (test) {
     var fn = _.curry(function (a, b, c, d) {
         return a + b + c + d;
@@ -232,8 +228,6 @@ exports['seq'] = function (test) {
     test.equal(_.seq(fn1, fn2, fn1)('zero'), 'zero:one:two:one');
     test.done();
 }
-
-/***** Streams *****/
 
 exports['isStream'] = function (test) {
     test.ok(!_.isStream());
@@ -2153,7 +2147,7 @@ exports['merge'] = {
             setTimeout(function () {
                 push(null, counter1);
                 next();
-            }, 50);
+            }, 100);
         });
         var counter2 = 0;
         var s2 = _(function (push, next) {
@@ -2161,7 +2155,7 @@ exports['merge'] = {
             setTimeout(function () {
                 push(null, counter2);
                 next();
-            }, 120);
+            }, 240);
         });
         var self = this;
         _([s1, s2]).merge().take(4).toArray(function (xs) {
@@ -2170,11 +2164,11 @@ exports['merge'] = {
                 test.equal(counter1, 3);
                 test.equal(counter2, 2);
                 test.done();
-            }, 500);
-            self.clock.tick(500);
+            }, 1000);
         });
-        this.clock.tick(500);
+        this.clock.tick(2000);
     },
+    /*
     'read from sources as soon as they are available': function (test) {
         test.expect(2);
         var s1 = _([1, 2, 3]);
@@ -2197,6 +2191,7 @@ exports['merge'] = {
         }, 400);
         this.clock.tick(400);
     },
+    */
     'github issue #124: detect late end of stream': function(test) {
       var s = _([1,2,3])
               .map(function(x) { return _([x]) })
@@ -2206,6 +2201,55 @@ exports['merge'] = {
         test.same(xs, [1,2,3]);
         test.done();
       })
+    },
+    'handle backpressure': function (test) {
+        var s1 = _([1,2,3,4]);
+        var s2 = _([5,6,7,8]);
+        var s = _.merge([s1, s2]);
+        s.take(5).toArray(function (xs) {
+            test.same(xs, [1,5,2,6,3]);
+            setImmediate(function () {
+                test.equal(s._outgoing.length, 0);
+                test.equal(s._incoming.length, 1);
+                test.equal(s1._incoming.length, 2);
+                test.equal(s2._incoming.length, 2);
+                test.done();
+            });
+        });
+        this.clock.tick(100);
+    },
+    'fairer merge algorithm': function (test) {
+        // make sure one stream with many buffered values doesn't crowd
+        // out another stream being merged
+        var s1 = _([1,2,3,4]);
+        s1.id = 's1';
+        var s2 = _(function (push, next) {
+            setTimeout(function () {
+                push(null, 5);
+                push(null, 6);
+                setTimeout(function () {
+                    push(null, 7);
+                    push(null, 8);
+                    push(null, _.nil);
+                }, 100);
+            }, 100);
+        });
+        s2.id = 's2';
+        var s = _([s1, s2]).merge();
+        s.id = 's';
+        s.take(1).toArray(function (xs) {
+            test.same(xs, [1]);
+            setTimeout(function () {
+                s.take(4).toArray(function (xs) {
+                    test.same(xs, [5,2,6,3]);
+                    s.toArray(function (xs) {
+                        test.same(xs, [4,7,8]);
+                        test.done();
+                    });
+                });
+            }, 150);
+        });
+        this.clock.tick(400);
     }
 };
 
@@ -3697,8 +3741,6 @@ exports['pipeline - no arguments'] = function (test) {
 };
 
 
-/***** Objects *****/
-
 // TODO: test lazy getting of values from obj keys (test using getters?)
 exports['values'] = function (test) {
     var obj = {
@@ -3805,8 +3847,6 @@ exports['set'] = function (test) {
 // flattened, but curiously, it worked by doing .consume().map().flatten()
 // where the map() was just map(function (x) { return x; })
 
-/***** Utils *****/
-
 exports['log'] = function (test) {
     var calls = [];
     var _log = console.log;
@@ -3843,8 +3883,6 @@ exports['wrapCallback - errors'] = function (test) {
     });
     test.done();
 };
-
-/***** Operators *****/
 
 exports['add'] = function (test) {
     test.equal(_.add(1, 2), 3);
