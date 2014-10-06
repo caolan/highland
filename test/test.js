@@ -2488,6 +2488,24 @@ exports['pluck - non-object argument'] = function (test) {
     test.done();
 };
 
+
+exports['pick'] = function (test) {
+    var a = _([
+        {breed: 'chihuahua', name: 'Princess', age: 5},
+        {breed: 'labrador', name: 'Rocky', age: 3},
+        {breed: 'german-shepherd', name: 'Waffles', age: 9}
+    ]);
+    a.pick('breed', 'age').toArray(function (xs) {
+        test.deepEqual(xs, [
+          {breed: 'chihuahua', age: 5},
+          {breed: 'labrador',  age: 3},
+          {breed: 'german-shepherd', age: 9}
+        ]);
+        test.done();
+    });
+};
+
+
 exports['filter'] = function (test) {
     test.expect(2);
     function isEven(x) {
