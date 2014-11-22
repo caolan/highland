@@ -1660,7 +1660,7 @@ exports['reduce - GeneratorStream'] = function (test) {
 };
 
 exports['reduce1'] = function (test) {
-    test.expect(4);
+    test.expect(3);
     function add(a, b) {
         return a + b;
     }
@@ -1668,9 +1668,6 @@ exports['reduce1'] = function (test) {
         test.same(xs, [10]);
     });
     // partial application
-    _.reduce1(add)([1,2,3,4]).toArray(function (xs) {
-        test.same(xs, [10]);
-    });
     _.reduce1(add)([1,2,3,4]).toArray(function (xs) {
         test.same(xs, [10]);
     });
@@ -1813,7 +1810,7 @@ exports['scan - GeneratorStream lazy'] = function (test) {
 };
 
 exports['scan1'] = function (test) {
-    test.expect(4);
+    test.expect(3);
     function add(a, b) {
         return a + b;
     }
@@ -1821,9 +1818,6 @@ exports['scan1'] = function (test) {
         test.same(xs, [1, 3, 6, 10]);
     });
     // partial application
-    _.scan1(add)([1,2,3,4]).toArray(function (xs) {
-        test.same(xs, [1, 3, 6, 10]);
-    });
     _.scan1(add)([1,2,3,4]).toArray(function (xs) {
         test.same(xs, [1, 3, 6, 10]);
     });
@@ -2697,7 +2691,6 @@ exports['find - argument function throws'] = function (test) {
 };
 
 exports['find - ArrayStream'] = function (test) {
-    test.expect(2);
     var xs = [
         {type: 'foo', name: 'wibble'},
         {type: 'foo', name: 'wobble'},
@@ -2710,12 +2703,8 @@ exports['find - ArrayStream'] = function (test) {
     };
     _(xs).find(f).toArray(function (xs) {
         test.same(xs, [{type: 'bar', name: '123'}]);
+        test.done();
     });
-    // partial application
-    _(xs).find(f).toArray(function (xs) {
-        test.same(xs, [{type: 'bar', name: '123'}]);
-    });
-    test.done();
 };
 
 exports['find - GeneratorStream'] = function (test) {
@@ -2827,15 +2816,8 @@ exports['find - GeneratorStream'] = function (test) {
     };
 
     exports['group - ArrayStream'] = function (test) {
-        test.expect(4);
+        test.expect(2);
 
-        _(xs).group(f).toArray(function (xs) {
-            test.same(xs, [expected]);
-        });
-        _(xs).group(s).toArray(function (xs) {
-            test.same(xs, [expected]);
-        });
-        // partial application
         _(xs).group(f).toArray(function (xs) {
             test.same(xs, [expected]);
         });
@@ -2920,7 +2902,6 @@ exports['where - ArrayStream'] = function (test) {
             {type: 'foo', name: 'wobble'}
         ]);
     });
-    // partial application
     _(xs).where({type: 'bar', name: 'asdf'}).toArray(function (xs) {
         test.same(xs, [
             {type: 'bar', name: 'asdf'}
@@ -2945,6 +2926,60 @@ exports['where - GeneratorStream'] = function (test) {
             {type: 'bar', name: 'asdf'},
             {type: 'baz', name: 'asdf'}
         ]);
+        test.done();
+    });
+};
+
+exports['findWhere'] = function (test) {
+    test.expect(2);
+    var xs = [
+        {type: 'foo', name: 'wibble'},
+        {type: 'foo', name: 'wobble'},
+        {type: 'bar', name: '123'},
+        {type: 'bar', name: 'asdf'},
+        {type: 'baz', name: 'asdf'}
+    ];
+    _.findWhere({type: 'bar'}, xs).toArray(function (xs) {
+        test.same(xs, [{type: 'bar', name: '123'}]);
+    });
+    // partial application
+    _.findWhere({type: 'bar'})(xs).toArray(function (xs) {
+        test.same(xs, [{type: 'bar', name: '123'}]);
+    });
+    test.done();
+};
+
+exports['findWhere - ArrayStream'] = function (test) {
+    test.expect(2);
+    var xs = [
+        {type: 'foo', name: 'wibble'},
+        {type: 'foo', name: 'wobble'},
+        {type: 'bar', name: '123'},
+        {type: 'bar', name: 'asdf'},
+        {type: 'baz', name: 'asdf'}
+    ];
+    _(xs).findWhere({type: 'bar'}).toArray(function (xs) {
+        test.same(xs, [{type: 'bar', name: '123'}]);
+    });
+    _(xs).findWhere({type: 'bar', name: 'asdf'}).toArray(function (xs) {
+        test.same(xs, [{type: 'bar', name: 'asdf'}]);
+    });
+    test.done();
+};
+
+exports['findWhere - GeneratorStream'] = function (test) {
+    var xs = _(function (push, next) {
+        push(null, {type: 'foo', name: 'wibble'});
+        push(null, {type: 'foo', name: 'wobble'});
+        setTimeout(function () {
+            push(null, {type: 'bar', name: '123'});
+            push(null, {type: 'bar', name: 'asdf'});
+            push(null, {type: 'baz', name: 'asdf'});
+            push(null, _.nil);
+        }, 10);
+    });
+    _(xs).findWhere({name: 'asdf'}).toArray(function (xs) {
+        test.same(xs, [{type: 'bar', name: 'asdf'}]);
         test.done();
     });
 };
