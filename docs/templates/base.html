@@ -82,6 +82,26 @@
         Made by <a href="http://twitter.com/caolan">@caolan</a>, with help and patience from friends - <a href="http://gittip.com/caolan">Leave a tip</a> or <a href="https://github.com/caolan/highland">fork this</a> :)
       </p>
 
+      <h3 id="browser">Usage in the browser</h3>
+      <p>
+        Highland can be used both in Node.js and in the browser. When you install the highland package,
+        you will find a <i>dist/highland.js</i> file in the package hierarchy.
+        This file has been prepared with browserify in order to bring a browser-ready version of highland.
+      </p>
+      <p>
+        Simply load this script with a &lt;script&gt; tag, and a <i>highland</i> variable
+        will be made available in the global javascript scope.
+      </p>
+      <p>
+        If you prefer using highland under the name <i>_</i> like is done in the examples below,
+        you can then simply use:
+      </p> 
+      <pre><code class="javascript">var _ = highland</code></pre>
+      <p>
+        You can also integrate highland in your own browserify bundle using a classical browserify workflow,
+        but this is beyond the scope of this documentation.
+      </p> 
+
       <h2 id="examples">Examples</h2>
       <p>Converting to/from Highland Streams</p>
       <pre><code class="javascript">_([1,2,3,4]).toArray(function (xs) {
