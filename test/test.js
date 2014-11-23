@@ -44,6 +44,23 @@ function anyError(test) {
     };
 }
 
+function noValueOnError(test, transform) {
+    var thrower = _([1]).map(function(x) { throw new Error('error')});
+    transform(thrower).errors(function () {})
+    .toArray(function(xs) {
+        test.same(xs, [], 'Value emitted for error');
+    });
+}
+
+exports['transforms do not emit values on errors'] = function (test) {
+    test.expect(4)
+    noValueOnError(test, _.batch(3))
+    noValueOnError(test, _.scan1(function(){}));
+    noValueOnError(test, _.reduce1(function(){}));
+    noValueOnError(test, _.otherwise(_([])));
+    test.done();
+}
+
 exports['ratelimit'] = {
     setUp: function (callback) {
         this.clock = sinon.useFakeTimers();
