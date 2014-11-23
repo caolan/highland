@@ -44,20 +44,67 @@ function anyError(test) {
     };
 }
 
-function noValueOnError(test, transform) {
-    var thrower = _([1]).map(function(x) { throw new Error('error')});
-    transform(thrower).errors(function () {})
-    .toArray(function(xs) {
-        test.same(xs, [], 'Value emitted for error');
+function noValueOnError(test, transform, expected) {
+    if (!expected) expected = [];
+    var thrower = _([1]).map(function () { throw new Error('error') });
+    transform(thrower).errors(function () {}).toArray(function (xs) {
+        test.same(xs, expected, 'Value emitted for error');
     });
 }
 
 exports['transforms do not emit values on errors'] = function (test) {
-    test.expect(4)
-    noValueOnError(test, _.batch(3))
-    noValueOnError(test, _.scan1(function(){}));
-    noValueOnError(test, _.reduce1(function(){}));
+    test.expect(24)
+
+    var iterator = function (x, y) { return x + y };
+    var ms = 10;
+    var props = {'foo': 'bar'};
+
+    // no tests for consume, error, stopOnError
+    noValueOnError(test, _.map(function (x) { return x }));
+    noValueOnError(test, _.doto(function (x) { return x }));
+    noValueOnError(test, _.ratelimit(1, ms));
+    noValueOnError(test, _.pluck('foo'));
+    noValueOnError(test, _.filter(function (x) { return true }));
+    noValueOnError(test, _.reject(function (x) { return false }));
+    noValueOnError(test, _.find(function (x) { return true }));
+    noValueOnError(test, _.findWhere(props));
+    noValueOnError(test, _.group('foo'), [{}]);
+    noValueOnError(test, _.compact());
+    noValueOnError(test, _.where(props));
+    noValueOnError(test, _.batch(1));
+    noValueOnError(test, _.take(1));
+    noValueOnError(test, _.head());
+    noValueOnError(test, _.last());
+    noValueOnError(test, _.append(1), [1]);
+    noValueOnError(test, _.reduce(0, iterator), [0]);
+    noValueOnError(test, _.reduce1(iterator));
+    noValueOnError(test, _.collect(), [[]]);
+    noValueOnError(test, _.scan(0, iterator), [0]);
+    noValueOnError(test, _.scan1(iterator));
+    noValueOnError(test, _.invoke('call', []));
+    noValueOnError(test, _.throttle(ms));
+    noValueOnError(test, _.debounce(ms));
+    noValueOnError(test, _.latest());
+
+    test.done();
+}
+
+exports['higher-order streams do not emit values on errors'] = function (test) {
+    test.expect(11);
+
+    // no tests for fork, observe, pipeline
+    noValueOnError(test, _.flatMap(function (x) { return _() }));
+    noValueOnError(test, _.flatFilter(function (x) { return _([true]) }));
+    noValueOnError(test, _.zip([1]));
+    noValueOnError(test, _.through(function (x) { return x }));
+    noValueOnError(test, _.sequence());
+    noValueOnError(test, _.series());
+    noValueOnError(test, _.flatten());
+    noValueOnError(test, _.parallel(2));
     noValueOnError(test, _.otherwise(_([])));
+    noValueOnError(test, _.concat([1]), [1]);
+    noValueOnError(test, _.merge());
+
     test.done();
 }
 
