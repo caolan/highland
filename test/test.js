@@ -3049,6 +3049,47 @@ exports['findWhere - GeneratorStream'] = function (test) {
     });
 };
 
+exports['uniqBy'] = function(test) {
+    test.expect(1);
+    var xs = [ 'blue', 'red', 'red', 'yellow', 'blue', 'red' ]
+    _.uniqBy(function(a,b) { return a[1] === b[1] }, xs).toArray(function(xs) {
+      test.same(xs, [ 'blue', 'red' ])
+    })
+    test.done();
+};
+
+exports['uniqBy - compare error'] = function(test) {
+    test.expect(4);
+    var xs = [ 'blue', 'red', 'red', 'yellow', 'blue', 'red' ]
+    var s = _.uniqBy(function(a,b) { if (a === "yellow") throw new Error('yellow'); return a === b; }, xs)
+    s.pull(function(err, x) {
+        test.equal(x, 'blue');
+    })
+    s.pull(function(err, x) {
+        test.equal(x, 'red');
+    })
+    s.pull(function(err, x) {
+        test.equal(err.message, 'yellow');
+    })
+    s.pull(function(err, x) {
+        test.equal(x, _.nil);
+    })
+    test.done();
+};
+
+exports['uniqBy - noValueOnError'] = noValueOnErrorTest(_.uniqBy(function(a,b) { return a === b }));
+
+exports['uniq'] = function(test) {
+    test.expect(1);
+    var xs = [ 'blue', 'red', 'red', 'yellow', 'blue', 'red' ]
+    _.uniq(xs).toArray(function(xs) {
+      test.same(xs, [ 'blue', 'red', 'yellow' ])
+    })
+    test.done();
+};
+
+exports['uniq - noValueOnError'] = noValueOnErrorTest(_.uniq());
+
 exports['zip'] = function (test) {
     test.expect(2);
     _.zip([1,2,3], ['a', 'b', 'c']).toArray(function (xs) {
