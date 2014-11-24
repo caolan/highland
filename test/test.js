@@ -988,41 +988,44 @@ exports['take 1'] = function (test) {
     test.done();
 };
 
-exports['drop'] = function (test) {
-    test.expect(3);
-    var s = _([1,2,3,4]).drop(2);
-    s.pull(function (err, x) {
-        test.equal(x, 3);
-    });
-    s.pull(function (err, x) {
-        test.equal(x, 4);
-    });
-    s.pull(function (err, x) {
-        test.equal(x, _.nil);
-    });
-    test.done();
-};
-
-exports['drop - errors'] = function (test) {
-    test.expect(3);
-    var s = _(function (push, next) {
-        push(null, 1),
-        push(new Error('error'), 2),
-        push(null, 3),
-        push(null, 4),
-        push(null, _.nil)
-    });
-    var f = s.drop(2);
-    f.pull(function (err, x) {
-        test.equal(err.message, 'error');
-    });
-    f.pull(function (err, x) {
-        test.equal(x, 4);
-    });
-    f.pull(function (err, x) {
-        test.equal(x, _.nil);
-    });
-    test.done();
+exports['drop'] = {
+    setUp: function (cb) {
+        this.input = [1, 2, 3, 4, 5];
+        this.expected = [3, 4, 5];
+        this.tester = function (expected, test) {
+            return function (xs) {
+                test.same(xs, expected);
+            };
+        };
+        cb();
+    },
+    'arrayStream': function (test) {
+        test.expect(1);
+        _(this.input).drop(2).toArray(this.tester(this.expected, test));
+        test.done();
+    },
+    'partial application': function (test) {
+        test.expect(1);
+        var s = _(this.input);
+        _.drop(2)(s).toArray(this.tester(this.expected, test));
+        test.done();
+    },
+    'error': function (test) {
+        test.expect(2);
+        var s = _(function (push, next) {
+            push(null, 1),
+            push(new Error('Drop error')),
+            push(null, 2),
+            push(null, 3),
+            push(null, 4),
+            push(null, 5),
+            push(null, _.nil)
+        });
+        s.drop(2).errors(errorEquals(test, 'Drop error'))
+            .toArray(this.tester(this.expected, test));
+        test.done();
+    },
+    'noValueOnError': noValueOnErrorTest(_.drop(2))
 };
 
 exports['head'] = function (test) {
@@ -2422,7 +2425,7 @@ exports['transduce'] = {
     },
     'noValueOnError': function (test) {
         noValueOnErrorTest(_.transduce(this.xf))(test);
-    },
+    }
 };
 
 exports['concat'] = function (test) {
