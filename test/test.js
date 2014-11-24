@@ -44,6 +44,17 @@ function anyError(test) {
     };
 }
 
+function noValueOnErrorTest(transform, expected) {
+    return function (test) {
+        if (!expected) expected = [];
+        var thrower = _([1]).map(function () { throw new Error('error') });
+        transform(thrower).errors(function () {}).toArray(function (xs) {
+            test.same(xs, expected, 'Value emitted for error');
+            test.done();
+        });
+    }
+}
+
 exports['ratelimit'] = {
     setUp: function (callback) {
         this.clock = sinon.useFakeTimers();
@@ -147,6 +158,8 @@ exports['ratelimit'] = {
         test.done();
     }
 };
+
+exports['ratelimit - noValueOnError'] = noValueOnErrorTest(_.ratelimit(1, 10));
 
 exports['curry'] = function (test) {
     var fn = _.curry(function (a, b, c, d) {
@@ -700,6 +713,8 @@ exports['take'] = function (test) {
     test.done();
 };
 
+exports['take - noValueOnError'] = noValueOnErrorTest(_.take(1));
+
 exports['take - errors'] = function (test) {
     test.expect(4);
     var s = _(function (push, next) {
@@ -748,6 +763,8 @@ exports['head'] = function (test) {
     });
     test.done();
 };
+
+exports['head - noValueOnError'] = noValueOnErrorTest(_.head());
 
 exports['each'] = function (test) {
     var calls = [];
@@ -1259,6 +1276,8 @@ exports['sequence'] = function (test) {
     test.done();
 };
 
+exports['sequence - noValueOnError'] = noValueOnErrorTest(_.sequence());
+
 exports['sequence - ArrayStream'] = function (test) {
     _([[1,2], [3], [[4],5]]).sequence().toArray(function (xs) {
         test.same(xs, [1,2,3,[4],5]);
@@ -1427,6 +1446,8 @@ exports['flatten'] = function (test) {
     });
 };
 
+exports['flatten - noValueOnError'] = noValueOnErrorTest(_.flatten());
+
 exports['flatten - ArrayStream'] = function (test) {
     _([1, [2, [3, 4], 5], [6]]).flatten().toArray(function (xs) {
         test.same(xs, [1,2,3,4,5,6]);
@@ -1498,6 +1519,8 @@ exports['otherwise'] = function (test) {
     });
     test.done();
 };
+
+exports['otherwise - noValueOnError'] = noValueOnErrorTest(_.otherwise(_([])));
 
 exports['otherwise - ArrayStream'] = function (test) {
     test.expect(5);
@@ -1579,6 +1602,8 @@ exports['append'] = function (test) {
     test.done();
 };
 
+exports['append - noValueOnError'] = noValueOnErrorTest(_.append(1), [1]);
+
 exports['append - ArrayStream'] = function (test) {
     _([1,2,3]).append(4).toArray(function (xs) {
         test.same(xs, [1,2,3,4]);
@@ -1616,6 +1641,8 @@ exports['reduce'] = function (test) {
     });
     test.done();
 };
+
+exports['reduce - noValueOnError'] = noValueOnErrorTest(_.reduce(0, _.add), [0]);
 
 exports['reduce - argument function throws'] = function (test) {
     test.expect(2);
@@ -1678,6 +1705,9 @@ exports['reduce1'] = function (test) {
     test.done();
 };
 
+exports['reduce1 - noValueOnError'] = noValueOnErrorTest(_.reduce1(_.add));
+
+
 exports['reduce1 - argument function throws'] = function (test) {
     test.expect(2);
     var err = new Error('error');
@@ -1738,6 +1768,8 @@ exports['scan'] = function (test) {
     });
     test.done();
 };
+
+exports['scan - noValueOnError'] = noValueOnErrorTest(_.scan(0, _.add), [0]);
 
 exports['scan - argument function throws'] = function (test) {
     test.expect(5);
@@ -1828,6 +1860,8 @@ exports['scan1'] = function (test) {
     test.done();
 };
 
+exports['scan1 - noValueOnError'] = noValueOnErrorTest(_.scan1(_.add));
+
 exports['scan1 - argument function throws'] = function (test) {
     test.expect(4);
     var err = new Error('error');
@@ -1904,6 +1938,8 @@ exports['collect'] = function (test) {
     });
 };
 
+exports['collect - noValueOnError'] = noValueOnErrorTest(_.collect(), [[]]);
+
 exports['collect - ArrayStream'] = function (test) {
     _([1,2,3,4]).collect().toArray(function (xs) {
         test.same(xs, [[1,2,3,4]]);
@@ -1938,6 +1974,8 @@ exports['concat'] = function (test) {
     });
     test.done();
 };
+
+exports['concat - noValueOnError'] = noValueOnErrorTest(_.concat([1]), [1]);
 
 exports['concat - ArrayStream'] = function (test) {
     _([1,2]).concat([3,4]).toArray(function (xs) {
@@ -2244,7 +2282,8 @@ exports['merge'] = {
             }, 150);
         });
         this.clock.tick(400);
-    }
+    },
+    'noValueOnError': noValueOnErrorTest(_.merge())
 };
 
 exports['invoke'] = function (test) {
@@ -2258,6 +2297,8 @@ exports['invoke'] = function (test) {
     });
     test.done();
 };
+
+exports['invoke - noValueOnError'] = noValueOnErrorTest(_.invoke('toString', []));
 
 exports['invoke - ArrayStream'] = function (test) {
     _([1,2,3,4]).invoke('toString', []).toArray(function (xs) {
@@ -2296,6 +2337,8 @@ exports['map'] = function (test) {
     });
     test.done();
 };
+
+exports['map - noValueOnError'] = noValueOnErrorTest(_.map(function (x) { return x }));
 
 exports['map - argument function throws'] = function (test) {
     test.expect(6);
@@ -2377,6 +2420,8 @@ exports['doto'] = function (test) {
     test.done();
 };
 
+exports['doto - noValueOnError'] = noValueOnErrorTest(_.doto(function (x) { return x }));
+
 exports['flatMap'] = function (test) {
     var f = function (x) {
         return _(function (push, next) {
@@ -2391,6 +2436,8 @@ exports['flatMap'] = function (test) {
         test.done();
     });
 };
+
+exports['flatMap - noValueOnError'] = noValueOnErrorTest(_.flatMap(function (x) { return _() }));
 
 exports['flatMap - argument function throws'] = function (test) {
     test.expect(4);
@@ -2471,6 +2518,8 @@ exports['pluck'] = function (test) {
     });
 };
 
+exports['pluck - noValueOnError'] = noValueOnErrorTest(_.pluck('foo'));
+
 exports['pluck - non-object argument'] = function (test) {
     var a = _([1, {type: 'blogpost', title: 'foo'}]);
     test.throws(function () {
@@ -2496,6 +2545,8 @@ exports['filter'] = function (test) {
     });
     test.done();
 };
+
+exports['filter - noValueOnError'] = noValueOnErrorTest(_.filter(function (x) { return true }));
 
 exports['filter - argument function throws'] = function (test) {
     test.expect(3);
@@ -2550,6 +2601,8 @@ exports['flatFilter'] = function (test) {
         test.done();
     });
 };
+
+exports['flatFilter - noValueOnError'] = noValueOnErrorTest(_.flatFilter(function (x) { return _([true]) }));
 
 exports['flatFilter - argument function throws'] = function (test) {
     test.expect(4);
@@ -2622,6 +2675,8 @@ exports['reject'] = function (test) {
     test.done();
 };
 
+exports['reject - noValueOnError'] = noValueOnErrorTest(_.reject(function (x) { return false }));
+
 exports['reject - ArrayStream'] = function (test) {
     function isEven(x) {
         return x % 2 === 0;
@@ -2674,6 +2729,8 @@ exports['find'] = function (test) {
 
     test.done();
 };
+
+exports['find - noValueOnError'] = noValueOnErrorTest(_.find(function (x) { return true }));
 
 exports['find - argument function throws'] = function (test) {
     test.expect(4);
@@ -2778,6 +2835,8 @@ exports['find - GeneratorStream'] = function (test) {
         test.done();
     };
 
+    exports['group - noValueOnError'] = noValueOnErrorTest(_.group('foo'), [{}]);
+
     exports['group - primatives'] = function (test) {
         test.expect(5);
 
@@ -2856,6 +2915,8 @@ exports['compact'] = function (test) {
     test.done();
 };
 
+exports['compact - noValueOnError'] = noValueOnErrorTest(_.compact());
+
 exports['compact - ArrayStream'] = function (test) {
     _([0, 1, false, 3, undefined, null, 6]).compact().toArray(function (xs) {
         test.same(xs, [1, 3, 6]);
@@ -2886,6 +2947,8 @@ exports['where'] = function (test) {
     });
     test.done();
 };
+
+exports['where - noValueOnError'] = noValueOnErrorTest(_.where({'foo': 'bar'}));
 
 exports['where - ArrayStream'] = function (test) {
     test.expect(2);
@@ -2949,6 +3012,8 @@ exports['findWhere'] = function (test) {
     test.done();
 };
 
+exports['findWhere - noValueOnError'] = noValueOnErrorTest(_.findWhere({'foo': 'bar'}));
+
 exports['findWhere - ArrayStream'] = function (test) {
     test.expect(2);
     var xs = [
@@ -2995,6 +3060,8 @@ exports['zip'] = function (test) {
     });
     test.done();
 };
+
+exports['zip - noValueOnError'] = noValueOnErrorTest(_.zip([1]));
 
 exports['zip - source emits error'] = function (test) {
     test.expect(4);
@@ -3082,6 +3149,8 @@ exports['batch'] = function (test) {
     test.done();
 };
 
+exports['batch - noValueOnError'] = noValueOnErrorTest(_.batch(1));
+
 exports['batch - ArrayStream'] = function (test) {
     test.expect(5);
     _([1,2,3,4,5,6,7,8,9,0]).batch(3).toArray(function (xs) {
@@ -3153,6 +3222,8 @@ exports['parallel'] = function (test) {
         test.done();
     });
 };
+
+exports['parallel - noValueOnError'] = noValueOnErrorTest(_.parallel(1));
 
 exports['parallel - partial application'] = function (test) {
     var calls = [];
@@ -3424,7 +3495,8 @@ exports['throttle'] = {
             test.done();
         });
         this.clock.tick(90);
-    }
+    },
+    'noValueOnError': noValueOnErrorTest(_.throttle(10))
 };
 
 exports['debounce'] = {
@@ -3510,7 +3582,8 @@ exports['debounce'] = {
             test.done();
         });
         this.clock.tick(300);
-    }
+    },
+    'noValueOnError': noValueOnErrorTest(_.debounce(10))
 };
 
 exports['latest'] = {
@@ -3634,6 +3707,8 @@ exports['last'] = function (test) {
     test.done();
 };
 
+exports['last - noValueOnError'] = noValueOnErrorTest(_.last());
+
 exports['through - function'] = function (test) {
     var s = _.through(function (s) {
         return s
@@ -3649,6 +3724,8 @@ exports['through - function'] = function (test) {
         test.done();
     });
 };
+
+exports['through - noValueOnError'] = noValueOnErrorTest(_.through(function (x) { return x }));
 
 exports['through - function - ArrayStream'] = function (test) {
     var s = _([1,2,3,4]).through(function (s) {
