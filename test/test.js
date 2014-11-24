@@ -3193,6 +3193,57 @@ exports['batch - GeneratorStream'] = function (test) {
     });
 }
 
+exports['intersperse'] = function(test) {
+    test.expect(4);
+    _.intersperse('n', ['ba', 'a', 'a']).toArray(function (xs) {
+        test.same(xs.join(''), 'banana');
+    });
+    _.intersperse('bar', ['foo']).toArray(function (xs) {
+        test.same(xs, ['foo']);
+    });
+    _.intersperse('bar', []).toArray(function (xs) {
+        test.same(xs, []);
+    });
+    // partial application
+    _.intersperse('n')(['ba', 'a', 'a']).toArray(function (xs) {
+        test.same(xs.join(''), 'banana');
+    });
+    test.done();
+}
+
+exports['intersperse - noValueOnError'] = noValueOnErrorTest(_.intersperse(1));
+
+exports['intersperse - ArrayStream'] = function(test) {
+    test.expect(3);
+    _(['ba', 'a', 'a']).intersperse('n').toArray(function (xs) {
+        test.same(xs.join(''), 'banana');
+    });
+    _(['foo']).intersperse('bar').toArray(function (xs) {
+        test.same(xs, ['foo']);
+    });
+    _([]).intersperse('bar').toArray(function (xs) {
+        test.same(xs, []);
+    });
+    test.done();
+}
+
+exports['intersperse - GeneratorStream'] = function(test) {
+    var s1 = _(function (push, next) {
+        push(null, 'ba');
+        setTimeout(function () {
+            push(null, 'a');
+            setTimeout(function () {
+                push(null, 'a');
+                push(null, _.nil);
+            }, 10);
+        }, 10);
+    });
+    s1.intersperse('n').toArray(function (xs) {
+        test.same(xs.join(''), 'banana');
+        test.done();
+    });
+}
+
 exports['parallel'] = function (test) {
     var calls = [];
     var s1 = _(function (push, next) {
