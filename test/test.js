@@ -3191,7 +3191,79 @@ exports['batch - GeneratorStream'] = function (test) {
         test.same(xs, [[1], [2], [3]]);
         test.done();
     });
-}
+};
+
+exports['splitBy'] = function(test) {
+    test.expect(3);
+    _.splitBy('ss', ['mis', 'si', 's', 'sippi']).toArray(function(xs) {
+        test.same(xs, 'mississippi'.split('ss'));
+    });
+    _.splitBy('foo', ['bar', 'baz']).toArray(function(xs) {
+        test.same(xs, ['barbaz']);
+    });
+    // partial application
+    _.splitBy('ss')(['mis', 'si', 's', 'sippi']).toArray(function(xs) {
+        test.same(xs, 'mississippi'.split('ss'));
+    });
+    test.done();
+};
+
+exports['splitBy - noValueOnError'] = noValueOnErrorTest(_.splitBy(' '));
+
+exports['splitBy - unicode'] = function (test) {
+    // test case borrowed from 'split' by dominictarr
+    var unicode = new Buffer('テスト試験今日とても,よい天気で');
+    var parts = [unicode.slice(0, 20), unicode.slice(20)];
+    _(parts).splitBy(/,/g).toArray(function (xs) {
+        test.same(xs, ['テスト試験今日とても', 'よい天気で']);
+        test.done();
+    });
+};
+
+exports['splitBy - ArrayStream'] = function (test) {
+    test.expect(2);
+    _(['mis', 'si', 's', 'sippi']).splitBy('ss').toArray(function (xs) {
+        test.same(xs, 'mississippi'.split('ss'));
+    });
+    _(['bar', 'baz']).splitBy('foo').toArray(function (xs) {
+        test.same(xs, ['barbaz']);
+    });
+    test.done();
+};
+
+exports['splitBy - GeneratorStream'] = function (test) {
+    function delay(push, ms, x) {
+        setTimeout(function () {
+            push(null, x);
+        }, ms);
+    }
+    var source = _(function (push, next) {
+        delay(push, 10, 'mis');
+        delay(push, 20, 'si');
+        delay(push, 30, 's');
+        delay(push, 40, 'sippi');
+        delay(push, 50, _.nil);
+    });
+    source.splitBy('ss').toArray(function (xs) {
+        test.same(xs, 'mississippi'.split('ss'));
+        test.done();
+    });
+};
+
+exports['split'] = function (test) {
+    test.expect(3);
+    _(['a\n', 'b\nc\n', 'd', '\ne']).split().toArray(function(xs) {
+        test.same(xs, 'abcde'.split(''));
+    });
+    _.split(['a\n', 'b\nc\n', 'd', '\ne']).toArray(function(xs) {
+        test.same(xs, 'abcde'.split(''));
+    });
+    // mixed CRLF + LF
+    _(['a\r\nb\nc']).split().toArray(function(xs) {
+        test.same(xs, 'abc'.split(''));
+    });
+    test.done();
+};
 
 exports['intersperse'] = function(test) {
     test.expect(4);
