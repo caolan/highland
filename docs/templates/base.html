@@ -95,12 +95,12 @@
       <p>
         If you prefer using highland under the name <i>_</i> like is done in the examples below,
         you can then simply use:
-      </p> 
+      </p>
       <pre><code class="javascript">var _ = highland</code></pre>
       <p>
         You can also integrate highland in your own browserify bundle using a classical browserify workflow,
         but this is beyond the scope of this documentation.
-      </p> 
+      </p>
 
       <h2 id="examples">Examples</h2>
       <p>Converting to/from Highland Streams</p>
@@ -185,7 +185,7 @@ var nums = _(['1', '2', '3']).map(function (x) {
 });
 
 // calls === 0</code></pre>
-      <p>To get the map iterator to be called, we must pull some data from the Stream. This is called a <strong><em>thunk</em></strong>, and some Highland methods will cause them (eg, <code>each</code>, <code>toArray</code>, <code>pipe</code>, <code>resume</code>).</p>
+      <p>To get the map iterator to be called, we must pull some data from the Stream. This is called a <strong><em>thunk</em></strong>, and some Highland methods will cause them (eg, <code>each</code>, <code>apply</code>, <code>toArray</code>, <code>pipe</code>, <code>resume</code>).</p>
       <pre><code class="javascript">nums.each(function (n) { console.log(n); });
 
 // calls === 3</code></pre>
