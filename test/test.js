@@ -1148,6 +1148,55 @@ exports['pipe highland stream to node stream'] = function (test) {
     src.pipe(dest);
 };
 
+exports['pipe highland stream to highland stream'] = function (test) {
+    var src = _([1,2,3]);
+    var dest = _();
+    src.pipe(dest).toArray(function (xs) {
+        test.same(xs, [1,2,3]);
+        test.done();
+    });
+};
+
+exports['pipe error to highland stream'] = function (test) {
+    var src = _([1,2,3]).map(function (x) {
+        if (x === 2) {
+            throw new Error('pipe error');
+        } else {
+            return x;
+        }
+    });
+    var dest = _();
+    src.pipe(dest).errors(function (err) {
+        test.equals(err.message, 'pipe error');
+    }).toArray(function (xs) {
+        test.same(xs, [1,3]);
+        test.done();
+    });
+};
+
+exports['pipe error to node stream'] = function (test) {
+    test.expect(2);
+    var src = _([1,2,3]).map(function (x) {
+        if (x === 2) {
+            throw new Error('pipe error');
+        } else {
+            return x;
+        }
+    });
+
+    var dest = new EventEmitter();
+    dest.writable = true;
+    dest.write = function (x) {
+        test.equals(x, 1);
+        return true;
+    };
+
+    test.throws(function () {
+        src.pipe(dest);
+    }, /pipe error/);
+    test.done();
+};
+
 exports['pipe to node stream with backpressure'] = function (test) {
     test.expect(3);
     var src = _([1,2,3,4]);
