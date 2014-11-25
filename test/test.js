@@ -4748,6 +4748,59 @@ exports['last'] = function (test) {
 
 exports['last - noValueOnError'] = noValueOnErrorTest(_.last());
 
+exports['sortBy'] = {
+    setUp: function (cb) {
+        this.input   = [5, 2, 4, 1, 3];
+        this.reversed = [5, 4, 3, 2, 1];
+        this.compDesc = function (a, b) {
+            return b - a;
+        };
+        this.tester = function (expected, test) {
+            return function (xs) {
+                test.same(xs, expected);
+            };
+        };
+        cb();
+    },
+    'arrayStream': function (test) {
+        test.expect(1);
+        _(this.input).sortBy(this.compDesc).toArray(this.tester(this.reversed, test));
+        test.done();
+    },
+    'partial application': function (test) {
+        test.expect(1);
+        var s = _(this.input);
+        _.sortBy(this.compDesc)(s).toArray(this.tester(this.reversed, test));
+        test.done();
+    },
+    'noValueOnError': noValueOnErrorTest(_.sortBy(this.compDesc))
+};
+
+exports['sort'] = {
+    setUp: function (cb) {
+        this.input   = ['e', 'a', 'd', 'c', 'b'];
+        this.sorted   = ['a', 'b', 'c', 'd', 'e'];
+        this.tester = function (expected, test) {
+            return function (xs) {
+                test.same(xs, expected);
+            };
+        };
+        cb();
+    },
+    'arrayStream': function (test) {
+        test.expect(1);
+        _(this.input).sort().toArray(this.tester(this.sorted, test));
+        test.done();
+    },
+    'partial application': function (test) {
+        test.expect(1);
+        var s = _(this.input);
+        _.sortBy(this.compDesc)(s).toArray(this.tester(this.sorted, test));
+        test.done();
+    },
+    'noValueOnError': noValueOnErrorTest(_.sort())
+};
+
 exports['through'] = {
     setUp: function (cb) {
         this.parser = through(
