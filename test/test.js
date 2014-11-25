@@ -680,6 +680,15 @@ exports['apply - ArrayStream'] = function (test) {
     });
 };
 
+exports['apply - varargs'] = function (test) {
+    _([1,2,3,4]).apply(function (a, b) {
+        test.equal(arguments.length, 4);
+        test.equal(a, 1);
+        test.equal(b, 2);
+        test.done();
+    });
+};
+
 exports['apply - GeneratorStream'] = function (test) {
     var s = _(function (push, next) {
         push(null, 1);
