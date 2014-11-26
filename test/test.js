@@ -1599,6 +1599,29 @@ exports['otherwise - GeneratorStream'] = function (test) {
     });
 };
 
+exports['otherwise - function'] = function (test) {
+    test.expect(4);
+    var calls = 0;
+    _([1,2,3]).otherwise(function() {
+        calls++;
+        return _([4,5,6]);
+    }).toArray(function (xs) {
+        test.same(calls, 0);
+        test.same(xs, [1,2,3]);
+    });
+
+    var calls2 = 0;
+    _([]).otherwise(function() {
+        calls2++;
+        return _([4,5,6]);
+    }).toArray(function (xs) {
+        test.same(calls2, 1);
+        test.same(xs, [4,5,6]);
+    });
+
+    test.done();
+};
+
 exports['append'] = function (test) {
     test.expect(2);
     _.append(4, [1,2,3]).toArray(function (xs) {
