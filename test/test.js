@@ -3918,7 +3918,7 @@ exports['sort'] = function (test) {
     test.done();
 };
 
-//exports['sort - noValueOnError'] = noValueOnErrorTest(_.sort(), [[]]);
+exports['sort - noValueOnError'] = noValueOnErrorTest(_.sort(0));
 
 exports['through - function'] = function (test) {
     var s = _.through(function (s) {
