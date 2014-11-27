@@ -2332,6 +2332,89 @@ exports['invoke - GeneratorStream'] = function (test) {
     });
 };
 
+exports['nfcall'] = function (test) {
+    test.expect(4);
+
+    function add(n) {
+        return function(state, push) {
+            state.val += n;
+            push(null, n);
+        }
+    }
+
+    var state = {val: 0};
+    _.nfcall([state], [add(1), add(2)]).series().toArray(function (xs) {
+        test.equals(state.val, 3);
+        test.same(xs, [1, 2]);
+    });
+    // partial application
+    _.nfcall([state])([add(3), add(4)]).series().toArray(function (xs) {
+        test.equals(state.val, 10);
+        test.same(xs, [3, 4]);
+    });
+    test.done();
+};
+
+exports['nfcall - noValueOnError'] = noValueOnErrorTest(_.nfcall([]));
+
+exports['nfcall - ArrayStream'] = function (test) {
+    function add(n) {
+        return function(state, push) {
+            state.val += n;
+            return push(null, n);
+        }
+    }
+
+    var state = {val: 0};
+    _([add(1), add(2)]).nfcall([state]).series().toArray(function (xs) {
+        test.equals(state.val, 3);
+        test.same(xs, [1, 2]);
+        test.done();
+    });
+};
+
+exports['nfcall - GeneratorStream'] = function (test) {
+    function add(n) {
+        return function(state, push) {
+            state.val += n;
+            return push(null, n);
+        }
+    }
+
+    var s = _(function (push, next) {
+        push(null, add(1));
+        setTimeout(function () {
+            push(null, add(2));
+            push(null, _.nil);
+        }, 10);
+    });
+
+    var state = {val: 0};
+    s.nfcall([state]).series().toArray(function (xs) {
+        test.equals(state.val, 3);
+        test.same(xs, [1, 2]);
+        test.done();
+    });
+};
+
+exports['nfcall - parallel result ordering'] = function (test) {
+    _([
+        function (callback) {
+            setTimeout(function () {
+                callback(null, 'one');
+            }, 20);
+        },
+        function (callback) {
+            setTimeout(function () {
+                callback(null, 'two');
+            }, 10);
+        }
+    ]).nfcall([]).parallel(2).toArray(function (xs) {
+        test.same(xs, ['one', 'two']);
+        test.done();
+    });
+}
+
 exports['map'] = function (test) {
     test.expect(2);
     function doubled(x) {
