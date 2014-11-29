@@ -288,6 +288,44 @@ exports['async consume'] = function (test) {
     });
 };
 
+exports['consume - push nil async (issue #173)'] = function (test) {
+    test.expect(1);
+    _([1, 2, 3, 4]).consume(function(err, x, push, next) {
+        if (err !== null) {
+            push(err);
+            next();
+        }
+        else if (x === _.nil) {
+            _.setImmediate(push.bind(this, null, x));
+        }
+        else {
+            push(null, x);
+            next();
+        }
+    })
+    .toArray(function (xs) {
+        test.same(xs, [1, 2, 3, 4]);
+        test.done();
+    });
+};
+
+exports['consume - source resume should buffer'] = function (test) {
+    test.expect(2);
+    var values = [];
+    var s = _([1, 2, 3]);
+    var s2 = s.consume(function (err, x, push, next) {
+        values.push(x);
+        if (x !== _.nil) {
+            next();
+        }
+    });
+    s.resume();
+    test.same(values, []);
+    s2.resume();
+    test.same(values, [1, 2, 3, _.nil]);
+    test.done();
+};
+
 exports['passing Stream to constructor returns original'] = function (test) {
     var s = _([1,2,3]);
     test.strictEqual(s, _(s));
@@ -437,6 +475,42 @@ exports['redirect from consumer'] = function (test) {
         test.same(xs, [4, 5, 6]);
         test.done();
     });
+};
+
+exports['redirect - redirecting stream should end when delegate end (issue #41)'] = function (test) {
+    test.expect(4);
+    var s1 = _([1]);
+    var s2 = _([2]);
+
+    var out = s1.concat(s2);
+
+    out.toArray(function(arr) {
+        test.same(arr, [1, 2]);
+    });
+    test.strictEqual(s1.ended, true, 's1 should be ended');
+    test.strictEqual(s2.ended, true, 's2 should be ended');
+    test.strictEqual(out.ended, true, 'out should be ended');
+    test.done();
+};
+
+exports['redirect - should pass on end event (issue #142)'] = function (test) {
+    test.expect(1);
+    var generator = _(function (push, next) {
+        push(null, _.nil);
+    });
+
+    var endCalls = 0;
+    generator.on('end', function () {
+        endCalls++;
+    })
+
+    var otherwise = _([]).otherwise(generator).on('end', function() {
+        endCalls++;
+    });
+    otherwise.resume();
+
+    test.same(endCalls, 2, 'The end event did not fire twice.');
+    test.done();
 };
 
 exports['async next from consumer'] = function (test) {
@@ -2315,7 +2389,20 @@ exports['merge'] = {
         });
         this.clock.tick(400);
     },
-    'noValueOnError': noValueOnErrorTest(_.merge())
+    'noValueOnError': noValueOnErrorTest(_.merge()),
+    'pass through errors (issue #141)': function (test) {
+        test.expect(1);
+
+        var s = _(function (push, next) {
+            push(new Error);
+            push(null, _.nil);
+        });
+        _([s])
+            .merge()
+            .errors(anyError(test))
+            .each(test.ok.bind(test, false, 'each should not be called'));
+        test.done();
+    }
 };
 
 exports['invoke'] = function (test) {
