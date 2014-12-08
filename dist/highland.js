@@ -286,7 +286,7 @@ _.partial = function (f /* args... */) {
  * @id flip
  * @name flip(fn, [x, y])
  * @section Functions
- * @param {Function} f - function to flip argument application for
+ * @param {Function} fn - function to flip argument application for
  * @param x - parameter to apply to the right hand side of f
  * @param y - parameter to apply to the left hand side of f
  * @api public
@@ -506,7 +506,7 @@ function exposeMethod(name) {
     var f = Stream.prototype[name];
     var n = f.length;
     _[name] = _.ncurry(n + 1, function () {
-        var args = Array.prototype.slice.call(arguments);
+        var args = slice.call(arguments);
         var s = _(args.pop());
         return f.apply(s, args);
     });
@@ -1264,7 +1264,7 @@ Stream.prototype.each = function (f) {
 exposeMethod('each');
 
 /**
- * Applies results from a Stream as arguments to a function
+ * Applies all values from a Stream as arguments to a function. This function causes a **thunk**.
  *
  * @id apply
  * @section Consumption
@@ -1276,6 +1276,11 @@ exposeMethod('each');
  *     // a === 1
  *     // b === 2
  *     // c === 3
+ * });
+ *
+ * _([1, 2, 3]).apply(function (a) {
+ *     // arguments.length === 3
+ *     // a === 1
  * });
  */
 
@@ -1603,7 +1608,7 @@ Stream.prototype.reject = function (f) {
 exposeMethod('reject');
 
 /**
- * A convenient form of filter, which returns the first object from a
+ * A convenient form of [filter](#filter), which returns the first object from a
  * Stream that passes the provided truth test
  *
  * @id find
@@ -1638,8 +1643,8 @@ Stream.prototype.find = function (f) {
 exposeMethod('find');
 
 /**
- * A convenient form of where, which returns the first object from a
- * Stream that matches a set of property values. findWhere is to where as find is to filter.
+ * A convenient form of [where](#where), which returns the first object from a
+ * Stream that matches a set of property values. findWhere is to [where](#where) as [find](#find) is to [filter](#filter).
  *
  * @id findWhere
  * @section Transforms
@@ -1670,7 +1675,7 @@ exposeMethod('findWhere');
 
 
 /**
- * A convenient form of reduce, which groups items based on a function or property name
+ * A convenient form of [reduce](#reduce), which groups items based on a function or property name
  *
  * @id group
  * @section Transforms
@@ -1728,7 +1733,7 @@ Stream.prototype.compact = function () {
 exposeMethod('compact');
 
 /**
- * A convenient form of filter, which returns all objects from a Stream
+ * A convenient form of [filter](#filter), which returns all objects from a Stream
  * which match a set of property values.
  *
  * @id where
@@ -1766,6 +1771,93 @@ Stream.prototype.where = function (props) {
     });
 };
 exposeMethod('where');
+
+/**
+ * A way to keep only unique objects from a Stream
+ * The definition of 'unicity' is given by a Function argument.
+ *
+ * Note:
+ *   - memory: in order to guarantee that each unique item is chosen only once, we need to keep an
+ *     internal buffer of all unique values. This may outgrow the available memory if you are not
+ *     cautious about the size of your stream and the number of unique objects you may receive on that
+ *     stream
+ *   - errors: the transformation will emit an error for each comparison that throws an error
+ *
+ * @id uniqBy
+ * @section Transforms
+ * @name Stream.uniqBy(compare)
+ * @param {Function} compare - custom equality predicate
+ * @api public
+ *
+ * var colors = [ 'blue', 'red', 'red', 'yellow', 'blue', 'red' ]
+ *
+ * _(colors).uniqBy(function(a,b) { return a[1] === b[1] })
+ * // => 'blue'
+ * // => 'red'
+ *
+ */
+
+Stream.prototype.uniqBy = function (compare) {
+    var uniques = [];
+    return this.consume(function (err, x, push, next) {
+        if (err) {
+            push(err);
+            next();
+        }
+        else if (x === nil) {
+            push(err, x);
+        }
+        else {
+            var seen = false;
+            var hasErr;
+            for (var i = 0, len = uniques.length; i < len; i++) {
+                try {
+                    seen = compare(x, uniques[i]);
+                } catch (e) {
+                    hasErr = e;
+                    seen = true;
+                }
+                if (seen) {
+                    break;
+                }
+            }
+            if (!seen) {
+                uniques.push(x);
+                push(null, x);
+            }
+            if (hasErr) {
+                push(hasErr);
+            }
+            next();
+        }
+    });
+};
+exposeMethod('uniqBy');
+
+/**
+ * Takes all unique values in a stream.
+ * It uses uniqBy internally, using the strict equality === operator to define unicity
+ *
+ * @id uniq
+ * @section Transforms
+ * @name Stream.uniq()
+ * @api public
+ *
+ * var colors = [ 'blue', 'red', 'red', 'yellow', 'blue', 'red' ]
+ *
+ * _(colors).uniq()
+ * // => 'blue'
+ * // => 'red'
+ * // => 'yellow'
+ */
+
+Stream.prototype.uniq = function () {
+    return this.uniqBy(function (a, b) {
+        return a === b;
+    });
+};
+exposeMethod('uniq');
+
 
 /**
  * Takes two Streams and returns a Stream of corresponding pairs.
@@ -2160,7 +2252,7 @@ _.pipeline = function (/*through...*/) {
 };
 
 /**
- * Reads values from a Stream of Streams, emitting them on a Single output
+ * Reads values from a Stream of Streams, emitting them on a single output
  * Stream. This can be thought of as a flatten, just one level deep. Often
  * used for resolving asynchronous actions such as a HTTP request or reading
  * a file.
@@ -2417,7 +2509,7 @@ exposeMethod('parallel');
  * @id otherwise
  * @section Higher-order Streams
  * @name Stream.otherwise(ys)
- * @param {Stream} ys - alternate stream to use if this stream is empty
+ * @param {Stream | Function} ys - alternate stream (or stream-returning function) to use if this stream is empty
  * @api public
  *
  * _([1,2,3]).otherwise(['foo'])  // => 1, 2, 3
@@ -2436,7 +2528,12 @@ Stream.prototype.otherwise = function (ys) {
             next();
         } else if (x === nil) {
             // hit the end without redirecting to xs, use alternative
-            next(ys);
+            if (_.isFunction(ys)) {
+                next(ys());
+            }
+            else {
+                next(ys);
+            }
         }
         else {
             // got a value, push it, then redirect to xs
@@ -2676,7 +2773,7 @@ exposeMethod('scan1');
  * @id concat
  * @section Higher-order Streams
  * @name Stream.concat(ys)
- * @params {Stream | Array} ys - the values to concatenate onto this Stream
+ * @param {Stream | Array} ys - the values to concatenate onto this Stream
  * @api public
  *
  * _([1, 2]).concat([3, 4])  // => 1, 2, 3, 4
