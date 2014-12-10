@@ -288,6 +288,44 @@ exports['async consume'] = function (test) {
     });
 };
 
+exports['consume - push nil async (issue #173)'] = function (test) {
+    test.expect(1);
+    _([1, 2, 3, 4]).consume(function(err, x, push, next) {
+        if (err !== null) {
+            push(err);
+            next();
+        }
+        else if (x === _.nil) {
+            _.setImmediate(push.bind(this, null, x));
+        }
+        else {
+            push(null, x);
+            next();
+        }
+    })
+    .toArray(function (xs) {
+        test.same(xs, [1, 2, 3, 4]);
+        test.done();
+    });
+};
+
+exports['consume - source resume should buffer'] = function (test) {
+    test.expect(2);
+    var values = [];
+    var s = _([1, 2, 3]);
+    var s2 = s.consume(function (err, x, push, next) {
+        values.push(x);
+        if (x !== _.nil) {
+            next();
+        }
+    });
+    s.resume();
+    test.same(values, []);
+    s2.resume();
+    test.same(values, [1, 2, 3, _.nil]);
+    test.done();
+};
+
 exports['passing Stream to constructor returns original'] = function (test) {
     var s = _([1,2,3]);
     test.strictEqual(s, _(s));
@@ -353,11 +391,11 @@ exports['if consumer paused, buffer data'] = function (test) {
 exports['write when paused adds to incoming buffer'] = function (test) {
     var s = _();
     test.ok(s.paused);
-    test.same(s._incoming, []);
+    test.same(s._outgoing.toArray(), []);
     test.strictEqual(s.write(1), false);
-    test.same(s._incoming, [1]);
+    test.same(s._outgoing.toArray(), [1]);
     test.strictEqual(s.write(2), false);
-    test.same(s._incoming, [1,2]);
+    test.same(s._outgoing.toArray(), [1,2]);
     test.done();
 };
 
@@ -370,15 +408,15 @@ exports['write when not paused sends to consumer'] = function (test) {
     });
     test.ok(s1.paused);
     test.ok(s2.paused);
-    test.same(s1._incoming, []);
-    test.same(s2._incoming, []);
+    test.same(s1._outgoing.toArray(), []);
+    test.same(s2._outgoing.toArray(), []);
     s2.resume();
     test.ok(!s1.paused);
     test.ok(!s2.paused);
     test.strictEqual(s1.write(1), true);
     test.strictEqual(s1.write(2), true);
-    test.same(s1._incoming, []);
-    test.same(s2._incoming, []);
+    test.same(s1._outgoing.toArray(), []);
+    test.same(s2._outgoing.toArray(), []);
     test.same(vals, [1,2]);
     test.done();
 };
@@ -391,12 +429,12 @@ exports['buffered incoming data released on resume'] = function (test) {
         next();
     });
     test.strictEqual(s1.write(1), false);
-    test.same(s1._incoming, [1]);
-    test.same(s2._incoming, []);
+    test.same(s1._outgoing.toArray(), [1]);
+    test.same(s2._outgoing.toArray(), []);
     s2.resume();
     test.same(vals, [1]);
-    test.same(s1._incoming, []);
-    test.same(s2._incoming, []);
+    test.same(s1._outgoing.toArray(), []);
+    test.same(s2._outgoing.toArray(), []);
     test.strictEqual(s1.write(2), true);
     test.same(vals, [1,2]);
     test.done();
@@ -407,23 +445,24 @@ exports['restart buffering incoming data on pause'] = function (test) {
     var s1 = _();
     var s2 = s1.consume(function (err, x, push, next) {
         vals.push(x);
+        push(null, x);
         next();
     });
     s2.resume();
     test.strictEqual(s1.write(1), true);
     test.strictEqual(s1.write(2), true);
-    test.same(s1._incoming, []);
-    test.same(s2._incoming, []);
+    test.same(s1._outgoing.toArray(), []);
+    test.same(s2._outgoing.toArray(), []);
     test.same(vals, [1,2]);
     s2.pause();
     test.strictEqual(s1.write(3), false);
     test.strictEqual(s1.write(4), false);
-    test.same(s1._incoming, [3,4]);
-    test.same(s2._incoming, []);
-    test.same(vals, [1,2]);
+    test.same(s1._outgoing.toArray(), [4]);
+    test.same(s2._outgoing.toArray(), [3]);
+    test.same(vals, [1,2,3]);
     s2.resume();
-    test.same(s1._incoming, []);
-    test.same(s2._incoming, []);
+    test.same(s1._outgoing.toArray(), []);
+    test.same(s2._outgoing.toArray(), []);
     test.same(vals, [1,2,3,4]);
     test.done();
 };
@@ -437,6 +476,42 @@ exports['redirect from consumer'] = function (test) {
         test.same(xs, [4, 5, 6]);
         test.done();
     });
+};
+
+exports['redirect - redirecting stream should end when delegate end (issue #41)'] = function (test) {
+    test.expect(4);
+    var s1 = _([1]);
+    var s2 = _([2]);
+
+    var out = s1.concat(s2);
+
+    out.toArray(function(arr) {
+        test.same(arr, [1, 2]);
+    });
+    test.strictEqual(s1.ended, true, 's1 should be ended');
+    test.strictEqual(s2.ended, true, 's2 should be ended');
+    test.strictEqual(out.ended, true, 'out should be ended');
+    test.done();
+};
+
+exports['redirect - should pass on end event (issue #142)'] = function (test) {
+    test.expect(1);
+    var generator = _(function (push, next) {
+        push(null, _.nil);
+    });
+
+    var endCalls = 0;
+    generator.on('end', function () {
+        endCalls++;
+    })
+
+    var otherwise = _([]).otherwise(generator).on('end', function() {
+        endCalls++;
+    });
+    otherwise.resume();
+
+    test.same(endCalls, 2, 'The end event did not fire twice.');
+    test.done();
 };
 
 exports['async next from consumer'] = function (test) {
@@ -858,9 +933,10 @@ exports['generator consumers are sent values eagerly until pause'] = function (t
     var calls = [];
     var consumer = s.consume(function (err, x, push, next) {
         calls.push(x);
-        if (x !== 2) {
-            next();
+        if (x === 2) {
+            consumer.pause();
         }
+        next();
     });
     consumer.resume();
     test.same(JSON.stringify(calls), JSON.stringify([1,2]));
@@ -1027,13 +1103,13 @@ exports['pipe old-style node stream to highland stream'] = function (test) {
     });
     Stream.prototype.pipe.call(src, s1);
     setTimeout(function () {
-        test.same(s1._incoming, [1]);
-        test.same(s2._incoming, []);
+        test.same(s1._outgoing.toArray(), [1]);
+        test.same(s2._outgoing.toArray(), []);
         test.same(xs, []);
         s2.resume();
         setTimeout(function () {
-            test.same(s1._incoming, []);
-            test.same(s2._incoming, []);
+            test.same(s1._outgoing.toArray(), []);
+            test.same(s2._outgoing.toArray(), []);
             test.same(xs, [1,2,3,4,_.nil]);
             test.done();
         }, 100);
@@ -1050,13 +1126,13 @@ exports['pipe node stream to highland stream'] = function (test) {
     });
     src.pipe(s1);
     setTimeout(function () {
-        test.same(s1._incoming, [1]);
-        test.same(s2._incoming, []);
+        test.same(s1._outgoing.toArray(), [1]);
+        test.same(s2._outgoing.toArray(), []);
         test.same(xs, []);
         s2.resume();
         setTimeout(function () {
-            test.same(s1._incoming, []);
-            test.same(s2._incoming, []);
+            test.same(s1._outgoing.toArray(), []);
+            test.same(s2._outgoing.toArray(), []);
             test.same(xs, [1,2,3,4,_.nil]);
             test.done();
         }, 100);
@@ -1125,8 +1201,8 @@ exports['wrap node stream and pipe'] = function (test) {
     };
     // make sure nothing starts until we pipe
     test.same(xs, []);
-    test.same(ys._incoming, []);
-    test.same(ys.source._incoming, []);
+    test.same(ys._outgoing.toArray(), []);
+    test.same(ys.source._outgoing.toArray(), []);
     ys.pipe(dest);
 };
 
@@ -1365,7 +1441,7 @@ exports['sequence - Streams of Streams of Arrays'] = function (test) {
 exports['fork'] = function (test) {
     var s = _([1,2,3,4]);
     s.id = 's';
-    var s2 = s.map(function (x) {
+    var s2 = s.fork().map(function (x) {
         return x * 2;
     });
     s2.id = 's2';
@@ -1421,7 +1497,7 @@ exports['observe'] = function (test) {
     });
     test.same(s2_data, [2]);
     test.same(s3_data, []);
-    test.same(s3.source._incoming, [1]);
+    test.same(s3.source._outgoing.toArray(), [1]);
     s3.take(2).each(function (x) {
         s3_data.push(x);
     });
@@ -2272,11 +2348,10 @@ exports['merge'] = {
         var s = _.merge([s1, s2]);
         s.take(5).toArray(function (xs) {
             test.same(xs, [1,5,2,6,3]);
-            setImmediate(function () {
-                test.equal(s._outgoing.length, 0);
-                test.equal(s._incoming.length, 1);
-                test.equal(s1._incoming.length, 2);
-                test.equal(s2._incoming.length, 2);
+            _.setImmediate(function () {
+                test.equal(s._outgoing.length, 1);
+                test.equal(s1._outgoing.length, 2);
+                test.equal(s2._outgoing.length, 2);
                 test.done();
             });
         });
@@ -2315,7 +2390,20 @@ exports['merge'] = {
         });
         this.clock.tick(400);
     },
-    'noValueOnError': noValueOnErrorTest(_.merge())
+    'noValueOnError': noValueOnErrorTest(_.merge()),
+    'pass through errors (issue #141)': function (test) {
+        test.expect(1);
+
+        var s = _(function (push, next) {
+            push(new Error);
+            push(null, _.nil);
+        });
+        _([s])
+            .merge()
+            .errors(anyError(test))
+            .each(test.ok.bind(test, false, 'each should not be called'));
+        test.done();
+    }
 };
 
 exports['invoke'] = function (test) {
