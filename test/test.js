@@ -2495,7 +2495,7 @@ exports['pick'] = function (test) {
         {breed: 'labrador', name: 'Rocky', age: 3},
         {breed: 'german-shepherd', name: 'Waffles', age: 9}
     ]);
-    a.pick('breed', 'age').toArray(function (xs) {
+    a.pick(['breed', 'age']).toArray(function (xs) {
         test.deepEqual(xs, [
           {breed: 'chihuahua', age: 5},
           {breed: 'labrador',  age: 3},
