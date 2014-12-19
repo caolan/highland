@@ -282,10 +282,10 @@ exports['async consume'] = function (test) {
             }, 10);
         }
     })
-    .toArray(function (xs) {
-        test.same(xs, [10, 20, 30, 40]);
-        test.done();
-    });
+        .toArray(function (xs) {
+            test.same(xs, [10, 20, 30, 40]);
+            test.done();
+        });
 };
 
 exports['passing Stream to constructor returns original'] = function (test) {
@@ -728,10 +728,10 @@ exports['take - errors'] = function (test) {
     test.expect(4);
     var s = _(function (push, next) {
         push(null, 1),
-        push(new Error('error'), 2),
-        push(null, 3),
-        push(null, 4),
-        push(null, _.nil)
+            push(new Error('error'), 2),
+            push(null, 3),
+            push(null, 4),
+            push(null, _.nil)
     });
     var f = s.take(2);
     f.pull(function (err, x) {
@@ -2233,38 +2233,38 @@ exports['merge'] = {
         this.clock.tick(2000);
     },
     /*
-    'read from sources as soon as they are available': function (test) {
-        test.expect(2);
-        var s1 = _([1, 2, 3]);
-        var s2 = _([4, 5, 6]);
-        var srcs = _(function (push, next) {
-            setTimeout(function () { push(null, s1); }, 100);
-            setTimeout(function () { push(null, s2); }, 200);
-            setTimeout(function () { push(null, _.nil); }, 300);
-        });
-        var xs = [];
-        srcs.merge().each(function (x) {
-            xs.push(x);
-        });
-        setTimeout(function () {
-            test.same(xs.slice(), [1, 2, 3]);
-        }, 150);
-        setTimeout(function () {
-            test.same(xs.slice(), [1, 2, 3, 4, 5, 6]);
-            test.done();
-        }, 400);
-        this.clock.tick(400);
-    },
-    */
+     'read from sources as soon as they are available': function (test) {
+     test.expect(2);
+     var s1 = _([1, 2, 3]);
+     var s2 = _([4, 5, 6]);
+     var srcs = _(function (push, next) {
+     setTimeout(function () { push(null, s1); }, 100);
+     setTimeout(function () { push(null, s2); }, 200);
+     setTimeout(function () { push(null, _.nil); }, 300);
+     });
+     var xs = [];
+     srcs.merge().each(function (x) {
+     xs.push(x);
+     });
+     setTimeout(function () {
+     test.same(xs.slice(), [1, 2, 3]);
+     }, 150);
+     setTimeout(function () {
+     test.same(xs.slice(), [1, 2, 3, 4, 5, 6]);
+     test.done();
+     }, 400);
+     this.clock.tick(400);
+     },
+     */
     'github issue #124: detect late end of stream': function(test) {
-      var s = _([1,2,3])
-              .map(function(x) { return _([x]) })
-              .merge()
+        var s = _([1,2,3])
+            .map(function(x) { return _([x]) })
+            .merge()
 
-      s.toArray(function(xs) {
-        test.same(xs, [1,2,3]);
-        test.done();
-      })
+        s.toArray(function(xs) {
+            test.same(xs, [1,2,3]);
+            test.done();
+        })
     },
     'handle backpressure': function (test) {
         var s1 = _([1,2,3,4]);
@@ -2555,11 +2555,11 @@ exports['pluck - noValueOnError'] = noValueOnErrorTest(_.pluck('foo'));
 exports['pluck - non-object argument'] = function (test) {
     var a = _([1, {type: 'blogpost', title: 'foo'}]);
     test.throws(function () {
-        a.pluck('title').toArray(function (xs) {
-            test.ok(false, "shouldn't be called");
-        });
-    },
-    'Expected Object, got array');
+            a.pluck('title').toArray(function (xs) {
+                test.ok(false, "shouldn't be called");
+            });
+        },
+        'Expected Object, got array');
     test.done();
 };
 
@@ -2879,7 +2879,7 @@ exports['find - GeneratorStream'] = function (test) {
             test.same(xs, [pexpectedUndefined]);
         });
         test.throws(function () {
-          _.group(null, primatives).toArray(_.log);
+            _.group(null, primatives).toArray(_.log);
         });
 
         // partial application
@@ -2887,7 +2887,7 @@ exports['find - GeneratorStream'] = function (test) {
             test.same(xs, [pexpected]);
         });
         test.throws(function () {
-          _.group(null)(primatives).toArray(_.log);
+            _.group(null)(primatives).toArray(_.log);
         });
 
         test.done();
@@ -3085,7 +3085,7 @@ exports['uniqBy'] = function(test) {
     test.expect(1);
     var xs = [ 'blue', 'red', 'red', 'yellow', 'blue', 'red' ]
     _.uniqBy(function(a,b) { return a[1] === b[1] }, xs).toArray(function(xs) {
-      test.same(xs, [ 'blue', 'red' ])
+        test.same(xs, [ 'blue', 'red' ])
     })
     test.done();
 };
@@ -3115,7 +3115,7 @@ exports['uniq'] = function(test) {
     test.expect(1);
     var xs = [ 'blue', 'red', 'red', 'yellow', 'blue', 'red' ]
     _.uniq(xs).toArray(function(xs) {
-      test.same(xs, [ 'blue', 'red', 'yellow' ])
+        test.same(xs, [ 'blue', 'red', 'yellow' ])
     })
     test.done();
 };
@@ -3193,6 +3193,79 @@ exports['zip - GeneratorStream'] = function (test) {
     });
     s1.zip(s2).toArray(function (xs) {
         test.same(xs, [['a',1], ['b',2], ['c',3]]);
+        test.done();
+    });
+};
+
+exports['zipAll'] = function (test) {
+    test.expect(3);
+    _.zipAll([[4, 5, 6], [7, 8, 9], [10, 11, 12]], [1,2,3]).toArray(function (xs) {
+        test.same(xs, [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]);
+    });
+    _.zipAll([_([4, 5, 6]), _([7, 8, 9]), _([10, 11, 12])], [1,2,3]).toArray(function (xs) {
+        test.same(xs, [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]);
+    });
+    // partial application
+    _.zipAll([[4, 5, 6], [7, 8, 9], [10, 11, 12]])([1,2,3]).toArray(function (xs) {
+        test.same(xs, [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]);
+    });
+    test.done();
+};
+
+exports['zipAll - noValueOnError'] = noValueOnErrorTest(_.zipAll([1]));
+
+exports['zipAll - StreamOfStreams'] = function (test) {
+    test.expect(1);
+    _.zipAll(_([[4, 5, 6], [7, 8, 9], [10, 11, 12]]), [1,2,3]).toArray(function (xs) {
+        test.same(xs, [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]);
+    });
+    test.done();
+};
+
+exports['zipAll - source emits error'] = function (test) {
+    test.expect(2);
+    var err = new Error('zip all error');
+    var s1 = _([1,2,3]);
+    var s2 = _(function (push) {
+        push(null, [4, 5, 6]);
+        push(err);
+        push(null, [7, 8, 9]);
+        push(null, [10, 11, 12]);
+        push(null, _.nil);
+    });
+
+    s1.zipAll(s2).errors(function (err) {
+        test.equal(err.message, 'zip all error');
+    }).toArray(function (xs) {
+        test.same(xs, [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]);
+    });
+    test.done();
+};
+
+exports['zipAll - GeneratorStream'] = function (test) {
+    var s1 = _(function (push, next) {
+        push(null, 1);
+        setTimeout(function () {
+            push(null, 2);
+            setTimeout(function () {
+                push(null, 3);
+                push(null, _.nil);
+            }, 10);
+        }, 10);
+    });
+    var s2 = _(function (push, next) {
+        setTimeout(function () {
+            push(null, [4, 5, 6]);
+            push(null, [7, 8, 9]);
+            setTimeout(function () {
+                push(null, [10, 11, 12]);
+                push(null, _.nil);
+            }, 50);
+        }, 50);
+    });
+
+    s1.zipAll(s2).toArray(function (xs) {
+        test.same(xs, [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]);
         test.done();
     });
 };
@@ -3933,11 +4006,11 @@ exports['through - function - ArrayStream'] = function (test) {
                 return x * 2;
             });
     })
-    .through(function (s) {
-        return s.map(function (x) {
-            return x + 1;
+        .through(function (s) {
+            return s.map(function (x) {
+                return x + 1;
+            });
         });
-    });
     s.toArray(function (xs) {
         test.same(xs, [3, 7]);
         test.done();
