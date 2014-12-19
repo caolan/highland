@@ -2505,6 +2505,19 @@ exports['pick'] = function (test) {
     });
 };
 
+exports['pick - non-existant property'] = function (test) {
+    var a = _([
+        {breed: 'labrador', name: 'Rocky'}, // <- missing age
+    ]);
+    a.pick(['breed', 'age']).toArray(function (xs) {
+        test.equal(xs[0].breed, 'labrador')
+        test.ok(xs[0].hasOwnProperty('age'));
+        test.ok(typeof(xs[0].age) === 'undefined');  
+        test.done();
+    });
+};
+
+
 
 exports['filter'] = function (test) {
     test.expect(2);
