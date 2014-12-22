@@ -2512,7 +2512,7 @@ exports['pick - non-existant property'] = function (test) {
     a.pick(['breed', 'age']).toArray(function (xs) {
         test.equal(xs[0].breed, 'labrador')
         test.ok(xs[0].hasOwnProperty('age'));
-        test.ok(typeof(xs[0].age) === 'undefined');  
+        test.ok(typeof(xs[0].age) === 'undefined');
         test.done();
     });
 };
