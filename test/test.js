@@ -3197,6 +3197,87 @@ exports['zip - GeneratorStream'] = function (test) {
     });
 };
 
+exports['zipAll'] = function (test) {
+    test.expect(3);
+    _.zipAll([[4, 5, 6], [7, 8, 9], [10, 11, 12]], [1,2,3]).toArray(function (xs) {
+        test.same(xs, [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]);
+    });
+    _.zipAll([_([4, 5, 6]), _([7, 8, 9]), _([10, 11, 12])], [1,2,3]).toArray(function (xs) {
+        test.same(xs, [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]);
+    });
+    // partial application
+    _.zipAll([[4, 5, 6], [7, 8, 9], [10, 11, 12]])([1,2,3]).toArray(function (xs) {
+        test.same(xs, [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]);
+    });
+    test.done();
+};
+
+exports['zipAll - noValueOnError'] = noValueOnErrorTest(_.zipAll([1]));
+
+exports['zipAll - StreamOfStreams'] = function (test) {
+    test.expect(1);
+    _.zipAll(_([[4, 5, 6], [7, 8, 9], [10, 11, 12]]), [1,2,3]).toArray(function (xs) {
+        test.same(xs, [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]);
+    });
+    test.done();
+};
+
+exports['zipAll - source emits error'] = function (test) {
+    test.expect(2);
+    var err = new Error('zip all error');
+    var s1 = _([1,2,3]);
+    var s2 = _(function (push) {
+        push(null, [4, 5, 6]);
+        push(err);
+        push(null, [7, 8, 9]);
+        push(null, [10, 11, 12]);
+        push(null, _.nil);
+    });
+
+    s1.zipAll(s2).errors(function (err) {
+        test.equal(err.message, 'zip all error');
+    }).toArray(function (xs) {
+        test.same(xs, [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]);
+    });
+    test.done();
+};
+
+exports['zipAll - GeneratorStream'] = function (test) {
+    var s1 = _(function (push, next) {
+        push(null, 1);
+        setTimeout(function () {
+            push(null, 2);
+            setTimeout(function () {
+                push(null, 3);
+                push(null, _.nil);
+            }, 10);
+        }, 10);
+    });
+    var s2 = _(function (push, next) {
+        setTimeout(function () {
+            push(null, [4, 5, 6]);
+            push(null, [7, 8, 9]);
+            setTimeout(function () {
+                push(null, [10, 11, 12]);
+                push(null, _.nil);
+            }, 50);
+        }, 50);
+    });
+
+    s1.zipAll(s2).toArray(function (xs) {
+        test.same(xs, [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]);
+        test.done();
+    });
+};
+
+exports['zipAll - Differing length streams'] = function (test) {
+    test.expect(1);
+    _.zipAll([[5, 6, 7, 8], [9, 10, 11, 12], [13, 14]])([1, 2, 3, 4]).toArray(function (xs) {
+        test.same(xs, [[1, 5, 9, 13], [2, 6, 10, 14]]);
+    });
+    test.done();
+};
+
 exports['batch'] = function (test) {
     test.expect(5);
     _.batch(3, [1,2,3,4,5,6,7,8,9,0]).toArray(function (xs) {
