@@ -3270,6 +3270,14 @@ exports['zipAll - GeneratorStream'] = function (test) {
     });
 };
 
+exports['zipAll - Differing length streams'] = function (test) {
+    test.expect(1);
+    _.zipAll([[5, 6, 7, 8], [9, 10, 11, 12], [13, 14]])([1, 2, 3, 4]).toArray(function (xs) {
+        test.same(xs, [[1, 5, 9, 13], [2, 6, 10, 14]]);
+    });
+    test.done();
+};
+
 exports['batch'] = function (test) {
     test.expect(5);
     _.batch(3, [1,2,3,4,5,6,7,8,9,0]).toArray(function (xs) {
