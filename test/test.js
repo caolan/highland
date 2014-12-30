@@ -3362,6 +3362,17 @@ exports['splitBy'] = function(test) {
     test.done();
 };
 
+exports['splitBy - delimiter at end of stream'] = function(test) {
+    test.expect(2);
+    _.splitBy('s', ['ducks']).toArray(function(xs) {
+        test.same(xs, ['duck', '']);
+    });
+    _.splitBy('\n', ['hello\n', 'world', '\n']).toArray(function(xs) {
+        test.same(xs, ['hello', 'world', '']);
+    });
+    test.done();
+};
+
 exports['splitBy - noValueOnError'] = noValueOnErrorTest(_.splitBy(' '));
 
 exports['splitBy - unicode'] = function (test) {
