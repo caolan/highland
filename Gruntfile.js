@@ -5,9 +5,9 @@ module.exports = function (grunt) {
 
         pkg: grunt.file.readJSON('package.json'),
 
-        jshint: {
+        eslint: {
             options: {
-                jshintrc: '.jshintrc'
+                config: '.eslintrc'
             },
             all: [
                 'Gruntfile.js',
@@ -69,14 +69,14 @@ module.exports = function (grunt) {
                 requires: [],
                 // if the workspace is dirty, abort publishing
                 // (to avoid publishing local changes)
-                abortIfDirty: true,
+                abortIfDirty: true
             }
         }
 
     });
 
     grunt.loadNpmTasks('grunt-contrib-watch');
-    grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.loadNpmTasks('grunt-eslint');
     grunt.loadNpmTasks('grunt-contrib-nodeunit');
     grunt.loadNpmTasks('grunt-browserify');
     grunt.loadNpmTasks('grunt-gh-pages');
@@ -108,7 +108,7 @@ module.exports = function (grunt) {
         'gh-pages'
     ]);
 
-    grunt.registerTask('test', ['jshint:all', 'nodeunit:all']);
+    grunt.registerTask('test', ['eslint:all', 'nodeunit:all']);
     grunt.registerTask('build', ['browserify:main', 'docs']);
     grunt.registerTask('default', ['build']);
 
