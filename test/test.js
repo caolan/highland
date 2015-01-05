@@ -2688,6 +2688,8 @@ exports['pick'] = function (test) {
     });
 };
 
+exports['pick - noValueOnError'] = noValueOnErrorTest(_.pick(['plug']));
+
 exports['pick - non-existant property'] = function (test) {
     var a = _([
         {breed: 'labrador', name: 'Rocky'}, // <- missing age
