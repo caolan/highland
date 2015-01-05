@@ -2232,7 +2232,6 @@ exports['merge'] = {
         });
         this.clock.tick(2000);
     },
-    /*
     'read from sources as soon as they are available': function (test) {
         test.expect(2);
         var s1 = _([1, 2, 3]);
@@ -2255,7 +2254,20 @@ exports['merge'] = {
         }, 400);
         this.clock.tick(400);
     },
-    */
+    'generator generating sources synchronously': function(test) {
+      var srcs = _(function (push, next) {
+          push(null, _([1, 2, 3]));
+          push(null, _([3, 4, 5]));
+          push(null, _([6, 7, 8]));
+          push(null, _([9, 10, 11]));
+          push(null, _([12, 13, 14]));
+          push(null, _.nil);
+      })
+      srcs.merge().toArray(function(xs) {
+        test.same(xs, [ 1, 3, 6, 9, 12, 2, 4, 7, 10, 13, 3, 5, 8, 11, 14 ]);
+        test.done();
+      });
+    },
     'github issue #124: detect late end of stream': function(test) {
       var s = _([1,2,3])
               .map(function(x) { return _([x]) })
@@ -2315,7 +2327,20 @@ exports['merge'] = {
         });
         this.clock.tick(400);
     },
-    'noValueOnError': noValueOnErrorTest(_.merge())
+    'noValueOnError': noValueOnErrorTest(_.merge()),
+    'pass through errors (issue #141)': function (test) {
+        test.expect(1);
+
+        var s = _(function (push, next) {
+            push(new Error);
+            push(null, _.nil);
+        });
+        _([s])
+            .merge()
+            .errors(anyError(test))
+            .each(test.ok.bind(test, false, 'each should not be called'));
+        test.done();
+    }
 };
 
 exports['invoke'] = function (test) {
