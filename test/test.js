@@ -4557,3 +4557,19 @@ exports['not'] = function (test) {
     test.equal(_.not(undefined), true);
     return test.done();
 };
+
+var λ = require('fantasy-check/src/adapters/nodeunit'),
+    functor = require('fantasy-check/src/laws/functor');
+
+
+function syncPullOne(stream) {
+  var val = Math.random(); // fail test if pull is async
+  stream.pull(function(e, v) {
+    val = v;
+  });
+  return val;
+}
+
+exports.laws = {
+    'functor - identity': functor.identity(λ)(_.of, syncPullOne)
+};
