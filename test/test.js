@@ -2284,7 +2284,7 @@ exports['merge'] = {
         var s = _.merge([s1, s2]);
         s.take(5).toArray(function (xs) {
             test.same(xs, [1,5,2,6,3]);
-            setImmediate(function () {
+            _.setImmediate(function () {
                 test.equal(s._outgoing.length, 0);
                 test.equal(s._incoming.length, 1);
                 test.equal(s1._incoming.length, 2);
