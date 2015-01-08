@@ -83,21 +83,16 @@ var Decoder = _dereq_('string_decoder').StringDecoder;
  * var foo = _($.getJSON('/api/foo'));
  */
 
+/*eslint-disable no-multi-spaces */
 exports = module.exports = function (/*optional*/xs, /*optional*/ee, /*optional*/ mappingHint) {
+    /*eslint-enable no-multi-spaces */
     return new Stream(xs, ee, mappingHint);
 };
 
 var _ = exports;
 
-
-// Save bytes in the minified (but not gzipped) version:
-var ArrayProto = Array.prototype,
-    ObjProto = Object.prototype;
-
-// Create quick reference variables for speed access to core prototypes.
-var slice = ArrayProto.slice,
-    toString = ObjProto.toString;
-
+// Create quick slice reference variable for speed
+var slice = Array.prototype.slice;
 
 _.isFunction = function (x) {
     return typeof x === 'function';
@@ -112,7 +107,7 @@ _.isString = function (x) {
 };
 
 _.isArray = Array.isArray || function (x) {
-    return toString.call(x) === '[object Array]';
+    return Object.prototype.toString.call(x) === '[object Array]';
 };
 
 // setImmediate implementation with browser and older node fallbacks
@@ -193,7 +188,7 @@ var nil = _.nil = _global.nil;
  * This function is not itself curryable.
  *
  * @id curry
- * @name curry(fn, [*arguments])
+ * @name _.curry(fn, [*arguments])
  * @section Functions
  * @param {Function} fn - the function to curry
  * @param args.. - any number of arguments to pre-apply to the function
@@ -221,7 +216,7 @@ _.curry = function (fn /* args... */) {
  * This function is not itself curryable.
  *
  * @id ncurry
- * @name ncurry(n, fn, [args...])
+ * @name _.ncurry(n, fn, [args...])
  * @section Functions
  * @param {Number} n - the number of arguments to wait for before apply fn
  * @param {Function} fn - the function to curry
@@ -243,13 +238,8 @@ _.ncurry = function (n, fn /* args... */) {
     if (largs.length >= n) {
         return fn.apply(this, largs.slice(0, n));
     }
-    return function () {
-        var args = largs.concat(slice.call(arguments));
-        if (args.length < n) {
-            return _.ncurry.apply(this, [n, fn].concat(args));
-        }
-        return fn.apply(this, args.slice(0, n));
-    };
+
+    return _.partial.apply(this, [_.ncurry, n, fn].concat(largs));
 };
 
 /**
@@ -258,7 +248,7 @@ _.ncurry = function (n, fn /* args... */) {
  * call of the partially applied function.
  *
  * @id partial
- * @name partial(fn, args...)
+ * @name _.partial(fn, args...)
  * @section Functions
  * @param {Function} fn - function to partial apply
  * @param args... - the arguments to apply to the function
@@ -284,7 +274,7 @@ _.partial = function (f /* args... */) {
  * works with functions that accept two arguments.
  *
  * @id flip
- * @name flip(fn, [x, y])
+ * @name _.flip(fn, [x, y])
  * @section Functions
  * @param {Function} fn - function to flip argument application for
  * @param x - parameter to apply to the right hand side of f
@@ -305,7 +295,7 @@ _.flip = _.curry(function (fn, x, y) { return fn(y, x); });
  * function itself.
  *
  * @id compose
- * @name compose(fn1, fn2, ...)
+ * @name _.compose(fn1, fn2, ...)
  * @section Functions
  * @api public
  *
@@ -326,7 +316,7 @@ _.compose = function (/*functions...*/) {
  * application.
  *
  * @id seq
- * @name seq(fn1, fn2, ...)
+ * @name _.seq(fn1, fn2, ...)
  * @section Functions
  * @api public
  *
@@ -341,7 +331,7 @@ _.seq = function () {
     var fns = slice.call(arguments);
     return function () {
         if (!fns.length) {
-            return;
+            return null;
         }
         var r = fns[0].apply(this, arguments);
         for (var i = 1; i < fns.length; i++) {
@@ -355,7 +345,9 @@ _.seq = function () {
  * Actual Stream constructor wrapped the the main exported function
  */
 
+/*eslint-disable no-multi-spaces */
 function Stream(/*optional*/xs, /*optional*/ee, /*optional*/mappingHint) {
+    /*eslint-enable no-multi-spaces */
     if (xs && _.isStream(xs)) {
         // already a Stream
         return xs;
@@ -409,6 +401,7 @@ function Stream(/*optional*/xs, /*optional*/ee, /*optional*/mappingHint) {
 
     if (xs === undefined) {
         // nothing else to do
+        return this;
     }
     else if (_.isArray(xs)) {
         self._incoming = xs.concat([nil]);
@@ -416,7 +409,7 @@ function Stream(/*optional*/xs, /*optional*/ee, /*optional*/mappingHint) {
     else if (typeof xs === 'function') {
         this._generator = xs;
         this._generator_push = function (err, x) {
-            self.write(err ? new StreamError(err): x);
+            self.write(err ? new StreamError(err) : x);
         };
         this._generator_next = function (s) {
             if (s) {
@@ -469,11 +462,13 @@ function Stream(/*optional*/xs, /*optional*/ee, /*optional*/mappingHint) {
 
         if (mappingHintType === 'function') {
             mapper = mappingHint;
-        } else if (mappingHintType === 'number') {
+        }
+        else if (mappingHintType === 'number') {
             mapper = function () {
                 return slice.call(arguments, 0, mappingHint);
             };
-        } else if (_.isArray(mappingHint)) {
+        }
+        else if (_.isArray(mappingHint)) {
             mapper = function () {
                 var args = arguments;
                 return mappingHint.reduce(function (ctx, hint, idx) {
@@ -481,7 +476,8 @@ function Stream(/*optional*/xs, /*optional*/ee, /*optional*/mappingHint) {
                     return ctx;
                 }, {});
             };
-        } else {
+        }
+        else {
             mapper = function (x) { return x; };
         }
 
@@ -1359,7 +1355,8 @@ Stream.prototype.map = function (f) {
             var fnVal, fnErr;
             try {
                 fnVal = f(x);
-            } catch (e) {
+            }
+            catch (e) {
                 fnErr = e;
             }
             push(fnErr, fnVal);
@@ -1513,6 +1510,61 @@ Stream.prototype.pluck = function (prop) {
 exposeMethod('pluck');
 
 /**
+ *
+ * Retrieves copies of all elements in the collection,
+ * with only the whitelisted keys.
+ *
+ * @id pick
+ * @section Transforms
+ * @name Stream.pick(properties)
+ * @param {Array} properties - property names to white filter
+ * @api public
+ *
+ * var docs = [
+ *    {breed: 'chihuahua', name: 'Princess', age: 5},
+ *    {breed: 'labrador', name: 'Rocky', age: 3},
+ *    {breed: 'german-shepherd', name: 'Waffles', age: 9}
+ * ];
+ *
+ * _(docs).pick(['breed', 'age']).toArray(function (xs) {
+ *     // xs is now:
+ *     [
+ *         {breed: 'chihuahua', age: 5},
+ *         {breed: 'labrador',  age: 3},
+ *         {breed: 'german-shepherd', age: 9}
+ *     ]
+ * });
+ */
+
+Stream.prototype.pick = function (properties) {
+
+    return this.consume(function (err, x, push, next) {
+        var out = {}, key, i = 0;
+        if (err) {
+            push(err);
+            next();
+        }
+        else if (x === nil) {
+            push(err, x);
+        }
+        else if (_.isObject(x)) {
+            while ((key = properties[i++])) {
+              out[key] = x[key];
+            }
+            push(null, out);
+            next();
+        }
+        else {
+            push(new Error(
+                'Expected Object, got ' + (typeof x)
+            ));
+            next();
+        }
+    });
+};
+exposeMethod('pick');
+
+/**
  * Creates a new Stream including only the values which pass a truth test.
  *
  * @id filter
@@ -1539,13 +1591,15 @@ Stream.prototype.filter = function (f) {
             var fnVal, fnErr;
             try {
                 fnVal = f(x);
-            } catch (e) {
+            }
+            catch (e) {
                 fnErr = e;
             }
 
             if (fnErr) {
                 push(fnErr);
-            } else if (fnVal) {
+            }
+            else if (fnVal) {
                 push(null, x);
             }
             next();
@@ -1709,7 +1763,7 @@ Stream.prototype.group = function (f) {
         if (!m.hasOwnProperty(key)) { m[key] = []; }
         m[key].push(o);
         return m;
-    }.bind(this));
+    });
 };
 exposeMethod('group');
 
@@ -1813,7 +1867,8 @@ Stream.prototype.uniqBy = function (compare) {
             for (var i = 0, len = uniques.length; i < len; i++) {
                 try {
                     seen = compare(x, uniques[i]);
-                } catch (e) {
+                }
+                catch (e) {
                     hasErr = e;
                     seen = true;
                 }
@@ -1858,24 +1913,34 @@ Stream.prototype.uniq = function () {
 };
 exposeMethod('uniq');
 
-
 /**
- * Takes two Streams and returns a Stream of corresponding pairs.
+ * Takes a stream and a `finite` stream of `N` streams
+ * and returns a stream where the first element from each
+ * separate stream is combined into a single data event,
+ * followed by the second elements of each stream and so on
+ * until the shortest input stream is exhausted.
  *
- * @id zip
+ * @id zipAll
  * @section Higher-order Streams
- * @name Stream.zip(ys)
- * @param {Array | Stream} ys - the other stream to combine values with
+ * @name Stream.zipAll(ys)
+ * @param {Array | Stream} ys - the array of streams to combine values with
  * @api public
  *
- * _(['a', 'b', 'c']).zip([1, 2, 3])  // => ['a', 1], ['b', 2], ['c', 3]
+ * _([1,2,3]).zipAll([[4, 5, 6], [7, 8, 9], [10, 11, 12]])
+ * // => [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]
+ *
+ * // shortest stream determines length of output stream
+ * _([1, 2, 3, 4]).zipAll([[5, 6, 7, 8], [9, 10, 11, 12], [13, 14]])
+ * // => [ [ 1, 5, 9, 13 ], [ 2, 6, 10, 14 ] ]
  */
 
-Stream.prototype.zip = function (ys) {
-    ys = _(ys);
-    var xs = this;
+Stream.prototype.zipAll = function (ys) {
+    var self = this;
+    ys = _(ys).map(_);
+
     var returned = 0;
     var z = [];
+
     function nextValue(index, max, src, push, next) {
         src.pull(function (err, x) {
             if (err) {
@@ -1895,12 +1960,35 @@ Stream.prototype.zip = function (ys) {
             }
         });
     }
-    return _(function (push, next) {
-        returned = 0;
-        z = [];
-        nextValue(0, 2, xs, push, next);
-        nextValue(1, 2, ys, push, next);
+
+    return ys.collect().flatMap(function (array) {
+        array.unshift(self);
+        return _(function (push, next) {
+            returned = 0;
+            z = [];
+            for (var i = 0, length = array.length; i < length; i++) {
+                nextValue(i, length, array[i], push, next);
+            }
+        });
     });
+
+};
+exposeMethod('zipAll');
+
+/**
+ * Takes two Streams and returns a Stream of corresponding pairs.
+ *
+ * @id zip
+ * @section Higher-order Streams
+ * @name Stream.zip(ys)
+ * @param {Array | Stream} ys - the other stream to combine values with
+ * @api public
+ *
+ * _(['a', 'b', 'c']).zip([1, 2, 3])  // => ['a', 1], ['b', 2], ['c', 3]
+ */
+
+Stream.prototype.zip = function (ys) {
+    return this.zipAll([ys]);
 };
 exposeMethod('zip');
 
@@ -1923,13 +2011,15 @@ Stream.prototype.batch = function (n) {
         if (err) {
             push(err);
             next();
-        } else if (x === nil) {
+        }
+        else if (x === nil) {
             if (batched.length > 0) {
                 push(null, batched);
             }
 
             push(null, nil);
-        } else {
+        }
+        else {
             batched.push(x);
 
             if (batched.length === n) {
@@ -1965,12 +2055,15 @@ Stream.prototype.intersperse = function (separator) {
         if (err) {
             push(err);
             next();
-        } else if (x === nil) {
+        }
+        else if (x === nil) {
             push(null, nil);
-        } else {
+        }
+        else {
             if (started) {
                 push(null, separator);
-            } else {
+            }
+            else {
                 started = true;
             }
             push(null, x);
@@ -1998,10 +2091,10 @@ exposeMethod('intersperse');
 
 Stream.prototype.splitBy = function (sep) {
     var decoder = new Decoder();
-    var buffer = '';
+    var buffer = false;
 
     function drain(x, push) {
-        buffer = buffer + decoder.write(x);
+        buffer = (buffer || '') + decoder.write(x);
         var pieces = buffer.split(sep);
         buffer = pieces.pop();
 
@@ -2014,11 +2107,15 @@ Stream.prototype.splitBy = function (sep) {
         if (err) {
             push(err);
             next();
-        } else if (x === nil) {
-            drain(decoder.end(), push);
-            if (buffer) push(null, buffer);
+        }
+        else if (x === nil) {
+            if (typeof buffer === 'string') {
+                drain(decoder.end(), push);
+                push(null, buffer);
+            }
             push(null, nil);
-        } else {
+        }
+        else {
             drain(x, push);
             next();
         }
@@ -2288,7 +2385,8 @@ Stream.prototype.sequence = function () {
                     x.forEach(function (y) {
                         push(null, y);
                     });
-                } else {
+                }
+                else {
                     push(null, x);
                 }
                 return next();
@@ -2496,9 +2594,7 @@ Stream.prototype.parallel = function (n) {
             // nothing more to do
             push(null, nil);
         }
-        else {
-            // wait for more data to arrive from running streams
-        }
+        // else wait for more data to arrive from running streams
     });
 };
 exposeMethod('parallel');
@@ -2526,7 +2622,8 @@ Stream.prototype.otherwise = function (ys) {
             // got an error, just keep going
             push(err);
             next();
-        } else if (x === nil) {
+        }
+        else if (x === nil) {
             // hit the end without redirecting to xs, use alternative
             if (_.isFunction(ys)) {
                 next(ys());
@@ -2609,7 +2706,8 @@ Stream.prototype.reduce = function (z, f) {
         else {
             try {
                 z = f(z, x);
-            } catch (e) {
+            }
+            catch (e) {
                 push(e);
                 push(null, _.nil);
                 return;
@@ -2641,7 +2739,8 @@ Stream.prototype.reduce1 = function (f) {
             if (err) {
                 push(err);
                 next();
-            } else if (x === nil) {
+            }
+            else if (x === nil) {
                 push(null, nil);
             }
             else {
@@ -2718,7 +2817,8 @@ Stream.prototype.scan = function (z, f) {
             else {
                 try {
                     z = f(z, x);
-                } catch (e) {
+                }
+                catch (e) {
                     push(e);
                     push(null, _.nil);
                     return;
@@ -2752,7 +2852,8 @@ Stream.prototype.scan1 = function (f) {
             if (err) {
                 push(err);
                 next();
-            } else if (x === nil) {
+            }
+            else if (x === nil) {
                 push(null, nil);
             }
             else {
@@ -2818,56 +2919,109 @@ exposeMethod('concat');
 
 Stream.prototype.merge = function () {
     var self = this;
-    var resuming = false;
-    var go_next = false;
-    var srcs;
+    var srcs = [];
+
+    var srcsNeedPull = [],
+        first = true,
+        async = false;
+
     return _(function (push, next) {
-        var safeNext = function () {
-            if (!resuming) {
-                next();
-            }
-            else {
-                go_next = true;
-            }
-        };
-        if (!srcs) {
-            self.errors(push).toArray(function (xs) {
-                srcs = xs;
-                srcs.forEach(function (src) {
-                    src.on('end', function () {
-                        srcs = srcs.filter(function (s) {
-                            return s !== src;
-                        });
-                        safeNext();
-                    });
-                    src.on('data', function (x) {
-                        src.pause();
-                        push(null, x);
-                        safeNext();
-                    });
-                    src.on('error', function (err) {
-                        push(err);
-                        safeNext();
-                    });
-                });
-                next();
-            });
+        if (first) {
+            first = false;
+            getSourcesSync(push, next);
         }
-        else if (srcs.length === 0) {
+
+        if (srcs.length === 0) {
             push(null, nil);
         }
+        else if (srcsNeedPull.length) {
+            pullFromAllSources(push, next);
+            next();
+        }
         else {
-            go_next = false;
-            resuming = true;
-            srcs.forEach(function (src) {
-                src.resume();
-            });
-            resuming = false;
-            if (go_next) {
-                next();
-            }
+            async = true;
         }
     });
+
+    // Make a handler for the main merge loop.
+    function srcPullHandler(push, next, src) {
+        return function (err, x) {
+            if (err) {
+                push(err);
+                srcsNeedPull.push(src);
+            }
+            else if (x === nil) {
+                srcs = srcs.filter(function (s) {
+                    return s !== src;
+                });
+            }
+            else {
+                if (src === self) {
+                    srcs.push(x);
+                    srcsNeedPull.push(x);
+                    srcsNeedPull.unshift(self);
+                }
+                else {
+                    push(null, x);
+                    srcsNeedPull.push(src);
+                }
+            }
+
+            if (async) {
+                async = false;
+                next();
+            }
+        };
+    }
+
+
+    function pullFromAllSources(push, next) {
+        var _srcs = srcsNeedPull;
+        srcsNeedPull = [];
+        _srcs.forEach(function (src) {
+            src.pull(srcPullHandler(push, next, src));
+        });
+    }
+
+    // Pulls as many sources as possible from self synchronously.
+    function getSourcesSync(push, next) {
+        // Shadows the outer async variable.
+        var asynchronous;
+        var done = false;
+
+        var pull_cb = function(err, x) {
+            asynchronous = false;
+            if (done) {
+                // This means the pull was async. Handle like
+                // regular async.
+                srcPullHandler(push, next, self)(err, x);
+            }
+            else {
+                if (err) {
+                    push(err);
+                }
+                else if (x === nil) {
+                    done = true;
+                }
+                else {
+                    srcs.push(x);
+                    srcsNeedPull.push(x);
+                }
+            }
+        };
+
+        while (!done) {
+            asynchronous = true;
+            self.pull(pull_cb);
+
+            // Async behavior, record self as a src and return.
+            if (asynchronous) {
+                done = true;
+                srcs.unshift(self);
+            }
+        }
+    }
+
 };
 exposeMethod('merge');
 
@@ -2895,6 +3049,62 @@ Stream.prototype.invoke = function (method, args) {
 exposeMethod('invoke');
 
 /**
+ * Takes a Stream of callback-accepting node-style functions,
+ * [wraps](#wrapCallback) each one into a stream-returning function,
+ * calls them with the arguments provided, and returns the results
+ * as a Stream.
+ *
+ * This can be used as a control flow shortcut and draws parallels
+ * with some control flow functions from [async](https://github.com/caolan/async).
+ * A few rough correspondences include:
+ *
+ * - `.nfcall([]).series()` to `async.series()`
+ * - `.nfcall([]).parallel(n)` to `async.parallelLimit(n)`
+ * - `.nfcall(args)` to `async.applyEach(..., args)`
+ * - `.nfcall(args).series()` to `async.applyEachSeries(..., args)`
+ *
+ * @id nfcall
+ * @section Transforms
+ * @name Stream.nfcall(args)
+ * @param {Array} args - the arguments to call each function with
+ * @api public
+ *
+ * _([
+ *   function (callback) {
+ *     setTimeout(function () {
+ *       callback(null, 'one');
+ *     }, 200);
+ *   },
+ *   function (callback) {
+ *     setTimeout(function () {
+ *       callback(null, 'two');
+ *     }, 100);
+ *   }
+ * ]).nfcall([]).parallel(2).toArray(function (xs) {
+ *   // xs is ['one', 'two'] even though second function had a shorter timeout
+ * });
+ *
+ * _([enableSearch, updateSchema]).nfcall(['bucket']).toArray(callback);
+ * // does roughly the same as
+ * async.applyEach([enableSearch, updateSchema], 'bucket', callback);
+ *
+ * _([
+ *   fs.appendFile,
+ *   fs.appendFile
+ * ]).nfcall(['example.txt', 'hello']).series().toArray(function() {
+ *   // example.txt now contains 'hellohello'
+ * });
+ *
+ */
+
+Stream.prototype.nfcall = function (args) {
+    return this.map(function (x) {
+        return _.wrapCallback(x).apply(x, args);
+    });
+};
+exposeMethod('nfcall');
+
+/**
  * Ensures that only one data event is push downstream (or into the buffer)
  * every `ms` milliseconds, any other values are dropped.
  *
@@ -2908,21 +3118,25 @@ exposeMethod('invoke');
  */
 
 Stream.prototype.throttle = function (ms) {
-    var s = new Stream();
     var last = 0 - ms;
-    var _write = s.write;
-    s.write = function (x) {
+    return this.consume(function (err, x, push, next) {
         var now = new Date().getTime();
-        if (_._isStreamError(x) || x === nil) {
-            return _write.apply(this, arguments);
+        if (err) {
+            push(err);
+            next();
+        }
+        else if (x === nil) {
+            push(null, nil);
         }
         else if (now - ms >= last) {
             last = now;
-            return _write.apply(this, arguments);
+            push(null, x);
+            next();
         }
-    };
-    this._addConsumer(s);
-    return s;
+        else {
+            next();
+        }
+    });
 };
 exposeMethod('throttle');
 
@@ -2942,38 +3156,34 @@ exposeMethod('throttle');
  */
 
 Stream.prototype.debounce = function (ms) {
-    var s = new Stream();
     var t = null;
     var nothing = {};
     var last = nothing;
-    var _write = s.write;
-    s.write = function (x) {
-        if (_._isStreamError(x)) {
+
+    return this.consume(function (err, x, push, next) {
+        if (err) {
             // let errors through regardless
-            return _write.apply(this, arguments);
+            push(err);
+            next();
         }
         else if (x === nil) {
             if (t) {
                 clearTimeout(t);
             }
             if (last !== nothing) {
-                _write.call(s, last);
+                push(null, last);
             }
-            return _write.apply(this, arguments);
+            push(null, nil);
         }
         else {
             last = x;
             if (t) {
                 clearTimeout(t);
             }
-            t = setTimeout(function () {
-                _write.call(s, last);
-            }, ms);
-            return !this.paused;
+            t = setTimeout(push.bind(this, null, x), ms);
+            next();
         }
-    };
-    this._addConsumer(s);
-    return s;
+    });
 };
 exposeMethod('debounce');
 
@@ -2994,38 +3204,61 @@ exposeMethod('debounce');
  */
 
 Stream.prototype.latest = function () {
-    var s = new Stream();
-    var _write = s.write;
-    s.pause = function () {
-        this.paused = true;
-        // do not force parent to checkBackpressure
-    };
-    s.write = function (x) {
-        if (_._isStreamError(x)) {
-            // pass errors straight through
-            _write.call(this, x);
+    var nothing = {},
+        latest = nothing,
+        errors = [],
+        ended = false,
+        onValue = null;
+
+    this.consume(function (err, x, push, next) {
+        if (onValue != null) {
+            var cb = onValue;
+            onValue = null;
+            cb(err, x);
+        }
+
+        if (err) {
+            errors.push(err);
+            next();
         }
         else if (x === nil) {
-            _write.call(this, x);
+            ended = true;
         }
         else {
-            if (this.paused) {
-                this._incoming = this._incoming.filter(function (x) {
-                    // remove any existing values from buffer
-                    return _._isStreamError(x) || x === nil;
-                });
-                this._incoming.push(x);
+            latest = x;
+            next();
+        }
+    }).resume();
+
+    return _(function (push, next) {
+        var oldErrors = errors;
+        errors = [];
+
+        if (!oldErrors.length && latest === nothing && !ended) {
+            // We haven't gotten any data yet. We can't call next
+            // because that might cause the stream to call the generator
+            // again, resulting in an infinite loop. Thus, we stick a
+            // a callback to be called whenever we get a value.
+            onValue = function (err, x) {
+                push(err, x);
+                if (x !== nil) {
+                    next();
+                }
+            };
+        }
+        else {
+            oldErrors.forEach(push);
+            if (latest !== nothing) {
+                push(null, latest);
+            }
+            if (ended) {
+                push(null, nil);
             }
             else {
-                _write.call(this, x);
+                next();
             }
         }
-        // never push back
-        return true;
-    };
-    this._addConsumer(s);
-    s.resume();
-    return s;
+    });
 };
 exposeMethod('latest');
 
@@ -3243,8 +3476,8 @@ _.wrapCallback = function (f) {
  * @name _.add(a, b)
  * @api public
  *
- * add(1, 2) === 3
- * add(1)(5) === 6
+ * _.add(1, 2) === 3
+ * _.add(1)(5) === 6
  */
 
 _.add = _.curry(function (a, b) {
@@ -3269,8 +3502,8 @@ _.not = function (x) {
     return !x;
 };
 
-}).call(this,_dereq_("/home/caolan/projects/caolan/highland/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"/home/caolan/projects/caolan/highland/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":7,"events":5,"string_decoder":8,"util":10}],2:[function(_dereq_,module,exports){
+}).call(this,_dereq_("/home/jwagner/gh-highland/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"/home/jwagner/gh-highland/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":7,"events":5,"string_decoder":8,"util":10}],2:[function(_dereq_,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -5761,7 +5994,7 @@ function hasOwnProperty(obj, prop) {
   return Object.prototype.hasOwnProperty.call(obj, prop);
 }
 
-}).call(this,_dereq_("/home/caolan/projects/caolan/highland/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":9,"/home/caolan/projects/caolan/highland/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":7,"inherits":6}]},{},[1])
+}).call(this,_dereq_("/home/jwagner/gh-highland/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./support/isBuffer":9,"/home/jwagner/gh-highland/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":7,"inherits":6}]},{},[1])
 (1)
 });
