@@ -2691,15 +2691,22 @@ exports['pick'] = function (test) {
 exports['pick - noValueOnError'] = noValueOnErrorTest(_.pick(['plug']));
 
 exports['pick - non-existant property'] = function (test) {
+    test.expect(2);
+
     var a = _([
         {breed: 'labrador', name: 'Rocky'}, // <- missing age
     ]);
+
     a.pick(['breed', 'age']).toArray(function (xs) {
         test.equal(xs[0].breed, 'labrador')
-        test.ok(xs[0].hasOwnProperty('age'));
-        test.ok(typeof(xs[0].age) === 'undefined');
-        test.done();
+        test.ok(Object.keys(xs[0]).length === 1);
     });
+
+    a.pick(['age']).toArray(function (xs) {
+        test.ok(Object.keys(xs[0]).length === 0);
+    });
+
+    test.done();
 };
 
 
