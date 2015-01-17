@@ -2691,7 +2691,7 @@ exports['pick'] = function (test) {
 exports['pick - noValueOnError'] = noValueOnErrorTest(_.pick(['plug']));
 
 exports['pick - non-existant property'] = function (test) {
-    test.expect(5);
+    test.expect(6);
 
     var a = _([
         {breed: 'labrador', name: 'Rocky'}, // <- missing age
@@ -2714,6 +2714,14 @@ exports['pick - non-existant property'] = function (test) {
         test.equal(xs[0].breed, 'labrador')
         test.ok(xs[0].hasOwnProperty('age'));
         test.ok(typeof(xs[0].age) === 'undefined');
+    });
+
+    var c = _([
+        {}
+    ]);
+
+    c.pick(['age']).toArray(function (xs) {
+        test.ok(Object.keys(xs[0]).length === 0);
     });
 
     test.done();
