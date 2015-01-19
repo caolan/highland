@@ -3232,7 +3232,7 @@ exports['compact - ArrayStream'] = function (test) {
 };
 
 exports['where'] = function (test) {
-    test.expect(2);
+    test.expect(4);
     var xs = [
         {type: 'foo', name: 'wibble'},
         {type: 'foo', name: 'wobble'},
@@ -3240,14 +3240,40 @@ exports['where'] = function (test) {
         {type: 'bar', name: 'asdf'},
         {type: 'baz', name: 'asdf'}
     ];
+
+    var noProtoObj = Object.create(null);
+    noProtoObj.type = 'foo';
+    noProtoObj.name = 'wibble';
+
+    var xsNoProto = [
+        noProtoObj,
+        {type: 'foo', name: 'wobble'},
+        {type: 'bar', name: '123'},
+        {type: 'bar', name: 'asdf'},
+        {type: 'baz', name: 'asdf'}
+    ];
+
     _.where({type: 'foo'}, xs).toArray(function (xs) {
         test.same(xs, [
             {type: 'foo', name: 'wibble'},
             {type: 'foo', name: 'wobble'}
         ]);
     });
+
+    _.where({type: 'foo'}, xsNoProto).toArray(function (xs) {
+        test.same(xs, [
+            {type: 'foo', name: 'wibble'},
+            {type: 'foo', name: 'wobble'}
+        ]);
+    });
+
     // partial application
     _.where({type: 'bar', name: 'asdf'})(xs).toArray(function (xs) {
+        test.same(xs, [
+            {type: 'bar', name: 'asdf'}
+        ]);
+    });
+    _.where({type: 'bar', name: 'asdf'})(xsNoProto).toArray(function (xs) {
         test.same(xs, [
             {type: 'bar', name: 'asdf'}
         ]);
