@@ -2673,6 +2673,7 @@ exports['pluck - non-object argument'] = function (test) {
 
 
 exports['pick'] = function (test) {
+    test.expect(2);
     var a = _([
         {breed: 'chihuahua', name: 'Princess', age: 5},
         {breed: 'labrador', name: 'Rocky', age: 3},
@@ -2684,8 +2685,23 @@ exports['pick'] = function (test) {
           {breed: 'labrador',  age: 3},
           {breed: 'german-shepherd', age: 9}
         ]);
-        test.done();
     });
+
+    var b = _([
+        Object.create({breed: 'chihuahua', name: 'Princess', age: 5}),
+        {breed: 'labrador', name: 'Rocky', age: 3},
+        {breed: 'german-shepherd', name: 'Waffles', age: 9}
+    ]);
+
+    b.pick(['breed', 'age']).toArray(function (xs) {
+        test.deepEqual(xs, [
+            {breed: 'chihuahua', age: 5},
+            {breed: 'labrador',  age: 3},
+            {breed: 'german-shepherd', age: 9}
+        ]);
+    });
+
+    test.done();
 };
 
 exports['pick - noValueOnError'] = noValueOnErrorTest(_.pick(['plug']));
@@ -2741,7 +2757,7 @@ exports['pick - non-existant property'] = function (test) {
 };
 
 exports['pickBy'] = function (test) {
-    test.expect(3);
+    test.expect(4);
 
     var objs = [{a: 1, _a: 2}, {a: 1, _c: 3}];
 
@@ -2776,6 +2792,15 @@ exports['pickBy'] = function (test) {
     }).toArray(function (xs) {
         test.deepEqual(xs, [{}, {b: {c: 4}}, {b: {c: 9}}]);
     });
+
+    var objs4 = [Object.create({a: 1, _a: 2}), {a: 1, _c: 3}];
+
+    _(objs4).pickBy(function (key) {
+        return key.indexOf('_') === 0;
+    }).toArray(function (xs) {
+        test.deepEqual(xs, [{_a: 2}, {_c: 3}]);
+    });
+
     test.done();
 };
 
@@ -3232,21 +3257,9 @@ exports['compact - ArrayStream'] = function (test) {
 };
 
 exports['where'] = function (test) {
-    test.expect(4);
+    test.expect(2);
     var xs = [
         {type: 'foo', name: 'wibble'},
-        {type: 'foo', name: 'wobble'},
-        {type: 'bar', name: '123'},
-        {type: 'bar', name: 'asdf'},
-        {type: 'baz', name: 'asdf'}
-    ];
-
-    var noProtoObj = Object.create(null);
-    noProtoObj.type = 'foo';
-    noProtoObj.name = 'wibble';
-
-    var xsNoProto = [
-        noProtoObj,
         {type: 'foo', name: 'wobble'},
         {type: 'bar', name: '123'},
         {type: 'bar', name: 'asdf'},
@@ -3260,24 +3273,13 @@ exports['where'] = function (test) {
         ]);
     });
 
-    _.where({type: 'foo'}, xsNoProto).toArray(function (xs) {
-        test.same(xs, [
-            {type: 'foo', name: 'wibble'},
-            {type: 'foo', name: 'wobble'}
-        ]);
-    });
-
     // partial application
     _.where({type: 'bar', name: 'asdf'})(xs).toArray(function (xs) {
         test.same(xs, [
             {type: 'bar', name: 'asdf'}
         ]);
     });
-    _.where({type: 'bar', name: 'asdf'})(xsNoProto).toArray(function (xs) {
-        test.same(xs, [
-            {type: 'bar', name: 'asdf'}
-        ]);
-    });
+
     test.done();
 };
 
