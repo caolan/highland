@@ -3013,6 +3013,18 @@ exports['find - GeneratorStream'] = function (test) {
         'baz': [{type: 'baz', name: 'asdf'}]
     };
 
+    var noProtoObj = Object.create(null);
+    noProtoObj.type = 'foo';
+    noProtoObj.name = 'wibble';
+
+    var xsNoProto = [
+        noProtoObj,
+        {type: 'foo', name: 'wobble'},
+        {type: 'bar', name: '123'},
+        {type: 'bar', name: 'asdf'},
+        {type: 'baz', name: 'asdf'}
+    ];
+
     var primatives = [1,2,3,'cat'];
 
     var pexpected = {1: [1], 2: [2], 3: [3], 'cat': ['cat']};
@@ -3027,12 +3039,18 @@ exports['find - GeneratorStream'] = function (test) {
     var s = 'type';
 
     exports['group'] = function (test) {
-        test.expect(4);
+        test.expect(8);
 
         _.group(f, xs).toArray(function (xs) {
             test.same(xs, [expected]);
         });
         _.group(s, xs).toArray(function (xs) {
+            test.same(xs, [expected]);
+        });
+        _.group(f, xsNoProto).toArray(function (xs) {
+            test.same(xs, [expected]);
+        });
+        _.group(s, xsNoProto).toArray(function (xs) {
             test.same(xs, [expected]);
         });
 
@@ -3041,6 +3059,12 @@ exports['find - GeneratorStream'] = function (test) {
             test.same(xs, [expected]);
         });
         _.group(s)(xs).toArray(function (xs) {
+            test.same(xs, [expected]);
+        });
+        _.group(f)(xsNoProto).toArray(function (xs) {
+            test.same(xs, [expected]);
+        });
+        _.group(s)(xsNoProto).toArray(function (xs) {
             test.same(xs, [expected]);
         });
         test.done();
@@ -4348,15 +4372,27 @@ exports['values - lazy property access'] = function (test) {
 };
 
 exports['keys'] = function (test) {
+    test.expect(2);
     var obj = {
         foo: 1,
         bar: 2,
         baz: 3
     };
+
+    var objNoProto = Object.create(null);
+    objNoProto.foo = 1;
+    objNoProto.bar = 2;
+    objNoProto.baz = 3;
+
+
     _.keys(obj).toArray(function (xs) {
         test.same(xs, ['foo', 'bar', 'baz']);
-        test.done();
     });
+
+    _.keys(objNoProto).toArray(function (xs) {
+        test.same(xs, ['foo', 'bar', 'baz']);
+    });
+    test.done();
 };
 
 exports['pairs'] = function (test) {
@@ -4393,12 +4429,24 @@ exports['pairs - lazy property access'] = function (test) {
 };
 
 exports['extend'] = function (test) {
+    test.expect(8);
     var a = {a: 1, b: {num: 2, test: 'test'}};
+
+    var b = Object.create(null);
+    b.a = 1;
+    b.b = {num: 2, test: 'test'};
+
     test.equal(a, _.extend({b: {num: 'foo'}, c: 3}, a));
     test.same(a, {a: 1, b: {num: 'foo'}, c: 3});
+    test.equal(b, _.extend({b: {num: 'bar'}, c: 3}, b));
+    test.same(b, {a: 1, b: {num: 'bar'}, c: 3});
+
     // partial application
     test.equal(a, _.extend({b: 'baz'})(a));
     test.same(a, {a: 1, b: 'baz', c: 3});
+    test.equal(b, _.extend({b: 'bar'})(b));
+    test.same(b, {a: 1, b: 'bar', c: 3});
+
     test.done();
 };
 
