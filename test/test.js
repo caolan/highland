@@ -2673,6 +2673,7 @@ exports['pluck - non-object argument'] = function (test) {
 
 
 exports['pick'] = function (test) {
+    test.expect(2);
     var a = _([
         {breed: 'chihuahua', name: 'Princess', age: 5},
         {breed: 'labrador', name: 'Rocky', age: 3},
@@ -2684,8 +2685,23 @@ exports['pick'] = function (test) {
           {breed: 'labrador',  age: 3},
           {breed: 'german-shepherd', age: 9}
         ]);
-        test.done();
     });
+
+    var b = _([
+        Object.create({breed: 'chihuahua', name: 'Princess', age: 5}),
+        {breed: 'labrador', name: 'Rocky', age: 3},
+        {breed: 'german-shepherd', name: 'Waffles', age: 9}
+    ]);
+
+    b.pick(['breed', 'age']).toArray(function (xs) {
+        test.deepEqual(xs, [
+            {breed: 'chihuahua', age: 5},
+            {breed: 'labrador',  age: 3},
+            {breed: 'german-shepherd', age: 9}
+        ]);
+    });
+
+    test.done();
 };
 
 exports['pick - noValueOnError'] = noValueOnErrorTest(_.pick(['plug']));
@@ -2694,11 +2710,11 @@ exports['pick - non-existant property'] = function (test) {
     test.expect(8);
 
     var a = _([
-        {breed: 'labrador', name: 'Rocky'}, // <- missing age
+        {breed: 'labrador', name: 'Rocky'} // <- missing age
     ]);
 
     a.pick(['breed', 'age']).toArray(function (xs) {
-        test.equal(xs[0].breed, 'labrador')
+        test.equal(xs[0].breed, 'labrador');
         test.ok(Object.keys(xs[0]).length === 1);
     });
 
@@ -2711,7 +2727,7 @@ exports['pick - non-existant property'] = function (test) {
     ]);
 
     b.pick(['breed', 'age']).toArray(function (xs) {
-        test.equal(xs[0].breed, 'labrador')
+        test.equal(xs[0].breed, 'labrador');
         test.ok(xs[0].hasOwnProperty('age'));
         test.ok(typeof(xs[0].age) === 'undefined');
     });
@@ -2740,7 +2756,88 @@ exports['pick - non-existant property'] = function (test) {
     test.done();
 };
 
+exports['pickBy'] = function (test) {
+    test.expect(4);
 
+    var objs = [{a: 1, _a: 2}, {a: 1, _c: 3}];
+
+    _(objs).pickBy(function (key) {
+        return key.indexOf('_') === 0;
+    }).toArray(function (xs) {
+        test.deepEqual(xs, [{_a: 2}, {_c: 3}]);
+    });
+
+    var objs2 = [{a: 1, b: {c: 2}}, {a: 1, b: {c: 4}}, {d: 1, b: {c: 9}}];
+
+    _(objs2).pickBy(function (key, value) {
+        if (key === 'b' && typeof value.c !== 'undefined') {
+            return value.c > 3;
+        }
+        return false;
+    }).toArray(function (xs) {
+        test.deepEqual(xs, [{}, {b: {c: 4}}, {b: {c: 9}}]);
+    });
+
+    var noProtoObj = Object.create(null);
+    noProtoObj.a = 1;
+    noProtoObj.b = {c: 4};
+
+    var objs3 = _([{a: 1, b: {c: 2}}, noProtoObj, {d: 1, b: {c: 9}}]);
+
+    objs3.pickBy(function (key, value) {
+        if (key === 'b' && typeof value.c !== 'undefined') {
+            return value.c > 3;
+        }
+        return false;
+    }).toArray(function (xs) {
+        test.deepEqual(xs, [{}, {b: {c: 4}}, {b: {c: 9}}]);
+    });
+
+    var objs4 = [Object.create({a: 1, _a: 2}), {a: 1, _c: 3}];
+
+    _(objs4).pickBy(function (key) {
+        return key.indexOf('_') === 0;
+    }).toArray(function (xs) {
+        test.deepEqual(xs, [{_a: 2}, {_c: 3}]);
+    });
+
+    test.done();
+};
+
+exports['pickBy - noValueOnError'] = noValueOnErrorTest(_.pickBy(' '));
+
+exports['pickBy - non-existant property'] = function (test) {
+    test.expect(3);
+
+    var objs = [{a: 1, b: 2}, {a: 1, d: 3}];
+
+    _(objs).pickBy(function (key) {
+        return key.indexOf('_') === 0;
+    }).toArray(function (xs) {
+        test.deepEqual(xs, [{}, {}]);
+    });
+
+    var objs2 = [{a: 1, b: {c: 2}}, {a: 1, b: {c: 4}}, {d: 1, b: {c: 9}}];
+
+    _(objs2).pickBy(function (key, value) {
+        if (key === 'b' && typeof value.c !== 'undefined') {
+            return value.c > 10;
+        }
+        return false;
+    }).toArray(function (xs) {
+        test.deepEqual(xs, [{}, {}, {}]);
+    });
+
+    var objs3 = [{}, {}];
+
+    _(objs3).pickBy(function (key) {
+        return key.indexOf('_') === 0;
+    }).toArray(function (xs) {
+        test.deepEqual(xs, [{}, {}]);
+    });
+
+    test.done();
+};
 
 exports['filter'] = function (test) {
     test.expect(2);
@@ -3168,18 +3265,21 @@ exports['where'] = function (test) {
         {type: 'bar', name: 'asdf'},
         {type: 'baz', name: 'asdf'}
     ];
+
     _.where({type: 'foo'}, xs).toArray(function (xs) {
         test.same(xs, [
             {type: 'foo', name: 'wibble'},
             {type: 'foo', name: 'wobble'}
         ]);
     });
+
     // partial application
     _.where({type: 'bar', name: 'asdf'})(xs).toArray(function (xs) {
         test.same(xs, [
             {type: 'bar', name: 'asdf'}
         ]);
     });
+
     test.done();
 };
 
