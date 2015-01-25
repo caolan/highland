@@ -2,3 +2,4 @@
 /node_modules
 /.grunt
 test/bundle.js
+*.swp
