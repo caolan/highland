@@ -1588,6 +1588,24 @@ exports['observe - observers should see errors.'] = function (test) {
     test.done();
 };
 
+exports['observe - observers should be destroyed (issue #208)'] = function (test) {
+    test.expect(6);
+    var s = _([]),
+    o = s.observe();
+    o2 = o.observe();
+
+    test.same(o2.source, o, 'o2.source should not be null before destroy.');
+    test.same(o._observers, [o2], 'o._observers should not be empty before destroy.');
+    test.same(s._observers, [o], 'source._observers should not be empty before destroy.');
+
+    o.destroy();
+
+    test.same(o2.source, null, 'o2.source should be null after destroy.');
+    test.same(o._observers, [], 'o._observers should be empty after destroy.');
+    test.same(s._observers, [], 'source._observers should be empty after destroy.');
+    test.done();
+};
+
 // TODO: test redirect after fork, forked streams should transfer over
 // TODO: test redirect after observe, observed streams should transfer over
 
