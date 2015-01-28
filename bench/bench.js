@@ -45,13 +45,15 @@ function benchmark(name, obj) {
         );
     });
     console.log('');
+    console.log(touch);
 }
 
 
 
 // example data / functions used in tests
-
+var touch = 0;
 function square(x) {
+    touch+=x;
     return x * x;
 }
 
