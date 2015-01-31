@@ -1445,6 +1445,33 @@ exports['observe'] = function (test) {
     test.done();
 };
 
+exports['observe - paused observer should not block parent (issue #215)'] = function (test) {
+    test.expect(4);
+    var s = _([1, 2, 3]),
+        o1 = s.observe(),
+        o2 = s.observe();
+
+    var pulled = false;
+
+    // Pull once in o1. This will pause o1. It should not
+    // put backpressure on s.
+    o1.pull(_.compose(markPulled, valueEquals(test, 1)));
+    test.same(pulled, false, 'The pull should not have completed yet.');
+
+    o2.toArray(function (arr) {
+        pulled = true;
+        test.same(arr, [1, 2, 3]);
+    });
+    test.same(pulled, false, 'The toArray should not have completed yet.');
+
+    s.resume();
+    test.done();
+
+    function markPulled() {
+        pulled = true;
+    }
+};
+
 // TODO: test redirect after fork, forked streams should transfer over
 // TODO: test redirect after observe, observed streams should transfer over
 
