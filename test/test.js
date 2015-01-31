@@ -33,7 +33,7 @@ function errorEquals(test, expectedMsg) {
             );
         }
         else {
-            test.notEqual(err, null, 'No error emitted.');
+            test.ok(false, 'No error emitted.');
         }
     };
 }
@@ -1470,6 +1470,21 @@ exports['observe - paused observer should not block parent (issue #215)'] = func
     function markPulled() {
         pulled = true;
     }
+};
+
+exports['observe - observers should see errors.'] = function (test) {
+    test.expect(2);
+    var s = _(function (push, next) {
+        push(new Error('error'));
+        push(null, _.nil);
+    });
+
+    var o = s.observe();
+    s.resume();
+
+    o.pull(errorEquals(test, 'error'));
+    o.pull(valueEquals(test, _.nil));
+    test.done();
 };
 
 // TODO: test redirect after fork, forked streams should transfer over
