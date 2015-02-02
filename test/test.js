@@ -470,6 +470,76 @@ exports['async next from consumer'] = function (test) {
     });
 };
 
+exports['generator throws error if next called after nil'] = function (test) {
+    test.expect(1);
+    var nil_seen = false;
+    var s = _(function(push, next) {
+        // Ensure that next after nil is only called once
+        if (nil_seen) {
+            return;
+        }
+        push(null, 1);
+        nil_seen = true;
+        push(null, _.nil);
+        next();
+    });
+    test.throws(function() {
+        s.resume();
+    });
+    test.done();
+};
+
+exports['generator throws error if push called after nil'] = function (test) {
+    test.expect(1);
+    var s = _(function(push, next) {
+        push(null, 1);
+        push(null, _.nil);
+        push(null, 2);
+    });
+    test.throws(function() {
+        s.resume();
+    });
+    test.done();
+};
+
+exports['consume throws error if push called after nil'] = function (test) {
+    test.expect(1);
+    var s = _([1,2,3]);
+    var s2 = s.consume(function (err, x, push, next) {
+        push(null, x);
+        if (x === _.nil) {
+            push(null, 4);
+        } else {
+            next();
+        }
+    });
+    test.throws(function () {
+        s2.resume();
+    });
+    test.done();
+};
+
+exports['consume throws error if next called after nil'] = function (test) {
+    test.expect(1);
+    var s = _([1,2,3]);
+    var nil_seen = false;
+    var s2 = s.consume(function (err, x, push, next) {
+        // ensure we only call `next` after nil once
+        if (nil_seen) {
+            return;
+        }
+        if (x === _.nil) {
+            nil_seen = true;
+        }
+        push(null, x);
+        next();
+    });
+    test.throws(function () {
+        s2.resume();
+    });
+    test.done();
+};
+
 exports['errors'] = function (test) {
     var errs = [];
     var err1 = new Error('one');
@@ -4249,14 +4319,16 @@ exports['latest'] = {
         var s2 = _.latest(s);
         var s3 = s2.consume(function (err, x, push, next) {
             push(err, x);
-            setTimeout(next, 60);
+            if (x !== _.nil) {
+                setTimeout(next, 60);
+            }
         });
         s3.toArray(function (xs) {
             // values at 0s, 60s, 120s
             test.same(xs, [1, 1, 'last']);
-            test.done();
         });
         this.clock.tick(1000);
+        test.done();
     },
     'GeneratorStream': function (test) {
         test.expect(1);
@@ -4279,14 +4351,16 @@ exports['latest'] = {
         var s2 = s.latest();
         var s3 = s2.consume(function (err, x, push, next) {
             push(err, x);
-            setTimeout(next, 60);
+            if (x !== _.nil) {
+                setTimeout(next, 60);
+            }
         });
         s3.toArray(function (xs) {
             // values at 0s, 60s, 120s
             test.same(xs, [1, 1, 'last']);
-            test.done();
         });
         this.clock.tick(1000);
+        test.done();
     },
     'let errors pass through': function (test) {
         test.expect(2);
@@ -4314,15 +4388,17 @@ exports['latest'] = {
         });
         var s3 = s2.consume(function (err, x, push, next) {
             push(err, x);
-            setTimeout(next, 60);
+            if (x !== _.nil) {
+                setTimeout(next, 60);
+            }
         });
         s3.toArray(function (xs) {
             // values at 0s, 60s, 120s
             test.same(xs, [1, 1, 'last']);
             test.same(errs, ['foo', 'bar']);
-            test.done();
         });
         this.clock.tick(1000);
+        test.done();
     }
 };
 
