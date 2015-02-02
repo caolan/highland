@@ -4319,7 +4319,9 @@ exports['latest'] = {
         var s2 = _.latest(s);
         var s3 = s2.consume(function (err, x, push, next) {
             push(err, x);
-            setTimeout(next, 60);
+            if (x !== _.nil) {
+                setTimeout(next, 60);
+            }
         });
         s3.toArray(function (xs) {
             // values at 0s, 60s, 120s
@@ -4349,14 +4351,16 @@ exports['latest'] = {
         var s2 = s.latest();
         var s3 = s2.consume(function (err, x, push, next) {
             push(err, x);
-            setTimeout(next, 60);
+            if (x !== _.nil) {
+                setTimeout(next, 60);
+            }
         });
         s3.toArray(function (xs) {
             // values at 0s, 60s, 120s
             test.same(xs, [1, 1, 'last']);
-            test.done();
         });
         this.clock.tick(1000);
+        test.done();
     },
     'let errors pass through': function (test) {
         test.expect(2);
@@ -4384,15 +4388,17 @@ exports['latest'] = {
         });
         var s3 = s2.consume(function (err, x, push, next) {
             push(err, x);
-            setTimeout(next, 60);
+            if (x !== _.nil) {
+                setTimeout(next, 60);
+            }
         });
         s3.toArray(function (xs) {
             // values at 0s, 60s, 120s
             test.same(xs, [1, 1, 'last']);
             test.same(errs, ['foo', 'bar']);
-            test.done();
         });
         this.clock.tick(1000);
+        test.done();
     }
 };
 
