@@ -470,6 +470,34 @@ exports['async next from consumer'] = function (test) {
     });
 };
 
+exports['generator throws error if next called after nil'] = function(test) {
+    var s = _(function(push, next) {
+        push(null, 1);
+        push(null, _.nil);
+        next();
+    });
+
+    test.throws(function() {
+        s.resume();
+    });
+
+    test.done();
+};
+
+exports['generator throws error if push called after nil'] = function(test) {
+    var s = _(function(push, next) {
+        push(null, 1);
+        push(null, _.nil);
+        push(null, 2);
+    });
+
+    test.throws(function() {
+        s.resume();
+    });
+
+    test.done();
+};
+
 exports['errors'] = function (test) {
     var errs = [];
     var err1 = new Error('one');
