@@ -4729,6 +4729,21 @@ exports['wrapCallback - errors'] = function (test) {
     test.done();
 };
 
+exports['invokeCallback'] = function (test) {
+    var MyClass = function () {};
+    MyClass.val = 5;
+    MyClass.f = function (a, b, cb) {
+        var val = this.val;
+        setTimeout(function () {
+            cb(null, a + b + val);
+        }, 10);
+    };
+    _.invokeCallback(MyClass, 'f')(1, 2).toArray(function (xs) {
+        test.same(xs, [8]);
+        test.done();
+    });
+};
+
 exports['add'] = function (test) {
     test.equal(_.add(1, 2), 3);
     test.equal(_.add(3)(2), 5);
