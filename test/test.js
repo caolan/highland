@@ -2123,9 +2123,9 @@ exports['transduce'] = {
         this.xf = transducers.map(_.add(1));
         this.input = [1, 2, 3];
         this.expected = [2, 3, 4];
-        this.tester = function (test) {
+        this.tester = function (expected, test) {
             return function (xs) {
-                test.same(xs, self.expected);
+                test.same(xs, expected);
             };
         };
         cb();
@@ -2134,20 +2134,20 @@ exports['transduce'] = {
         test.expect(1);
         _(this.input)
             .transduce(this.xf)
-            .toArray(this.tester(test));
+            .toArray(this.tester(this.expected, test));
         test.done();
     },
     'GeneratorStream': function (test) {
         test.expect(1);
         generatorStream(this.input, 10)
             .transduce(this.xf)
-            .toArray(this.tester(test));
+            .toArray(this.tester(this.expected, test));
         setTimeout(test.done.bind(test), 10 * (this.input.length + 2));
     },
     'partial application': function (test) {
         test.expect(1);
         _.transduce(this.xf)(this.input)
-            .toArray(this.tester(test));
+            .toArray(this.tester(this.expected, test));
         test.done();
     },
     'passThroughError': function (test) {
@@ -2209,6 +2209,14 @@ exports['transduce'] = {
                 step: transform.step.bind(transform)
             };
         }
+    },
+    'early termination': function (test) {
+        test.expect(1);
+        var xf = transducers.take(1);
+        _([1, 2, 3])
+            .transduce(xf)
+            .toArray(this.tester([1], test));
+        test.done();
     },
     'noValueOnError': function (test) {
         noValueOnErrorTest(_.transduce(this.xf))(test);
