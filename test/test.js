@@ -288,6 +288,27 @@ exports['async consume'] = function (test) {
     });
 };
 
+exports['consume - push nil async (issue #173)'] = function (test) {
+    test.expect(1);
+    _([1, 2, 3, 4]).consume(function(err, x, push, next) {
+        if (err !== null) {
+            push(err);
+            next();
+        }
+        else if (x === _.nil) {
+            _.setImmediate(push.bind(this, null, x));
+        }
+        else {
+            push(null, x);
+            next();
+        }
+    })
+    .toArray(function (xs) {
+        test.same(xs, [1, 2, 3, 4]);
+        test.done();
+    });
+};
+
 exports['passing Stream to constructor returns original'] = function (test) {
     var s = _([1,2,3]);
     test.strictEqual(s, _(s));
