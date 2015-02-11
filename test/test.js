@@ -288,15 +288,15 @@ exports['async consume'] = function (test) {
     });
 };
 
-
-exports['consume async nil'] = function (test) {
+exports['consume - push nil async (issue #173)'] = function (test) {
     test.expect(1);
-    _([1])
-    .consume(function (err, x, push, next) {
-        if (x === _.nil) {
-            setTimeout(function() {
-              push(null, _.nil);
-            }, 10);
+    _([1, 2, 3, 4]).consume(function(err, x, push, next) {
+        if (err !== null) {
+            push(err);
+            next();
+        }
+        else if (x === _.nil) {
+            _.setImmediate(push.bind(this, null, x));
         }
         else {
             push(null, x);
@@ -304,7 +304,7 @@ exports['consume async nil'] = function (test) {
         }
     })
     .toArray(function (xs) {
-        test.same(xs, [1]);
+        test.same(xs, [1, 2, 3, 4]);
         test.done();
     });
 };
