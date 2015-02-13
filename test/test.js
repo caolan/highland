@@ -5,6 +5,7 @@ var EventEmitter = require('events').EventEmitter,
     streamify = require('stream-array'),
     concat = require('concat-stream'),
     Promise = require('es6-promise').Promise,
+    transducers = require('transducers-js'),
     _ = require('../lib/index');
 
 
@@ -53,6 +54,15 @@ function noValueOnErrorTest(transform, expected) {
             test.done();
         });
     }
+}
+
+function generatorStream(input, timeout) {
+    return _(function (push, next) {
+        for (var i = 0, len = input.length; i < len; i++) {
+            setTimeout(push.bind(null, null, input[i]), timeout * i);
+        }
+        setTimeout(push.bind(null, null, _.nil), timeout * len);
+    });
 }
 
 exports['ratelimit'] = {
@@ -2126,6 +2136,112 @@ exports['collect - GeneratorStream'] = function (test) {
         test.same(xs, [[1,2,3,4]]);
         test.done();
     });
+};
+
+exports['transduce'] = {
+    setUp: function (cb) {
+        var self = this;
+        this.xf = transducers.map(_.add(1));
+        this.input = [1, 2, 3];
+        this.expected = [2, 3, 4];
+        this.tester = function (expected, test) {
+            return function (xs) {
+                test.same(xs, expected);
+            };
+        };
+        cb();
+    },
+    'ArrayStream': function (test) {
+        test.expect(1);
+        _(this.input)
+            .transduce(this.xf)
+            .toArray(this.tester(this.expected, test));
+        test.done();
+    },
+    'GeneratorStream': function (test) {
+        test.expect(1);
+        generatorStream(this.input, 10)
+            .transduce(this.xf)
+            .toArray(this.tester(this.expected, test));
+        setTimeout(test.done.bind(test), 10 * (this.input.length + 2));
+    },
+    'partial application': function (test) {
+        test.expect(1);
+        _.transduce(this.xf)(this.input)
+            .toArray(this.tester(this.expected, test));
+        test.done();
+    },
+    'passThroughError': function (test) {
+        test.expect(4);
+        var s = _([1, 2, 3]).map(function (x) {
+            if (x === 2) {
+                throw new Error('error');
+            }
+            return x;
+        }).transduce(this.xf);
+
+        s.pull(valueEquals(test, 2));
+        s.pull(errorEquals(test, 'error'));
+        s.pull(valueEquals(test, 4));
+        s.pull(valueEquals(test, _.nil));
+        test.done();
+    },
+    'stopOnStepError': function (test) {
+        test.expect(3);
+        var s = _([1, 2, 3]).transduce(xf);
+
+        s.pull(valueEquals(test, 1));
+        s.pull(errorEquals(test, 'error'));
+        s.pull(valueEquals(test, _.nil));
+        test.done();
+
+        function xf(transform) {
+            return {
+                init: transform.init.bind(transform),
+                result: transform.result.bind(transform),
+                step: function (result, x) {
+                    if (x === 2) {
+                        throw new Error('error');
+                    }
+                    result = transform.step(result, x);
+                    return result;
+                }
+            };
+        }
+    },
+    'stopOnResultError': function (test) {
+        test.expect(5);
+        var s = _([1, 2, 3]).transduce(xf);
+
+        s.pull(valueEquals(test, 1));
+        s.pull(valueEquals(test, 2));
+        s.pull(valueEquals(test, 3));
+        s.pull(errorEquals(test, 'error'));
+        s.pull(valueEquals(test, _.nil));
+        test.done();
+
+        function xf(transform) {
+            return {
+                init: transform.init.bind(transform),
+                result: function (result) {
+                    transform.result(result);
+                    throw new Error('error');
+                },
+                step: transform.step.bind(transform)
+            };
+        }
+    },
+    'early termination': function (test) {
+        test.expect(1);
+        var xf = transducers.take(1);
+        _([1, 2, 3])
+            .transduce(xf)
+            .toArray(this.tester([1], test));
+        test.done();
+    },
+    'noValueOnError': function (test) {
+        noValueOnErrorTest(_.transduce(this.xf))(test);
+    },
 };
 
 exports['concat'] = function (test) {
