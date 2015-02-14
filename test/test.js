@@ -808,59 +808,75 @@ exports['apply - GeneratorStream'] = function (test) {
     });
 };
 
-exports['take'] = function (test) {
-    test.expect(3);
-    var s = _([1,2,3,4]).take(2);
-    s.pull(function (err, x) {
-        test.equal(x, 1);
-    });
-    s.pull(function (err, x) {
-        test.equal(x, 2);
-    });
-    s.pull(function (err, x) {
-        test.equal(x, _.nil);
-    });
-    test.done();
-};
+function takeTest(name, one, two) {
+    exports[name] = function (test) {
+        test.expect(3);
+        var s = _([1,2,3,4])[name](two);
+        s.pull(function (err, x) {
+            test.equal(x, 1);
+        });
+        s.pull(function (err, x) {
+            test.equal(x, 2);
+        });
+        s.pull(function (err, x) {
+            test.equal(x, _.nil);
+        });
+        test.done();
+    };
 
-exports['take - noValueOnError'] = noValueOnErrorTest(_.take(1));
+    exports[name + ' - noValueOnError'] = noValueOnErrorTest(_[name](one));
 
-exports['take - errors'] = function (test) {
-    test.expect(4);
-    var s = _(function (push, next) {
-        push(null, 1),
-        push(new Error('error'), 2),
-        push(null, 3),
-        push(null, 4),
-        push(null, _.nil)
-    });
-    var f = s.take(2);
-    f.pull(function (err, x) {
-        test.equal(x, 1);
-    });
-    f.pull(function (err, x) {
-        test.equal(err.message, 'error');
-    });
-    f.pull(function (err, x) {
-        test.equal(x, 3);
-    });
-    f.pull(function (err, x) {
-        test.equal(x, _.nil);
-    });
-    test.done();
-};
+    exports[name + ' - errors'] = function (test) {
+        test.expect(4);
+        var s = _(function (push, next) {
+            push(null, 1),
+            push(new Error('error'), -1),
+            push(null, 2),
+            push(null, 3),
+            push(null, _.nil)
+        });
+        var f = s[name](two);
+        f.pull(function (err, x) {
+            test.equal(x, 1);
+        });
+        f.pull(function (err, x) {
+            test.equal(err.message, 'error');
+        });
+        f.pull(function (err, x) {
+            test.equal(x, 2);
+        });
+        f.pull(function (err, x) {
+            test.equal(x, _.nil);
+        });
+        test.done();
+    };
 
-exports['take 1'] = function (test) {
-    test.expect(2);
-    var s = _([1]).take(1);
-    s.pull(function (err, x) {
-        test.equal(x, 1);
-    });
-    s.pull(function (err, x) {
-        test.equal(x, _.nil);
-    });
-    test.done();
-};
+    exports[name + ' 1'] = function (test) {
+        test.expect(2);
+        var s = _([1])[name](one);
+        s.pull(function (err, x) {
+            test.equal(x, 1);
+        });
+        s.pull(function (err, x) {
+            test.equal(x, _.nil);
+        });
+        test.done();
+    };
+}
+
+takeTest('take', 1, 2);
+
+takeTest('takeWhile', function (x) {
+    return x < 2;
+}, function (x) {
+    return x < 3;
+});
+
+takeTest('takeUntil', function (x) {
+    return x >= 2;
+}, function (x) {
+    return x >= 3;
+});
 
 exports['head'] = function (test) {
     test.expect(2);
