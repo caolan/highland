@@ -4813,6 +4813,16 @@ exports['streamifyAll'] = {
         test.equal(typeof obj2.keysStream, 'undefined');
         test.done();
     },
+    "doesn't break when property has custom getter": function (test) {
+        function ExampleClass (a) { this.a = { b: a }; }
+        Object.defineProperty(ExampleClass.prototype, 'c',
+            { get: function () { return this.a.b; } });
+        
+        test.doesNotThrow(function () {
+            _.streamifyAll(ExampleClass);    
+        });
+        test.done();
+    }
 };
 
 exports['add'] = function (test) {
