@@ -93,6 +93,7 @@ var _ = exports;
 
 // Create quick slice reference variable for speed
 var slice = Array.prototype.slice;
+var hasOwn = Object.prototype.hasOwnProperty;
 
 _.isFunction = function (x) {
     return typeof x === 'function';
@@ -369,7 +370,9 @@ function Stream(/*optional*/xs, /*optional*/ee, /*optional*/mappingHint) {
     this._observers = [];
     this._destructors = [];
     this._send_events = false;
+    this._nil_seen = false;
     this._delegate = null;
+    this._is_observer = false;
     this.source = null;
 
     // Old-style node Stream.pipe() checks for this
@@ -409,9 +412,21 @@ function Stream(/*optional*/xs, /*optional*/ee, /*optional*/mappingHint) {
     else if (typeof xs === 'function') {
         this._generator = xs;
         this._generator_push = function (err, x) {
+            if (self._nil_seen) {
+                throw new Error('Can not write to stream after nil');
+            }
+
+            if (x === nil) {
+                self._nil_seen = true;
+            }
+
             self.write(err ? new StreamError(err) : x);
         };
         this._generator_next = function (s) {
+            if (self._nil_seen) {
+                throw new Error('Can not call next after nil');
+            }
+
             if (s) {
                 // we MUST pause to get the redirect object into the _incoming
                 // buffer otherwise it would be passed directly to _send(),
@@ -456,7 +471,7 @@ function Stream(/*optional*/xs, /*optional*/ee, /*optional*/mappingHint) {
             xs.pipe(self);
         }
     }
-    else if (typeof xs === 'string') {
+    else if (_.isString(xs)) {
         var mappingHintType = (typeof mappingHint);
         var mapper;
 
@@ -557,27 +572,28 @@ _._isStreamRedirect = function (x) {
 
 Stream.prototype._send = function (err, x) {
     //console.log(['_send', this.id, err, x]);
+    var token;
+
     if (x === nil) {
         this.ended = true;
     }
     if (this._consumers.length) {
+        token = err ? new StreamError(err) : x;
         for (var i = 0, len = this._consumers.length; i < len; i++) {
-            var c = this._consumers[i];
-            if (err) {
-                c.write(new StreamError(err));
-            }
-            else {
-                c.write(x);
-            }
+            this._consumers[i].write(token);
         }
     }
     if (this._observers.length) {
+        token = err ? new StreamError(err) : x;
         for (var j = 0, len2 = this._observers.length; j < len2; j++) {
-            this._observers[j].write(x);
+            this._observers[j].write(token);
         }
     }
     if (this._send_events) {
-        if (x === nil) {
+        if (err) {
+            this.emit('error', err);
+        }
+        else if (x === nil) {
             this.emit('end');
         }
         else {
@@ -601,7 +617,7 @@ Stream.prototype._send = function (err, x) {
 Stream.prototype.pause = function () {
     //console.log(['pause', this.id]);
     this.paused = true;
-    if (this.source) {
+    if (!this._is_observer && this.source) {
         this.source._checkBackPressure();
     }
 };
@@ -709,7 +725,7 @@ Stream.prototype.resume = function () {
         this._readFromBuffer();
 
         // we may have paused while reading from buffer
-        if (!this.paused) {
+        if (!this.paused && !this._is_observer) {
             // ask parent for more data
             if (this.source) {
                 //console.log(['ask parent for more data']);
@@ -826,8 +842,14 @@ Stream.prototype.destroy = function () {
     _(this._consumers).each(function (consumer) {
         self._removeConsumer(consumer);
     });
+    _(this._observers).each(function (observer) {
+        self._removeObserver(observer);
+    });
+
     if (this.source) {
-        this.source._removeConsumer(this);
+        var source = this.source;
+        source._removeConsumer(this);
+        source._removeObserver(this);
     }
     _(this._destructors).each(function (destructor) {
         destructor();
@@ -930,6 +952,19 @@ Stream.prototype._removeConsumer = function (s) {
 };
 
 /**
+ * Removes an observer from this Stream.
+ */
+
+Stream.prototype._removeObserver = function (s) {
+    this._observers = this._observers.filter(function (o) {
+        return o !== s;
+    });
+    if (s.source === this) {
+        s.source = null;
+    }
+};
+
+/**
  * Consumes values from a Stream (once resumed) and returns a new Stream for
  * you to optionally push values onto using the provided push / next functions.
  *
@@ -974,8 +1009,12 @@ Stream.prototype.consume = function (f) {
     var _send = s._send;
     var push = function (err, x) {
         //console.log(['push', err, x, s.paused]);
+        if (s._nil_seen) {
+            throw new Error('Can not write to stream after nil');
+        }
         if (x === nil) {
             // ended, remove consumer from source
+            s._nil_seen = true;
             self._removeConsumer(s);
         }
         if (s.paused) {
@@ -994,6 +1033,9 @@ Stream.prototype.consume = function (f) {
     var next_called;
     var next = function (s2) {
         //console.log(['next', async]);
+        if (s._nil_seen) {
+            throw new Error('Can not call next after nil');
+        }
         if (s2) {
             // we MUST pause to get the redirect object into the _incoming
             // buffer otherwise it would be passed directly to _send(),
@@ -1019,7 +1061,8 @@ Stream.prototype.consume = function (f) {
         next_called = false;
         f(err, x, push, next);
         async = true;
-        if (!next_called) {
+        // Don't pause if x is nil -- as next will never be called after
+        if (!next_called && x !== nil) {
             s.pause();
         }
     };
@@ -1150,6 +1193,7 @@ Stream.prototype.observe = function () {
     var s = new Stream();
     s.id = 'observe:' + s.id;
     s.source = this;
+    s._is_observer = true;
     this._observers.push(s);
     return s;
 };
@@ -1261,6 +1305,7 @@ exposeMethod('each');
 
 /**
  * Applies all values from a Stream as arguments to a function. This function causes a **thunk**.
+ * `f` will always be called when the `nil` token is encountered, even when the stream is empty.
  *
  * @id apply
  * @section Consumption
@@ -1397,6 +1442,21 @@ Stream.prototype.doto = function (f) {
 exposeMethod('doto');
 
 /**
+ * An alias for the [doto](#doto) method.
+ *
+ * @id tap
+ * @section Transforms
+ * @name Stream.tap(f)
+ * @param f - the function to apply
+ * @api public
+ *
+ * _([1, 2, 3]).tap(console.log)
+ */
+
+Stream.prototype.tap = Stream.prototype.doto;
+_.tap = _.doto;
+
+/**
  * Limits number of values through the stream to a maximum of number of values
  * per window. Errors are not limited but allowed to pass through as soon as
  * they are read from the source.
@@ -1511,35 +1571,37 @@ exposeMethod('pluck');
 
 /**
  *
- * Retrieves copies of all elements in the collection,
- * with only the whitelisted keys.
+ * Retrieves copies of all the enumerable elements in the collection
+ * that satisfy a given predicate.
  *
- * @id pick
+ * @id pickBy
  * @section Transforms
- * @name Stream.pick(properties)
- * @param {Array} properties - property names to white filter
+ * @name Stream.pickBy(f)
+ * @param {Function} f - the predicate function
  * @api public
  *
- * var docs = [
- *    {breed: 'chihuahua', name: 'Princess', age: 5},
- *    {breed: 'labrador', name: 'Rocky', age: 3},
- *    {breed: 'german-shepherd', name: 'Waffles', age: 9}
- * ];
- *
- * _(docs).pick(['breed', 'age']).toArray(function (xs) {
- *     // xs is now:
- *     [
- *         {breed: 'chihuahua', age: 5},
- *         {breed: 'labrador',  age: 3},
- *         {breed: 'german-shepherd', age: 9}
- *     ]
- * });
+ *  var dogs = [
+ *      {breed: 'chihuahua', name: 'Princess', age: 5},
+ *      {breed: 'labrador', name: 'Rocky', age: 3},
+ *      {breed: 'german-shepherd', name: 'Waffles', age: 9}
+ *  ];
+
+ *  _(dogs).pickBy(function (key, value) {
+ *      return value > 4;
+ *  }).toArray(function (xs) {
+ *    // xs is now:
+ *    [
+ *      { age: 5 },
+ *      {},
+ *      { age: 9 }
+ *    ]
+ *  });
  */
 
-Stream.prototype.pick = function (properties) {
+Stream.prototype.pickBy = function (f) {
 
     return this.consume(function (err, x, push, next) {
-        var out = {}, key, i = 0;
+        var out = {};
         if (err) {
             push(err);
             next();
@@ -1548,8 +1610,10 @@ Stream.prototype.pick = function (properties) {
             push(err, x);
         }
         else if (_.isObject(x)) {
-            while ((key = properties[i++])) {
-              out[key] = x[key];
+            for (var k in x) {
+                if (f(k, x[k])) {
+                    out[k] = x[k];
+                }
             }
             push(null, out);
             next();
@@ -1560,6 +1624,54 @@ Stream.prototype.pick = function (properties) {
             ));
             next();
         }
+    });
+};
+exposeMethod('pickBy');
+
+/**
+ *
+ * Retrieves copies of all enumerable elements in the collection,
+ * with only the whitelisted keys. If one of the whitelisted
+ * keys does not exist, it will be ignored.
+ *
+ * @id pick
+ * @section Transforms
+ * @name Stream.pick(properties)
+ * @param {Array} properties - property names to white filter
+ * @api public
+ *
+ * var dogs = [
+ *      {breed: 'chihuahua', name: 'Princess', age: 5},
+ *      {breed: 'labrador', name: 'Rocky', age: 3},
+ *      {breed: 'german-shepherd', name: 'Waffles', age: 9}
+ * ];
+ *
+ * _(dogs).pick(['breed', 'age']).toArray(function (xs) {
+ *       // xs is now:
+ *       [
+ *           {breed: 'chihuahua', age: 5},
+ *           {breed: 'labrador', age: 3},
+ *           {breed: 'german-shepherd', age: 9}
+ *       ]
+ * });
+ *
+ * _(dogs).pick(['owner']).toArray(function (xs) {
+ *      // xs is now:
+ *      [
+ *          {},
+ *          {},
+ *          {}
+ *      ]
+ * });*/
+
+Stream.prototype.pick = function (properties) {
+    return this.pickBy(function (key) {
+        for (var i = 0, length = properties.length; i < length; i++) {
+            if (properties[i] === key) {
+                return true;
+            }
+        }
+        return false;
     });
 };
 exposeMethod('pick');
@@ -1760,7 +1872,7 @@ Stream.prototype.group = function (f) {
     var lambda = _.isString(f) ? _.get(f) : f;
     return this.reduce({}, function (m, o) {
         var key = lambda(o);
-        if (!m.hasOwnProperty(key)) { m[key] = []; }
+        if (!hasOwn.call(m, key)) { m[key] = []; }
         m[key].push(o);
         return m;
     });
@@ -1940,6 +2052,7 @@ Stream.prototype.zipAll = function (ys) {
 
     var returned = 0;
     var z = [];
+    var finished = false;
 
     function nextValue(index, max, src, push, next) {
         src.pull(function (err, x) {
@@ -1948,7 +2061,10 @@ Stream.prototype.zipAll = function (ys) {
                 nextValue(index, max, src, push, next);
             }
             else if (x === _.nil) {
-                push(null, nil);
+                if (!finished) {
+                    finished = true;
+                    push(null, nil);
+                }
             }
             else {
                 returned++;
@@ -2109,7 +2225,7 @@ Stream.prototype.splitBy = function (sep) {
             next();
         }
         else if (x === nil) {
-            if (typeof buffer === 'string') {
+            if (_.isString(buffer)) {
                 drain(decoder.end(), push);
                 push(null, buffer);
             }
@@ -2864,6 +2980,97 @@ Stream.prototype.scan1 = function (f) {
 };
 exposeMethod('scan1');
 
+var highlandTransform = {
+    init: function () {  },
+    result: function (push) {
+        // Don't push nil here. Otherwise, we can't catch errors from `result`
+        // and propagate them. The `transduce` implementation will do it.
+        return push;
+    },
+    step: function (push, input) {
+        push(null, input);
+        return push;
+    }
+};
+
+/**
+ * Applies the transformation defined by the the given *transducer* to the
+ * stream. A transducer is any function that follows the
+ * [Transducer Protocol](https://github.com/cognitect-labs/transducers-js#transformer-protocol).
+ * See
+ * [transduce-js](https://github.com/cognitect-labs/transducers-js#transducers-js)
+ * for more details on what transducers actually are.
+ *
+ * The `result` object that is passed in through the
+ * [Transformer Protocol](https://github.com/cognitect-labs/transducers-js#transformer-protocol)
+ * will be the `push` function provided by the [consume](#consume) transform.
+ *
+ * Like [scan](#scan), if the transducer throws an exception, the transform
+ * will stop and emit that error. Any intermediate values that were produced
+ * before the error will still be emitted.
+ *
+ * @id transduce
+ * @section Transforms
+ * @name Stream.transduce(xf)
+ * @param {Function} xf - The transducer.
+ * @api public
+ *
+ * var xf = require('transducer-js').map(_.add(1));
+ * _([1, 2, 3, 4]).transduce(xf);
+ * // => [2, 3, 4, 5]
+ */
+
+Stream.prototype.transduce = function transduce(xf) {
+    var transform = xf(highlandTransform);
+
+    return this.consume(function (err, x, push, next) {
+        if (err) {
+            // Pass through errors, like we always do.
+            push(err);
+            next();
+        }
+        else if (x === _.nil) {
+            runResult(push);
+        }
+        else {
+            var res = runStep(push, x);
+
+            if (!res) {
+                return;
+            }
+
+            if (res.__transducers_reduced__) {
+                runResult(res.value);
+            }
+            else {
+                next();
+            }
+        }
+    });
+
+    function runResult(push) {
+        try {
+            transform.result(push);
+        }
+        catch (e) {
+            push(e);
+        }
+        push(null, _.nil);
+    }
+
+    function runStep(push, x) {
+        try {
+            return transform.step(push, x);
+        }
+        catch (e) {
+            push(e);
+            push(null, _.nil);
+            return null;
+        }
+    }
+};
+exposeMethod('transduce');
+
 /**
  * Concatenates a Stream to the end of this Stream.
  *
@@ -3298,7 +3505,7 @@ _.values = function (obj) {
 _.keys = function (obj) {
     var keys = [];
     for (var k in obj) {
-        if (obj.hasOwnProperty(k)) {
+        if (hasOwn.call(obj, k)) {
             keys.push(k);
         }
     }
@@ -3351,7 +3558,7 @@ _.pairs = function (obj) {
 
 _.extend = _.curry(function (extensions, target) {
     for (var k in extensions) {
-        if (extensions.hasOwnProperty(k)) {
+        if (hasOwn.call(extensions, k)) {
             target[k] = extensions[k];
         }
     }
