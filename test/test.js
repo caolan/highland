@@ -2811,6 +2811,31 @@ exports['doto'] = function (test) {
 
 exports['doto - noValueOnError'] = noValueOnErrorTest(_.doto(function (x) { return x }));
 
+exports['tap'] = function (test) {
+    test.expect(4);
+
+    var seen;
+    function record(x) {
+        seen.push(x * 2);
+    }
+
+    seen = [];
+    _.tap(record, [1, 2, 3, 4]).toArray(function (xs) {
+        test.same(xs, [1, 2, 3, 4]);
+        test.same(seen, [2, 4, 6, 8]);
+    });
+
+    // partial application
+    seen = [];
+    _.tap(record)([1, 2, 3, 4]).toArray(function (xs) {
+        test.same(xs, [1, 2, 3, 4]);
+        test.same(seen, [2, 4, 6, 8]);
+    });
+    test.done();
+};
+
+exports['tap - noValueOnError'] = noValueOnErrorTest(_.tap(function (x) { return x }));
+
 exports['flatMap'] = function (test) {
     var f = function (x) {
         return _(function (push, next) {
