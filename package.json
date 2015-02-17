@@ -1,6 +1,6 @@
 {
   "name": "highland",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "The high-level streams library",
   "main": "lib/index.js",
   "files": [
