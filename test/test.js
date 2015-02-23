@@ -5019,6 +5019,102 @@ exports['wrapCallback - errors'] = function (test) {
     test.done();
 };
 
+exports['streamifyAll'] = {
+    'throws when passed a non-function non-object': function (test) {
+        test.throws(function () {
+            _.streamifyAll(1);
+        }, TypeError);
+        test.done();
+    }, 
+    'streamifies object methods': function (test) { 
+        var plainObject = { fn: function (a, b, cb) { cb(null, a + b); } };
+        var obj = _.streamifyAll(plainObject);
+        test.equal(typeof obj.fnStream, 'function');
+        obj.fnStream(1, 2).apply(function (res) {
+            test.equal(res, 3);
+            test.done();
+        });
+    }, 
+    'streamifies constructor prototype methods': function (test) { 
+        function ExampleClass (a) { this.a = a; }
+        ExampleClass.prototype.fn = function (b, cb) {  cb(null, this.a + b); };
+        var ExampleClass = _.streamifyAll(ExampleClass);
+        obj = new ExampleClass(1);
+        test.equal(typeof obj.fnStream, 'function');
+        obj.fnStream(2).apply(function (res) {
+            test.equal(res, 3);
+            test.done();
+        });
+    }, 
+    'streamifies constructor methods': function (test) { 
+        function ExampleClass (a) { this.a = a; }
+        ExampleClass.a = 5;
+        ExampleClass.fn = function (b, cb) { cb(null, this.a + b); };
+        var ExampleClass = _.streamifyAll(ExampleClass);
+        test.equal(typeof ExampleClass.fnStream, 'function');
+        ExampleClass.fnStream(2).apply(function (res) {
+            test.equal(res, 7);
+            test.done();
+        });
+    }, 
+    'streamifies inherited methods': function (test) { 
+        function Grandfather () {}
+        Grandfather.prototype.fn1 = function (b, cb) { cb(null, this.a*b); }
+        function Father () {}
+        Father.prototype = Object.create(Grandfather.prototype);
+        Father.prototype.fn2 = function (b, cb) { cb(null, this.a/b); }
+        function Child (a) { this.a = a; }
+        Child.prototype = Object.create(Father.prototype);
+        Child.prototype.fn3 = function (b, cb) { cb(null, this.a+b); }
+        var Child = _.streamifyAll(Child);
+        var child = new Child(3);
+
+        test.equal(typeof child.fn1Stream, 'function');
+        test.equal(typeof child.fn2Stream, 'function');
+        test.equal(typeof child.fn3Stream, 'function');
+        _([child.fn1Stream(1), child.fn2Stream(2), child.fn3Stream(3)])
+            .series()
+            .toArray(function (arr) {
+                test.deepEqual(arr, [3, 1.5, 6]);
+                test.done();
+            });
+    }, 
+    'does not re-streamify functions': function (test) { 
+        var plainObject = { fn: function (a, b, cb) { cb(null, a + b); } };
+        var obj = _.streamifyAll(_.streamifyAll(plainObject));
+        test.equal(typeof obj.fnStreamStream, 'undefined');
+        test.done();
+    }, 
+    'does not streamify constructors': function (test) { 
+        function ExampleClass () {}
+        ExampleClass.prototype.fn = function (cb) { cb(null, 'foo'); }
+        var obj = new (_.streamifyAll(ExampleClass))();
+        test.equal(typeof obj.constructorStream, 'undefined');
+        test.done();
+    }, 
+    'does not streamify Object methods': function (test) { 
+        function ExampleClass () {}
+        ExampleClass.prototype.fn = function (cb) { cb(null, 'foo'); }
+        var obj1 = new (_.streamifyAll(ExampleClass))();
+        var obj2 = _.streamifyAll(new ExampleClass());
+        test.equal(typeof obj1.toStringStream, 'undefined');
+        test.equal(typeof obj1.keysStream, 'undefined');
+        test.equal(typeof obj2.toStringStream, 'undefined');
+        test.equal(typeof obj2.keysStream, 'undefined');
+        test.done();
+    },
+    "doesn't break when property has custom getter": function (test) {
+        function ExampleClass (a) { this.a = { b: a }; }
+        Object.defineProperty(ExampleClass.prototype, 'c',
+            { get: function () { return this.a.b; } });
+        
+        test.doesNotThrow(function () {
+            _.streamifyAll(ExampleClass);    
+        });
+        test.done();
+    }
+};
+
 exports['add'] = function (test) {
     test.equal(_.add(1, 2), 3);
     test.equal(_.add(3)(2), 5);
