@@ -346,6 +346,132 @@ exports['constructor from promise - errors'] = function (test) {
         });
 };
 
+function createTestIterator(array, error, lastVal) {
+    var count = 0,
+        length = array.length;
+    return {
+        next: function() {
+            if (count < length) {
+                if (error && count === 2) {
+                    throw error;
+                }
+                var iterElem = {
+                    value: array[count], done: false
+                };
+                count++;
+                return iterElem;
+            }
+            else {
+                return {
+                    value: lastVal, done: true
+                }
+            }
+        }
+    };
+}
+
+exports['constructor from iterator'] = function (test) {
+    test.expect(1);
+    _(createTestIterator([1, 2, 3, 4, 5])).toArray(function (xs) {
+        test.same(xs, [1, 2, 3, 4, 5]);
+    });
+    test.done();
+};
+
+exports['constructor from iterator - error'] = function (test) {
+    test.expect(2);
+    _(createTestIterator([1, 2, 3, 4, 5], new Error('Error at index 2'))).errors(function (err) {
+        test.equals(err.message, 'Error at index 2');
+    }).toArray(function (xs) {
+        test.same(xs, [1, 2]);
+    });
+    test.done();
+};
+
+exports['constructor from iterator - final return falsy'] = function (test) {
+    test.expect(1);
+    _(createTestIterator([1, 2, 3, 4, 5], void 0, 0)).toArray(function (xs) {
+        test.same(xs, [1, 2, 3, 4, 5, 0]);
+    });
+    test.done();
+};
+
+//ES6 iterators Begin
+if (global.Map && global.Symbol) {
+
+    exports['constructor from Map'] = function (test) {
+        test.expect(1);
+        var map = new Map();
+        map.set('a', 1);
+        map.set('b', 2);
+        map.set('c', 3);
+
+        _(map).toArray(function (xs) {
+            test.same(xs, [ [ 'a', 1 ], [ 'b', 2 ], [ 'c', 3 ] ]);
+        });
+        test.done();
+    };
+
+    exports['constructor from Map iterator'] = function (test) {
+        test.expect(1);
+        var map = new Map();
+        map.set('a', 1);
+        map.set('b', 2);
+        map.set('c', 3);
+
+        _(map.entries()).toArray(function (xs) {
+            test.same(xs, [ [ 'a', 1 ], [ 'b', 2 ], [ 'c', 3 ] ]);
+        });
+        test.done();
+    };
+
+    exports['constructor from empty Map iterator'] = function (test) {
+        test.expect(1);
+        var map = new Map();
+
+        _(map.entries()).toArray(function (xs) {
+            test.same(xs, []);
+        });
+        test.done();
+    };
+
+}
+
+if (global.Set && global.Symbol) {
+
+    exports['constructor from Set'] = function (test) {
+        test.expect(1);
+        var sett = new Set([1, 2, 2, 3, 4]);
+
+        _(sett).toArray(function (xs) {
+            test.same(xs, [1, 2, 3, 4]);
+        });
+        test.done();
+    };
+
+    exports['constructor from Set iterator'] = function (test) {
+        test.expect(1);
+        var sett = new Set([1, 2, 2, 3, 4]);
+
+        _(sett.values()).toArray(function (xs) {
+            test.same(xs, [1, 2, 3, 4]);
+        });
+        test.done();
+    };
+
+    exports['constructor from empty Map iterator'] = function (test) {
+        test.expect(1);
+        var sett = new Set();
+
+        _(sett.values()).toArray(function (xs) {
+            test.same(xs, []);
+        });
+        test.done();
+    };
+
+}
+//ES6 iterators End
+
 exports['if no consumers, buffer data'] = function (test) {
     var s = _();
     test.equal(s.paused, true);
