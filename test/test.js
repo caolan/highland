@@ -988,6 +988,43 @@ exports['take 1'] = function (test) {
     test.done();
 };
 
+exports['drop'] = function (test) {
+    test.expect(3);
+    var s = _([1,2,3,4]).drop(2);
+    s.pull(function (err, x) {
+        test.equal(x, 3);
+    });
+    s.pull(function (err, x) {
+        test.equal(x, 4);
+    });
+    s.pull(function (err, x) {
+        test.equal(x, _.nil);
+    });
+    test.done();
+};
+
+exports['drop - errors'] = function (test) {
+    test.expect(3);
+    var s = _(function (push, next) {
+        push(null, 1),
+        push(new Error('error'), 2),
+        push(null, 3),
+        push(null, 4),
+        push(null, _.nil)
+    });
+    var f = s.drop(2);
+    f.pull(function (err, x) {
+        test.equal(err.message, 'error');
+    });
+    f.pull(function (err, x) {
+        test.equal(x, 4);
+    });
+    f.pull(function (err, x) {
+        test.equal(x, _.nil);
+    });
+    test.done();
+};
+
 exports['head'] = function (test) {
     test.expect(2);
     var s = _([2, 1]).head();
