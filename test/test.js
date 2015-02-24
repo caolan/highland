@@ -4708,6 +4708,44 @@ exports['last'] = function (test) {
 
 exports['last - noValueOnError'] = noValueOnErrorTest(_.last());
 
+exports['sort'] = function (test) {
+    var random,
+        sorted,
+        reversed;
+
+    function alphaSortDesc(a, b) {
+        var result = 0;
+
+        if(a < b) {
+            // a goes down
+            result = 1;
+        } else if(a > b) {
+            // a goes up
+            result = -1;
+        }
+
+        return result
+    }
+
+    random   = [5, 2, 4, 1, 3];
+    sorted   = [1, 2, 3, 4, 5];
+    reversed = [5, 4, 3, 2, 1];
+
+    // sorts by lexical ascending order by default
+    _(random).sort().toArray(function (xs) {
+        test.same(xs, sorted);
+    });
+
+    // sorts by given sorting function
+    _(random).sort(alphaSortDesc).toArray(function (xs) {
+        test.same(xs, reversed);
+    });
+
+    test.done();
+};
+
+exports['sort - noValueOnError'] = noValueOnErrorTest(_.sort(0));
+
 exports['through - function'] = function (test) {
     var s = _.through(function (s) {
         return s
