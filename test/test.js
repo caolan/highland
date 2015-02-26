@@ -2385,7 +2385,7 @@ exports['transduce'] = {
     },
     'noValueOnError': function (test) {
         noValueOnErrorTest(_.transduce(this.xf))(test);
-    },
+    }
 };
 
 exports['concat'] = function (test) {
@@ -4708,92 +4708,107 @@ exports['last'] = function (test) {
 
 exports['last - noValueOnError'] = noValueOnErrorTest(_.last());
 
-exports['through - function'] = function (test) {
-    var s = _.through(function (s) {
-        return s
-            .filter(function (x) {
-                return x % 2;
-            })
-            .map(function (x) {
-                return x * 2;
+exports['through'] = {
+    setUp: function (cb) {
+        this.parser = through(
+            function (data) {
+                try {
+                    this.queue(JSON.parse(data));
+                }
+                catch (err) {
+                    this.emit('error', err);
+                }
+            },
+            function () {
+                this.queue(null);
+            }
+        );
+        this.numArray = [1, 2, 3, 4];
+        this.stringArray = ['1','2','3','4'];
+        this.tester = function (expected, test) {
+            return function (xs) {
+                test.same(xs, expected);
+            };
+        };
+        cb();
+    },
+    'function': function (test) {
+        test.expect(1);
+        var s = _.through(function (s) {
+            return s
+                .filter(function (x) {
+                    return x % 2;
+                })
+                .map(function (x) {
+                    return x * 2;
+                });
+        }, this.numArray);
+        s.toArray(this.tester([2, 6], test));
+        test.done();
+    },
+    'function - ArrayStream': function (test) {
+        test.expect(1);
+        var s = _(this.numArray).through(function (s) {
+            return s
+                .filter(function (x) {
+                    return x % 2;
+                })
+                .map(function (x) {
+                    return x * 2;
+                });
+        }).through(function (s) {
+                return s.map(function (x) {
+                    return x + 1;
+                });
             });
-    }, [1,2,3,4]);
-    s.toArray(function (xs) {
-        test.same(xs, [2, 6]);
+        s.toArray(this.tester([3, 7], test));
         test.done();
-    });
-};
-
-exports['through - noValueOnError'] = noValueOnErrorTest(_.through(function (x) { return x }));
-
-exports['through - function - ArrayStream'] = function (test) {
-    var s = _([1,2,3,4]).through(function (s) {
-        return s
-            .filter(function (x) {
-                return x % 2;
-            })
-            .map(function (x) {
-                return x * 2;
+    },
+    'stream': function (test) {
+        test.expect(1);
+        var s = _.through(this.parser, this.stringArray);
+        s.toArray(this.tester(this.numArray, test));
+        test.done();
+    },
+    'stream - ArrayStream': function (test) {
+        test.expect(1);
+        var s = _(this.stringArray).through(this.parser);
+        s.toArray(this.tester(this.numArray, test));
+        test.done();
+    },
+    'stream and function': function (test) {
+        test.expect(1);
+        var s = _(this.stringArray)
+            .through(this.parser)
+            .through(function (s) {
+                return s.map(function (x) {
+                    return x * 2;
+                });
             });
-    })
-    .through(function (s) {
-        return s.map(function (x) {
-            return x + 1;
-        });
-    });
-    s.toArray(function (xs) {
-        test.same(xs, [3, 7]);
+        s.toArray(this.tester([2,4,6,8], test));
         test.done();
-    });
-};
+    },
+    'inputstream - error': function (test) {
+        test.expect(2);
+        var s = _(function (push) {
+            push(new Error('Input error'));
+            push(null, _.nil);
+        }).through(this.parser);
 
-exports['through - stream'] = function (test) {
-    var parser = through(
-        function (data) {
-            this.queue(JSON.parse(data));
-        },
-        function () {
-            this.queue(null);
-        }
-    );
-    var s = _.through(parser, ['1','2','3','4']);
-    s.toArray(function (xs) {
-        test.same(xs, [1,2,3,4]);
+        s.errors(errorEquals(test, 'Input error'))
+            .toArray(this.tester([], test));
         test.done();
-    });
-};
-
-exports['through - stream - ArrayStream'] = function (test) {
-    var parser = through(function (data) {
-        this.queue(JSON.parse(data));
-    });
-    var s = _(['1','2','3','4']).through(parser);
-    s.toArray(function (xs) {
-        test.same(xs, [1,2,3,4]);
+    },
+    'throughstream - error': function (test) {
+        test.expect(2);
+        var s = _(['zz{"a": 1}']).through(this.parser);
+        s.errors(errorEquals(test, 'Unexpected token z'))
+            .toArray(this.tester([], test));
         test.done();
-    });
-};
-
-exports['through - stream and function'] = function (test) {
-    var parser = through(
-        function (data) {
-            this.queue(JSON.parse(data));
-        },
-        function () {
-            this.queue(null);
-        }
-    );
-    var s = _(['1','2','3','4'])
-        .through(parser)
-        .through(function (s) {
-            return s.map(function (x) {
-                return x * 2;
-            });
-        });
-    s.toArray(function (xs) {
-        test.same(xs, [2,4,6,8]);
-        test.done();
-    });
+    },
+    'noValueOnError': function (test) {
+        noValueOnErrorTest(_.through(function (x) { return x }))(test);
+    }
 };
 
 exports['pipeline'] = function (test) {
