@@ -988,6 +988,46 @@ exports['take 1'] = function (test) {
     test.done();
 };
 
+exports['drop'] = {
+    setUp: function (cb) {
+        this.input = [1, 2, 3, 4, 5];
+        this.expected = [3, 4, 5];
+        this.tester = function (expected, test) {
+            return function (xs) {
+                test.same(xs, expected);
+            };
+        };
+        cb();
+    },
+    'arrayStream': function (test) {
+        test.expect(1);
+        _(this.input).drop(2).toArray(this.tester(this.expected, test));
+        test.done();
+    },
+    'partial application': function (test) {
+        test.expect(1);
+        var s = _(this.input);
+        _.drop(2)(s).toArray(this.tester(this.expected, test));
+        test.done();
+    },
+    'error': function (test) {
+        test.expect(2);
+        var s = _(function (push, next) {
+            push(null, 1),
+            push(new Error('Drop error')),
+            push(null, 2),
+            push(null, 3),
+            push(null, 4),
+            push(null, 5),
+            push(null, _.nil)
+        });
+        s.drop(2).errors(errorEquals(test, 'Drop error'))
+            .toArray(this.tester(this.expected, test));
+        test.done();
+    },
+    'noValueOnError': noValueOnErrorTest(_.drop(2))
+};
+
 exports['head'] = function (test) {
     test.expect(2);
     var s = _([2, 1]).head();
