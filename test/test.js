@@ -5755,6 +5755,39 @@ exports['wrapCallback - errors'] = function (test) {
     test.done();
 };
 
+exports['wrapCallback with args wrapping by function'] = function (test) {
+    function f(cb) {
+        cb(null, 1, 2, 3);
+    }
+    function mapper(){
+        return Array.prototype.slice.call(arguments);
+    }
+    _.wrapCallback(f, mapper)().each(function (x) {
+        test.same(x, [1, 2, 3]);
+        test.done();
+    });
+};
+
+exports['wrapCallback with args wrapping by number'] = function (test) {
+    function f(cb) {
+        cb(null, 1, 2, 3);
+    }
+    _.wrapCallback(f, 2)().each(function (x) {
+        test.same(x, [1, 2]);
+        test.done();
+    });
+};
+
+exports['wrapCallback with args wrapping by array'] = function (test) {
+    function f(cb) {
+        cb(null, 1, 2, 3);
+    }
+    _.wrapCallback(f, ['one', 'two', 'three'])().each(function (x) {
+        test.same(x, {'one': 1, 'two': 2, 'three': 3});
+        test.done()
+    });
+};
+
 exports['streamifyAll'] = {
     'throws when passed a non-function non-object': function (test) {
         test.throws(function () {
