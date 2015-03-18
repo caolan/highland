@@ -5115,6 +5115,22 @@ exports['wrapCallback'] = function (test) {
     });
 };
 
+exports['wrapCallback - context'] = function (test) {
+    var o = {
+        f: function (a, b, cb) {
+            test.equal(this, o);
+            setTimeout(function () {
+                cb(null, a + b);
+            }, 10);
+        }
+    };
+    o.g = _.wrapCallback(o.f);
+    o.g(1, 2).toArray(function (xs) {
+        test.same(xs, [3]);
+        test.done();
+    });
+};
+
 exports['wrapCallback - errors'] = function (test) {
     var f = function (a, b, cb) {
         cb(new Error('boom'));
