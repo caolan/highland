@@ -949,6 +949,50 @@ exports['take'] = function (test) {
     test.done();
 };
 
+exports['slice'] = {
+    setUp: function (cb) {
+        this.input = [1, 2, 3, 4, 5];
+        this.expected = [3, 4, 5];
+        this.tester = function (expected, test) {
+            return function (xs) {
+                test.same(xs, expected);
+            };
+        };
+        cb();
+    },
+    'arrayStream': function (test) {
+        test.expect(5);
+        _(this.input).slice(2, 6).toArray(this.tester([3, 4, 5], test));
+        _(this.input).slice(2).toArray(this.tester([3, 4, 5], test));
+        _(this.input).slice().toArray(this.tester([1, 2, 3, 4, 5], test));
+        _(this.input).slice(-1, 6).toArray(this.tester([], test));
+        _(this.input).slice(0).toArray(this.tester([1, 2, 3, 4, 5], test));
+        test.done();
+    },
+    'partial application': function (test) {
+        test.expect(1);
+        var s = _(this.input);
+        _.slice(1, 4)(s).toArray(this.tester([2, 3, 4], test));
+        test.done();
+    },
+    'error': function (test) {
+        test.expect(2);
+        var s = _(function (push, next) {
+            push(null, 1),
+            push(new Error('Slice error')),
+            push(null, 2),
+            push(null, 3),
+            push(null, 4),
+            push(null, 5),
+            push(null, _.nil)
+        });
+        s.slice(2, 4).errors(errorEquals(test, 'Slice error'))
+            .toArray(this.tester([3, 4], test));
+        test.done();
+    },
+    'noValueOnError': noValueOnErrorTest(_.slice(2, 3))
+};
+
 exports['take - noValueOnError'] = noValueOnErrorTest(_.take(1));
 
 exports['take - errors'] = function (test) {
