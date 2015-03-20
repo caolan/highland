@@ -787,6 +787,7 @@ like a 'through' stream, handling values as they are read.</p>
         else if (x === _.nil) {
             // pass nil (end event) along the stream
             push(null, x);
+            next();
         }
         else {
             // pass on the value only if the value passes the predicate
