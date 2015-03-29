@@ -1548,6 +1548,8 @@ exports['wrap EventEmitter (or jQuery) on handler with args wrapping by array'] 
 exports['takeUntil'] = function (test) {
     a = _();
     b = _();
+    a.resume();
+    b.resume();
     c = a.takeUntil(b);
     a.write(1);
     a.write(2);
