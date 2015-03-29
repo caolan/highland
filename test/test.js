@@ -1545,6 +1545,20 @@ exports['wrap EventEmitter (or jQuery) on handler with args wrapping by array'] 
     });
 };
 
+exports['takeUntil'] = function (test) {
+    a = _();
+    b = _();
+    c = a.takeUntil(b);
+    a.write(1);
+    a.write(2);
+    b.write(1);
+    a.write(3);
+    c.toArray(function(x) {
+        test.same(x, [1,2]);
+    })
+    test.done();
+};
+
 exports['sequence'] = function (test) {
     _.sequence([[1,2], [3], [[4],5]]).toArray(function (xs) {
         test.same(xs, [1,2,3,[4],5]);
