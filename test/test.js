@@ -1545,21 +1545,129 @@ exports['wrap EventEmitter (or jQuery) on handler with args wrapping by array'] 
     });
 };
 
-exports['takeUntil'] = function (test) {
-    a = _();
-    b = _();
-    a.resume();
-    b.resume();
-    c = a.takeUntil(b);
-    a.write(1);
-    a.write(2);
-    b.write(1);
-    a.write(3);
-    c.toArray(function(x) {
-        test.same(x, [1,2]);
-    })
-    test.done();
-};
+
+exports['takeUntil'] = {
+    setUp: function (callback) {
+        this.clock = sinon.useFakeTimers();
+        callback();
+    },
+    tearDown: function (callback) {
+        this.clock.restore();
+        callback();
+    },
+    'invalid stream': function (test) {
+        test.throws(function () {
+            _([1,2,3]).takeUntil(10);
+        });
+        test.done();
+    },
+    'async generator': function (test) {
+        function delay(push, ms, x) {
+            setTimeout(function () {
+                push(null, x);
+            }, ms);
+        }
+        var source = _(function (push, next) {
+            delay(push, 10, 1);
+            delay(push, 20, 2);
+            delay(push, 30, 3);
+            // should be stopped
+            delay(push, 40, 4);
+            delay(push, 50, 5);
+            delay(push, 60, _.nil);
+        })
+        var stopStream = _(function (push, next) {
+            delay(push, 25, 1);
+            delay(push, 35, _.nil);
+        })
+        var results = [];
+        source.takeUntil(stopStream).each(function (x) {
+            results.push(x);
+        });
+        this.clock.tick(10);
+        test.same(results, [1]);
+        this.clock.tick(10);
+        test.same(results, [1, 2]);
+        this.clock.tick(10);
+        test.same(results, [1, 2, 3]);
+        this.clock.tick(10);
+        test.same(results, [1, 2, 3]);
+        this.clock.tick(20);
+        test.same(results, [1, 2, 3]);
+        test.done();
+    },
+    'toplevel - async generator': function (test) {
+        function delay(push, ms, x) {
+            setTimeout(function () {
+                push(null, x);
+            }, ms);
+        }
+        var source = _(function (push, next) {
+            delay(push, 10, 1);
+            delay(push, 20, 2);
+            delay(push, 30, 3);
+            // should be stopped
+            delay(push, 40, 4);
+            delay(push, 50, 5);
+            delay(push, 60, _.nil);
+        })
+        var stopStream = _(function (push, next) {
+            delay(push, 25, 1);
+            delay(push, 35, _.nil);
+        })
+        var results = [];
+        _.takeUntil(stopStream, source).each(function (x) {
+            results.push(x);
+        });
+        this.clock.tick(10);
+        test.same(results, [1]);
+        this.clock.tick(10);
+        test.same(results, [1, 2]);
+        this.clock.tick(10);
+        test.same(results, [1, 2, 3]);
+        this.clock.tick(10);
+        test.same(results, [1, 2, 3]);
+        this.clock.tick(20);
+        test.same(results, [1, 2, 3]);
+        test.done();
+    },
+    'toplevel - partial application, async generator': function (test) {
+        function delay(push, ms, x) {
+            setTimeout(function () {
+                push(null, x);
+            }, ms);
+        }
+        var source = _(function (push, next) {
+            delay(push, 10, 1);
+            delay(push, 20, 2);
+            delay(push, 30, 3);
+            // should be stopped
+            delay(push, 40, 4);
+            delay(push, 50, 5);
+            delay(push, 60, _.nil);
+        })
+        var stopStream = _(function (push, next) {
+            delay(push, 25, 1);
+            delay(push, 35, _.nil);
+        })
+        var results = [];
+        _.takeUntil(stopStream)(source).each(function (x) {
+            results.push(x);
+        });
+        this.clock.tick(10);
+        test.same(results, [1]);
+        this.clock.tick(10);
+        test.same(results, [1, 2]);
+        this.clock.tick(10);
+        test.same(results, [1, 2, 3]);
+        this.clock.tick(10);
+        test.same(results, [1, 2, 3]);
+        this.clock.tick(20);
+        test.same(results, [1, 2, 3]);
+        test.done();
+    },
+    'noValueOnError': noValueOnErrorTest(_.takeUntil(_()))
+}; 
 
 exports['sequence'] = function (test) {
     _.sequence([[1,2], [3], [[4],5]]).toArray(function (xs) {
