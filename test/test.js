@@ -2381,13 +2381,13 @@ exports['transduce'] = {
 
         function xf(transform) {
             return {
-                init: transform.init.bind(transform),
-                result: transform.result.bind(transform),
-                step: function (result, x) {
+                '@@transducer/init': transform['@@transducer/init'].bind(transform),
+                '@@transducer/result': transform['@@transducer/result'].bind(transform),
+                '@@transducer/step': function (result, x) {
                     if (x === 2) {
                         throw new Error('error');
                     }
-                    result = transform.step(result, x);
+                    result = transform['@@transducer/step'](result, x);
                     return result;
                 }
             };
@@ -2406,12 +2406,12 @@ exports['transduce'] = {
 
         function xf(transform) {
             return {
-                init: transform.init.bind(transform),
-                result: function (result) {
-                    transform.result(result);
+                '@@transducer/init': transform['@@transducer/init'].bind(transform),
+                '@@transducer/result': function (result) {
+                    transform['@@transducer/result'](result);
                     throw new Error('error');
                 },
-                step: transform.step.bind(transform)
+                '@@transducer/step': transform['@@transducer/step'].bind(transform)
             };
         }
     },
@@ -2422,6 +2422,46 @@ exports['transduce'] = {
             .transduce(xf)
             .toArray(this.tester([1], test));
         test.done();
+    },
+    'wrapped memo': function (test) {
+        test.expect(2);
+        _(this.input)
+            .transduce(transducers.comp(this.xf, wrap))
+            .toArray(this.tester(this.expected, test));
+
+        _(this.input)
+            .transduce(transducers.comp(wrap, this.xf))
+            .toArray(this.tester(this.expected, test));
+        test.done();
+
+        function wrap(transform) {
+            return {
+                '@@transducer/init': function () {
+                    return wrapMemo(transform['@@transducer/init']());
+                },
+                '@@transducer/result': function (result) {
+                    return wrapMemo(transform['@@transducer/result'](result.memo));
+                },
+                '@@transducer/step': function (result, x) {
+                    var res = transform['@@transducer/step'](result.memo, x);
+                    if (res['@@transducer/reduced']) {
+                        return {
+                            '@@transducer/reduced': true,
+                            '@@transducer/value': wrapMemo(res['@transducer/value'])
+                        };
+                    }
+                    else {
+                        return wrapMemo(res);
+                    }
+                }
+            };
+        }
+
+        function wrapMemo(x) {
+            return {
+                memo: x
+            };
+        }
     },
     'noValueOnError': function (test) {
         noValueOnErrorTest(_.transduce(this.xf))(test);
