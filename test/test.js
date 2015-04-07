@@ -1096,6 +1096,81 @@ exports['each - throw error if consumed'] = function (test) {
     test.done();
 };
 
+exports['done'] = function (test) {
+    test.expect(3);
+
+    var calls = [];
+    _.map(function (x) {
+        calls.push(x);
+        return x;
+    }, [1,2,3]).done(function () {
+        test.same(calls, [1, 2, 3]);
+    });
+
+    calls = [];
+    _.each(function (x) {
+        calls.push(x);
+    }, [1,2,3]).done(function () {
+        test.same(calls, [1,2,3]);
+    });
+
+    // partial application
+    calls = [];
+    _.each(function (x) {
+        calls.push(x);
+    })([1,2,3]).done(function () {
+        test.same(calls, [1,2,3]);
+    });
+
+    test.done();
+}
+
+exports['done - ArrayStream'] = function (test) {
+    var calls = [];
+    _([1,2,3]).each(function (x) {
+        calls.push(x);
+    }).done(function () {
+        test.same(calls, [1,2,3]);
+        test.done();
+    });
+}
+
+exports['done - GeneratorStream'] = function (test) {
+    function delay(push, ms, x) {
+        setTimeout(function () {
+            push(null, x);
+        }, ms);
+    }
+    var source = _(function (push, next) {
+        delay(push, 10, 1);
+        delay(push, 20, 2);
+        delay(push, 30, 3);
+        delay(push, 40, _.nil);
+    });
+
+    var calls = [];
+    source.each(function (x) {
+        calls.push(x);
+    }).done(function () {
+        test.same(calls, [1,2,3]);
+        test.done();
+    })
+}
+
+exports['done - throw error if consumed'] = function (test) {
+    var e = new Error('broken');
+    var s = _(function (push, next) {
+        push(null, 1);
+        push(e);
+        push(null, 2);
+        push(null, _.nil);
+    });
+    test.throws(function () {
+        s.done(function () {});
+    });
+    test.done();
+};
+
 exports['calls generator on read'] = function (test) {
     var gen_calls = 0;
     var s = _(function (push, next) {
