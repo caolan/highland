@@ -34,6 +34,7 @@
     "scrawl": "0.0.5",
     "sinon": "~1.8.2",
     "stream-array": "~1.0.1",
+    "tape": "~2.4.2",
     "through": "~2.3.4",
     "transducers-js": "~0.4.135",
     "eslint": "~0.10.0"
