@@ -962,17 +962,22 @@ exports['slice'] = {
     },
     'arrayStream': function (test) {
         test.expect(5);
-        _(this.input).slice(2, 6).toArray(this.tester([3, 4, 5], test));
-        _(this.input).slice(2).toArray(this.tester([3, 4, 5], test));
-        _(this.input).slice().toArray(this.tester([1, 2, 3, 4, 5], test));
-        _(this.input).slice(-1, 6).toArray(this.tester([], test));
-        _(this.input).slice(0).toArray(this.tester([1, 2, 3, 4, 5], test));
+        _(this.input).slice(2, 6).toArray(this.tester(this.expected, test));
+        _(this.input).slice(2).toArray(this.tester(this.expected, test));
+        _(this.input).slice().toArray(this.tester(this.input, test));
+        _(this.input).slice(-1, 6).toArray(this.tester(this.input, test));
+        _(this.input).slice(0).toArray(this.tester(this.input, test));
         test.done();
     },
     'partial application': function (test) {
         test.expect(1);
         var s = _(this.input);
         _.slice(1, 4)(s).toArray(this.tester([2, 3, 4], test));
+        test.done();
+    },
+    'negative indicies': function(test) {
+        test.expect(1);
+        _.slice(-5, Infinity)(this.input).toArray(this.tester(this.input, test));
         test.done();
     },
     'error': function (test) {
@@ -1052,6 +1057,11 @@ exports['drop'] = {
         test.expect(1);
         var s = _(this.input);
         _.drop(2)(s).toArray(this.tester(this.expected, test));
+        test.done();
+    },
+    'negative indicies': function(test) {
+        test.expect(1);
+        _.drop(-1)(this.input).toArray(this.tester(this.input, test));
         test.done();
     },
     'error': function (test) {
