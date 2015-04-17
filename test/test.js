@@ -15,11 +15,12 @@ var EventEmitter = require('events').EventEmitter,
 
 function valueEquals(test, expected) {
     return function (err, x) {
+        // Must only run one test so that users can correctly
+        // compute test.expect.
         if (err) {
             test.equal(err, null, 'Expected a value to be emitted.');
-        }
-        else {
-            test.equal(x, expected, 'Incorrect value emitted.');
+        } else {
+            test.deepEqual(x, expected, 'Incorrect value emitted.');
         }
     };
 }
@@ -27,7 +28,7 @@ function valueEquals(test, expected) {
 function errorEquals(test, expectedMsg) {
     return function (err, x) {
         if (err) {
-            test.equal(
+            test.strictEqual(
                 err.message,
                 expectedMsg,
                 'Error emitted with incorrect message. ' + err.message
@@ -47,6 +48,7 @@ function anyError(test) {
 
 function noValueOnErrorTest(transform, expected) {
     return function (test) {
+        test.expect(1);
         if (!expected) expected = [];
         var thrower = _([1]).map(function () { throw new Error('error') });
         transform(thrower).errors(function () {}).toArray(function (xs) {
@@ -4136,6 +4138,103 @@ exports['zipAll - Differing length streams'] = function (test) {
         test.same(xs, [[1, 5, 9, 13], [2, 6, 10, 14]]);
     });
     test.done();
+};
+
+exports['zipAll0'] = {
+    setUp: function (cb) {
+        this.input = [
+            _([1, 2, 3]),
+            _([4, 5, 6]),
+            _([7, 8, 9]),
+            _([10, 11, 12])
+        ];
+        this.expected = [
+            [ 1, 4, 7, 10 ],
+            [ 2, 5, 8, 11 ],
+            [ 3, 6, 9, 12 ]
+        ];
+        this.tester = function (expected, test) {
+            return function (xs) {
+                test.same(xs, expected);
+            };
+        };
+        this.clock = sinon.useFakeTimers();
+        cb();
+    },
+    tearDown: function (cb) {
+        this.clock.restore();
+        cb();
+    },
+    'ArrayStream': function (test) {
+        test.expect(1);
+        _(this.input)
+            .zipAll0()
+            .toArray(this.tester(this.expected, test));
+        test.done();
+    },
+    'partial application': function (test) {
+        test.expect(1);
+        _.zipAll0(this.input)
+            .toArray(this.tester(this.expected, test));
+        test.done();
+    },
+    'empty stream': function (test) {
+        test.expect(1);
+        _.zipAll0([]).toArray(this.tester([], test));
+        test.done();
+    },
+    'noValueOnError': noValueOnErrorTest(_.zipAll0),
+    'source emits error': function (test) {
+        test.expect(5);
+        var self = this;
+        var err = new Error('zip all error');
+        var s = _(function (push) {
+            push(null, self.input[0]);
+            push(null, self.input[1]);
+            push(err);
+            push(null, self.input[2]);
+            push(null, self.input[3]);
+            push(null, _.nil);
+        }).zipAll0();
+
+        s.pull(errorEquals(test, 'zip all error'));
+        s.pull(valueEquals(test, this.expected[0]));
+        s.pull(valueEquals(test, this.expected[1]));
+        s.pull(valueEquals(test, this.expected[2]));
+        s.pull(valueEquals(test, _.nil));
+        test.done();
+    },
+    'GeneratorStream': function (test) {
+        var self = this;
+        var s = _(function (push, next) {
+            push(null, self.input[0]);
+            setTimeout(function () {
+                push(null, self.input[1]);
+                push(null, self.input[2]);
+                setTimeout(function () {
+                    push(null, self.input[3]);
+                    push(null, _.nil);
+                }, 50);
+            }, 50);
+        });
+
+        s.zipAll0().toArray(this.tester(this.expected, test));
+        this.clock.tick(100);
+        test.done();
+    },
+    'Differing length streams': function (test) {
+        test.expect(1);
+        _.zipAll0([
+            this.input[0],
+            this.input[1],
+            this.input[2],
+            this.input[3].take(2),
+        ]).toArray(this.tester([
+            this.expected[0],
+            this.expected[1],
+        ], test));
+        test.done();
+    }
 };
 
 exports['batch'] = function (test) {
