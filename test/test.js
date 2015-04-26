@@ -4360,6 +4360,63 @@ exports['batch - GeneratorStream'] = function (test) {
     });
 };
 
+exports['batchWithTimeOrCount'] = {
+    setUp: function (callback) {
+        this.clock = sinon.useFakeTimers();
+
+        function delay(push, ms, x) {
+            setTimeout(function () {
+                push(null, x);
+            }, ms);
+        }
+        this.generator = function (push, next) {
+            delay(push, 10, 1);
+            delay(push, 20, 2);
+            delay(push, 30, 3);
+            delay(push, 100, 4);
+            delay(push, 110, 5);
+            delay(push, 120, 6);
+            delay(push, 130, _.nil);
+        };
+
+        this.tester = function (stream, test) {
+            var results = [];
+
+            stream.each(function (x) {
+                results.push(x);
+            });
+
+            this.clock.tick(10);
+            test.same(results, []);
+            this.clock.tick(50);
+            test.same(results, [[1,2]]);
+            this.clock.tick(30);
+            test.same(results, [[1,2], [3]]);
+            this.clock.tick(10);
+            test.same(results, [[1,2], [3]]);
+            this.clock.tick(25);
+            test.same(results, [[1,2], [3], [4,5]]);
+            this.clock.tick(10);
+            test.same(results, [[1,2], [3], [4,5], [6]]);
+            test.done();
+        };
+
+        callback();
+    },
+    tearDown: function (callback) {
+        this.clock.restore();
+        callback();
+    },
+    'async generator': function (test) {
+        this.tester(_(this.generator).batchWithTimeOrCount(50, 2), test);
+    },
+    'toplevel - partial application, async generator': function (test) {
+        this.tester(_.batchWithTimeOrCount(50)(2)(this.generator), test);
+    }
+};
+
+exports['batchWithTimeOrCount - noValueOnError'] = noValueOnErrorTest(_.batchWithTimeOrCount(10, 2));
+
 exports['splitBy'] = function(test) {
     test.expect(3);
     _.splitBy('ss', ['mis', 'si', 's', 'sippi']).toArray(function(xs) {
