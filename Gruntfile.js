@@ -86,24 +86,38 @@ module.exports = function (grunt) {
     // custom tasks
     grunt.loadTasks('./tasks');
 
-    grunt.registerTask('release:patch', [
+    grunt.registerTask('pre-release:patch', [
         'test',
-        'build',
         'bump:patch',
-        'npm-publish',
-        'gh-pages'
+        'build'
     ]);
-    grunt.registerTask('release:minor', [
+
+    grunt.registerTask('pre-release:minor', [
         'test',
-        'build',
         'bump:minor',
+        'build'
+    ]);
+
+    grunt.registerTask('pre-release:major', [
+        'test',
+        'bump:major',
+        'build'
+    ]);
+
+    grunt.registerTask('release:patch', [
+        'pre-release:patch',
         'npm-publish',
         'gh-pages'
     ]);
+
+    grunt.registerTask('release:minor', [
+        'pre-release:minor',
+        'npm-publish',
+        'gh-pages'
+    ]);
+
     grunt.registerTask('release:major', [
-        'test',
-        'build',
-        'bump:major',
+        'pre-release:major',
         'npm-publish',
         'gh-pages'
     ]);

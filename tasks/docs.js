@@ -70,11 +70,9 @@ module.exports = function (grunt) {
 
             // sort the items in the sections?
             Object.keys(sections).forEach(function(sec){
-              console.log(sections[sec].items)
               sections[sec].items.sort(function(item1, item2){
                 return (item1.id > item2.id ? 1 : -1);
               });
-              console.log(sections[sec].items)
             });
 
             var tmpl_src = fs.readFileSync(tmpl_file).toString();
@@ -82,7 +80,8 @@ module.exports = function (grunt) {
 
             var html = tmpl({
                 comments: comments,
-                sections: sections
+                sections: sections,
+                tag: grunt.config.get('pkg.version')
             });
 
             fs.writeFileSync(out_file, html);

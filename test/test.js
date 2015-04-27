@@ -5,6 +5,7 @@ var EventEmitter = require('events').EventEmitter,
     streamify = require('stream-array'),
     concat = require('concat-stream'),
     Promise = require('es6-promise').Promise,
+    transducers = require('transducers-js'),
     _ = require('../lib/index');
 
 
@@ -14,11 +15,12 @@ var EventEmitter = require('events').EventEmitter,
 
 function valueEquals(test, expected) {
     return function (err, x) {
+        // Must only run one test so that users can correctly
+        // compute test.expect.
         if (err) {
             test.equal(err, null, 'Expected a value to be emitted.');
-        }
-        else {
-            test.equal(x, expected, 'Incorrect value emitted.');
+        } else {
+            test.deepEqual(x, expected, 'Incorrect value emitted.');
         }
     };
 }
@@ -26,14 +28,14 @@ function valueEquals(test, expected) {
 function errorEquals(test, expectedMsg) {
     return function (err, x) {
         if (err) {
-            test.equal(
+            test.strictEqual(
                 err.message,
                 expectedMsg,
-                'Error emitted with incorrect message.'
+                'Error emitted with incorrect message. ' + err.message
             );
         }
         else {
-            test.notEqual(err, null, 'No error emitted.');
+            test.ok(false, 'No error emitted.');
         }
     };
 }
@@ -46,6 +48,7 @@ function anyError(test) {
 
 function noValueOnErrorTest(transform, expected) {
     return function (test) {
+        test.expect(1);
         if (!expected) expected = [];
         var thrower = _([1]).map(function () { throw new Error('error') });
         transform(thrower).errors(function () {}).toArray(function (xs) {
@@ -53,6 +56,15 @@ function noValueOnErrorTest(transform, expected) {
             test.done();
         });
     }
+}
+
+function generatorStream(input, timeout) {
+    return _(function (push, next) {
+        for (var i = 0, len = input.length; i < len; i++) {
+            setTimeout(push.bind(null, null, input[i]), timeout * i);
+        }
+        setTimeout(push.bind(null, null, _.nil), timeout * len);
+    });
 }
 
 exports['ratelimit'] = {
@@ -288,6 +300,27 @@ exports['async consume'] = function (test) {
     });
 };
 
+exports['consume - push nil async (issue #173)'] = function (test) {
+    test.expect(1);
+    _([1, 2, 3, 4]).consume(function(err, x, push, next) {
+        if (err !== null) {
+            push(err);
+            next();
+        }
+        else if (x === _.nil) {
+            _.setImmediate(push.bind(this, null, x));
+        }
+        else {
+            push(null, x);
+            next();
+        }
+    })
+    .toArray(function (xs) {
+        test.same(xs, [1, 2, 3, 4]);
+        test.done();
+    });
+};
+
 exports['passing Stream to constructor returns original'] = function (test) {
     var s = _([1,2,3]);
     test.strictEqual(s, _(s));
@@ -314,6 +347,132 @@ exports['constructor from promise - errors'] = function (test) {
             test.done();
         });
 };
+
+function createTestIterator(array, error, lastVal) {
+    var count = 0,
+        length = array.length;
+    return {
+        next: function() {
+            if (count < length) {
+                if (error && count === 2) {
+                    throw error;
+                }
+                var iterElem = {
+                    value: array[count], done: false
+                };
+                count++;
+                return iterElem;
+            }
+            else {
+                return {
+                    value: lastVal, done: true
+                }
+            }
+        }
+    };
+}
+
+exports['constructor from iterator'] = function (test) {
+    test.expect(1);
+    _(createTestIterator([1, 2, 3, 4, 5])).toArray(function (xs) {
+        test.same(xs, [1, 2, 3, 4, 5]);
+    });
+    test.done();
+};
+
+exports['constructor from iterator - error'] = function (test) {
+    test.expect(2);
+    _(createTestIterator([1, 2, 3, 4, 5], new Error('Error at index 2'))).errors(function (err) {
+        test.equals(err.message, 'Error at index 2');
+    }).toArray(function (xs) {
+        test.same(xs, [1, 2]);
+    });
+    test.done();
+};
+
+exports['constructor from iterator - final return falsy'] = function (test) {
+    test.expect(1);
+    _(createTestIterator([1, 2, 3, 4, 5], void 0, 0)).toArray(function (xs) {
+        test.same(xs, [1, 2, 3, 4, 5, 0]);
+    });
+    test.done();
+};
+
+//ES6 iterators Begin
+if (global.Map && global.Symbol) {
+
+    exports['constructor from Map'] = function (test) {
+        test.expect(1);
+        var map = new Map();
+        map.set('a', 1);
+        map.set('b', 2);
+        map.set('c', 3);
+
+        _(map).toArray(function (xs) {
+            test.same(xs, [ [ 'a', 1 ], [ 'b', 2 ], [ 'c', 3 ] ]);
+        });
+        test.done();
+    };
+
+    exports['constructor from Map iterator'] = function (test) {
+        test.expect(1);
+        var map = new Map();
+        map.set('a', 1);
+        map.set('b', 2);
+        map.set('c', 3);
+
+        _(map.entries()).toArray(function (xs) {
+            test.same(xs, [ [ 'a', 1 ], [ 'b', 2 ], [ 'c', 3 ] ]);
+        });
+        test.done();
+    };
+
+    exports['constructor from empty Map iterator'] = function (test) {
+        test.expect(1);
+        var map = new Map();
+
+        _(map.entries()).toArray(function (xs) {
+            test.same(xs, []);
+        });
+        test.done();
+    };
+
+}
+
+if (global.Set && global.Symbol) {
+
+    exports['constructor from Set'] = function (test) {
+        test.expect(1);
+        var sett = new Set([1, 2, 2, 3, 4]);
+
+        _(sett).toArray(function (xs) {
+            test.same(xs, [1, 2, 3, 4]);
+        });
+        test.done();
+    };
+
+    exports['constructor from Set iterator'] = function (test) {
+        test.expect(1);
+        var sett = new Set([1, 2, 2, 3, 4]);
+
+        _(sett.values()).toArray(function (xs) {
+            test.same(xs, [1, 2, 3, 4]);
+        });
+        test.done();
+    };
+
+    exports['constructor from empty Map iterator'] = function (test) {
+        test.expect(1);
+        var sett = new Set();
+
+        _(sett.values()).toArray(function (xs) {
+            test.same(xs, []);
+        });
+        test.done();
+    };
+
+}
+//ES6 iterators End
 
 exports['if no consumers, buffer data'] = function (test) {
     var s = _();
@@ -468,6 +627,76 @@ exports['async next from consumer'] = function (test) {
         test.equal(calls, 4);
         test.done();
     });
+};
+
+exports['generator throws error if next called after nil'] = function (test) {
+    test.expect(1);
+    var nil_seen = false;
+    var s = _(function(push, next) {
+        // Ensure that next after nil is only called once
+        if (nil_seen) {
+            return;
+        }
+        push(null, 1);
+        nil_seen = true;
+        push(null, _.nil);
+        next();
+    });
+    test.throws(function() {
+        s.resume();
+    });
+    test.done();
+};
+
+exports['generator throws error if push called after nil'] = function (test) {
+    test.expect(1);
+    var s = _(function(push, next) {
+        push(null, 1);
+        push(null, _.nil);
+        push(null, 2);
+    });
+    test.throws(function() {
+        s.resume();
+    });
+    test.done();
+};
+
+exports['consume throws error if push called after nil'] = function (test) {
+    test.expect(1);
+    var s = _([1,2,3]);
+    var s2 = s.consume(function (err, x, push, next) {
+        push(null, x);
+        if (x === _.nil) {
+            push(null, 4);
+        } else {
+            next();
+        }
+    });
+    test.throws(function () {
+        s2.resume();
+    });
+    test.done();
+};
+
+exports['consume throws error if next called after nil'] = function (test) {
+    test.expect(1);
+    var s = _([1,2,3]);
+    var nil_seen = false;
+    var s2 = s.consume(function (err, x, push, next) {
+        // ensure we only call `next` after nil once
+        if (nil_seen) {
+            return;
+        }
+        if (x === _.nil) {
+            nil_seen = true;
+        }
+        push(null, x);
+        next();
+    });
+    test.throws(function () {
+        s2.resume();
+    });
+    test.done();
 };
 
 exports['errors'] = function (test) {
@@ -722,6 +951,55 @@ exports['take'] = function (test) {
     test.done();
 };
 
+exports['slice'] = {
+    setUp: function (cb) {
+        this.input = [1, 2, 3, 4, 5];
+        this.expected = [3, 4, 5];
+        this.tester = function (expected, test) {
+            return function (xs) {
+                test.same(xs, expected);
+            };
+        };
+        cb();
+    },
+    'arrayStream': function (test) {
+        test.expect(5);
+        _(this.input).slice(2, 6).toArray(this.tester(this.expected, test));
+        _(this.input).slice(2).toArray(this.tester(this.expected, test));
+        _(this.input).slice().toArray(this.tester(this.input, test));
+        _(this.input).slice(-1, 6).toArray(this.tester(this.input, test));
+        _(this.input).slice(0).toArray(this.tester(this.input, test));
+        test.done();
+    },
+    'partial application': function (test) {
+        test.expect(1);
+        var s = _(this.input);
+        _.slice(1, 4)(s).toArray(this.tester([2, 3, 4], test));
+        test.done();
+    },
+    'negative indicies': function(test) {
+        test.expect(1);
+        _.slice(-5, Infinity)(this.input).toArray(this.tester(this.input, test));
+        test.done();
+    },
+    'error': function (test) {
+        test.expect(2);
+        var s = _(function (push, next) {
+            push(null, 1),
+            push(new Error('Slice error')),
+            push(null, 2),
+            push(null, 3),
+            push(null, 4),
+            push(null, 5),
+            push(null, _.nil)
+        });
+        s.slice(2, 4).errors(errorEquals(test, 'Slice error'))
+            .toArray(this.tester([3, 4], test));
+        test.done();
+    },
+    'noValueOnError': noValueOnErrorTest(_.slice(2, 3))
+};
+
 exports['take - noValueOnError'] = noValueOnErrorTest(_.take(1));
 
 exports['take - errors'] = function (test) {
@@ -759,6 +1037,51 @@ exports['take 1'] = function (test) {
         test.equal(x, _.nil);
     });
     test.done();
+};
+
+exports['drop'] = {
+    setUp: function (cb) {
+        this.input = [1, 2, 3, 4, 5];
+        this.expected = [3, 4, 5];
+        this.tester = function (expected, test) {
+            return function (xs) {
+                test.same(xs, expected);
+            };
+        };
+        cb();
+    },
+    'arrayStream': function (test) {
+        test.expect(1);
+        _(this.input).drop(2).toArray(this.tester(this.expected, test));
+        test.done();
+    },
+    'partial application': function (test) {
+        test.expect(1);
+        var s = _(this.input);
+        _.drop(2)(s).toArray(this.tester(this.expected, test));
+        test.done();
+    },
+    'negative indicies': function(test) {
+        test.expect(1);
+        _.drop(-1)(this.input).toArray(this.tester(this.input, test));
+        test.done();
+    },
+    'error': function (test) {
+        test.expect(2);
+        var s = _(function (push, next) {
+            push(null, 1),
+            push(new Error('Drop error')),
+            push(null, 2),
+            push(null, 3),
+            push(null, 4),
+            push(null, 5),
+            push(null, _.nil)
+        });
+        s.drop(2).errors(errorEquals(test, 'Drop error'))
+            .toArray(this.tester(this.expected, test));
+        test.done();
+    },
+    'noValueOnError': noValueOnErrorTest(_.drop(2))
 };
 
 exports['head'] = function (test) {
@@ -825,6 +1148,81 @@ exports['each - throw error if consumed'] = function (test) {
         s.each(function (x) {
             // do nothing
         });
+    });
+    test.done();
+};
+
+exports['done'] = function (test) {
+    test.expect(3);
+
+    var calls = [];
+    _.map(function (x) {
+        calls.push(x);
+        return x;
+    }, [1,2,3]).done(function () {
+        test.same(calls, [1, 2, 3]);
+    });
+
+    calls = [];
+    _.each(function (x) {
+        calls.push(x);
+    }, [1,2,3]).done(function () {
+        test.same(calls, [1,2,3]);
+    });
+
+    // partial application
+    calls = [];
+    _.each(function (x) {
+        calls.push(x);
+    })([1,2,3]).done(function () {
+        test.same(calls, [1,2,3]);
+    });
+
+    test.done();
+}
+
+exports['done - ArrayStream'] = function (test) {
+    var calls = [];
+    _([1,2,3]).each(function (x) {
+        calls.push(x);
+    }).done(function () {
+        test.same(calls, [1,2,3]);
+        test.done();
+    });
+}
+
+exports['done - GeneratorStream'] = function (test) {
+    function delay(push, ms, x) {
+        setTimeout(function () {
+            push(null, x);
+        }, ms);
+    }
+    var source = _(function (push, next) {
+        delay(push, 10, 1);
+        delay(push, 20, 2);
+        delay(push, 30, 3);
+        delay(push, 40, _.nil);
+    });
+
+    var calls = [];
+    source.each(function (x) {
+        calls.push(x);
+    }).done(function () {
+        test.same(calls, [1,2,3]);
+        test.done();
+    })
+}
+
+exports['done - throw error if consumed'] = function (test) {
+    var e = new Error('broken');
+    var s = _(function (push, next) {
+        push(null, 1);
+        push(e);
+        push(null, 2);
+        push(null, _.nil);
+    });
+    test.throws(function () {
+        s.done(function () {});
     });
     test.done();
 };
@@ -1445,6 +1843,66 @@ exports['observe'] = function (test) {
     test.done();
 };
 
+exports['observe - paused observer should not block parent (issue #215)'] = function (test) {
+    test.expect(4);
+    var s = _([1, 2, 3]),
+        o1 = s.observe(),
+        o2 = s.observe();
+
+    var pulled = false;
+
+    // Pull once in o1. This will pause o1. It should not
+    // put backpressure on s.
+    o1.pull(_.compose(markPulled, valueEquals(test, 1)));
+    test.same(pulled, false, 'The pull should not have completed yet.');
+
+    o2.toArray(function (arr) {
+        pulled = true;
+        test.same(arr, [1, 2, 3]);
+    });
+    test.same(pulled, false, 'The toArray should not have completed yet.');
+
+    s.resume();
+    test.done();
+
+    function markPulled() {
+        pulled = true;
+    }
+};
+
+exports['observe - observers should see errors.'] = function (test) {
+    test.expect(2);
+    var s = _(function (push, next) {
+        push(new Error('error'));
+        push(null, _.nil);
+    });
+
+    var o = s.observe();
+    s.resume();
+
+    o.pull(errorEquals(test, 'error'));
+    o.pull(valueEquals(test, _.nil));
+    test.done();
+};
+
+exports['observe - observers should be destroyed (issue #208)'] = function (test) {
+    test.expect(6);
+    var s = _([]),
+    o = s.observe();
+    o2 = o.observe();
+
+    test.same(o2.source, o, 'o2.source should not be null before destroy.');
+    test.same(o._observers, [o2], 'o._observers should not be empty before destroy.');
+    test.same(s._observers, [o], 'source._observers should not be empty before destroy.');
+
+    o.destroy();
+
+    test.same(o2.source, null, 'o2.source should be null after destroy.');
+    test.same(o._observers, [], 'o._observers should be empty after destroy.');
+    test.same(s._observers, [], 'source._observers should be empty after destroy.');
+    test.done();
+};
+
 // TODO: test redirect after fork, forked streams should transfer over
 // TODO: test redirect after observe, observed streams should transfer over
 
@@ -1993,6 +2451,152 @@ exports['collect - GeneratorStream'] = function (test) {
         test.same(xs, [[1,2,3,4]]);
         test.done();
     });
+};
+
+exports['transduce'] = {
+    setUp: function (cb) {
+        var self = this;
+        this.xf = transducers.map(_.add(1));
+        this.input = [1, 2, 3];
+        this.expected = [2, 3, 4];
+        this.tester = function (expected, test) {
+            return function (xs) {
+                test.same(xs, expected);
+            };
+        };
+        cb();
+    },
+    'ArrayStream': function (test) {
+        test.expect(1);
+        _(this.input)
+            .transduce(this.xf)
+            .toArray(this.tester(this.expected, test));
+        test.done();
+    },
+    'GeneratorStream': function (test) {
+        test.expect(1);
+        generatorStream(this.input, 10)
+            .transduce(this.xf)
+            .toArray(this.tester(this.expected, test));
+        setTimeout(test.done.bind(test), 10 * (this.input.length + 2));
+    },
+    'partial application': function (test) {
+        test.expect(1);
+        _.transduce(this.xf)(this.input)
+            .toArray(this.tester(this.expected, test));
+        test.done();
+    },
+    'passThroughError': function (test) {
+        test.expect(4);
+        var s = _([1, 2, 3]).map(function (x) {
+            if (x === 2) {
+                throw new Error('error');
+            }
+            return x;
+        }).transduce(this.xf);
+
+        s.pull(valueEquals(test, 2));
+        s.pull(errorEquals(test, 'error'));
+        s.pull(valueEquals(test, 4));
+        s.pull(valueEquals(test, _.nil));
+        test.done();
+    },
+    'stopOnStepError': function (test) {
+        test.expect(3);
+        var s = _([1, 2, 3]).transduce(xf);
+
+        s.pull(valueEquals(test, 1));
+        s.pull(errorEquals(test, 'error'));
+        s.pull(valueEquals(test, _.nil));
+        test.done();
+
+        function xf(transform) {
+            return {
+                '@@transducer/init': transform['@@transducer/init'].bind(transform),
+                '@@transducer/result': transform['@@transducer/result'].bind(transform),
+                '@@transducer/step': function (result, x) {
+                    if (x === 2) {
+                        throw new Error('error');
+                    }
+                    result = transform['@@transducer/step'](result, x);
+                    return result;
+                }
+            };
+        }
+    },
+    'stopOnResultError': function (test) {
+        test.expect(5);
+        var s = _([1, 2, 3]).transduce(xf);
+
+        s.pull(valueEquals(test, 1));
+        s.pull(valueEquals(test, 2));
+        s.pull(valueEquals(test, 3));
+        s.pull(errorEquals(test, 'error'));
+        s.pull(valueEquals(test, _.nil));
+        test.done();
+
+        function xf(transform) {
+            return {
+                '@@transducer/init': transform['@@transducer/init'].bind(transform),
+                '@@transducer/result': function (result) {
+                    transform['@@transducer/result'](result);
+                    throw new Error('error');
+                },
+                '@@transducer/step': transform['@@transducer/step'].bind(transform)
+            };
+        }
+    },
+    'early termination': function (test) {
+        test.expect(1);
+        var xf = transducers.take(1);
+        _([1, 2, 3])
+            .transduce(xf)
+            .toArray(this.tester([1], test));
+        test.done();
+    },
+    'wrapped memo': function (test) {
+        test.expect(2);
+        _(this.input)
+            .transduce(transducers.comp(this.xf, wrap))
+            .toArray(this.tester(this.expected, test));
+
+        _(this.input)
+            .transduce(transducers.comp(wrap, this.xf))
+            .toArray(this.tester(this.expected, test));
+        test.done();
+
+        function wrap(transform) {
+            return {
+                '@@transducer/init': function () {
+                    return wrapMemo(transform['@@transducer/init']());
+                },
+                '@@transducer/result': function (result) {
+                    return wrapMemo(transform['@@transducer/result'](result.memo));
+                },
+                '@@transducer/step': function (result, x) {
+                    var res = transform['@@transducer/step'](result.memo, x);
+                    if (res['@@transducer/reduced']) {
+                        return {
+                            '@@transducer/reduced': true,
+                            '@@transducer/value': wrapMemo(res['@transducer/value'])
+                        };
+                    }
+                    else {
+                        return wrapMemo(res);
+                    }
+                }
+            };
+        }
+
+        function wrapMemo(x) {
+            return {
+                memo: x
+            };
+        }
+    },
+    'noValueOnError': function (test) {
+        noValueOnErrorTest(_.transduce(this.xf))(test);
+    }
 };
 
 exports['concat'] = function (test) {
@@ -2562,6 +3166,15 @@ exports['doto'] = function (test) {
 
 exports['doto - noValueOnError'] = noValueOnErrorTest(_.doto(function (x) { return x }));
 
+exports['tap - doto alias'] = function (test) {
+    test.expect(2);
+
+    test.strictEqual(_.tap, _.doto);
+    test.strictEqual(_([]).tap, _([]).doto);
+
+    test.done();
+};
+
 exports['flatMap'] = function (test) {
     var f = function (x) {
         return _(function (push, next) {
@@ -2788,6 +3401,7 @@ exports['pluck - non-object argument'] = function (test) {
 
 
 exports['pick'] = function (test) {
+    test.expect(2);
     var a = _([
         {breed: 'chihuahua', name: 'Princess', age: 5},
         {breed: 'labrador', name: 'Rocky', age: 3},
@@ -2799,25 +3413,159 @@ exports['pick'] = function (test) {
           {breed: 'labrador',  age: 3},
           {breed: 'german-shepherd', age: 9}
         ]);
-        test.done();
     });
+
+    var b = _([
+        Object.create({breed: 'chihuahua', name: 'Princess', age: 5}),
+        {breed: 'labrador', name: 'Rocky', age: 3},
+        {breed: 'german-shepherd', name: 'Waffles', age: 9}
+    ]);
+
+    b.pick(['breed', 'age']).toArray(function (xs) {
+        test.deepEqual(xs, [
+            {breed: 'chihuahua', age: 5},
+            {breed: 'labrador',  age: 3},
+            {breed: 'german-shepherd', age: 9}
+        ]);
+    });
+
+    test.done();
 };
 
 exports['pick - noValueOnError'] = noValueOnErrorTest(_.pick(['plug']));
 
 exports['pick - non-existant property'] = function (test) {
+    test.expect(8);
+
     var a = _([
-        {breed: 'labrador', name: 'Rocky'}, // <- missing age
+        {breed: 'labrador', name: 'Rocky'} // <- missing age
     ]);
+
     a.pick(['breed', 'age']).toArray(function (xs) {
-        test.equal(xs[0].breed, 'labrador')
+        test.equal(xs[0].breed, 'labrador');
+        test.ok(Object.keys(xs[0]).length === 1);
+    });
+
+    a.pick(['age']).toArray(function (xs) {
+        test.ok(Object.keys(xs[0]).length === 0);
+    });
+
+    var b = _([
+        {breed: 'labrador', age: void 0}
+    ]);
+
+    b.pick(['breed', 'age']).toArray(function (xs) {
+        test.equal(xs[0].breed, 'labrador');
         test.ok(xs[0].hasOwnProperty('age'));
         test.ok(typeof(xs[0].age) === 'undefined');
-        test.done();
     });
+
+    var c = _([
+        {}
+    ]);
+
+    c.pick(['age']).toArray(function (xs) {
+        test.ok(Object.keys(xs[0]).length === 0);
+    });
+
+    var noProtoObj = Object.create(null);
+    noProtoObj.breed = 'labrador';
+    noProtoObj.name = 'Rocky';
+
+    var d = _([
+        noProtoObj
+    ]);
+
+    d.pick(['breed', 'age']).toArray(function (xs) {
+        test.equal(xs[0].breed, 'labrador')
+        test.ok(Object.keys(xs[0]).length === 1);
+    });
+
+    test.done();
 };
 
+exports['pickBy'] = function (test) {
+    test.expect(4);
 
+    var objs = [{a: 1, _a: 2}, {a: 1, _c: 3}];
+
+    _(objs).pickBy(function (key) {
+        return key.indexOf('_') === 0;
+    }).toArray(function (xs) {
+        test.deepEqual(xs, [{_a: 2}, {_c: 3}]);
+    });
+
+    var objs2 = [{a: 1, b: {c: 2}}, {a: 1, b: {c: 4}}, {d: 1, b: {c: 9}}];
+
+    _(objs2).pickBy(function (key, value) {
+        if (key === 'b' && typeof value.c !== 'undefined') {
+            return value.c > 3;
+        }
+        return false;
+    }).toArray(function (xs) {
+        test.deepEqual(xs, [{}, {b: {c: 4}}, {b: {c: 9}}]);
+    });
+
+    var noProtoObj = Object.create(null);
+    noProtoObj.a = 1;
+    noProtoObj.b = {c: 4};
+
+    var objs3 = _([{a: 1, b: {c: 2}}, noProtoObj, {d: 1, b: {c: 9}}]);
+
+    objs3.pickBy(function (key, value) {
+        if (key === 'b' && typeof value.c !== 'undefined') {
+            return value.c > 3;
+        }
+        return false;
+    }).toArray(function (xs) {
+        test.deepEqual(xs, [{}, {b: {c: 4}}, {b: {c: 9}}]);
+    });
+
+    var objs4 = [Object.create({a: 1, _a: 2}), {a: 1, _c: 3}];
+
+    _(objs4).pickBy(function (key) {
+        return key.indexOf('_') === 0;
+    }).toArray(function (xs) {
+        test.deepEqual(xs, [{_a: 2}, {_c: 3}]);
+    });
+
+    test.done();
+};
+
+exports['pickBy - noValueOnError'] = noValueOnErrorTest(_.pickBy(' '));
+
+exports['pickBy - non-existant property'] = function (test) {
+    test.expect(3);
+
+    var objs = [{a: 1, b: 2}, {a: 1, d: 3}];
+
+    _(objs).pickBy(function (key) {
+        return key.indexOf('_') === 0;
+    }).toArray(function (xs) {
+        test.deepEqual(xs, [{}, {}]);
+    });
+
+    var objs2 = [{a: 1, b: {c: 2}}, {a: 1, b: {c: 4}}, {d: 1, b: {c: 9}}];
+
+    _(objs2).pickBy(function (key, value) {
+        if (key === 'b' && typeof value.c !== 'undefined') {
+            return value.c > 10;
+        }
+        return false;
+    }).toArray(function (xs) {
+        test.deepEqual(xs, [{}, {}, {}]);
+    });
+
+    var objs3 = [{}, {}];
+
+    _(objs3).pickBy(function (key) {
+        return key.indexOf('_') === 0;
+    }).toArray(function (xs) {
+        test.deepEqual(xs, [{}, {}]);
+    });
+
+    test.done();
+};
 
 exports['filter'] = function (test) {
     test.expect(2);
@@ -3090,6 +3838,18 @@ exports['find - GeneratorStream'] = function (test) {
         'baz': [{type: 'baz', name: 'asdf'}]
     };
 
+    var noProtoObj = Object.create(null);
+    noProtoObj.type = 'foo';
+    noProtoObj.name = 'wibble';
+
+    var xsNoProto = [
+        noProtoObj,
+        {type: 'foo', name: 'wobble'},
+        {type: 'bar', name: '123'},
+        {type: 'bar', name: 'asdf'},
+        {type: 'baz', name: 'asdf'}
+    ];
+
     var primatives = [1,2,3,'cat'];
 
     var pexpected = {1: [1], 2: [2], 3: [3], 'cat': ['cat']};
@@ -3104,12 +3864,18 @@ exports['find - GeneratorStream'] = function (test) {
     var s = 'type';
 
     exports['group'] = function (test) {
-        test.expect(4);
+        test.expect(8);
 
         _.group(f, xs).toArray(function (xs) {
             test.same(xs, [expected]);
         });
         _.group(s, xs).toArray(function (xs) {
+            test.same(xs, [expected]);
+        });
+        _.group(f, xsNoProto).toArray(function (xs) {
+            test.same(xs, [expected]);
+        });
+        _.group(s, xsNoProto).toArray(function (xs) {
             test.same(xs, [expected]);
         });
 
@@ -3118,6 +3884,12 @@ exports['find - GeneratorStream'] = function (test) {
             test.same(xs, [expected]);
         });
         _.group(s)(xs).toArray(function (xs) {
+            test.same(xs, [expected]);
+        });
+        _.group(f)(xsNoProto).toArray(function (xs) {
+            test.same(xs, [expected]);
+        });
+        _.group(s)(xsNoProto).toArray(function (xs) {
             test.same(xs, [expected]);
         });
         test.done();
@@ -3221,18 +3993,21 @@ exports['where'] = function (test) {
         {type: 'bar', name: 'asdf'},
         {type: 'baz', name: 'asdf'}
     ];
+
     _.where({type: 'foo'}, xs).toArray(function (xs) {
         test.same(xs, [
             {type: 'foo', name: 'wibble'},
             {type: 'foo', name: 'wobble'}
         ]);
     });
+
     // partial application
     _.where({type: 'bar', name: 'asdf'})(xs).toArray(function (xs) {
         test.same(xs, [
             {type: 'bar', name: 'asdf'}
         ]);
     });
+
     test.done();
 };
 
@@ -3534,6 +4309,103 @@ exports['zipAll - Differing length streams'] = function (test) {
     test.done();
 };
 
+exports['zipAll0'] = {
+    setUp: function (cb) {
+        this.input = [
+            _([1, 2, 3]),
+            _([4, 5, 6]),
+            _([7, 8, 9]),
+            _([10, 11, 12])
+        ];
+        this.expected = [
+            [ 1, 4, 7, 10 ],
+            [ 2, 5, 8, 11 ],
+            [ 3, 6, 9, 12 ]
+        ];
+        this.tester = function (expected, test) {
+            return function (xs) {
+                test.same(xs, expected);
+            };
+        };
+        this.clock = sinon.useFakeTimers();
+        cb();
+    },
+    tearDown: function (cb) {
+        this.clock.restore();
+        cb();
+    },
+    'ArrayStream': function (test) {
+        test.expect(1);
+        _(this.input)
+            .zipAll0()
+            .toArray(this.tester(this.expected, test));
+        test.done();
+    },
+    'partial application': function (test) {
+        test.expect(1);
+        _.zipAll0(this.input)
+            .toArray(this.tester(this.expected, test));
+        test.done();
+    },
+    'empty stream': function (test) {
+        test.expect(1);
+        _.zipAll0([]).toArray(this.tester([], test));
+        test.done();
+    },
+    'noValueOnError': noValueOnErrorTest(_.zipAll0),
+    'source emits error': function (test) {
+        test.expect(5);
+        var self = this;
+        var err = new Error('zip all error');
+        var s = _(function (push) {
+            push(null, self.input[0]);
+            push(null, self.input[1]);
+            push(err);
+            push(null, self.input[2]);
+            push(null, self.input[3]);
+            push(null, _.nil);
+        }).zipAll0();
+
+        s.pull(errorEquals(test, 'zip all error'));
+        s.pull(valueEquals(test, this.expected[0]));
+        s.pull(valueEquals(test, this.expected[1]));
+        s.pull(valueEquals(test, this.expected[2]));
+        s.pull(valueEquals(test, _.nil));
+        test.done();
+    },
+    'GeneratorStream': function (test) {
+        var self = this;
+        var s = _(function (push, next) {
+            push(null, self.input[0]);
+            setTimeout(function () {
+                push(null, self.input[1]);
+                push(null, self.input[2]);
+                setTimeout(function () {
+                    push(null, self.input[3]);
+                    push(null, _.nil);
+                }, 50);
+            }, 50);
+        });
+
+        s.zipAll0().toArray(this.tester(this.expected, test));
+        this.clock.tick(100);
+        test.done();
+    },
+    'Differing length streams': function (test) {
+        test.expect(1);
+        _.zipAll0([
+            this.input[0],
+            this.input[1],
+            this.input[2],
+            this.input[3].take(2),
+        ]).toArray(this.tester([
+            this.expected[0],
+            this.expected[1],
+        ], test));
+        test.done();
+    }
+};
+
 exports['batch'] = function (test) {
     test.expect(5);
     _.batch(3, [1,2,3,4,5,6,7,8,9,0]).toArray(function (xs) {
@@ -3602,6 +4474,63 @@ exports['batch - GeneratorStream'] = function (test) {
         test.done();
     });
 };
+
+exports['batchWithTimeOrCount'] = {
+    setUp: function (callback) {
+        this.clock = sinon.useFakeTimers();
+
+        function delay(push, ms, x) {
+            setTimeout(function () {
+                push(null, x);
+            }, ms);
+        }
+        this.generator = function (push, next) {
+            delay(push, 10, 1);
+            delay(push, 20, 2);
+            delay(push, 30, 3);
+            delay(push, 100, 4);
+            delay(push, 110, 5);
+            delay(push, 120, 6);
+            delay(push, 130, _.nil);
+        };
+
+        this.tester = function (stream, test) {
+            var results = [];
+
+            stream.each(function (x) {
+                results.push(x);
+            });
+
+            this.clock.tick(10);
+            test.same(results, []);
+            this.clock.tick(50);
+            test.same(results, [[1,2]]);
+            this.clock.tick(30);
+            test.same(results, [[1,2], [3]]);
+            this.clock.tick(10);
+            test.same(results, [[1,2], [3]]);
+            this.clock.tick(25);
+            test.same(results, [[1,2], [3], [4,5]]);
+            this.clock.tick(10);
+            test.same(results, [[1,2], [3], [4,5], [6]]);
+            test.done();
+        };
+
+        callback();
+    },
+    tearDown: function (callback) {
+        this.clock.restore();
+        callback();
+    },
+    'async generator': function (test) {
+        this.tester(_(this.generator).batchWithTimeOrCount(50, 2), test);
+    },
+    'toplevel - partial application, async generator': function (test) {
+        this.tester(_.batchWithTimeOrCount(50)(2)(this.generator), test);
+    }
+};
+
+exports['batchWithTimeOrCount - noValueOnError'] = noValueOnErrorTest(_.batchWithTimeOrCount(10, 2));
 
 exports['splitBy'] = function(test) {
     test.expect(3);
@@ -4160,14 +5089,16 @@ exports['latest'] = {
         var s2 = _.latest(s);
         var s3 = s2.consume(function (err, x, push, next) {
             push(err, x);
-            setTimeout(next, 60);
+            if (x !== _.nil) {
+                setTimeout(next, 60);
+            }
         });
         s3.toArray(function (xs) {
             // values at 0s, 60s, 120s
             test.same(xs, [1, 1, 'last']);
-            test.done();
         });
         this.clock.tick(1000);
+        test.done();
     },
     'GeneratorStream': function (test) {
         test.expect(1);
@@ -4190,14 +5121,16 @@ exports['latest'] = {
         var s2 = s.latest();
         var s3 = s2.consume(function (err, x, push, next) {
             push(err, x);
-            setTimeout(next, 60);
+            if (x !== _.nil) {
+                setTimeout(next, 60);
+            }
         });
         s3.toArray(function (xs) {
             // values at 0s, 60s, 120s
             test.same(xs, [1, 1, 'last']);
-            test.done();
         });
         this.clock.tick(1000);
+        test.done();
     },
     'let errors pass through': function (test) {
         test.expect(2);
@@ -4225,15 +5158,17 @@ exports['latest'] = {
         });
         var s3 = s2.consume(function (err, x, push, next) {
             push(err, x);
-            setTimeout(next, 60);
+            if (x !== _.nil) {
+                setTimeout(next, 60);
+            }
         });
         s3.toArray(function (xs) {
             // values at 0s, 60s, 120s
             test.same(xs, [1, 1, 'last']);
             test.same(errs, ['foo', 'bar']);
-            test.done();
         });
         this.clock.tick(1000);
+        test.done();
     }
 };
 
@@ -4253,92 +5188,160 @@ exports['last'] = function (test) {
 
 exports['last - noValueOnError'] = noValueOnErrorTest(_.last());
 
-exports['through - function'] = function (test) {
-    var s = _.through(function (s) {
-        return s
-            .filter(function (x) {
-                return x % 2;
-            })
-            .map(function (x) {
-                return x * 2;
+exports['sortBy'] = {
+    setUp: function (cb) {
+        this.input   = [5, 2, 4, 1, 3];
+        this.reversed = [5, 4, 3, 2, 1];
+        this.compDesc = function (a, b) {
+            return b - a;
+        };
+        this.tester = function (expected, test) {
+            return function (xs) {
+                test.same(xs, expected);
+            };
+        };
+        cb();
+    },
+    'arrayStream': function (test) {
+        test.expect(1);
+        _(this.input).sortBy(this.compDesc).toArray(this.tester(this.reversed, test));
+        test.done();
+    },
+    'partial application': function (test) {
+        test.expect(1);
+        var s = _(this.input);
+        _.sortBy(this.compDesc)(s).toArray(this.tester(this.reversed, test));
+        test.done();
+    },
+    'noValueOnError': noValueOnErrorTest(_.sortBy(this.compDesc))
+};
+
+exports['sort'] = {
+    setUp: function (cb) {
+        this.input   = ['e', 'a', 'd', 'c', 'b'];
+        this.sorted   = ['a', 'b', 'c', 'd', 'e'];
+        this.tester = function (expected, test) {
+            return function (xs) {
+                test.same(xs, expected);
+            };
+        };
+        cb();
+    },
+    'arrayStream': function (test) {
+        test.expect(1);
+        _(this.input).sort().toArray(this.tester(this.sorted, test));
+        test.done();
+    },
+    'partial application': function (test) {
+        test.expect(1);
+        var s = _(this.input);
+        _.sortBy(this.compDesc)(s).toArray(this.tester(this.sorted, test));
+        test.done();
+    },
+    'noValueOnError': noValueOnErrorTest(_.sort())
+};
+
+exports['through'] = {
+    setUp: function (cb) {
+        this.parser = through(
+            function (data) {
+                try {
+                    this.queue(JSON.parse(data));
+                }
+                catch (err) {
+                    this.emit('error', err);
+                }
+            },
+            function () {
+                this.queue(null);
+            }
+        );
+        this.numArray = [1, 2, 3, 4];
+        this.stringArray = ['1','2','3','4'];
+        this.tester = function (expected, test) {
+            return function (xs) {
+                test.same(xs, expected);
+            };
+        };
+        cb();
+    },
+    'function': function (test) {
+        test.expect(1);
+        var s = _.through(function (s) {
+            return s
+                .filter(function (x) {
+                    return x % 2;
+                })
+                .map(function (x) {
+                    return x * 2;
+                });
+        }, this.numArray);
+        s.toArray(this.tester([2, 6], test));
+        test.done();
+    },
+    'function - ArrayStream': function (test) {
+        test.expect(1);
+        var s = _(this.numArray).through(function (s) {
+            return s
+                .filter(function (x) {
+                    return x % 2;
+                })
+                .map(function (x) {
+                    return x * 2;
+                });
+        }).through(function (s) {
+                return s.map(function (x) {
+                    return x + 1;
+                });
             });
-    }, [1,2,3,4]);
-    s.toArray(function (xs) {
-        test.same(xs, [2, 6]);
+        s.toArray(this.tester([3, 7], test));
         test.done();
-    });
-};
-
-exports['through - noValueOnError'] = noValueOnErrorTest(_.through(function (x) { return x }));
-
-exports['through - function - ArrayStream'] = function (test) {
-    var s = _([1,2,3,4]).through(function (s) {
-        return s
-            .filter(function (x) {
-                return x % 2;
-            })
-            .map(function (x) {
-                return x * 2;
+    },
+    'stream': function (test) {
+        test.expect(1);
+        var s = _.through(this.parser, this.stringArray);
+        s.toArray(this.tester(this.numArray, test));
+        test.done();
+    },
+    'stream - ArrayStream': function (test) {
+        test.expect(1);
+        var s = _(this.stringArray).through(this.parser);
+        s.toArray(this.tester(this.numArray, test));
+        test.done();
+    },
+    'stream and function': function (test) {
+        test.expect(1);
+        var s = _(this.stringArray)
+            .through(this.parser)
+            .through(function (s) {
+                return s.map(function (x) {
+                    return x * 2;
+                });
             });
-    })
-    .through(function (s) {
-        return s.map(function (x) {
-            return x + 1;
-        });
-    });
-    s.toArray(function (xs) {
-        test.same(xs, [3, 7]);
+        s.toArray(this.tester([2,4,6,8], test));
         test.done();
-    });
-};
+    },
+    'inputstream - error': function (test) {
+        test.expect(2);
+        var s = _(function (push) {
+            push(new Error('Input error'));
+            push(null, _.nil);
+        }).through(this.parser);
 
-exports['through - stream'] = function (test) {
-    var parser = through(
-        function (data) {
-            this.queue(JSON.parse(data));
-        },
-        function () {
-            this.queue(null);
-        }
-    );
-    var s = _.through(parser, ['1','2','3','4']);
-    s.toArray(function (xs) {
-        test.same(xs, [1,2,3,4]);
+        s.errors(errorEquals(test, 'Input error'))
+            .toArray(this.tester([], test));
         test.done();
-    });
-};
-
-exports['through - stream - ArrayStream'] = function (test) {
-    var parser = through(function (data) {
-        this.queue(JSON.parse(data));
-    });
-    var s = _(['1','2','3','4']).through(parser);
-    s.toArray(function (xs) {
-        test.same(xs, [1,2,3,4]);
+    },
+    'throughstream - error': function (test) {
+        test.expect(2);
+        var s = _(['zz{"a": 1}']).through(this.parser);
+        s.errors(anyError(test))
+            .toArray(this.tester([], test));
         test.done();
-    });
-};
-
-exports['through - stream and function'] = function (test) {
-    var parser = through(
-        function (data) {
-            this.queue(JSON.parse(data));
-        },
-        function () {
-            this.queue(null);
-        }
-    );
-    var s = _(['1','2','3','4'])
-        .through(parser)
-        .through(function (s) {
-            return s.map(function (x) {
-                return x * 2;
-            });
-        });
-    s.toArray(function (xs) {
-        test.same(xs, [2,4,6,8]);
-        test.done();
-    });
+    },
+    'noValueOnError': function (test) {
+        noValueOnErrorTest(_.through(function (x) { return x }))(test);
+    }
 };
 
 exports['pipeline'] = function (test) {
@@ -4425,15 +5428,27 @@ exports['values - lazy property access'] = function (test) {
 };
 
 exports['keys'] = function (test) {
+    test.expect(2);
     var obj = {
         foo: 1,
         bar: 2,
         baz: 3
     };
+
+    var objNoProto = Object.create(null);
+    objNoProto.foo = 1;
+    objNoProto.bar = 2;
+    objNoProto.baz = 3;
+
+
     _.keys(obj).toArray(function (xs) {
         test.same(xs, ['foo', 'bar', 'baz']);
-        test.done();
     });
+
+    _.keys(objNoProto).toArray(function (xs) {
+        test.same(xs, ['foo', 'bar', 'baz']);
+    });
+    test.done();
 };
 
 exports['pairs'] = function (test) {
@@ -4470,12 +5485,24 @@ exports['pairs - lazy property access'] = function (test) {
 };
 
 exports['extend'] = function (test) {
+    test.expect(8);
     var a = {a: 1, b: {num: 2, test: 'test'}};
+
+    var b = Object.create(null);
+    b.a = 1;
+    b.b = {num: 2, test: 'test'};
+
     test.equal(a, _.extend({b: {num: 'foo'}, c: 3}, a));
     test.same(a, {a: 1, b: {num: 'foo'}, c: 3});
+    test.equal(b, _.extend({b: {num: 'bar'}, c: 3}, b));
+    test.same(b, {a: 1, b: {num: 'bar'}, c: 3});
+
     // partial application
     test.equal(a, _.extend({b: 'baz'})(a));
     test.same(a, {a: 1, b: 'baz', c: 3});
+    test.equal(b, _.extend({b: 'bar'})(b));
+    test.same(b, {a: 1, b: 'bar', c: 3});
+
     test.done();
 };
 
@@ -4528,6 +5555,22 @@ exports['wrapCallback'] = function (test) {
     });
 };
 
+exports['wrapCallback - context'] = function (test) {
+    var o = {
+        f: function (a, b, cb) {
+            test.equal(this, o);
+            setTimeout(function () {
+                cb(null, a + b);
+            }, 10);
+        }
+    };
+    o.g = _.wrapCallback(o.f);
+    o.g(1, 2).toArray(function (xs) {
+        test.same(xs, [3]);
+        test.done();
+    });
+};
+
 exports['wrapCallback - errors'] = function (test) {
     var f = function (a, b, cb) {
         cb(new Error('boom'));
@@ -4538,6 +5581,102 @@ exports['wrapCallback - errors'] = function (test) {
         });
     });
     test.done();
+};
+
+exports['streamifyAll'] = {
+    'throws when passed a non-function non-object': function (test) {
+        test.throws(function () {
+            _.streamifyAll(1);
+        }, TypeError);
+        test.done();
+    },
+    'streamifies object methods': function (test) {
+        var plainObject = { fn: function (a, b, cb) { cb(null, a + b); } };
+        var obj = _.streamifyAll(plainObject);
+        test.equal(typeof obj.fnStream, 'function');
+        obj.fnStream(1, 2).apply(function (res) {
+            test.equal(res, 3);
+            test.done();
+        });
+    },
+    'streamifies constructor prototype methods': function (test) {
+        function ExampleClass (a) { this.a = a; }
+        ExampleClass.prototype.fn = function (b, cb) {  cb(null, this.a + b); };
+        var ExampleClass = _.streamifyAll(ExampleClass);
+        var obj = new ExampleClass(1);
+        test.equal(typeof obj.fnStream, 'function');
+        obj.fnStream(2).apply(function (res) {
+            test.equal(res, 3);
+            test.done();
+        });
+    },
+    'streamifies constructor methods': function (test) {
+        function ExampleClass (a) { this.a = a; }
+        ExampleClass.a = 5;
+        ExampleClass.fn = function (b, cb) { cb(null, this.a + b); };
+        var ExampleClass = _.streamifyAll(ExampleClass);
+        test.equal(typeof ExampleClass.fnStream, 'function');
+        ExampleClass.fnStream(2).apply(function (res) {
+            test.equal(res, 7);
+            test.done();
+        });
+    },
+    'streamifies inherited methods': function (test) {
+        function Grandfather () {}
+        Grandfather.prototype.fn1 = function (b, cb) { cb(null, this.a*b); };
+        function Father () {}
+        Father.prototype = Object.create(Grandfather.prototype);
+        Father.prototype.fn2 = function (b, cb) { cb(null, this.a/b); };
+        function Child (a) { this.a = a; }
+        Child.prototype = Object.create(Father.prototype);
+        Child.prototype.fn3 = function (b, cb) { cb(null, this.a+b); };
+        var Child = _.streamifyAll(Child);
+        var child = new Child(3);
+
+        test.equal(typeof child.fn1Stream, 'function');
+        test.equal(typeof child.fn2Stream, 'function');
+        test.equal(typeof child.fn3Stream, 'function');
+        _([child.fn1Stream(1), child.fn2Stream(2), child.fn3Stream(3)])
+            .series()
+            .toArray(function (arr) {
+                test.deepEqual(arr, [3, 1.5, 6]);
+                test.done();
+            });
+    },
+    'does not re-streamify functions': function (test) {
+        var plainObject = { fn: function (a, b, cb) { cb(null, a + b); } };
+        var obj = _.streamifyAll(_.streamifyAll(plainObject));
+        test.equal(typeof obj.fnStreamStream, 'undefined');
+        test.done();
+    },
+    'does not streamify constructors': function (test) {
+        function ExampleClass () {}
+        ExampleClass.prototype.fn = function (cb) { cb(null, 'foo'); };
+        var obj = new (_.streamifyAll(ExampleClass))();
+        test.equal(typeof obj.constructorStream, 'undefined');
+        test.done();
+    },
+    'does not streamify Object methods': function (test) {
+        function ExampleClass () {}
+        ExampleClass.prototype.fn = function (cb) { cb(null, 'foo'); };
+        var obj1 = new (_.streamifyAll(ExampleClass))();
+        var obj2 = _.streamifyAll(new ExampleClass());
+        test.equal(typeof obj1.toStringStream, 'undefined');
+        test.equal(typeof obj1.keysStream, 'undefined');
+        test.equal(typeof obj2.toStringStream, 'undefined');
+        test.equal(typeof obj2.keysStream, 'undefined');
+        test.done();
+    },
+    "doesn't break when property has custom getter": function (test) {
+        function ExampleClass (a) { this.a = { b: a }; }
+        Object.defineProperty(ExampleClass.prototype, 'c',
+            { get: function () { return this.a.b; } });
+
+        test.doesNotThrow(function () {
+            _.streamifyAll(ExampleClass);
+        });
+        test.done();
+    }
 };
 
 exports['add'] = function (test) {

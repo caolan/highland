@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="css/highland.css">
     <link rel="stylesheet" href="css/highlight.github.css">
     <script src="js/vendor/modernizr.js"></script>
-    <script src="https://rawgithub.com/caolan/highland/master/dist/highland.js" type="text/javascript"></script>
+    <script src="https://cdn.rawgit.com/caolan/highland/{{tag}}/dist/highland.js" type="text/javascript"></script>
 
   </head>
   <body>
@@ -30,11 +30,11 @@
       <p>The high-level streams library for Node.js and the browser.</p>
       <pre class="npm-install">$ npm install highland</pre>
       <p class="show-for-small-only">
-        <a class="button small" href="https://raw.github.com/caolan/highland/master/dist/highland.js">Download</a>
+        <a class="button small" href="https://cdn.rawgit.com/caolan/highland/{{tag}}/dist/highland.js">Download</a>
         <a class="button small" href="https://github.com/caolan/highland"><i style="margin-right: 3px" class="fi-social-github"></i> Source code</a>
       </p>
       <p class="show-for-medium-up">
-        <a class="button" href="https://raw.github.com/caolan/highland/master/dist/highland.js">Download</a>
+        <a class="button" href="https://cdn.rawgit.com/caolan/highland/{{tag}}/dist/highland.js">Download</a>
         <a class="button" href="https://github.com/caolan/highland"><i style="margin-right: 3px" class="fi-social-github"></i> Source code</a>
       </p>
     </div>
@@ -165,7 +165,7 @@ counter.each(function (n) {
         });
     });
 };</code></pre>
-      <p>First, we return a new Stream which when read from will read a file (this is called lazy evaluation). When <code>fs.readFile</code> calls it's callback, we push the error and data values onto the Stream. Finally, we push <code>_.nil</code> onto the Stream. This is the "end of stream" marker and will tell any consumers of this stream to stop reading.</p>
+      <p>First, we return a new Stream which when read from will read a file (this is called lazy evaluation). When <code>fs.readFile</code> calls its callback, we push the error and data values onto the Stream. Finally, we push <code>_.nil</code> onto the Stream. This is the "end of stream" marker and will tell any consumers of this stream to stop reading.</p>
       <p>Since wrapping a callback is a fairly common thing to do, there is a convenience function:</p>
       <pre><code class="javascript">var getData = _.wrapCallback(fs.readFile);</code></pre>
       <p>Now we have a new asynchronous source, we can run the exact same code from the Array examples on it:</p>
@@ -185,7 +185,7 @@ var nums = _(['1', '2', '3']).map(function (x) {
 });
 
 // calls === 0</code></pre>
-      <p>To get the map iterator to be called, we must pull some data from the Stream. This is called a <strong><em>thunk</em></strong>, and some Highland methods will cause them (eg, <code>each</code>, <code>apply</code>, <code>toArray</code>, <code>pipe</code>, <code>resume</code>).</p>
+      <p>To get the map iterator to be called, we must pull some data from the Stream. This is called a <strong><em>thunk</em></strong>, and some Highland methods will cause them (eg, <code>each</code>, <code>done</code>, <code>apply</code>, <code>toArray</code>, <code>pipe</code>, <code>resume</code>).</p>
       <pre><code class="javascript">nums.each(function (n) { console.log(n); });
 
 // calls === 3</code></pre>
@@ -196,7 +196,7 @@ filenames.map(readFile).parallel(10)</code></pre>
       <h3 id="backpressure">Back-pressure</h3>
       <p>Since Highland is designed to play nicely with Node Streams, it also support back-pressure. This means that a fast source will not overwhelm a slow consumer.</p>
       <pre><code class="javascript">fastSource.map(slowThing)</code></pre>
-      <p>In the above example, <code>fastSource</code> will be paused while <code>slowThing</code> does it's processing.</p>
+      <p>In the above example, <code>fastSource</code> will be paused while <code>slowThing</code> does its processing.</p>
       <p>Some streams (such as those based on events) cannot be paused. In these cases data is buffered until the consumer is ready to handle it. If you expect a non-pausable source to be consumed by a slow consumer, then you should use methods such as <a href="#throttle">throttle</a> or <a href="#latest">latest</a> to selectively drop data and regulate the flow.</p>
       <p>Occasionally, you'll need to split Streams in your program. At this point, Highland will force you to choose between sharing back-pressure with the new consumer, or letting the existing consumer regulate backpressure and have the new consumer simply observe values as they arrive. Attempting to add two consumers to a Stream without calling <a href="#fork">fork</a> or <a href="#observe">observe</a> will throw an error.</p>
       <pre><code class="javascript">// shared back-pressure
@@ -220,7 +220,7 @@ var getBlogposts = _.filter(function (doc) {
     return doc.type === 'blogpost';
 });
 
-// now we can use the new function by completing it's arguments
+// now we can use the new function by completing its arguments
 getBlogposts(data); // => new Stream of blogposts</code></pre>
       <p>You can curry your own functions too:</p>
       <pre><code class="javascript">var myCurryableFn = _.curry(fn);</code></pre>
@@ -253,7 +253,7 @@ results.each(function (result) {
           <div id={{id}} class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/master/lib/index.js#L{{line}}"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/{{tag}}/lib/index.js#L{{line}}"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#{{id}}"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>{{name}}</pre>
