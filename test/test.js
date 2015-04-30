@@ -2176,6 +2176,70 @@ exports['reduce - GeneratorStream'] = function (test) {
     });
 };
 
+exports['flatReduce'] = function (test) {
+    test.expect(3);
+    function add(a, b) {
+        return _([a + b]);
+    }
+    _.flatReduce(10, add, [1,2,3,4]).toArray(function (xs) {
+        test.same(xs, [20]);
+    });
+    // partial application
+    _.flatReduce(10, add)([1,2,3,4]).toArray(function (xs) {
+        test.same(xs, [20]);
+    });
+    _.flatReduce(10)(add)([1,2,3,4]).toArray(function (xs) {
+        test.same(xs, [20]);
+    });
+    test.done();
+};
+
+exports['flatReduce - noValueOnError'] = noValueOnErrorTest(_.flatReduce(0, function (a, b) {
+    return _([a + b]);
+}), [0]);
+
+exports['flatReduce - argument function throws'] = function (test) {
+    test.expect(2);
+    var err = new Error('error');
+    var s = _([1,2,3,4,5]).flatReduce(0, function (memo, x) {
+        if (x === 3) throw err;
+        return _([memo + x]);
+    });
+
+    s.pull(errorEquals(test, 'error'));
+    s.pull(valueEquals(test, _.nil));
+    test.done();
+};
+
+exports['flatReduce - ArrayStream'] = function (test) {
+    function add(a, b) {
+        return _([a + b]);
+    }
+    _([1,2,3,4]).flatReduce(10, add).toArray(function (xs) {
+        test.same(xs, [20]);
+        test.done();
+    });
+};
+
+exports['flatReduce - GeneratorStream'] = function (test) {
+    function add(a, b) {
+        return _([a + b]);
+    }
+    var s = _(function (push, next) {
+        setTimeout(function () {
+            push(null, 1);
+            push(null, 2);
+            push(null, 3);
+            push(null, 4);
+            push(null, _.nil);
+        }, 10);
+    });
+    s.flatReduce(10, add).toArray(function (xs) {
+        test.same(xs, [20]);
+        test.done();
+    });
+};
+
 exports['reduce1'] = function (test) {
     test.expect(3);
     function add(a, b) {
