@@ -65,6 +65,7 @@ module.exports = function (grunt) {
                 if (contains(items, c)) {
                     throw new Error('Duplicate id:' + c.id);
                 }
+                c.tag = grunt.config.get('pkg.version')
                 items.push(c);
             });
 
