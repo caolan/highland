@@ -4423,6 +4423,7 @@ exports['slidingBuffer'] = function (test) {
 
     var array = [1,2,3,4,5,6,7,8,9,0] 
     var shortarray = [1,2,3]
+
     _.slidingBuffer(3,1,array).toArray(function (xs) {
         test.same(xs, [[1,2,3], [2,3,4], [3,4,5],
                        [4,5,6], [5,6,7], [6,7,8],
@@ -4492,6 +4493,8 @@ exports['slidingBuffer - ArrayStream'] = function (test) {
     test.expect(13);
 
     var array = [1,2,3,4,5,6,7,8,9,0] 
+    var shortarray = [1,2,3]
+
     _(array).slidingBuffer(3).toArray(function (xs) {
         test.same(xs, [[1,2,3], [2,3,4], [3,4,5],
                        [4,5,6], [5,6,7], [6,7,8],
@@ -4506,29 +4509,30 @@ exports['slidingBuffer - ArrayStream'] = function (test) {
         test.same(xs, [[1,2,3], [4,5,6], [7,8,9], [0]]);
     });
 
-    _([1,2,3]).slidingBuffer(4).toArray(function (xs) {
+    _(shortarray).slidingBuffer(4).toArray(function (xs) {
         test.same(xs, [[1,2,3]]);
     });
 
-    _([1,2,3]).slidingBuffer(3).toArray(function (xs) {
+    _(shortarray).slidingBuffer(3).toArray(function (xs) {
         test.same(xs, [[1,2,3]]);
     });
 
-    _([1,2,3]).slidingBuffer(2).toArray(function (xs) {
+    _(shortarray).slidingBuffer(2).toArray(function (xs) {
         test.same(xs, [[1,2],[2,3]]);
     });
 
-    _([1,2,3]).slidingBuffer(1).toArray(function (xs) {
+    _(shortarray).slidingBuffer(1).toArray(function (xs) {
         test.same(xs, [[1],[2],[3]]);
     });
 
-    _([1,2,3]).slidingBuffer(0).toArray(function (xs) {
+    _(shortarray).slidingBuffer(0).toArray(function (xs) {
         test.same(xs, [[1,2,3]]);
     });
 
     _([]).slidingBuffer(1).toArray(function (xs) {
         test.same(xs, []);
     });
+
     _(array).slidingBuffer(4,4).toArray(function (xs) {
       _(array).batch(4).toArray(function(batch){
         test.same(xs, batch);
