@@ -4417,6 +4417,164 @@ exports['batchWithTimeOrCount'] = {
 
 exports['batchWithTimeOrCount - noValueOnError'] = noValueOnErrorTest(_.batchWithTimeOrCount(10, 2));
 
+
+exports['slidingBuffer'] = function (test) {
+    test.expect(13);
+
+    var array = [1,2,3,4,5,6,7,8,9,0] 
+    var shortarray = [1,2,3]
+    _.slidingBuffer(3,1,array).toArray(function (xs) {
+        test.same(xs, [[1,2,3], [2,3,4], [3,4,5],
+                       [4,5,6], [5,6,7], [6,7,8],
+                       [7,8,9], [8,9,0]]);
+    });
+
+    _.slidingBuffer(4,3,array).toArray(function (xs) {
+        test.same(xs, [[1,2,3,4], [4,5,6,7], [7,8,9,0]]);
+    });
+
+    _.slidingBuffer(3,4,array).toArray(function (xs) {
+        test.same(xs, [[1,2,3], [4,5,6], [7,8,9], [0]]);
+    });
+
+    _.slidingBuffer(4,1,shortarray).toArray(function (xs) {
+        test.same(xs, [[1,2,3]]);
+    });
+
+    _.slidingBuffer(3,1,shortarray).toArray(function (xs) {
+        test.same(xs, [[1,2,3]]);
+    });
+
+    _.slidingBuffer(2,1,shortarray).toArray(function (xs) {
+        test.same(xs, [[1,2],[2,3]]);
+    });
+
+    _.slidingBuffer(1,1,shortarray).toArray(function (xs) {
+        test.same(xs, [[1],[2],[3]]);
+    });
+
+    _.slidingBuffer(0,1,shortarray).toArray(function (xs) {
+        test.same(xs, [[1,2,3]]);
+    });
+
+    _.slidingBuffer(1,1,[]).toArray(function (xs) {
+        test.same(xs, []);
+    });
+
+    _.slidingBuffer(4,4,array).toArray(function (xs) {
+      _(array).batch(4).toArray(function(batch){
+        test.same(xs, batch);
+      })
+    });
+
+    _.slidingBuffer(3,3,array).toArray(function (xs) {
+      _(array).batch(3).toArray(function(batch){
+        test.same(xs, batch);
+      })
+    });
+
+    _.slidingBuffer(2,2,array).toArray(function (xs) {
+      _(array).batch(2).toArray(function(batch){
+        test.same(xs, batch);
+      })
+    });
+
+    _.slidingBuffer(1,1,array).toArray(function (xs) {
+      _(array).batch(1).toArray(function(batch){
+        test.same(xs, batch);
+      })
+    });
+
+    test.done();
+};
+
+exports['slidingBuffer - ArrayStream'] = function (test) {
+    test.expect(13);
+
+    var array = [1,2,3,4,5,6,7,8,9,0] 
+    _(array).slidingBuffer(3).toArray(function (xs) {
+        test.same(xs, [[1,2,3], [2,3,4], [3,4,5],
+                       [4,5,6], [5,6,7], [6,7,8],
+                       [7,8,9], [8,9,0]]);
+    });
+
+    _(array).slidingBuffer(4,3).toArray(function (xs) {
+        test.same(xs, [[1,2,3,4], [4,5,6,7], [7,8,9,0]]);
+    });
+
+    _(array).slidingBuffer(3,4).toArray(function (xs) {
+        test.same(xs, [[1,2,3], [4,5,6], [7,8,9], [0]]);
+    });
+
+    _([1,2,3]).slidingBuffer(4).toArray(function (xs) {
+        test.same(xs, [[1,2,3]]);
+    });
+
+    _([1,2,3]).slidingBuffer(3).toArray(function (xs) {
+        test.same(xs, [[1,2,3]]);
+    });
+
+    _([1,2,3]).slidingBuffer(2).toArray(function (xs) {
+        test.same(xs, [[1,2],[2,3]]);
+    });
+
+    _([1,2,3]).slidingBuffer(1).toArray(function (xs) {
+        test.same(xs, [[1],[2],[3]]);
+    });
+
+    _([1,2,3]).slidingBuffer(0).toArray(function (xs) {
+        test.same(xs, [[1,2,3]]);
+    });
+
+    _([]).slidingBuffer(1).toArray(function (xs) {
+        test.same(xs, []);
+    });
+    _(array).slidingBuffer(4,4).toArray(function (xs) {
+      _(array).batch(4).toArray(function(batch){
+        test.same(xs, batch);
+      })
+    });
+
+    _(array).slidingBuffer(3,3).toArray(function (xs) {
+      _(array).batch(3).toArray(function(batch){
+        test.same(xs, batch);
+      })
+    });
+
+    _(array).slidingBuffer(2,2).toArray(function (xs) {
+      _(array).batch(2).toArray(function(batch){
+        test.same(xs, batch);
+      })
+    });
+
+    _(array).slidingBuffer(1,1).toArray(function (xs) {
+      _(array).batch(1).toArray(function(batch){
+        test.same(xs, batch);
+      })
+    });
+
+    test.done();
+};
+
+exports['slidingBuffer - GeneratorStream'] = function (test) {
+    var s1 = _(function (push, next) {
+        push(null, 1);
+        setTimeout(function () {
+            push(null, 2);
+            setTimeout(function () {
+                push(null, 3);
+                push(null, _.nil);
+            }, 10);
+        }, 10);
+    });
+    s1.slidingBuffer(1).toArray(function (xs) {
+        test.same(xs, [[1], [2], [3]]);
+        test.done();
+    });
+}
+
+exports['slidingBuffer - noValueOnError'] = noValueOnErrorTest(_.slidingBuffer(2,1));
+
 exports['splitBy'] = function(test) {
     test.expect(3);
     _.splitBy('ss', ['mis', 'si', 's', 'sippi']).toArray(function(xs) {
