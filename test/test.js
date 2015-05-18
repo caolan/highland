@@ -4770,6 +4770,81 @@ exports['parallel consume from async generator'] = function (test) {
     });
 };
 
+exports['parallel - behaviour of parallel with fork() - issue #234'] = function (test) {
+    test.expect(1);
+
+    function addTen(a) {
+        return a + 10;
+    }
+
+    function addTwenty(a) {
+        return a + 20;
+    }
+
+    var arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    var expected = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+        10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+        20, 21, 22, 23, 24, 25, 26, 27, 28, 29 ];
+
+    var baseRange = _(arr);
+    var loRange = baseRange.fork();
+    var midRange = baseRange.fork().map(addTen);
+    var hiRange = baseRange.fork().map(addTwenty);
+
+    _([loRange, midRange, hiRange])
+        .parallel(3)
+        .toArray(function (xs) {
+            test.same(xs, expected);
+            test.done();
+        });
+};
+
+exports['parallel consumption liveness - issue #302'] = function  (test) {
+    test.expect(3);
+    var clock = sinon.useFakeTimers(),
+        s3flag = false,
+        expected = [1, 2, 10, 20, 30, 40, 100];
+
+    function delay(push, ms, x) {
+        setTimeout(function () {
+            push(null, x);
+        }, ms);
+    }
+
+    var s1 = _(function (push) {
+        delay(push, 10, 1);
+        delay(push, 15, 2);
+        delay(push, 20, _.nil);
+    });
+
+    var s2 = _(function (push) {
+        delay(push, 10, 10);
+        delay(push, 20, 20);
+        delay(push, 30, 30);
+        delay(push, 40, 40);
+        delay(push, 50, _.nil);
+    });
+
+    var s3 = _(function (push, next) {
+        s3flag = true;
+        push(null, 100);
+        push(null, _.nil);
+    });
+
+    _([s1, s2, s3]).parallel(2)
+        .toArray(function (xs) {
+            test.same(xs, expected);
+            test.done();
+            clock.restore();
+        });
+
+    clock.tick(15);
+    test.equal(s3flag, false);
+    clock.tick(25);
+    test.equal(s3flag, true);
+    clock.tick(25);
+};
+
 exports['throttle'] = {
     setUp: function (callback) {
         this.clock = sinon.useFakeTimers();
