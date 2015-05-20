@@ -126,7 +126,7 @@ exports['ratelimit'] = {
             delay(push, 40, 4);
             delay(push, 50, 5);
             delay(push, 60, _.nil);
-        })
+        });
         var results = [];
         _.ratelimit(2, 100, source).each(function (x) {
             results.push(x);
@@ -321,81 +321,101 @@ exports['consume - push nil async (issue #173)'] = function (test) {
     });
 };
 
-exports['passing Stream to constructor returns original'] = function (test) {
-    var s = _([1,2,3]);
-    test.strictEqual(s, _(s));
-    test.done();
-};
-
-exports['constructor from promise'] = function (test) {
-    _(Promise.resolve(3)).toArray(function (xs) {
-        test.same(xs, [3]);
+exports['constructor'] = {
+    setUp: function (callback) {
+        this.clock = sinon.useFakeTimers();
+        this.createTestIterator = function(array, error, lastVal) {
+            var count = 0,
+                length = array.length;
+            return {
+                next: function() {
+                    if (count < length) {
+                        if (error && count === 2) {
+                            throw error;
+                        }
+                        var iterElem = {
+                            value: array[count], done: false
+                        };
+                        count++;
+                        return iterElem;
+                    }
+                    else {
+                        return {
+                            value: lastVal, done: true
+                        }
+                    }
+                }
+            };
+        };
+        this.tester = function (expected, test) {
+            return function (xs) {
+                test.same(xs, expected);
+            };
+        };
+        callback();
+    },
+    tearDown: function (callback) {
+        this.clock.restore();
+        callback();
+    },
+    'passing Stream to constructor returns original': function (test) {
+        var s = _([1,2,3]);
+        test.strictEqual(s, _(s));
         test.done();
-    });
-};
+    },
+    'constructor from Readable stream with next function - issue #303': function (test) {
+        var Readable = Stream.Readable;
 
-exports['constructor from promise - errors'] = function (test) {
-    var errs = [];
-    _(Promise.reject(new Error('boom')))
-        .errors(function (err) {
-            errs.push(err);
-        })
-        .toArray(function (xs) {
-            test.equal(errs[0].message, 'boom');
-            test.equal(errs.length, 1);
-            test.same(xs, []);
-            test.done();
-        });
-};
-
-function createTestIterator(array, error, lastVal) {
-    var count = 0,
-        length = array.length;
-    return {
-        next: function() {
-            if (count < length) {
-                if (error && count === 2) {
-                    throw error;
-                }
-                var iterElem = {
-                    value: array[count], done: false
-                };
-                count++;
-                return iterElem;
-            }
-            else {
-                return {
-                    value: lastVal, done: true
-                }
-            }
-        }
-    };
-}
-
-exports['constructor from iterator'] = function (test) {
-    test.expect(1);
-    _(createTestIterator([1, 2, 3, 4, 5])).toArray(function (xs) {
-        test.same(xs, [1, 2, 3, 4, 5]);
-    });
-    test.done();
-};
-
-exports['constructor from iterator - error'] = function (test) {
-    test.expect(2);
-    _(createTestIterator([1, 2, 3, 4, 5], new Error('Error at index 2'))).errors(function (err) {
-        test.equals(err.message, 'Error at index 2');
-    }).toArray(function (xs) {
-        test.same(xs, [1, 2]);
-    });
-    test.done();
-};
-
-exports['constructor from iterator - final return falsy'] = function (test) {
-    test.expect(1);
-    _(createTestIterator([1, 2, 3, 4, 5], void 0, 0)).toArray(function (xs) {
-        test.same(xs, [1, 2, 3, 4, 5, 0]);
-    });
-    test.done();
+        var rs = new Readable;
+        rs.next = function() {};
+        rs.push('a');
+        rs.push('b');
+        rs.push('c');
+        rs.push(null);
+        _(rs).invoke('toString', ['utf8'])
+            .toArray(this.tester(['a', 'b', 'c'], test));
+        test.done();
+    },
+    'constructor - throws error for unsupported object': function (test) {
+        test.throws(function () {
+            _({}).done(function () {});
+        }, Error, 'Object was not a stream, promise, iterator or iterable: object');
+        test.done();
+    },
+    'constructor from promise': function (test) {
+        _(Promise.resolve(3)).toArray(this.tester([3], test));
+        test.done();
+    },
+    'constructor from promise - errors': function (test) {
+        test.expect(3);
+        var errs = [];
+        _(Promise.reject(new Error('boom')))
+            .errors(function (err) {
+                errs.push(err);
+            })
+            .toArray(function (xs) {
+                test.equal(errs[0].message, 'boom');
+                test.equal(errs.length, 1);
+                test.same(xs, []);
+                test.done();
+            });
+    },
+    'constructor from iterator': function (test) {
+        _(this.createTestIterator([1, 2, 3, 4, 5]))
+            .toArray(this.tester([1, 2, 3, 4, 5], test));
+        test.done();
+    },
+    'constructor from iterator - error': function (test) {
+        _(this.createTestIterator([1, 2, 3, 4, 5], new Error('Error at index 2'))).errors(function (err) {
+            test.equals(err.message, 'Error at index 2');
+        }).toArray(this.tester([1, 2], test));
+        test.done();
+    },
+    'constructor from iterator - final return falsy': function (test) {
+        test.expect(1);
+        _(this.createTestIterator([1, 2, 3, 4, 5], void 0, 0)).toArray(this.tester([1, 2, 3, 4, 5, 0], test));
+        test.done();
+    }
 };
 
 //ES6 iterators Begin
