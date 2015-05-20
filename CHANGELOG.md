@@ -5,6 +5,11 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
+2.5.1
+-----
+### Bugfix
+* Move stream check in constructor to beginning of object branch. #303
+
 2.5.0
 -----
 ### New additions
