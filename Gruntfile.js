@@ -57,7 +57,7 @@ module.exports = function (grunt) {
                 pushTo: 'origin',
                 commit: true,
                 commitMessage: 'Release %VERSION%',
-                commitFiles: ['package.json', 'bower.json'],
+                commitFiles: ['package.json', 'bower.json', 'dist/highland.js', 'docs/index.html'],
                 createTag: true,
                 tagName: '%VERSION%',
                 tagMessage: 'Version %VERSION%'
@@ -88,20 +88,23 @@ module.exports = function (grunt) {
 
     grunt.registerTask('pre-release:patch', [
         'test',
-        'bump:patch',
-        'build'
+        'bump-only:patch',
+        'build',
+        'bump-commit'
     ]);
 
     grunt.registerTask('pre-release:minor', [
         'test',
-        'bump:minor',
-        'build'
+        'bump-only:minor',
+        'build',
+        'bump-commit'
     ]);
 
     grunt.registerTask('pre-release:major', [
         'test',
-        'bump:major',
-        'build'
+        'bump-only:major',
+        'build',
+        'bump-commit'
     ]);
 
     grunt.registerTask('release:patch', [
