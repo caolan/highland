@@ -12,10 +12,7 @@
     "type": "git",
     "url": "https://github.com/caolan/highland.git"
   },
-  "license": {
-    "type": "Apache 2.0",
-    "url": "https://github.com/caolan/highland/raw/master/LICENSE"
-  },
+  "license": "Apache-2.0",
   "devDependencies": {
     "browserify": "~3.30.1",
     "concat-stream": "~1.4.1",
