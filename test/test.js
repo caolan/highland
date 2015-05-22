@@ -3481,6 +3481,10 @@ exports['pickBy - non-existant property'] = function (test) {
     test.done();
 };
 
+var isES5 = (function () {
+  'use strict';
+  return Function.prototype.bind && !this;
+}());
 
 exports['pickBy - non-enumerable properties'] = function (test) {
     test.expect(5);
@@ -3505,13 +3509,20 @@ exports['pickBy - non-enumerable properties'] = function (test) {
         return false
     }).toArray(function (xs) {
         test.equal(xs[0].a, 5);
-        test.equal(xs[0].b, 15);
+        if (isES5) {
+            test.equal(xs[0].b, 15);
+        } else {
+            test.ok(typeof(xs[0].b) === 'undefined');
+        }
         test.ok(xs[0].hasOwnProperty('d'));
         test.ok(typeof(xs[0].d) === 'undefined');
         // neither c nor e was selected, b is not selected by keys
-        test.ok(Object.keys(xs[0]).length === 3);  
+        if (isES5) {
+            test.ok(Object.keys(xs[0]).length === 3);
+        } else {
+            test.ok(Object.keys(xs[0]).length === 2);
+        }
     });
-
 
     test.done();
 };
