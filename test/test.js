@@ -3528,12 +3528,13 @@ exports['pickBy - non-enumerable properties'] = function (test) {
 };
 
 exports['pickBy - overridden properties'] = function (test) {
-    test.expect(6);
+    test.expect(7);
     var aObj = {
         a: 5, 
         c: 5,
         d: 10,
-        e: 10
+        e: 10,
+        valueOf: 10
     }
     var bObj = Object.create(aObj);
     bObj.b = 10;
@@ -3556,7 +3557,8 @@ exports['pickBy - overridden properties'] = function (test) {
         test.equal(xs[0].c, 10);
         test.ok(typeof(xs[0].d) === 'undefined');
         test.equal(xs[0].e, 10);
-        test.ok(Object.keys(xs[0]).length === 3);
+        test.equal(xs[0].valueOf, 10);
+        test.ok(Object.keys(xs[0]).length === 4);
     });
 
     test.done();
