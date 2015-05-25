@@ -3389,13 +3389,42 @@ exports['pick - non-existant property'] = function (test) {
     test.done();
 };
 
+exports['pick - non-enumerable properties'] = function (test) {
+    test.expect(5);
+    var aObj = {breed: 'labrador', 
+        name: 'Rocky',
+        owner: 'Adrian',
+        color: 'chocolate'
+    }
+    Object.defineProperty(aObj, 'age', {enumerable:false, value:12});
+    delete aObj.owner;
+    aObj.name = undefined;
+
+    var a = _([
+        aObj // <- owner delete, name undefined, age non-enumerable
+    ]);
+
+
+    a.pick(['breed', 'age', 'name', 'owner']).toArray(function (xs) {
+        test.equal(xs[0].breed, 'labrador');
+        test.equal(xs[0].age, 12);
+        test.ok(xs[0].hasOwnProperty('name'));
+        test.ok(typeof(xs[0].name) === 'undefined');
+        // neither owner nor color was selected
+        test.ok(Object.keys(xs[0]).length === 3);  
+    });
+
+
+    test.done();
+};
+
 exports['pickBy'] = function (test) {
     test.expect(4);
 
     var objs = [{a: 1, _a: 2}, {a: 1, _c: 3}];
 
-    _(objs).pickBy(function (key) {
-        return key.indexOf('_') === 0;
+    _(objs).pickBy(function (key, value) {
+        return key.indexOf('_') === 0 && typeof value !== 'function';
     }).toArray(function (xs) {
         test.deepEqual(xs, [{_a: 2}, {_c: 3}]);
     });
@@ -3428,8 +3457,8 @@ exports['pickBy'] = function (test) {
 
     var objs4 = [Object.create({a: 1, _a: 2}), {a: 1, _c: 3}];
 
-    _(objs4).pickBy(function (key) {
-        return key.indexOf('_') === 0;
+    _(objs4).pickBy(function (key, value) {
+        return key.indexOf('_') === 0 && typeof value !== 'function';
     }).toArray(function (xs) {
         test.deepEqual(xs, [{_a: 2}, {_c: 3}]);
     });
@@ -3444,8 +3473,8 @@ exports['pickBy - non-existant property'] = function (test) {
 
     var objs = [{a: 1, b: 2}, {a: 1, d: 3}];
 
-    _(objs).pickBy(function (key) {
-        return key.indexOf('_') === 0;
+    _(objs).pickBy(function (key, value) {
+        return key.indexOf('_') === 0 && typeof value !== 'function';
     }).toArray(function (xs) {
         test.deepEqual(xs, [{}, {}]);
     });
@@ -3463,14 +3492,98 @@ exports['pickBy - non-existant property'] = function (test) {
 
     var objs3 = [{}, {}];
 
-    _(objs3).pickBy(function (key) {
-        return key.indexOf('_') === 0;
+    _(objs3).pickBy(function (key, value) {
+        return key.indexOf('_') === 0 && typeof value !== 'function';
     }).toArray(function (xs) {
         test.deepEqual(xs, [{}, {}]);
     });
 
     test.done();
 };
+
+var isES5 = (function () {
+  'use strict';
+  return Function.prototype.bind && !this;
+}());
+
+exports['pickBy - non-enumerable properties'] = function (test) {
+    test.expect(5);
+    var aObj = {a: 5, 
+        c: 5,
+        d: 10,
+        e: 10
+    }
+    Object.defineProperty(aObj, 'b', {enumerable:false, value:15});
+    delete aObj.c;
+    aObj.d = undefined;
+
+    var a = _([
+        aObj // <- c delete, d undefined, b non-enumerable but valid
+    ]);
+
+
+    a.pickBy(function (key, value) {
+        if (key === 'b' || value === 5 || typeof value === 'undefined') {
+            return true
+        }
+        return false
+    }).toArray(function (xs) {
+        test.equal(xs[0].a, 5);
+        if (isES5) {
+            test.equal(xs[0].b, 15);
+        } else {
+            test.ok(typeof(xs[0].b) === 'undefined');
+        }
+        test.ok(xs[0].hasOwnProperty('d'));
+        test.ok(typeof(xs[0].d) === 'undefined');
+        // neither c nor e was selected, b is not selected by keys
+        if (isES5) {
+            test.ok(Object.keys(xs[0]).length === 3);
+        } else {
+            test.ok(Object.keys(xs[0]).length === 2);
+        }
+    });
+
+    test.done();
+};
+
+exports['pickBy - overridden properties'] = function (test) {
+    test.expect(7);
+    var aObj = {
+        a: 5, 
+        c: 5,
+        d: 10,
+        e: 10,
+        valueOf: 10
+    }
+    var bObj = Object.create(aObj);
+    bObj.b = 10;
+    bObj.c = 10;
+    bObj.d = 5;
+
+    var a = _([
+        bObj
+    ]);
+
+
+    a.pickBy(function (key, value) {
+        if (value > 7) {
+            return true
+        }
+        return false
+    }).toArray(function (xs) {
+        test.ok(typeof(xs[0].a) === 'undefined');
+        test.equal(xs[0].b, 10);
+        test.equal(xs[0].c, 10);
+        test.ok(typeof(xs[0].d) === 'undefined');
+        test.equal(xs[0].e, 10);
+        test.equal(xs[0].valueOf, 10);
+        test.ok(Object.keys(xs[0]).length === 4);
+    });
+
+    test.done();
+};
+
 
 exports['filter'] = function (test) {
     test.expect(2);
