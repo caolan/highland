@@ -3527,6 +3527,41 @@ exports['pickBy - non-enumerable properties'] = function (test) {
     test.done();
 };
 
+exports['pickBy - overridden properties'] = function (test) {
+    test.expect(6);
+    var aObj = {
+        a: 5, 
+        c: 5,
+        d: 10,
+        e: 10
+    }
+    var bObj = Object.create(aObj);
+    bObj.b = 10;
+    bObj.c = 10;
+    bObj.d = 5;
+
+    var a = _([
+        bObj
+    ]);
+
+
+    a.pickBy(function (key, value) {
+        if (value > 7) {
+            return true
+        }
+        return false
+    }).toArray(function (xs) {
+        test.ok(typeof(xs[0].a) === 'undefined');
+        test.equal(xs[0].b, 10);
+        test.equal(xs[0].c, 10);
+        test.ok(typeof(xs[0].d) === 'undefined');
+        test.equal(xs[0].e, 10);
+        test.ok(Object.keys(xs[0]).length === 3);
+    });
+
+    test.done();
+};
+
 
 exports['filter'] = function (test) {
     test.expect(2);
