@@ -4978,6 +4978,15 @@ exports['parallel consumption liveness - issue #302'] = function  (test) {
     clock.tick(25);
 };
 
+
+exports['parallel - throw descriptive error on not-stream'] = function (test) {
+    test.expect(2);
+    var s = _([1]).parallel(2);
+    s.pull(errorEquals(test, 'Expected Stream, got number'));
+    s.pull(valueEquals(test, _.nil));
+    test.done();
+}
+
 exports['throttle'] = {
     setUp: function (callback) {
         this.clock = sinon.useFakeTimers();
