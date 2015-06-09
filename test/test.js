@@ -3087,6 +3087,15 @@ exports['nfcall - parallel result ordering'] = function (test) {
     });
 }
 
+exports['project'] = function (test) {
+    _([
+        {foo: 1, bar: 2, baz: 3}
+    ]).project({a: 'foo', b: 'bar'}).toArray(function (xs) {
+      test.same(xs, [{a: 1, b: 2}]);
+      test.done();
+    });
+}
+
 exports['map'] = function (test) {
     test.expect(2);
     function doubled(x) {
