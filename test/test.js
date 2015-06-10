@@ -4419,142 +4419,94 @@ exports['batchWithTimeOrCount - noValueOnError'] = noValueOnErrorTest(_.batchWit
 
 
 exports['slidingBuffer'] = function (test) {
-    test.expect(13);
+    test.expect(8);
 
     var array = [1,2,3,4,5,6,7,8,9,0] 
-    var shortarray = [1,2,3]
+
+    _.slidingBuffer(1,2,array).toArray(function (xs) {
+        test.same(xs, [[1], [3], [5], [7], [9]]);
+    });
 
     _.slidingBuffer(3,1,array).toArray(function (xs) {
         test.same(xs, [[1,2,3], [2,3,4], [3,4,5],
                        [4,5,6], [5,6,7], [6,7,8],
-                       [7,8,9], [8,9,0]]);
+                       [7,8,9], [8,9,0], [9,0], [0]]);
     });
 
-    _.slidingBuffer(4,3,array).toArray(function (xs) {
-        test.same(xs, [[1,2,3,4], [4,5,6,7], [7,8,9,0]]);
-    });
-
-    _.slidingBuffer(3,4,array).toArray(function (xs) {
-        test.same(xs, [[1,2,3], [4,5,6], [7,8,9], [0]]);
-    });
-
-    _.slidingBuffer(4,1,shortarray).toArray(function (xs) {
-        test.same(xs, [[1,2,3]]);
-    });
-
-    _.slidingBuffer(3,1,shortarray).toArray(function (xs) {
-        test.same(xs, [[1,2,3]]);
-    });
-
-    _.slidingBuffer(2,1,shortarray).toArray(function (xs) {
-        test.same(xs, [[1,2],[2,3]]);
-    });
-
-    _.slidingBuffer(1,1,shortarray).toArray(function (xs) {
-        test.same(xs, [[1],[2],[3]]);
-    });
-
-    _.slidingBuffer(0,1,shortarray).toArray(function (xs) {
-        test.same(xs, [[1,2,3]]);
-    });
-
-    _.slidingBuffer(1,1,[]).toArray(function (xs) {
-        test.same(xs, []);
-    });
-
-    _.slidingBuffer(4,4,array).toArray(function (xs) {
-      _(array).batch(4).toArray(function(batch){
-        test.same(xs, batch);
-      })
+    _.slidingBuffer(3,2,array).toArray(function (xs) {
+        test.same(xs, [[1,2,3], [3,4,5], [5,6,7],
+                       [7,8,9], [9,0]]);
     });
 
     _.slidingBuffer(3,3,array).toArray(function (xs) {
-      _(array).batch(3).toArray(function(batch){
-        test.same(xs, batch);
-      })
+        _(array).batch(3).toArray(function(batch){
+          test.same(xs, batch);
+        })
     });
 
-    _.slidingBuffer(2,2,array).toArray(function (xs) {
-      _(array).batch(2).toArray(function(batch){
-        test.same(xs, batch);
-      })
+    _.slidingBuffer(3,4,array).toArray(function (xs) {
+        test.same(xs, [[1,2,3], [5,6,7], [9,0]]);
     });
 
-    _.slidingBuffer(1,1,array).toArray(function (xs) {
-      _(array).batch(1).toArray(function(batch){
-        test.same(xs, batch);
-      })
+    _.slidingBuffer(3,5,array).toArray(function (xs) {
+        test.same(xs, [[1,2,3], [6,7,8]]);
+    });
+
+    _.slidingBuffer(array.length,array.length,array).toArray(function (xs) {
+        _(array).batch(array.length).toArray(function(batch){
+          test.same(xs, batch);
+        })
+    });
+
+    _.slidingBuffer(3,2,[]).toArray(function (xs) {
+        test.same(xs, []);
     });
 
     test.done();
 };
 
 exports['slidingBuffer - ArrayStream'] = function (test) {
-    test.expect(13);
+    test.expect(8);
 
     var array = [1,2,3,4,5,6,7,8,9,0] 
-    var shortarray = [1,2,3]
 
-    _(array).slidingBuffer(3).toArray(function (xs) {
+    _(array).slidingBuffer(1,2).toArray(function (xs) {
+        test.same(xs, [[1], [3], [5], [7], [9]]);
+    });
+
+    _(array).slidingBuffer(3,1).toArray(function (xs) {
         test.same(xs, [[1,2,3], [2,3,4], [3,4,5],
                        [4,5,6], [5,6,7], [6,7,8],
-                       [7,8,9], [8,9,0]]);
+                       [7,8,9], [8,9,0], [9,0], [0]]);
     });
 
-    _(array).slidingBuffer(4,3).toArray(function (xs) {
-        test.same(xs, [[1,2,3,4], [4,5,6,7], [7,8,9,0]]);
-    });
-
-    _(array).slidingBuffer(3,4).toArray(function (xs) {
-        test.same(xs, [[1,2,3], [4,5,6], [7,8,9], [0]]);
-    });
-
-    _(shortarray).slidingBuffer(4).toArray(function (xs) {
-        test.same(xs, [[1,2,3]]);
-    });
-
-    _(shortarray).slidingBuffer(3).toArray(function (xs) {
-        test.same(xs, [[1,2,3]]);
-    });
-
-    _(shortarray).slidingBuffer(2).toArray(function (xs) {
-        test.same(xs, [[1,2],[2,3]]);
-    });
-
-    _(shortarray).slidingBuffer(1).toArray(function (xs) {
-        test.same(xs, [[1],[2],[3]]);
-    });
-
-    _(shortarray).slidingBuffer(0).toArray(function (xs) {
-        test.same(xs, [[1,2,3]]);
-    });
-
-    _([]).slidingBuffer(1).toArray(function (xs) {
-        test.same(xs, []);
-    });
-
-    _(array).slidingBuffer(4,4).toArray(function (xs) {
-      _(array).batch(4).toArray(function(batch){
-        test.same(xs, batch);
-      })
+    _(array).slidingBuffer(3,2).toArray(function (xs) {
+        test.same(xs, [[1,2,3], [3,4,5], [5,6,7],
+                       [7,8,9], [9,0]]);
     });
 
     _(array).slidingBuffer(3,3).toArray(function (xs) {
-      _(array).batch(3).toArray(function(batch){
-        test.same(xs, batch);
-      })
+        _(array).batch(3).toArray(function(batch){
+          test.same(xs, batch);
+        })
     });
 
-    _(array).slidingBuffer(2,2).toArray(function (xs) {
-      _(array).batch(2).toArray(function(batch){
-        test.same(xs, batch);
-      })
+    _(array).slidingBuffer(3,4).toArray(function (xs) {
+        test.same(xs, [[1,2,3], [5,6,7], [9,0]]);
     });
 
-    _(array).slidingBuffer(1,1).toArray(function (xs) {
-      _(array).batch(1).toArray(function(batch){
-        test.same(xs, batch);
-      })
+    _(array).slidingBuffer(3,5).toArray(function (xs) {
+        test.same(xs, [[1,2,3], [6,7,8]]);
+    });
+
+    _(array).slidingBuffer(array.length,array.length).toArray(function (xs) {
+        _(array).batch(array.length).toArray(function(batch){
+          test.same(xs, batch);
+        })
+    });
+
+    _([]).slidingBuffer(1,1).toArray(function (xs) {
+        test.same(xs, []);
     });
 
     test.done();
@@ -4571,7 +4523,7 @@ exports['slidingBuffer - GeneratorStream'] = function (test) {
             }, 10);
         }, 10);
     });
-    s1.slidingBuffer(1).toArray(function (xs) {
+    s1.slidingBuffer(1,1).toArray(function (xs) {
         test.same(xs, [[1], [2], [3]]);
         test.done();
     });
