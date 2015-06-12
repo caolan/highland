@@ -57,7 +57,7 @@ module.exports = function (grunt) {
                 pushTo: 'origin',
                 commit: true,
                 commitMessage: 'Release %VERSION%',
-                commitFiles: ['package.json', 'bower.json', 'dist/highland.js', 'docs/index.html'],
+                commitFiles: ['package.json', 'dist/highland.js', 'docs/index.html'],
                 createTag: true,
                 tagName: '%VERSION%',
                 tagMessage: 'Version %VERSION%'
