@@ -5972,3 +5972,46 @@ exports['not'] = function (test) {
     test.equal(_.not(undefined), true);
     return test.done();
 };
+
+exports['subclass'] = {
+    "creates a subclass of Stream": function (test) {
+        var Sub = _.subclass();
+        test.ok(new Sub instanceof Sub);
+        test.ok(new Sub instanceof _);
+        test.done();
+    },
+
+    "can be called without new, like Stream": function (test) {
+        var Sub = _.subclass();
+        test.ok(Sub() instanceof Sub);
+        test.ok(Sub() instanceof _);
+        test.done();
+    },
+
+    "streams": function (test) {
+        var Sub = _.subclass();
+        Sub([1, 2, 3]).toArray(function(xs) {
+            test.same(xs, [1, 2, 3]);
+            test.done();
+        });
+    },
+
+    "returns streams of the same type": function(test) {
+        var Sub = _.subclass();
+        var s = Sub([1, 2, 3]).map(function(i) { return i });
+        test.ok(s instanceof Sub);
+        test.done();
+    },
+
+    "attatches methods": function(test) {
+        var Sub = _.subclass({
+            foo: function() {
+                return this;
+            }
+        });
+
+        var s = Sub();
+        test.equal(s.foo(), s);
+        test.done();
+    }
+};
