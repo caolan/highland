@@ -5839,5 +5839,17 @@ exports['use'] = {
         var s = Sub();
         test.equal(s.foo(), s);
         test.done();
+    },
+
+    "doesn't modify original environment": function(test) {
+        var Sub = _.use({
+            foo: function() {}
+        });
+        
+        var s = _();
+        var t = Sub();
+        test.equal(typeof t.foo, 'function');
+        test.equal(typeof s.foo, 'undefined');
+        test.done();
     }
 };
