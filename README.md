@@ -5,6 +5,7 @@ View the [Highland website](http://highlandjs.org) for more in-depth
 documentation.
 
 [![build status](https://secure.travis-ci.org/caolan/highland.png)](http://travis-ci.org/caolan/highland)
+[![Join the chat at https://gitter.im/caolan/highland](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/caolan/highland?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Introduction
 

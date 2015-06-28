@@ -51,10 +51,19 @@ var Decoder = _dereq_('string_decoder').StringDecoder;
  * **Promise -** Accepts an ES6 / jQuery style promise and returns a
  * Highland Stream which will emit a single value (or an error).
  *
+ * **Iterator -** Accepts an ES6 style iterator that implements the [iterator protocol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#The_.22iterator.22_protocol):
+ * yields all the values from the iterator using its `next()` method and terminates when the
+ * iterator's done value returns true. If the iterator's `next()` method throws, the exception will be emitted as an error,
+ * and the stream will be ended with no further calls to `next()`.
+ *
+ * **Iterable -** Accepts an object that implements the [iterable protocol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#The_.22iterable.22_protocol),
+ * i.e., contains a method that returns an object that conforms to the iterator protocol. The stream will use the
+ * iterator defined in the `Symbol.iterator` property of the iterable object to generate emitted values.
+ *
  * @id _(source)
  * @section Stream Objects
  * @name _(source)
- * @param {Array | Function | Readable Stream | Promise} source - (optional) source to take values from from
+ * @param {Array | Function | Readable Stream | Promise | Iterator | Iterable} source - (optional) source to take values from from
  * @api public
  *
  * // from an Array
@@ -81,6 +90,16 @@ var Decoder = _dereq_('string_decoder').StringDecoder;
  *
  * // from a Promise object
  * var foo = _($.getJSON('/api/foo'));
+ *
+ * //from an iterator
+ * var map = new Map([['a', 1], ['b', 2]]);
+ * var bar = _(map.values()).toArray(_.log);
+ * //=> [1, 2]
+ *
+ * //from an iterable
+ * var set = new Set([1, 2, 2, 3, 4]);
+ * var bar = _(set).toArray(_.log);
+ * //=> [ 1, 2, 3, 4]
  */
 
 /*eslint-disable no-multi-spaces */
@@ -93,6 +112,11 @@ var _ = exports;
 
 // Create quick slice reference variable for speed
 var slice = Array.prototype.slice;
+var hasOwn = Object.prototype.hasOwnProperty;
+
+_.isUndefined = function (x) {
+    return typeof x === 'undefined';
+};
 
 _.isFunction = function (x) {
     return typeof x === 'function';
@@ -341,6 +365,51 @@ _.seq = function () {
     };
 };
 
+function promiseGenerator(promise) {
+    return _(function (push) {
+        promise.then(function (value) {
+                push(null, value);
+                return push(null, nil);
+            },
+            function (err) {
+                push(err);
+                return push(null, nil);
+            });
+    });
+}
+
+function iteratorGenerator(it) {
+    return _(function (push, next) {
+        var iterElem, iterErr;
+        try {
+            iterElem = it.next();
+        }
+        catch (err) {
+            iterErr = err;
+        }
+
+        if (iterErr) {
+            push(iterErr);
+            push(null, _.nil);
+        }
+        else if (iterElem.done) {
+            if (!_.isUndefined(iterElem.value)) {
+                // generators can return a final
+                // value on completion using return
+                // keyword otherwise value will be
+                // undefined
+                push(null, iterElem.value);
+            }
+            push(null, _.nil);
+        }
+        else {
+            push(null, iterElem.value);
+            next();
+        }
+
+    });
+}
+
 /**
  * Actual Stream constructor wrapped the the main exported function
  */
@@ -369,7 +438,9 @@ function Stream(/*optional*/xs, /*optional*/ee, /*optional*/mappingHint) {
     this._observers = [];
     this._destructors = [];
     this._send_events = false;
+    this._nil_seen = false;
     this._delegate = null;
+    this._is_observer = false;
     this.source = null;
 
     // Old-style node Stream.pipe() checks for this
@@ -399,19 +470,31 @@ function Stream(/*optional*/xs, /*optional*/ee, /*optional*/mappingHint) {
         }
     });
 
-    if (xs === undefined) {
+    if (_.isUndefined(xs)) {
         // nothing else to do
         return this;
     }
     else if (_.isArray(xs)) {
         self._incoming = xs.concat([nil]);
     }
-    else if (typeof xs === 'function') {
+    else if (_.isFunction(xs)) {
         this._generator = xs;
         this._generator_push = function (err, x) {
+            if (self._nil_seen) {
+                throw new Error('Can not write to stream after nil');
+            }
+
+            if (x === nil) {
+                self._nil_seen = true;
+            }
+
             self.write(err ? new StreamError(err) : x);
         };
         this._generator_next = function (s) {
+            if (self._nil_seen) {
+                throw new Error('Can not call next after nil');
+            }
+
             if (s) {
                 // we MUST pause to get the redirect object into the _incoming
                 // buffer otherwise it would be passed directly to _send(),
@@ -434,29 +517,37 @@ function Stream(/*optional*/xs, /*optional*/ee, /*optional*/mappingHint) {
         };
     }
     else if (_.isObject(xs)) {
-        if (_.isFunction(xs.then)) {
-            // probably a promise
-            return _(function (push) {
-                xs.then(function (value) {
-                    push(null, value);
-                    return push(null, nil);
-                },
-                function (err) {
-                    push(err);
-                    return push(null, nil);
-                });
-            });
-        }
-        else {
+        // check to see if we have a readable stream
+        if (_.isFunction(xs.on) && _.isFunction(xs.pipe)) {
             // write any errors into the stream
             xs.on('error', function (err) {
                 self.write(new StreamError(err));
             });
-            // assume it's a pipeable stream as a source
             xs.pipe(self);
         }
+        else if (_.isFunction(xs.then)) {
+            //probably a promise
+            return promiseGenerator(xs);
+        }
+        // must check iterators and iterables in this order
+        // because generators are both iterators and iterables:
+        // their Symbol.iterator method returns the `this` object
+        // and an infinite loop would result otherwise
+        else if (_.isFunction(xs.next)) {
+            //probably an iterator
+            return iteratorGenerator(xs);
+        }
+        else if (!_.isUndefined(_global.Symbol) && xs[_global.Symbol.iterator]) {
+            //probably an iterable
+            return iteratorGenerator(xs[_global.Symbol.iterator]());
+        }
+        else {
+            throw new Error(
+                'Object was not a stream, promise, iterator or iterable: ' + (typeof xs)
+            );
+        }
     }
-    else if (typeof xs === 'string') {
+    else if (_.isString(xs)) {
         var mappingHintType = (typeof mappingHint);
         var mapper;
 
@@ -557,27 +648,28 @@ _._isStreamRedirect = function (x) {
 
 Stream.prototype._send = function (err, x) {
     //console.log(['_send', this.id, err, x]);
+    var token;
+
     if (x === nil) {
         this.ended = true;
     }
     if (this._consumers.length) {
+        token = err ? new StreamError(err) : x;
         for (var i = 0, len = this._consumers.length; i < len; i++) {
-            var c = this._consumers[i];
-            if (err) {
-                c.write(new StreamError(err));
-            }
-            else {
-                c.write(x);
-            }
+            this._consumers[i].write(token);
         }
     }
     if (this._observers.length) {
+        token = err ? new StreamError(err) : x;
         for (var j = 0, len2 = this._observers.length; j < len2; j++) {
-            this._observers[j].write(x);
+            this._observers[j].write(token);
         }
     }
     if (this._send_events) {
-        if (x === nil) {
+        if (err) {
+            this.emit('error', err);
+        }
+        else if (x === nil) {
             this.emit('end');
         }
         else {
@@ -601,7 +693,7 @@ Stream.prototype._send = function (err, x) {
 Stream.prototype.pause = function () {
     //console.log(['pause', this.id]);
     this.paused = true;
-    if (this.source) {
+    if (!this._is_observer && this.source) {
         this.source._checkBackPressure();
     }
 };
@@ -709,7 +801,7 @@ Stream.prototype.resume = function () {
         this._readFromBuffer();
 
         // we may have paused while reading from buffer
-        if (!this.paused) {
+        if (!this.paused && !this._is_observer) {
             // ask parent for more data
             if (this.source) {
                 //console.log(['ask parent for more data']);
@@ -734,6 +826,9 @@ Stream.prototype.resume = function () {
  * You shouldn't need to call this directly, rather it will be called by
  * any [Node Readable Streams](http://nodejs.org/api/stream.html#stream_class_stream_readable)
  * you pipe in.
+ *
+ * Only call this function on streams that were constructed with no source
+ * (i.e., with `_()`).
  *
  * @id end
  * @section Stream Objects
@@ -826,8 +921,14 @@ Stream.prototype.destroy = function () {
     _(this._consumers).each(function (consumer) {
         self._removeConsumer(consumer);
     });
+    _(this._observers).each(function (observer) {
+        self._removeObserver(observer);
+    });
+
     if (this.source) {
-        this.source._removeConsumer(this);
+        var source = this.source;
+        source._removeConsumer(this);
+        source._removeObserver(this);
     }
     _(this._destructors).each(function (destructor) {
         destructor();
@@ -930,6 +1031,19 @@ Stream.prototype._removeConsumer = function (s) {
 };
 
 /**
+ * Removes an observer from this Stream.
+ */
+
+Stream.prototype._removeObserver = function (s) {
+    this._observers = this._observers.filter(function (o) {
+        return o !== s;
+    });
+    if (s.source === this) {
+        s.source = null;
+    }
+};
+
+/**
  * Consumes values from a Stream (once resumed) and returns a new Stream for
  * you to optionally push values onto using the provided push / next functions.
  *
@@ -974,8 +1088,12 @@ Stream.prototype.consume = function (f) {
     var _send = s._send;
     var push = function (err, x) {
         //console.log(['push', err, x, s.paused]);
+        if (s._nil_seen) {
+            throw new Error('Can not write to stream after nil');
+        }
         if (x === nil) {
             // ended, remove consumer from source
+            s._nil_seen = true;
             self._removeConsumer(s);
         }
         if (s.paused) {
@@ -994,6 +1112,9 @@ Stream.prototype.consume = function (f) {
     var next_called;
     var next = function (s2) {
         //console.log(['next', async]);
+        if (s._nil_seen) {
+            throw new Error('Can not call next after nil');
+        }
         if (s2) {
             // we MUST pause to get the redirect object into the _incoming
             // buffer otherwise it would be passed directly to _send(),
@@ -1019,7 +1140,8 @@ Stream.prototype.consume = function (f) {
         next_called = false;
         f(err, x, push, next);
         async = true;
-        if (!next_called) {
+        // Don't pause if x is nil -- as next will never be called after
+        if (!next_called && x !== nil) {
             s.pause();
         }
     };
@@ -1065,6 +1187,9 @@ Stream.prototype.pull = function (f) {
  * You shouldn't need to call this yourself, but it may be called by Node
  * functions which treat Highland Streams as a [Node Writable Stream](http://nodejs.org/api/stream.html#stream_class_stream_writable).
  *
+ * Only call this function on streams that were constructed with no source
+ * (i.e., with `_()`).
+
  * @id write
  * @section Stream Objects
  * @name Stream.write(x)
@@ -1079,6 +1204,10 @@ Stream.prototype.pull = function (f) {
  * xs.toArray(function (ys) {
  *     // ys will be [1, 2]
  * });
+ *
+ * // Do *not* do this.
+ * var xs2 = _().toArray(_.log);
+ * xs2.write(1); // This call is illegal.
  */
 
 Stream.prototype.write = function (x) {
@@ -1150,6 +1279,7 @@ Stream.prototype.observe = function () {
     var s = new Stream();
     s.id = 'observe:' + s.id;
     s.source = this;
+    s._is_observer = true;
     this._observers.push(s);
     return s;
 };
@@ -1247,20 +1377,26 @@ exposeMethod('stopOnError');
 
 Stream.prototype.each = function (f) {
     var self = this;
-    return this.consume(function (err, x, push, next) {
+    var s = this.consume(function (err, x, push, next) {
         if (err) {
             self.emit('error', err);
         }
-        else if (x !== nil) {
+        else if (x === nil) {
+            push(null, nil);
+        }
+        else {
             f(x);
             next();
         }
-    }).resume();
+    });
+    s.resume();
+    return s;
 };
 exposeMethod('each');
 
 /**
  * Applies all values from a Stream as arguments to a function. This function causes a **thunk**.
+ * `f` will always be called when the `nil` token is encountered, even when the stream is empty.
  *
  * @id apply
  * @section Consumption
@@ -1289,7 +1425,7 @@ exposeMethod('apply');
 
 /**
  * Collects all values from a Stream into an Array and calls a function with
- * once with the result. This function causes a **thunk**.
+ * the result. This function causes a **thunk**.
  *
  * If an error from the Stream reaches the `toArray` call, it will emit an
  * error event (which will cause it to throw if unhandled).
@@ -1315,6 +1451,46 @@ Stream.prototype.toArray = function (f) {
             f(x);
         }
     });
+};
+
+/**
+ * Calls a function once the Stream has ended. This function causes a **thunk**.
+ * If the Stream has already ended, the function is called immediately.
+ *
+ * If an error from the Stream reaches the `done` call, it will emit an
+ * error event (which will cause it to throw if unhandled).
+ *
+ * @id done
+ * @section Consumption
+ * @name Stream.done(f)
+ * @param {Function} f - the callback
+ * @api public
+ *
+ * var total = 0;
+ * _([1, 2, 3, 4]).each(function (x) {
+ *     total += x;
+ * }).done(function () {
+ *     // total will be 10
+ * });
+ */
+
+Stream.prototype.done = function (f) {
+    if (this.ended) {
+        f();
+        return null;
+    }
+    var self = this;
+    return this.consume(function (err, x, push, next) {
+        if (err) {
+            self.emit('error', err);
+        }
+        else if (x === nil) {
+            f();
+        }
+        else {
+            next();
+        }
+    }).resume();
 };
 
 /**
@@ -1395,6 +1571,21 @@ Stream.prototype.doto = function (f) {
     });
 };
 exposeMethod('doto');
+
+/**
+ * An alias for the [doto](#doto) method.
+ *
+ * @id tap
+ * @section Transforms
+ * @name Stream.tap(f)
+ * @param f - the function to apply
+ * @api public
+ *
+ * _([1, 2, 3]).tap(console.log)
+ */
+
+Stream.prototype.tap = Stream.prototype.doto;
+_.tap = _.doto;
 
 /**
  * Limits number of values through the stream to a maximum of number of values
@@ -1511,35 +1702,37 @@ exposeMethod('pluck');
 
 /**
  *
- * Retrieves copies of all elements in the collection,
- * with only the whitelisted keys.
+ * Retrieves copies of all the enumerable elements in the collection
+ * that satisfy a given predicate.
  *
- * @id pick
+ * @id pickBy
  * @section Transforms
- * @name Stream.pick(properties)
- * @param {Array} properties - property names to white filter
+ * @name Stream.pickBy(f)
+ * @param {Function} f - the predicate function
  * @api public
  *
- * var docs = [
- *    {breed: 'chihuahua', name: 'Princess', age: 5},
- *    {breed: 'labrador', name: 'Rocky', age: 3},
- *    {breed: 'german-shepherd', name: 'Waffles', age: 9}
- * ];
- *
- * _(docs).pick(['breed', 'age']).toArray(function (xs) {
- *     // xs is now:
- *     [
- *         {breed: 'chihuahua', age: 5},
- *         {breed: 'labrador',  age: 3},
- *         {breed: 'german-shepherd', age: 9}
- *     ]
- * });
+ *  var dogs = [
+ *      {breed: 'chihuahua', name: 'Princess', age: 5},
+ *      {breed: 'labrador', name: 'Rocky', age: 3},
+ *      {breed: 'german-shepherd', name: 'Waffles', age: 9}
+ *  ];
+
+ *  _(dogs).pickBy(function (key, value) {
+ *      return value > 4;
+ *  }).toArray(function (xs) {
+ *    // xs is now:
+ *    [
+ *      { age: 5 },
+ *      {},
+ *      { age: 9 }
+ *    ]
+ *  });
  */
 
-Stream.prototype.pick = function (properties) {
+Stream.prototype.pickBy = function (f) {
 
     return this.consume(function (err, x, push, next) {
-        var out = {}, key, i = 0;
+        var out = {};
         if (err) {
             push(err);
             next();
@@ -1548,8 +1741,10 @@ Stream.prototype.pick = function (properties) {
             push(err, x);
         }
         else if (_.isObject(x)) {
-            while ((key = properties[i++])) {
-              out[key] = x[key];
+            for (var k in x) {
+                if (f(k, x[k])) {
+                    out[k] = x[k];
+                }
             }
             push(null, out);
             next();
@@ -1560,6 +1755,54 @@ Stream.prototype.pick = function (properties) {
             ));
             next();
         }
+    });
+};
+exposeMethod('pickBy');
+
+/**
+ *
+ * Retrieves copies of all enumerable elements in the collection,
+ * with only the whitelisted keys. If one of the whitelisted
+ * keys does not exist, it will be ignored.
+ *
+ * @id pick
+ * @section Transforms
+ * @name Stream.pick(properties)
+ * @param {Array} properties - property names to white filter
+ * @api public
+ *
+ * var dogs = [
+ *      {breed: 'chihuahua', name: 'Princess', age: 5},
+ *      {breed: 'labrador', name: 'Rocky', age: 3},
+ *      {breed: 'german-shepherd', name: 'Waffles', age: 9}
+ * ];
+ *
+ * _(dogs).pick(['breed', 'age']).toArray(function (xs) {
+ *       // xs is now:
+ *       [
+ *           {breed: 'chihuahua', age: 5},
+ *           {breed: 'labrador', age: 3},
+ *           {breed: 'german-shepherd', age: 9}
+ *       ]
+ * });
+ *
+ * _(dogs).pick(['owner']).toArray(function (xs) {
+ *      // xs is now:
+ *      [
+ *          {},
+ *          {},
+ *          {}
+ *      ]
+ * });*/
+
+Stream.prototype.pick = function (properties) {
+    return this.pickBy(function (key) {
+        for (var i = 0, length = properties.length; i < length; i++) {
+            if (properties[i] === key) {
+                return true;
+            }
+        }
+        return false;
     });
 };
 exposeMethod('pick');
@@ -1760,7 +2003,7 @@ Stream.prototype.group = function (f) {
     var lambda = _.isString(f) ? _.get(f) : f;
     return this.reduce({}, function (m, o) {
         var key = lambda(o);
-        if (!m.hasOwnProperty(key)) { m[key] = []; }
+        if (!hasOwn.call(m, key)) { m[key] = []; }
         m[key].push(o);
         return m;
     });
@@ -1914,11 +2157,82 @@ Stream.prototype.uniq = function () {
 exposeMethod('uniq');
 
 /**
+ * Takes a `finite` stream of streams and returns a stream where the first
+ * element from each separate stream is combined into a single data event,
+ * followed by the second elements of each stream and so on until the shortest
+ * input stream is exhausted.
+ *
+ * @id zipAll0
+ * @section Higher-order Streams
+ * @name Stream.zipAll0()
+ * @api public
+ *
+ * _([
+ *     _([1, 2, 3]),
+ *     _([4, 5, 6]),
+ *     _([7, 8, 9]),
+ *     _([10, 11, 12])
+ * ]).zipAll0()
+ * // => [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]
+ *
+ * // shortest stream determines length of output stream
+ * _([
+ *     _([1, 2, 3, 4]),
+ *     _([5, 6, 7, 8]),
+ *     _([9, 10, 11, 12]),
+ *     _([13, 14])
+ * ]).zipAll0()
+ * // => [ [ 1, 5, 9, 13 ], [ 2, 6, 10, 14 ] ]
+ */
+
+Stream.prototype.zipAll0 = function () {
+    var returned = 0;
+    var z = [];
+    var finished = false;
+
+    function nextValue(index, max, src, push, next) {
+        src.pull(function (err, x) {
+            if (err) {
+                push(err);
+                nextValue(index, max, src, push, next);
+            }
+            else if (x === _.nil) {
+                if (!finished) {
+                    finished = true;
+                    push(null, nil);
+                }
+            }
+            else {
+                returned++;
+                z[index] = x;
+                if (returned === max) {
+                    push(null, z);
+                    next();
+                }
+            }
+        });
+    }
+
+    return this.collect().flatMap(function (array) {
+        if (!array.length) {
+            return _([]);
+        }
+
+        return _(function (push, next) {
+            returned = 0;
+            z = [];
+            for (var i = 0, length = array.length; i < length; i++) {
+                nextValue(i, length, array[i], push, next);
+            }
+        });
+    });
+
+};
+exposeMethod('zipAll0');
+
+/**
  * Takes a stream and a `finite` stream of `N` streams
- * and returns a stream where the first element from each
- * separate stream is combined into a single data event,
- * followed by the second elements of each stream and so on
- * until the shortest input stream is exhausted.
+ * and returns a stream of the corresponding `(N+1)`-tuples.
  *
  * @id zipAll
  * @section Higher-order Streams
@@ -1935,43 +2249,7 @@ exposeMethod('uniq');
  */
 
 Stream.prototype.zipAll = function (ys) {
-    var self = this;
-    ys = _(ys).map(_);
-
-    var returned = 0;
-    var z = [];
-
-    function nextValue(index, max, src, push, next) {
-        src.pull(function (err, x) {
-            if (err) {
-                push(err);
-                nextValue(index, max, src, push, next);
-            }
-            else if (x === _.nil) {
-                push(null, nil);
-            }
-            else {
-                returned++;
-                z[index] = x;
-                if (returned === max) {
-                    push(null, z);
-                    next();
-                }
-            }
-        });
-    }
-
-    return ys.collect().flatMap(function (array) {
-        array.unshift(self);
-        return _(function (push, next) {
-            returned = 0;
-            z = [];
-            for (var i = 0, length = array.length; i < length; i++) {
-                nextValue(i, length, array[i], push, next);
-            }
-        });
-    });
-
+    return _([this]).concat(_(ys).map(_)).zipAll0();
 };
 exposeMethod('zipAll');
 
@@ -1988,7 +2266,7 @@ exposeMethod('zipAll');
  */
 
 Stream.prototype.zip = function (ys) {
-    return this.zipAll([ys]);
+    return _([this, _(ys)]).zipAll0();
 };
 exposeMethod('zip');
 
@@ -2005,7 +2283,34 @@ exposeMethod('zip');
  */
 
 Stream.prototype.batch = function (n) {
-    var batched = [];
+    return this.batchWithTimeOrCount(-1, n);
+};
+exposeMethod('batch');
+
+/**
+ * Takes one Stream and batches incoming data within a maximum time frame
+ * into arrays of a maximum length.
+ *
+ * @id batchWithTimeOrCount
+ * @section Transforms
+ * @name Stream.batchWithTimeOrCount(ms, n)
+ * @param {Number} ms - the maximum milliseconds to buffer a batch
+ * @param {Number} n - the maximum length of the array to batch
+ * @api public
+ *
+ * _(function (push) {
+ *     push(1);
+ *     push(2);
+ *     push(3);
+ *     setTimeout(push, 20, 4);
+ * }).batchWithTimeOrCount(10, 2)
+ *
+ * // => [1, 2], [3], [4]
+ */
+
+Stream.prototype.batchWithTimeOrCount = function (ms, n) {
+    var batched = [],
+        timeout;
 
     return this.consume(function (err, x, push, next) {
         if (err) {
@@ -2015,6 +2320,7 @@ Stream.prototype.batch = function (n) {
         else if (x === nil) {
             if (batched.length > 0) {
                 push(null, batched);
+                clearTimeout(timeout);
             }
 
             push(null, nil);
@@ -2025,13 +2331,20 @@ Stream.prototype.batch = function (n) {
             if (batched.length === n) {
                 push(null, batched);
                 batched = [];
+                clearTimeout(timeout);
+            }
+            else if (batched.length === 1 && ms >= 0) {
+                timeout = setTimeout(function () {
+                    push(null, batched);
+                    batched = [];
+                }, ms);
             }
 
             next();
         }
     });
 };
-exposeMethod('batch');
+exposeMethod('batchWithTimeOrCount');
 
 /**
  * Creates a new Stream with the separator interspersed between the elements of the source.
@@ -2109,7 +2422,7 @@ Stream.prototype.splitBy = function (sep) {
             next();
         }
         else if (x === nil) {
-            if (typeof buffer === 'string') {
+            if (_.isString(buffer)) {
                 drain(decoder.end(), push);
                 push(null, buffer);
             }
@@ -2141,7 +2454,55 @@ Stream.prototype.split = function () {
 exposeMethod('split');
 
 /**
- * Creates a new Stream with the first `n` values from the source.
+ * Creates a new Stream with the values from the source in the range of `start` to `end`.
+ * `start` and `end` must be of type `Number`, if `start` is not a `Number` it will default to `0`
+ * and, likewise, `end` will default to `Infinity`: this could result in the whole stream being be
+ * returned.
+ *
+ * @id slice
+ * @section Transforms
+ * @name Stream.slice(start, end)
+ * @param {Number} start - integer representing index to start reading from source
+ * @param {Number} stop - integer representing index to stop reading from source
+ * @api public
+ *
+ * _([1, 2, 3, 4]).slice(1, 3) // => 2, 3
+ */
+
+Stream.prototype.slice = function(start, end) {
+    var index = 0;
+    start = typeof start != 'number' || start < 0 ? 0 : start;
+    end = typeof end != 'number' ? Infinity : end;
+
+    if (start === 0 && end === Infinity) {
+        return this;
+    } else if (start >= end) {
+        return _([]);
+    }
+    var s = this.consume(function (err, x, push, next) {
+        var done = x === nil;
+        if (err) {
+            push(err);
+        }
+        else if (!done && index++ >= start) {
+            push(null, x);
+        }
+
+        if (!done && index < end) {
+            next();
+        }
+        else {
+            push(null, nil);
+        }
+    });
+    s.id = 'slice:' + s.id;
+    return s;
+};
+exposeMethod('slice');
+
+/**
+ * Creates a new Stream with the first `n` values from the source. `n` must be of type `Number`,
+ * if not the whole stream will be returned.
  *
  * @id take
  * @section Transforms
@@ -2153,38 +2514,30 @@ exposeMethod('split');
  */
 
 Stream.prototype.take = function (n) {
-    if (n === 0) {
-        return _([]);
-    }
-    var s = this.consume(function (err, x, push, next) {
-        //console.log(['take', err, x, n]);
-        if (err) {
-            push(err);
-            if (n > 0) {
-                next();
-            }
-            else {
-                push(null, nil);
-            }
-        }
-        else if (x === nil) {
-            push(null, nil);
-        }
-        else {
-            n--;
-            push(null, x);
-            if (n > 0) {
-                next();
-            }
-            else {
-                push(null, nil);
-            }
-        }
-    });
+    var s = this.slice(0, n);
     s.id = 'take:' + s.id;
     return s;
 };
 exposeMethod('take');
+
+/**
+ * Acts as the inverse of [`take(n)`](#take) - instead of returning the first `n` values, it ignores the
+ * first `n` values and then emits the rest. `n` must be of type `Number`, if not the whole stream will
+ * be returned. All errors (even ones emitted before the nth value) will be emitted.
+ *
+ * @id drop
+ * @section Transforms
+ * @name Stream.drop(n)
+ * @param {Number} n - integer representing number of values to read from source
+ * @api public
+ *
+ * _([1, 2, 3, 4]).drop(2) // => 3, 4
+ */
+
+Stream.prototype.drop = function (n) {
+    return this.slice(n, Infinity);
+};
+exposeMethod('drop');
 
 /**
  * Creates a new Stream with only the first value from the source.
@@ -2236,10 +2589,52 @@ Stream.prototype.last = function () {
 exposeMethod('last');
 
 /**
+ * Collects all values together then emits each value individually but in sorted order.
+ * The method for sorting the elements is defined by the comparator function supplied
+ * as a parameter.
+ *
+ * @id sortBy
+ * @section Transforms
+ * @name Stream.sortBy(f)
+ * @param f - the sorting function
+ * @api public
+ *
+ * var sorts = _([3, 1, 4, 2]).sortBy(function (a, b) {
+ *     return b - a;
+ * }).toArray(_.log);
+ *
+ * //=> [4, 3, 2, 1]
+ */
+
+Stream.prototype.sortBy = function (f) {
+    return this.collect().invoke('sort', [f]).sequence();
+};
+exposeMethod('sortBy');
+
+/**
+ * Collects all values together then emits each value individually but in sorted order.
+ * The method for sorting the elements is ascending lexical.
+ *
+ * @id sort
+ * @section Transforms
+ * @name Stream.sort()
+ * @api public
+ *
+ * var sorted = _(['b', 'z', 'g', 'r']).sort().toArray(_.log);
+ * // => ['b', 'g', 'r', 'z']
+ */
+
+Stream.prototype.sort = function () {
+    return this.sortBy();
+};
+exposeMethod('sort');
+
+
+/**
  * Passes the current Stream to a function, returning the result. Can also
  * be used to pipe the current Stream through another Stream. It will always
  * return a Highland Stream (instead of the piped to target directly as in
- * Node.js).
+ * Node.js). Any errors emitted will be propagated as Highland errors.
  *
  * @id through
  * @section Higher-order Streams
@@ -2263,17 +2658,29 @@ exposeMethod('last');
  * _(filenames).through(jsonParser).map(function (obj) {
  *     // ...
  * });
+ *
+ * // All errors will be propagated as Highland errors
+ * _(['zz{"a": 1}']).through(jsonParser).errors(function (err) {
+ *   console.log(err); // => SyntaxError: Unexpected token z
+ * });
  */
 
 Stream.prototype.through = function (target) {
+    var output;
+
     if (_.isFunction(target)) {
         return target(this);
     }
     else {
-        var output = _();
         target.pause();
-        this.pipe(target).pipe(output);
-        return output;
+        output = _();
+        this.on('error', writeErr);
+        target.on('error', writeErr);
+        return this.pipe(target).pipe(output);
+    }
+
+    function writeErr(err) {
+        output.write(new StreamError(err));
     }
 };
 exposeMethod('through');
@@ -2864,6 +3271,112 @@ Stream.prototype.scan1 = function (f) {
 };
 exposeMethod('scan1');
 
+function HighlandTransform(push) {
+    this.push = push;
+}
+
+HighlandTransform.prototype['@@transducer/init'] = function () {
+    return this.push;
+};
+
+HighlandTransform.prototype['@@transducer/result'] = function (push) {
+    // Don't push nil here. Otherwise, we can't catch errors from `result`
+    // and propagate them. The `transduce` implementation will do it.
+    return push;
+};
+
+HighlandTransform.prototype['@@transducer/step'] = function (push, input) {
+    push(null, input);
+    return push;
+};
+
+/**
+ * Applies the transformation defined by the the given *transducer* to the
+ * stream. A transducer is any function that follows the
+ * [Transducer Protocol](https://github.com/cognitect-labs/transducers-js#transformer-protocol).
+ * See
+ * [transduce-js](https://github.com/cognitect-labs/transducers-js#transducers-js)
+ * for more details on what transducers actually are.
+ *
+ * The `result` object that is passed in through the
+ * [Transformer Protocol](https://github.com/cognitect-labs/transducers-js#transformer-protocol)
+ * will be the `push` function provided by the [consume](#consume) transform.
+ *
+ * Like [scan](#scan), if the transducer throws an exception, the transform
+ * will stop and emit that error. Any intermediate values that were produced
+ * before the error will still be emitted.
+ *
+ * @id transduce
+ * @section Transforms
+ * @name Stream.transduce(xf)
+ * @param {Function} xf - The transducer.
+ * @api public
+ *
+ * var xf = require('transducer-js').map(_.add(1));
+ * _([1, 2, 3, 4]).transduce(xf);
+ * // => [2, 3, 4, 5]
+ */
+
+Stream.prototype.transduce = function transduce(xf) {
+    var transform = null,
+        memo = null;
+
+    return this.consume(function (err, x, push, next) {
+        if (transform == null) {
+            transform = xf(new HighlandTransform(push));
+            memo = transform['@@transducer/init']();
+        }
+
+        if (err) {
+            // Pass through errors, like we always do.
+            push(err);
+            next();
+        }
+        else if (x === _.nil) {
+            // Push may be different from memo depending on the transducer that
+            // we get.
+            runResult(push, memo);
+        }
+        else {
+            var res = runStep(push, memo, x);
+
+            if (!res) {
+                return;
+            }
+
+            memo = res;
+            if (memo['@@transducer/reduced']) {
+                runResult(memo['@@transducer/value']);
+            }
+            else {
+                next();
+            }
+        }
+    });
+
+    function runResult(push, memo) {
+        try {
+            transform['@@transducer/result'](memo);
+        }
+        catch (e) {
+            push(e);
+        }
+        push(null, _.nil);
+    }
+
+    function runStep(push, memo, x) {
+        try {
+            return transform['@@transducer/step'](memo, x);
+        }
+        catch (e) {
+            push(e);
+            push(null, _.nil);
+            return null;
+        }
+    }
+};
+exposeMethod('transduce');
+
 /**
  * Concatenates a Stream to the end of this Stream.
  *
@@ -3295,14 +3808,18 @@ _.values = function (obj) {
  * _.keys({foo: 1, bar: 2, baz: 3})  // => 'foo', 'bar', 'baz'
  */
 
-_.keys = function (obj) {
-    var keys = [];
+function keys (obj) {
+    var keysArray = [];
     for (var k in obj) {
-        if (obj.hasOwnProperty(k)) {
-            keys.push(k);
+        if (hasOwn.call(obj, k)) {
+            keysArray.push(k);
         }
     }
-    return _(keys);
+    return keysArray;
+}
+
+_.keys = function (obj) {
+    return _(keys(obj));
 };
 
 /**
@@ -3351,7 +3868,7 @@ _.pairs = function (obj) {
 
 _.extend = _.curry(function (extensions, target) {
     for (var k in extensions) {
-        if (extensions.hasOwnProperty(k)) {
+        if (hasOwn.call(extensions, k)) {
             target[k] = extensions[k];
         }
     }
@@ -3433,7 +3950,9 @@ _.log = function () {
  * Wraps a node-style async function which accepts a callback, transforming
  * it to a function which accepts the same arguments minus the callback and
  * returns a Highland Stream instead. Only the first argument to the
- * callback (or an error) will be pushed onto the Stream.
+ * callback (or an error) will be pushed onto the Stream. The wrapped
+ * function keeps its context, so you can safely use it as a method without
+ * binding (see the second example below).
  *
  * @id wrapCallback
  * @section Utils
@@ -3448,10 +3967,21 @@ _.log = function () {
  * readFile('example.txt').apply(function (data) {
  *     // data is now the contents of example.txt
  * });
+ *
+ * function Reader(file) {
+ *     this.file = file;
+ * }
+ *
+ * Reader.prototype.read = function(cb) {
+ *     fs.readFile(this.file, cb);
+ * };
+ *
+ * Reader.prototype.readStream = _.wrapCallback(Reader.prototype.read);
  */
 
 _.wrapCallback = function (f) {
     return function () {
+        var self = this;
         var args = slice.call(arguments);
         return _(function (push) {
             var cb = function (err, x) {
@@ -3463,9 +3993,98 @@ _.wrapCallback = function (f) {
                 }
                 push(null, nil);
             };
-            f.apply(null, args.concat([cb]));
+            f.apply(self, args.concat([cb]));
         });
     };
+};
+
+/**
+ * Takes an object or a constructor function and returns that object or
+ * constructor with streamified versions of its function properties.
+ * Passed constructors will also have their prototype functions
+ * streamified.  This is useful for wrapping many node style async
+ * functions at once, and for preserving those functions' context.
+ *
+ * @id streamifyAll
+ * @section Utils
+ * @name _.streamifyAll(source)
+ * @param {Object | Function} source - the function or object with
+ * node-style function properties.
+ * @api public
+ *
+ * var fs = _.streamifyAll(require('fs'));
+ *
+ * fs.readFileStream('example.txt').apply(function (data) {
+ *     // data is now the contents of example.txt
+ * });
+ */
+
+
+var isES5 = (function () {
+  'use strict';
+  return Function.prototype.bind && !this;
+}());
+
+function isClass (fn) {
+    if (!(typeof fn === 'function' && fn.prototype)) { return false; }
+    var getKeys = isES5 ? Object.getOwnPropertyNames : keys;
+    var allKeys = getKeys(fn.prototype);
+    return allKeys.length > 0 && !(allKeys.length === 1 &&
+            allKeys[0] === 'constructor');
+}
+
+function inheritedKeys (obj) {
+    var allProps = {};
+    var curr = obj;
+    var handleProp = function (prop) {
+        allProps[prop] = true;
+    };
+    while (Object.getPrototypeOf(curr)) {
+        var props = Object.getOwnPropertyNames(curr);
+        props.forEach(handleProp);
+        curr = Object.getPrototypeOf(curr);
+    }
+    return keys(allProps);
+}
+
+function streamifyAll (inp, suffix) {
+    // will not streamify inherited functions in ES3
+    var getKeys = isES5 ? inheritedKeys : keys;
+    var allKeys = getKeys(inp);
+
+    for (var i = 0, len = allKeys.length; i < len; i++) {
+        var key = allKeys[i];
+        var val;
+
+        // will skip context aware getters
+        try {
+            val = inp[key];
+        }
+        catch (e) {
+        }
+
+        if (val && typeof val === 'function' && !isClass(val) &&
+                !val.__HighlandStreamifiedFunction__) {
+
+            var streamified = _.wrapCallback(val);
+            streamified.__HighlandStreamifiedFunction__ = true;
+            inp[key + suffix] = streamified;
+        }
+    }
+    return inp;
+}
+
+_.streamifyAll = function (arg) {
+    if (typeof arg !== 'function' && typeof arg !== 'object') {
+        throw new TypeError('takes an object or a constructor function');
+    }
+    var suffix = 'Stream';
+
+    var ret = streamifyAll(arg, suffix);
+    if (isClass(arg)) {
+        ret.prototype = streamifyAll(arg.prototype, suffix);
+    }
+    return ret;
 };
 
 /**
@@ -4629,12 +5248,16 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	var NUMBER = '0'.charCodeAt(0)
 	var LOWER  = 'a'.charCodeAt(0)
 	var UPPER  = 'A'.charCodeAt(0)
+	var PLUS_URL_SAFE = '-'.charCodeAt(0)
+	var SLASH_URL_SAFE = '_'.charCodeAt(0)
 
 	function decode (elt) {
 		var code = elt.charCodeAt(0)
-		if (code === PLUS)
+		if (code === PLUS ||
+		    code === PLUS_URL_SAFE)
 			return 62 // '+'
-		if (code === SLASH)
+		if (code === SLASH ||
+		    code === SLASH_URL_SAFE)
 			return 63 // '/'
 		if (code < NUMBER)
 			return -1 //no match
@@ -4737,7 +5360,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
 },{}],4:[function(_dereq_,module,exports){
-exports.read = function(buffer, offset, isLE, mLen, nBytes) {
+exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
       eMax = (1 << eLen) - 1,
@@ -4745,32 +5368,32 @@ exports.read = function(buffer, offset, isLE, mLen, nBytes) {
       nBits = -7,
       i = isLE ? (nBytes - 1) : 0,
       d = isLE ? -1 : 1,
-      s = buffer[offset + i];
+      s = buffer[offset + i]
 
-  i += d;
+  i += d
 
-  e = s & ((1 << (-nBits)) - 1);
-  s >>= (-nBits);
-  nBits += eLen;
-  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8);
+  e = s & ((1 << (-nBits)) - 1)
+  s >>= (-nBits)
+  nBits += eLen
+  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8) {}
 
-  m = e & ((1 << (-nBits)) - 1);
-  e >>= (-nBits);
-  nBits += mLen;
-  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8);
+  m = e & ((1 << (-nBits)) - 1)
+  e >>= (-nBits)
+  nBits += mLen
+  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8) {}
 
   if (e === 0) {
-    e = 1 - eBias;
+    e = 1 - eBias
   } else if (e === eMax) {
-    return m ? NaN : ((s ? -1 : 1) * Infinity);
+    return m ? NaN : ((s ? -1 : 1) * Infinity)
   } else {
-    m = m + Math.pow(2, mLen);
-    e = e - eBias;
+    m = m + Math.pow(2, mLen)
+    e = e - eBias
   }
-  return (s ? -1 : 1) * m * Math.pow(2, e - mLen);
-};
+  return (s ? -1 : 1) * m * Math.pow(2, e - mLen)
+}
 
-exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
+exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   var e, m, c,
       eLen = nBytes * 8 - mLen - 1,
       eMax = (1 << eLen) - 1,
@@ -4778,49 +5401,49 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
       rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0),
       i = isLE ? 0 : (nBytes - 1),
       d = isLE ? 1 : -1,
-      s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0;
+      s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0
 
-  value = Math.abs(value);
+  value = Math.abs(value)
 
   if (isNaN(value) || value === Infinity) {
-    m = isNaN(value) ? 1 : 0;
-    e = eMax;
+    m = isNaN(value) ? 1 : 0
+    e = eMax
   } else {
-    e = Math.floor(Math.log(value) / Math.LN2);
+    e = Math.floor(Math.log(value) / Math.LN2)
     if (value * (c = Math.pow(2, -e)) < 1) {
-      e--;
-      c *= 2;
+      e--
+      c *= 2
     }
     if (e + eBias >= 1) {
-      value += rt / c;
+      value += rt / c
     } else {
-      value += rt * Math.pow(2, 1 - eBias);
+      value += rt * Math.pow(2, 1 - eBias)
     }
     if (value * c >= 2) {
-      e++;
-      c /= 2;
+      e++
+      c /= 2
     }
 
     if (e + eBias >= eMax) {
-      m = 0;
-      e = eMax;
+      m = 0
+      e = eMax
     } else if (e + eBias >= 1) {
-      m = (value * c - 1) * Math.pow(2, mLen);
-      e = e + eBias;
+      m = (value * c - 1) * Math.pow(2, mLen)
+      e = e + eBias
     } else {
-      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen);
-      e = 0;
+      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen)
+      e = 0
     }
   }
 
-  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8);
+  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8) {}
 
-  e = (e << mLen) | m;
-  eLen += mLen;
-  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8);
+  e = (e << mLen) | m
+  eLen += mLen
+  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8) {}
 
-  buffer[offset + i - d] |= s * 128;
-};
+  buffer[offset + i - d] |= s * 128
+}
 
 },{}],5:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.

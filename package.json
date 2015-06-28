@@ -1,6 +1,6 @@
 {
   "name": "highland",
-  "version": "2.3.0",
+  "version": "2.5.1",
   "description": "The high-level streams library",
   "main": "lib/index.js",
   "files": [
@@ -12,10 +12,7 @@
     "type": "git",
     "url": "https://github.com/caolan/highland.git"
   },
-  "license": {
-    "type": "Apache 2.0",
-    "url": "https://github.com/caolan/highland/raw/master/LICENSE"
-  },
+  "license": "Apache-2.0",
   "devDependencies": {
     "browserify": "~3.30.1",
     "concat-stream": "~1.4.1",
@@ -34,10 +31,13 @@
     "scrawl": "0.0.5",
     "sinon": "~1.8.2",
     "stream-array": "~1.0.1",
-    "through": "~2.3.4"
+    "tape": "~2.4.2",
+    "through": "~2.3.4",
+    "transducers-js": "~0.4.135",
+    "eslint": "~0.10.0"
   },
   "scripts": {
-    "test": "nodeunit test/test.js"
+    "test": "eslint Gruntfile.js lib && nodeunit test/test.js"
   },
   "testling": {
     "files": "test/testling.js",

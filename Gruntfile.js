@@ -51,13 +51,13 @@ module.exports = function (grunt) {
 
         bump: {
             options: {
-                files: ['package.json', 'bower.json'],
+                files: ['package.json'],
                 updateConfigs: ['pkg'],
                 push: false,
                 pushTo: 'origin',
                 commit: true,
                 commitMessage: 'Release %VERSION%',
-                commitFiles: ['package.json', 'bower.json'],
+                commitFiles: ['package.json', 'dist/highland.js', 'docs/index.html'],
                 createTag: true,
                 tagName: '%VERSION%',
                 tagMessage: 'Version %VERSION%'
@@ -86,24 +86,41 @@ module.exports = function (grunt) {
     // custom tasks
     grunt.loadTasks('./tasks');
 
+    grunt.registerTask('pre-release:patch', [
+        'test',
+        'bump-only:patch',
+        'build',
+        'bump-commit'
+    ]);
+
+    grunt.registerTask('pre-release:minor', [
+        'test',
+        'bump-only:minor',
+        'build',
+        'bump-commit'
+    ]);
+
+    grunt.registerTask('pre-release:major', [
+        'test',
+        'bump-only:major',
+        'build',
+        'bump-commit'
+    ]);
+
     grunt.registerTask('release:patch', [
-        'test',
-        'build',
-        'bump:patch',
+        'pre-release:patch',
         'npm-publish',
         'gh-pages'
     ]);
+
     grunt.registerTask('release:minor', [
-        'test',
-        'build',
-        'bump:minor',
+        'pre-release:minor',
         'npm-publish',
         'gh-pages'
     ]);
+
     grunt.registerTask('release:major', [
-        'test',
-        'build',
-        'bump:major',
+        'pre-release:major',
         'npm-publish',
         'gh-pages'
     ]);
