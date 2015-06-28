@@ -67,6 +67,22 @@ function generatorStream(input, timeout) {
     });
 }
 
+function takeNext(xs, array, times, cb) {
+    xs.pull(function (err, x) {
+        if (x !== _.nil) {
+            array.push(x);
+            if (times - 1 > 0) {
+                takeNext(xs, array, times - 1, cb);
+            }
+        }
+
+        if (cb && (times <= 1 || x === _.nil)) {
+            cb(array);
+        }
+    });
+}
+
+
 exports['ratelimit'] = {
     setUp: function (callback) {
         this.clock = sinon.useFakeTimers();
@@ -1308,6 +1324,7 @@ exports['done - throw error if consumed'] = function (test) {
 };
 
 exports['calls generator on read'] = function (test) {
+    test.expect(5);
     var gen_calls = 0;
     var s = _(function (push, next) {
         gen_calls++;
@@ -1315,15 +1332,14 @@ exports['calls generator on read'] = function (test) {
         push(null, _.nil);
     });
     test.equal(gen_calls, 0);
-    s.take(1).toArray(function (xs) {
-        test.equal(gen_calls, 1);
-        test.same(xs, [1]);
-        s.take(1).toArray(function (ys) {
-            test.equal(gen_calls, 1);
-            test.same(ys, []);
-            test.done();
-        });
-    });
+
+    s.pull(valueEquals(test, 1));
+    test.equal(gen_calls, 1);
+
+    s.pull(valueEquals(test, _.nil));
+    test.equal(gen_calls, 1);
+
+    test.done();
 };
 
 exports['generator consumers are sent values eagerly until pause'] = function (test) {
@@ -1368,6 +1384,8 @@ exports['check generator loops on next call without push'] = function (test) {
 };
 
 exports['calls generator multiple times if paused by next'] = function (test) {
+    test.expect(7);
+
     var gen_calls = 0;
     var vals = [1, 2];
     var s = _(function (push, next) {
@@ -1381,19 +1399,17 @@ exports['calls generator multiple times if paused by next'] = function (test) {
         }
     });
     test.equal(gen_calls, 0);
-    s.take(1).toArray(function (xs) {
-        test.equal(gen_calls, 1);
-        test.same(xs, [1]);
-        s.take(1).toArray(function (xs) {
-            test.equal(gen_calls, 2);
-            test.same(xs, [2]);
-            s.take(1).toArray(function (xs) {
-                test.equal(gen_calls, 3);
-                test.same(xs, []);
-                test.done();
-            });
-        });
-    });
+
+    s.pull(valueEquals(test, 1));
+    test.equal(gen_calls, 1);
+
+    s.pull(valueEquals(test, 2));
+    test.equal(gen_calls, 2);
+
+    s.pull(valueEquals(test, _.nil));
+    test.equal(gen_calls, 3);
+
+    test.done();
 };
 
 exports['adding multiple consumers should error'] = function (test) {
@@ -1406,6 +1422,8 @@ exports['adding multiple consumers should error'] = function (test) {
 };
 
 exports['switch to alternate stream using next'] = function (test) {
+    test.expect(11);
+
     var s2_gen_calls = 0;
     var s2 = _(function (push, next) {
         s2_gen_calls++;
@@ -1422,25 +1440,26 @@ exports['switch to alternate stream using next'] = function (test) {
     s1.id = 's1';
     test.equal(s1_gen_calls, 0);
     test.equal(s2_gen_calls, 0);
-    s1.take(1).toArray(function (xs) {
-        test.equal(s1_gen_calls, 1);
-        test.equal(s2_gen_calls, 0);
-        test.same(xs, [1]);
-        s1.take(1).toArray(function (xs) {
-            test.equal(s1_gen_calls, 1);
-            test.equal(s2_gen_calls, 1);
-            test.same(xs, [2]);
-            s1.take(1).toArray(function (xs) {
-                test.equal(s1_gen_calls, 1);
-                test.equal(s2_gen_calls, 1);
-                test.same(xs, []);
-                test.done();
-            });
-        });
-    });
+
+    s1.pull(valueEquals(test, 1));
+    test.equal(s1_gen_calls, 1);
+    test.equal(s2_gen_calls, 0);
+
+    s1.pull(valueEquals(test, 2));
+    test.equal(s1_gen_calls, 1);
+    test.equal(s2_gen_calls, 1);
+
+    s1.pull(valueEquals(test, _.nil));
+    test.equal(s1_gen_calls, 1);
+    test.equal(s2_gen_calls, 1);
+
+    test.done();
 };
 
 exports['switch to alternate stream using next (async)'] = function (test) {
+    test.expect(11);
+    var clock = sinon.useFakeTimers();
+
     var s2_gen_calls = 0;
     var s2 = _(function (push, next) {
         s2_gen_calls++;
@@ -1459,24 +1478,26 @@ exports['switch to alternate stream using next (async)'] = function (test) {
         }, 10);
     });
     s1.id = 's1';
+
     test.equal(s1_gen_calls, 0);
     test.equal(s2_gen_calls, 0);
-    s1.take(1).toArray(function (xs) {
-        test.equal(s1_gen_calls, 1);
-        test.equal(s2_gen_calls, 0);
-        test.same(xs, [1]);
-        s1.take(1).toArray(function (xs) {
-            test.equal(s1_gen_calls, 1);
-            test.equal(s2_gen_calls, 1);
-            test.same(xs, [2]);
-            s1.take(1).toArray(function (xs) {
-                test.equal(s1_gen_calls, 1);
-                test.equal(s2_gen_calls, 1);
-                test.same(xs, []);
-                test.done();
-            });
-        });
-    });
+
+    s1.pull(valueEquals(test, 1));
+    test.equal(s1_gen_calls, 1);
+    test.equal(s2_gen_calls, 0);
+    clock.tick(10);
+
+    s1.pull(valueEquals(test, 2));
+    test.equal(s1_gen_calls, 1);
+    test.equal(s2_gen_calls, 1);
+    clock.tick(10);
+
+    s1.pull(valueEquals(test, _.nil));
+    test.equal(s1_gen_calls, 1);
+    test.equal(s2_gen_calls, 1);
+
+    clock.restore();
+    test.done();
 };
 
 exports['lazily evalute stream'] = function (test) {
@@ -1582,7 +1603,8 @@ exports['wrap node stream and pipe'] = function (test) {
     }
     var xs = [];
     var readable = streamify([1,2,3,4]);
-    var ys = _(readable).map(doubled);
+    var source = _(readable);
+    var ys = source.map(doubled);
 
     var dest = new EventEmitter();
     dest.writable = true;
@@ -1591,7 +1613,7 @@ exports['wrap node stream and pipe'] = function (test) {
         if (xs.length === 2) {
             _.setImmediate(function () {
                 test.same(xs, [2,4]);
-                test.ok(ys.source.paused);
+                test.ok(source.paused);
                 test.equal(readable._readableState.readingMore, false);
                 dest.emit('drain');
             });
@@ -1605,7 +1627,7 @@ exports['wrap node stream and pipe'] = function (test) {
     // make sure nothing starts until we pipe
     test.same(xs, []);
     test.same(ys._outgoing.toArray(), []);
-    test.same(ys.source._outgoing.toArray(), []);
+    test.same(source._outgoing.toArray(), []);
     ys.pipe(dest);
 };
 
@@ -1842,6 +1864,7 @@ exports['sequence - Streams of Streams of Arrays'] = function (test) {
 }
 
 exports['fork'] = function (test) {
+    test.expect(9);
     var s = _([1,2,3,4]);
     s.id = 's';
     var s2 = s.fork().map(function (x) {
@@ -1854,71 +1877,69 @@ exports['fork'] = function (test) {
     s3.id = 's3';
     var s2_data = [];
     var s3_data = [];
-    s2.take(1).each(function (x) {
-        s2_data.push(x);
-    });
+
+    takeNext(s2, s2_data, 1);
+
     // don't start until both consumers resume
     test.same(s2_data, []);
-    s3.take(2).each(function (x) {
-        s3_data.push(x);
-    });
+
+    takeNext(s3, s3_data, 2);
     test.same(s2_data, [2]);
     test.same(s3_data, [3]);
-    s2.take(1).each(function (x) {
-        s2_data.push(x);
-    });
+
+    takeNext(s2, s2_data, 1);
     test.same(s2_data, [2,4]);
     test.same(s3_data, [3,6]);
-    s3.take(2).each(function (x) {
-        s3_data.push(x);
-    });
+
+    takeNext(s3, s3_data, 2);
     test.same(s2_data, [2,4]);
     test.same(s3_data, [3,6]);
-    s2.take(2).each(function (x) {
-        s2_data.push(x);
-    });
+
+    takeNext(s2, s2_data, 2);
     test.same(s2_data, [2,4,6,8]);
     test.same(s3_data, [3,6,9,12]);
+
     test.done();
 };
 
 exports['observe'] = function (test) {
+    test.expect(11);
+
     var s = _([1,2,3,4]);
     s.id = 's';
     var s2 = s.map(function (x) {
         return x * 2;
     });
     s2.id = 's2';
-    var s3 = s.observe().map(function (x) {
+
+    var s3_source = s.observe();
+    var s3 = s3_source.map(function (x) {
         return x * 3;
     });
     s3.id = 's3';
+
     var s2_data = [];
     var s3_data = [];
-    s2.take(1).each(function (x) {
-        s2_data.push(x);
-    });
+
+    takeNext(s2, s2_data, 1);
+
     test.same(s2_data, [2]);
     test.same(s3_data, []);
-    test.same(s3.source._outgoing.toArray(), [1]);
-    s3.take(2).each(function (x) {
-        s3_data.push(x);
-    });
+    test.same(s3_source._outgoing.toArray(), [1]);
+
+    takeNext(s3, s3_data, 2);
     test.same(s2_data, [2]);
     test.same(s3_data, [3]);
-    s2.take(1).each(function (x) {
-        s2_data.push(x);
-    });
+
+    takeNext(s2, s2_data, 1);
     test.same(s2_data, [2,4]);
     test.same(s3_data, [3,6]);
-    s3.take(2).each(function (x) {
-        s3_data.push(x);
-    });
+
+    takeNext(s3, s3_data, 2);
     test.same(s2_data, [2,4]);
     test.same(s3_data, [3,6]);
-    s2.take(2).each(function (x) {
-        s2_data.push(x);
-    });
+
+    takeNext(s2, s2_data, 2);
     test.same(s2_data, [2,4,6,8]);
     test.same(s3_data, [3,6,9,12]);
     test.done();
@@ -2995,12 +3016,13 @@ exports['merge'] = {
         s2.id = 's2';
         var s = _([s1, s2]).merge();
         s.id = 's';
-        s.take(1).toArray(function (xs) {
+
+        takeNext(s, [], 1, function (xs) {
             test.same(xs, [1]);
             setTimeout(function () {
-                s.take(4).toArray(function (xs) {
+                takeNext(s, [], 4, function (xs) {
                     test.same(xs, [5,2,6,3]);
-                    s.toArray(function (xs) {
+                    takeNext(s, [], 4, function (xs) {
                         test.same(xs, [4,7,8]);
                         test.done();
                     });
