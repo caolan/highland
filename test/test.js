@@ -1323,6 +1323,49 @@ exports['done - throw error if consumed'] = function (test) {
     test.done();
 };
 
+exports['onDestroy'] = {
+    setUp: function (cb) {
+        var self = this;
+        self.destroy_call = 0;
+        self.destructor = function () {
+            self.destroy_call++;
+        };
+        self.checkDestructor = function (test) {
+            test.same(self.destroy_call, 1, 'destructor must be called exactly one time.');
+        };
+        cb();
+    },
+    'called on stream end': function (test) {
+        test.expect(2);
+        _([1]).onDestroy(this.destructor)
+            .toArray(function (xs) {
+                test.same(xs, [1]);
+            });
+        this.checkDestructor(test);
+        test.done();
+    },
+    'called on destroy() call': function (test) {
+        test.expect(1);
+
+        var s = _([]).onDestroy(this.destructor);
+
+        s.destroy();
+
+        this.checkDestructor(test);
+        test.done();
+    },
+    'called on children end': function (test) {
+        test.expect(2);
+        _([1, 2, 3]).onDestroy(this.destructor)
+            .take(1)
+            .toArray(function (xs) {
+                test.same(xs, [1]);
+            });
+        this.checkDestructor(test);
+        test.done();
+    }
+};
+
 exports['calls generator on read'] = function (test) {
     test.expect(5);
     var gen_calls = 0;
@@ -2986,7 +3029,8 @@ exports['merge'] = {
         var s1 = _([1,2,3,4]);
         var s2 = _([5,6,7,8]);
         var s = _.merge([s1, s2]);
-        s.take(5).toArray(function (xs) {
+
+        takeNext(s, [], 5, function (xs) {
             test.same(xs, [1,5,2,6,3]);
             _.setImmediate(function () {
                 test.equal(s._outgoing.length, 1);
