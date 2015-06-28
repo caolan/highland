@@ -3398,18 +3398,18 @@ exports['pick'] = function (test) {
 exports['pick - noValueOnError'] = noValueOnErrorTest(_.pick(['plug']));
 
 exports['pick - non-existant property'] = function (test) {
-    test.expect(8);
+    test.expect(9);
 
-    var a = _([
+    var a = [
         {breed: 'labrador', name: 'Rocky'} // <- missing age
-    ]);
+    ];
 
-    a.pick(['breed', 'age']).toArray(function (xs) {
+    _(a).pick(['breed', 'age']).toArray(function (xs) {
         test.equal(xs[0].breed, 'labrador');
         test.ok(Object.keys(xs[0]).length === 1);
     });
 
-    a.pick(['age']).toArray(function (xs) {
+    _(a).pick(['age']).toArray(function (xs) {
         test.ok(Object.keys(xs[0]).length === 0);
     });
 
