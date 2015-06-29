@@ -282,6 +282,54 @@ exports['nil should not equate to any empty object'] = function (test) {
     });
 };
 
+exports['pull'] = {
+    'pull should take one element - ArrayStream': function (test) {
+        test.expect(2);
+        var s = _([1, 2, 3]);
+        s.pull(valueEquals(test, 1));
+        s.toArray(function (xs) {
+            test.same(xs, [2, 3]);
+            test.done();
+        });
+    },
+    'pull should take one element - GeneratorStream': function (test) {
+        test.expect(2);
+        var i = 1;
+        var s = _(function (push, next) {
+            push(null, i++);
+            if (i < 4) {
+                next();
+            }
+            else {
+                push(null, _.nil);
+            }
+        });
+        s.pull(valueEquals(test, 1));
+        s.toArray(function (xs) {
+            test.same(xs, [2, 3]);
+            test.done();
+        });
+    },
+    'pull should take one element - GeneratorStream next called first (issue #325)': function (test) {
+        test.expect(2);
+        var i = 1;
+        var s = _(function (push, next) {
+            if (i < 4) {
+                next();
+            }
+            push(null, i++);
+            if (i >= 4) {
+                push(null, _.nil);
+            }
+        });
+        s.pull(valueEquals(test, 1));
+        s.toArray(function (xs) {
+            test.same(xs, [2, 3]);
+            test.done();
+        });
+    }
+};
+
 exports['async consume'] = function (test) {
     _([1,2,3,4]).consume(function (err, x, push, next) {
         if (x === _.nil) {
