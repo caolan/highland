@@ -362,7 +362,6 @@ exports['passing Stream to constructor returns original'] = function (test) {
 
 exports['constructor'] = {
     setUp: function (callback) {
-        this.clock = sinon.useFakeTimers();
         this.createTestIterator = function(array, error, lastVal) {
             var count = 0,
                 length = array.length;
@@ -391,10 +390,6 @@ exports['constructor'] = {
                 test.same(xs, expected);
             };
         };
-        callback();
-    },
-    tearDown: function (callback) {
-        this.clock.restore();
         callback();
     },
     'passing Stream to constructor returns original': function (test) {
@@ -454,6 +449,58 @@ exports['constructor'] = {
         test.expect(1);
         _(this.createTestIterator([1, 2, 3, 4, 5], void 0, 0)).toArray(this.tester([1, 2, 3, 4, 5, 0], test));
         test.done();
+    }
+};
+
+exports['GeneratorStream'] = {
+    'sync next does not re-enter generator': function (test) {
+        test.expect(2);
+        var in_generator = false;
+        var first = true;
+        _(function (push, next) {
+            test.ok(!in_generator, 'Generator was re-entered.');
+            in_generator = true;
+            if (first) {
+                first = false;
+                next();
+            }
+            else {
+                test.done();
+                push(null, _.nil);
+            }
+            in_generator = false;
+        }).resume();
+    },
+    'async next does not call generator synchronously': function (test) {
+        test.expect(2);
+        var in_next = false;
+        var first = true;
+        _(function (push, next) {
+            test.ok(!in_next, 'Generator was called synchronously.');
+            if (first) {
+                first = false;
+                setTimeout(function () {
+                    in_next = true;
+                    next();
+                    in_next = false;
+                }, 0);
+            }
+            else {
+                test.done();
+                push(null, _.nil);
+            }
+        }).resume();
+    },
+    'this context is bound to the stream': function (test) {
+        test.expect(2);
+        function generator(push) {
+            test.ok(_.isStream(this), 'The "this" reference is not a stream');
+            test.strictEqual(generator, this._generator);
+            test.done();
+
+            push(null, _.nil);
+        }
+        _(generator).resume();
     }
 };
 
@@ -586,6 +633,7 @@ exports['write when not paused sends to consumer'] = function (test) {
         vals.push(x);
         next();
     });
+    s2.id = 's2'
     test.ok(s1.paused);
     test.ok(s2.paused);
     test.same(s1._outgoing.toArray(), []);
@@ -1910,7 +1958,9 @@ exports['fork'] = function (test) {
     test.expect(9);
     var s = _([1,2,3,4]);
     s.id = 's';
-    var s2 = s.fork().map(function (x) {
+    var ss2 = s.fork();
+    ss2.id = 'ss2';
+    var s2 = ss2.map(function (x) {
         return x * 2;
     });
     s2.id = 's2';
@@ -5489,6 +5539,13 @@ exports['through'] = {
                 test.same(xs, expected);
             };
         };
+        this.tester = function (expected, test) {
+            return function (xs) {
+                test.same(xs, expected);
+                test.done();
+            };
+        };
+
         cb();
     },
     'function': function (test) {
@@ -5503,7 +5560,6 @@ exports['through'] = {
                 });
         }, this.numArray);
         s.toArray(this.tester([2, 6], test));
-        test.done();
     },
     'function - ArrayStream': function (test) {
         test.expect(1);
@@ -5521,19 +5577,16 @@ exports['through'] = {
                 });
             });
         s.toArray(this.tester([3, 7], test));
-        test.done();
     },
     'stream': function (test) {
         test.expect(1);
         var s = _.through(this.parser, this.stringArray);
         s.toArray(this.tester(this.numArray, test));
-        test.done();
     },
     'stream - ArrayStream': function (test) {
         test.expect(1);
         var s = _(this.stringArray).through(this.parser);
         s.toArray(this.tester(this.numArray, test));
-        test.done();
     },
     'stream and function': function (test) {
         test.expect(1);
@@ -5545,7 +5598,6 @@ exports['through'] = {
                 });
             });
         s.toArray(this.tester([2,4,6,8], test));
-        test.done();
     },
     'inputstream - error': function (test) {
         test.expect(2);
@@ -5556,14 +5608,12 @@ exports['through'] = {
 
         s.errors(errorEquals(test, 'Input error'))
             .toArray(this.tester([], test));
-        test.done();
     },
     'throughstream - error': function (test) {
         test.expect(2);
         var s = _(['zz{"a": 1}']).through(this.parser);
         s.errors(anyError(test))
             .toArray(this.tester([], test));
-        test.done();
     },
     'noValueOnError': function (test) {
         noValueOnErrorTest(_.through(function (x) { return x }))(test);
