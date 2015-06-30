@@ -5035,6 +5035,28 @@ exports['parallel - throw descriptive error on not-stream'] = function (test) {
     test.done();
 }
 
+exports['parallel - parallel should not drop data if paused (issue #328)'] = function (test) {
+    test.expect(1);
+    var s1 = _([1, 2, 3]);
+    var s2 = _([11, 12, 13]);
+    _([s1.fork(), s2, s1.fork()])
+        .parallel(3)
+        .consume(function (err, x, push, next) {
+            push(err, x);
+            if (x.buf === 21) {
+                // Pause for a while.
+                setTimeout(next, 1000);
+            }
+            else if (x !== _.nil) {
+                next();
+            }
+        })
+        .toArray(function (xs) {
+            test.same(xs, [1, 2, 3, 11, 12, 13, 1, 2, 3]);
+            test.done();
+        });
+};
+
 exports['throttle'] = {
     setUp: function (callback) {
         this.clock = sinon.useFakeTimers();
