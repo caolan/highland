@@ -1744,6 +1744,19 @@ exports['wrap EventEmitter (or jQuery) on handler with args wrapping by array'] 
     });
 };
 
+exports['wrap EventEmitter default mapper discards all but first arg'] = function (test) {
+    var ee = {
+        on: function (name, f) {
+            test.same(name, 'myevent');
+            f(1, 2, 3);
+        }
+    };
+    _('myevent', ee).each(function (x) {
+        test.same(x, 1);
+        test.done()
+    });
+};
+
 exports['sequence'] = function (test) {
     _.sequence([[1,2], [3], [[4],5]]).toArray(function (xs) {
         test.same(xs, [1,2,3,[4],5]);
@@ -5784,6 +5797,16 @@ exports['wrapCallback with args wrapping by array'] = function (test) {
     }
     _.wrapCallback(f, ['one', 'two', 'three'])().each(function (x) {
         test.same(x, {'one': 1, 'two': 2, 'three': 3});
+        test.done()
+    });
+};
+
+exports['wrapCallback default mapper discards all but first arg'] = function (test) {
+    function f(cb) {
+        cb(null, 1, 2, 3);
+    }
+    _.wrapCallback(f)().each(function (x) {
+        test.same(x, 1);
         test.done()
     });
 };
