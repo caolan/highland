@@ -5968,17 +5968,9 @@ exports['not'] = function (test) {
 };
 
 exports['use'] = {
-    "creates a use of Stream": function (test) {
+    "creates a new Stream environment": function (test) {
         var Sub = _.use();
-        test.ok(new Sub instanceof Sub);
-        test.ok(new Sub instanceof _);
-        test.done();
-    },
-
-    "can be called without new, like Stream": function (test) {
-        var Sub = _.use();
-        test.ok(Sub() instanceof Sub);
-        test.ok(Sub() instanceof _);
+        test.ok(_.isStream(Sub()));
         test.done();
     },
 
@@ -5991,9 +5983,9 @@ exports['use'] = {
     },
 
     "returns streams of the same type": function(test) {
-        var Sub = _.use();
+        var Sub = _.use({foo: true});
         var s = Sub([1, 2, 3]).map(function(i) { return i });
-        test.ok(s instanceof Sub);
+        test.ok(s.foo);
         test.done();
     },
 
