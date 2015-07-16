@@ -226,7 +226,7 @@ getBlogposts(data); // => new Stream of blogposts</code></pre>
       <pre><code class="javascript">var myCurryableFn = _.curry(fn);</code></pre>
 
       <h3 id="events">Events</h3>
-      <p>Streams can used to handle events as well as data, control-flow and error propagation. This is often a convenient way to filter and combine events into groups, a common goal on dynamically updated sites.</p>
+      <p>Streams can be used to handle events as well as data, control-flow and error propagation. This is often a convenient way to filter and combine events into groups, a common goal on dynamically updated sites.</p>
       <pre><code class="javascript">var inbox = _('message', client).where({recipient: 'me'});</code></pre>
       <p>If you expect to receive a lot of events, and perform an async process on each of them, then you should sample the events instead of buffering all of them.</p>
       <pre><code class="javascript">// get a frequent event source
