@@ -6013,7 +6013,7 @@ exports['use'] = {
         test.done();
     },
 
-    "casts between streams": function(test) {
+    "casts between streams calling methods": function(test) {
         var A = _.use({
             foo: function() {
                 return this;
@@ -6021,6 +6021,17 @@ exports['use'] = {
         });
         var B = _.use();
         test.equal(typeof A.foo(B()).foo, 'function');
+        test.done();
+    },
+
+    "casts between streams calling topLevel": function(test) {
+        var A = _.use({
+            foo: function() {
+                return this;
+            }
+        });
+        var B = _.use();
+        test.equal(typeof A(B()).foo, 'function');
         test.done();
     }
 };
