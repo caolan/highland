@@ -6011,5 +6011,16 @@ exports['use'] = {
         test.equal(typeof t.foo, 'function');
         test.equal(typeof s.foo, 'undefined');
         test.done();
+    },
+
+    "casts between streams": function(test) {
+        var A = _.use({
+            foo: function() {
+                return this;
+            }
+        });
+        var B = _.use();
+        test.equal(typeof A.foo(B()).foo, 'function');
+        test.done();
     }
 };
