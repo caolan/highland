@@ -2312,44 +2312,39 @@ exports['reduce'] = function (test) {
     function add(a, b) {
         return a + b;
     }
-    _.reduce(10, add, [1,2,3,4]).toArray(function (xs) {
+    _.reduce(add, 10, [1,2,3,4]).toArray(function (xs) {
         test.same(xs, [20]);
     });
     // partial application
-    _.reduce(10, add)([1,2,3,4]).toArray(function (xs) {
+    _.reduce(add, 10)([1,2,3,4]).toArray(function (xs) {
         test.same(xs, [20]);
     });
-    _.reduce(10)(add)([1,2,3,4]).toArray(function (xs) {
+    _.reduce(add)(10)([1,2,3,4]).toArray(function (xs) {
         test.same(xs, [20]);
     });
     test.done();
 };
-
-exports['reduce - noValueOnError'] = noValueOnErrorTest(_.reduce(0, _.add), [0]);
-
+exports['reduce - noValueOnError'] = noValueOnErrorTest(_.reduce(_.add, 0), [0]);
 exports['reduce - argument function throws'] = function (test) {
     test.expect(2);
     var err = new Error('error');
-    var s = _([1,2,3,4,5]).reduce(0, function (memo, x) {
+    var s = _([1,2,3,4,5]).reduce(function (memo, x) {
         if (x === 3) throw err;
         return memo + x;
-    });
-
+    }, 0);
     s.pull(errorEquals(test, 'error'));
     s.pull(valueEquals(test, _.nil));
     test.done();
 };
-
 exports['reduce - ArrayStream'] = function (test) {
     function add(a, b) {
         return a + b;
     }
-    _([1,2,3,4]).reduce(10, add).toArray(function (xs) {
+    _([1,2,3,4]).reduce(add, 10).toArray(function (xs) {
         test.same(xs, [20]);
         test.done();
     });
 };
-
 exports['reduce - GeneratorStream'] = function (test) {
     function add(a, b) {
         return a + b;
@@ -2363,7 +2358,7 @@ exports['reduce - GeneratorStream'] = function (test) {
             push(null, _.nil);
         }, 10);
     });
-    s.reduce(10, add).toArray(function (xs) {
+    s.reduce(add, 10).toArray(function (xs) {
         test.same(xs, [20]);
         test.done();
     });
@@ -2439,29 +2434,27 @@ exports['scan'] = function (test) {
     function add(a, b) {
         return a + b;
     }
-    _.scan(10, add, [1,2,3,4]).toArray(function (xs) {
+    _.scan(add, 10, [1,2,3,4]).toArray(function (xs) {
         test.same(xs, [10, 11, 13, 16, 20]);
     });
     // partial application
-    _.scan(10, add)([1,2,3,4]).toArray(function (xs) {
+    _.scan(add, 10)([1,2,3,4]).toArray(function (xs) {
         test.same(xs, [10, 11, 13, 16, 20]);
     });
-    _.scan(10)(add)([1,2,3,4]).toArray(function (xs) {
+    _.scan(add)(10)([1,2,3,4]).toArray(function (xs) {
         test.same(xs, [10, 11, 13, 16, 20]);
     });
     test.done();
 };
-
-exports['scan - noValueOnError'] = noValueOnErrorTest(_.scan(0, _.add), [0]);
+exports['scan - noValueOnError'] = noValueOnErrorTest(_.scan(_.add, 0), [0]);
 
 exports['scan - argument function throws'] = function (test) {
     test.expect(5);
     var err = new Error('error');
-    var s = _([1,2,3,4,5]).scan(0, function (memo, x) {
+    var s = _([1,2,3,4,5]).scan(function (memo, x) {
         if (x === 3) throw err;
         return memo + x;
-    });
-
+    }, 0);
     s.pull(valueEquals(test, 0));
     s.pull(valueEquals(test, 1));
     s.pull(valueEquals(test, 3));
@@ -2474,7 +2467,7 @@ exports['scan - ArrayStream'] = function (test) {
     function add(a, b) {
         return a + b;
     }
-    _([1,2,3,4]).scan(10, add).toArray(function (xs) {
+    _([1,2,3,4]).scan(add, 10).toArray(function (xs) {
         test.same(xs, [10, 11, 13, 16, 20]);
         test.done();
     });
@@ -2493,7 +2486,7 @@ exports['scan - GeneratorStream'] = function (test) {
             push(null, _.nil);
         }, 10);
     });
-    s.scan(10, add).toArray(function (xs) {
+    s.scan(add, 10).toArray(function (xs) {
         test.same(xs, [10, 11, 13, 16, 20]);
         test.done();
     });
@@ -2514,7 +2507,7 @@ exports['scan - GeneratorStream lazy'] = function (test) {
             push(null, _.nil);
         }, 10);
     });
-    s.scan(10, add).take(3).toArray(function (xs) {
+    s.scan(add, 10).take(3).toArray(function (xs) {
         test.same(calls, [
             [10, 1],
             [11, 2]
@@ -4420,32 +4413,32 @@ exports['zip - GeneratorStream'] = function (test) {
     });
 };
 
-exports['zipAll'] = function (test) {
+exports['zipEach'] = function (test) {
     test.expect(3);
-    _.zipAll([[4, 5, 6], [7, 8, 9], [10, 11, 12]], [1,2,3]).toArray(function (xs) {
+    _.zipEach([[4, 5, 6], [7, 8, 9], [10, 11, 12]], [1,2,3]).toArray(function (xs) {
         test.same(xs, [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]);
     });
-    _.zipAll([_([4, 5, 6]), _([7, 8, 9]), _([10, 11, 12])], [1,2,3]).toArray(function (xs) {
+    _.zipEach([_([4, 5, 6]), _([7, 8, 9]), _([10, 11, 12])], [1,2,3]).toArray(function (xs) {
         test.same(xs, [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]);
     });
     // partial application
-    _.zipAll([[4, 5, 6], [7, 8, 9], [10, 11, 12]])([1,2,3]).toArray(function (xs) {
+    _.zipEach([[4, 5, 6], [7, 8, 9], [10, 11, 12]])([1,2,3]).toArray(function (xs) {
         test.same(xs, [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]);
     });
     test.done();
 };
 
-exports['zipAll - noValueOnError'] = noValueOnErrorTest(_.zipAll([1]));
+exports['zipEach - noValueOnError'] = noValueOnErrorTest(_.zipEach([1]));
 
-exports['zipAll - StreamOfStreams'] = function (test) {
+exports['zipEach - StreamOfStreams'] = function (test) {
     test.expect(1);
-    _.zipAll(_([[4, 5, 6], [7, 8, 9], [10, 11, 12]]), [1,2,3]).toArray(function (xs) {
+    _.zipEach(_([[4, 5, 6], [7, 8, 9], [10, 11, 12]]), [1,2,3]).toArray(function (xs) {
         test.same(xs, [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]);
     });
     test.done();
 };
 
-exports['zipAll - source emits error'] = function (test) {
+exports['zipEach - source emits error'] = function (test) {
     test.expect(2);
     var err = new Error('zip all error');
     var s1 = _([1,2,3]);
@@ -4457,7 +4450,7 @@ exports['zipAll - source emits error'] = function (test) {
         push(null, _.nil);
     });
 
-    s1.zipAll(s2).errors(function (err) {
+    s1.zipEach(s2).errors(function (err) {
         test.equal(err.message, 'zip all error');
     }).toArray(function (xs) {
         test.same(xs, [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]);
@@ -4465,7 +4458,7 @@ exports['zipAll - source emits error'] = function (test) {
     test.done();
 };
 
-exports['zipAll - GeneratorStream'] = function (test) {
+exports['zipEach - GeneratorStream'] = function (test) {
     var s1 = _(function (push, next) {
         push(null, 1);
         setTimeout(function () {
@@ -4487,21 +4480,21 @@ exports['zipAll - GeneratorStream'] = function (test) {
         }, 50);
     });
 
-    s1.zipAll(s2).toArray(function (xs) {
+    s1.zipEach(s2).toArray(function (xs) {
         test.same(xs, [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]);
         test.done();
     });
 };
 
-exports['zipAll - Differing length streams'] = function (test) {
+exports['zipEach - Differing length streams'] = function (test) {
     test.expect(1);
-    _.zipAll([[5, 6, 7, 8], [9, 10, 11, 12], [13, 14]])([1, 2, 3, 4]).toArray(function (xs) {
+    _.zipEach([[5, 6, 7, 8], [9, 10, 11, 12], [13, 14]])([1, 2, 3, 4]).toArray(function (xs) {
         test.same(xs, [[1, 5, 9, 13], [2, 6, 10, 14]]);
     });
     test.done();
 };
 
-exports['zipAll0'] = {
+exports['zipAll'] = {
     setUp: function (cb) {
         this.input = [
             _([1, 2, 3]),
@@ -4529,22 +4522,22 @@ exports['zipAll0'] = {
     'ArrayStream': function (test) {
         test.expect(1);
         _(this.input)
-            .zipAll0()
+            .zipAll()
             .toArray(this.tester(this.expected, test));
         test.done();
     },
     'partial application': function (test) {
         test.expect(1);
-        _.zipAll0(this.input)
+        _.zipAll(this.input)
             .toArray(this.tester(this.expected, test));
         test.done();
     },
     'empty stream': function (test) {
         test.expect(1);
-        _.zipAll0([]).toArray(this.tester([], test));
+        _.zipAll([]).toArray(this.tester([], test));
         test.done();
     },
-    'noValueOnError': noValueOnErrorTest(_.zipAll0),
+    'noValueOnError': noValueOnErrorTest(_.zipAll),
     'source emits error': function (test) {
         test.expect(5);
         var self = this;
@@ -4556,7 +4549,7 @@ exports['zipAll0'] = {
             push(null, self.input[2]);
             push(null, self.input[3]);
             push(null, _.nil);
-        }).zipAll0();
+        }).zipAll();
 
         s.pull(errorEquals(test, 'zip all error'));
         s.pull(valueEquals(test, this.expected[0]));
@@ -4579,20 +4572,20 @@ exports['zipAll0'] = {
             }, 50);
         });
 
-        s.zipAll0().toArray(this.tester(this.expected, test));
+        s.zipAll().toArray(this.tester(this.expected, test));
         this.clock.tick(100);
         test.done();
     },
     'Differing length streams': function (test) {
         test.expect(1);
-        _.zipAll0([
+        _.zipAll([
             this.input[0],
             this.input[1],
             this.input[2],
-            this.input[3].take(2),
+            this.input[3].take(2)
         ]).toArray(this.tester([
             this.expected[0],
-            this.expected[1],
+            this.expected[1]
         ], test));
         test.done();
     }
