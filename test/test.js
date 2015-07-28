@@ -3590,7 +3590,7 @@ exports['pickBy'] = function (test) {
 
     var objs = [{a: 1, _a: 2}, {a: 1, _c: 3}];
 
-    _(objs).pickBy(function (key, value) {
+    _(objs).pickBy(function (value, key) {
         return key.indexOf('_') === 0 && typeof value !== 'function';
     }).toArray(function (xs) {
         test.deepEqual(xs, [{_a: 2}, {_c: 3}]);
@@ -3598,7 +3598,7 @@ exports['pickBy'] = function (test) {
 
     var objs2 = [{a: 1, b: {c: 2}}, {a: 1, b: {c: 4}}, {d: 1, b: {c: 9}}];
 
-    _(objs2).pickBy(function (key, value) {
+    _(objs2).pickBy(function (value, key) {
         if (key === 'b' && typeof value.c !== 'undefined') {
             return value.c > 3;
         }
@@ -3613,7 +3613,7 @@ exports['pickBy'] = function (test) {
 
     var objs3 = _([{a: 1, b: {c: 2}}, noProtoObj, {d: 1, b: {c: 9}}]);
 
-    objs3.pickBy(function (key, value) {
+    objs3.pickBy(function (value, key) {
         if (key === 'b' && typeof value.c !== 'undefined') {
             return value.c > 3;
         }
@@ -3624,7 +3624,7 @@ exports['pickBy'] = function (test) {
 
     var objs4 = [Object.create({a: 1, _a: 2}), {a: 1, _c: 3}];
 
-    _(objs4).pickBy(function (key, value) {
+    _(objs4).pickBy(function (value, key) {
         return key.indexOf('_') === 0 && typeof value !== 'function';
     }).toArray(function (xs) {
         test.deepEqual(xs, [{_a: 2}, {_c: 3}]);
@@ -3640,7 +3640,7 @@ exports['pickBy - non-existant property'] = function (test) {
 
     var objs = [{a: 1, b: 2}, {a: 1, d: 3}];
 
-    _(objs).pickBy(function (key, value) {
+    _(objs).pickBy(function (value, key) {
         return key.indexOf('_') === 0 && typeof value !== 'function';
     }).toArray(function (xs) {
         test.deepEqual(xs, [{}, {}]);
@@ -3648,7 +3648,7 @@ exports['pickBy - non-existant property'] = function (test) {
 
     var objs2 = [{a: 1, b: {c: 2}}, {a: 1, b: {c: 4}}, {d: 1, b: {c: 9}}];
 
-    _(objs2).pickBy(function (key, value) {
+    _(objs2).pickBy(function (value, key) {
         if (key === 'b' && typeof value.c !== 'undefined') {
             return value.c > 10;
         }
@@ -3659,7 +3659,7 @@ exports['pickBy - non-existant property'] = function (test) {
 
     var objs3 = [{}, {}];
 
-    _(objs3).pickBy(function (key, value) {
+    _(objs3).pickBy(function (value, key) {
         return key.indexOf('_') === 0 && typeof value !== 'function';
     }).toArray(function (xs) {
         test.deepEqual(xs, [{}, {}]);
@@ -3689,7 +3689,7 @@ exports['pickBy - non-enumerable properties'] = function (test) {
     ]);
 
 
-    a.pickBy(function (key, value) {
+    a.pickBy(function (value, key) {
         if (key === 'b' || value === 5 || typeof value === 'undefined') {
             return true
         }
@@ -3722,7 +3722,8 @@ exports['pickBy - overridden properties'] = function (test) {
         d: 10,
         e: 10,
         valueOf: 10
-    }
+    };
+
     var bObj = Object.create(aObj);
     bObj.b = 10;
     bObj.c = 10;
@@ -3733,7 +3734,7 @@ exports['pickBy - overridden properties'] = function (test) {
     ]);
 
 
-    a.pickBy(function (key, value) {
+    a.pickBy(function (value, key) {
         if (value > 7) {
             return true
         }
