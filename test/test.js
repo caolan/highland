@@ -6083,6 +6083,17 @@ exports['wrapCallback - errors'] = function (test) {
     test.done();
 };
 
+exports['wrapCallback - substream'] = function (test) {
+    var s = _.use({
+        foo: true
+    });
+    var f = function (cb) {
+        cb(null, 'hello');
+    };
+    test.ok(s.wrapCallback(f)().foo);
+    test.done();
+};
+
 exports['streamifyAll'] = {
     'throws when passed a non-function non-object': function (test) {
         test.throws(function () {
@@ -6175,6 +6186,19 @@ exports['streamifyAll'] = {
         test.doesNotThrow(function () {
             _.streamifyAll(ExampleClass);
         });
+        test.done();
+    },
+    'substream': function (test) {
+        var s = _.use({
+            foo: true
+        });
+        var obj = s.streamifyAll({
+            bar: function(cb) {
+                cb(null, 'hello');
+            }
+        });
+
+        test.ok(obj.barStream().foo);
         test.done();
     }
 };
