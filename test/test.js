@@ -2431,7 +2431,7 @@ exports['reduce - GeneratorStream'] = function (test) {
 };
 
 exports['reduce - returnsSameStream'] = returnsSameStreamTest(function(s) {
-    return s.reduce(0, _.add);
+    return s.reduce(_.add, 0);
 }, [3], [1, 2]);
 
 exports['reduce1'] = function (test) {
@@ -2591,7 +2591,7 @@ exports['scan - GeneratorStream lazy'] = function (test) {
 };
 
 exports['scan - returnsSameStream'] = returnsSameStreamTest(function(s) {
-    return s.scan(0, _.add);
+    return s.scan(_.add, 0);
 }, [0, 1, 3], [1, 2]);
 
 exports['scan1'] = function (test) {
@@ -3773,7 +3773,7 @@ exports['pickBy'] = function (test) {
 exports['pickBy - noValueOnError'] = noValueOnErrorTest(_.pickBy(' '));
 
 exports['pickBy - returnsSameStream'] = returnsSameStreamTest(function(s) {
-    return s.pickBy(function(k) {return k === 'foo'});
+    return s.pickBy(function(v, k) {return k === 'foo'});
 }, [{foo: 'bar'}], [{foo: 'bar'}]);
 
 exports['pickBy - non-existant property'] = function (test) {
