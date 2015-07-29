@@ -3302,6 +3302,17 @@ exports['nfcall - returnsSameStream'] = returnsSameStreamTest(function(s) {
     return s.nfcall([]).series();
 }, [1], [function(c) { c(null, 1) }]);
 
+exports['nfcall - wraps same stream'] = function (test) {
+    var s = _.use({
+        foo: true
+    });
+
+    s([function(c) { c(null, 1) }]).nfcall([]).apply(function(xs) {
+        test.ok(xs.foo);
+        test.done();
+    });
+};
+
 exports['nfcall - ArrayStream'] = function (test) {
     function add(n) {
         return function(state, push) {
