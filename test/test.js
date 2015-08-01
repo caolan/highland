@@ -5910,6 +5910,21 @@ exports['pipeline - no arguments'] = function (test) {
     });
 };
 
+exports['pipeline - substream'] = function (test) {
+    var s = _.use({
+        foo: true
+    });
+
+    var src = streamify([1]);
+
+    var through = s.pipeline(function(s) {
+        return s;
+    });
+
+    test.ok(src.pipe(through).foo);
+    test.done();
+};
+
 
 // TODO: test lazy getting of values from obj keys (test using getters?)
 exports['values'] = function (test) {
