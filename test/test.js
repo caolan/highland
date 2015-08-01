@@ -6313,5 +6313,17 @@ exports['use'] = {
         var B = _.use();
         test.equal(typeof A(B()).foo, 'function');
         test.done();
+    },
+
+    "can add methods directly to topLevel": function(test) {
+        var Sub = _.use({
+            foo: true
+        }, {
+            bar: function() {
+                return this();
+            }
+        });
+        test.ok(Sub.bar().foo);
+        test.done();
     }
 };
