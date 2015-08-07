@@ -820,6 +820,23 @@ exports['asNodeWritable'] = {
             test.same(xs, [1, 2, 3]);
             test.done();
         });
+    },
+    'callbacks fired when value emitted': function (test) {
+        test.expect(4);
+        var cbFired = false;
+        var s = _();
+        var writable = s.asNodeWritable();
+
+        writable.write(1, null, function () {
+            cbFired = true;
+        });
+        writable.end();
+
+        test.ok(!cbFired, 'The callback fired before the value was consumed.');
+        s.pull(valueEquals(test, 1));
+        test.ok(cbFired, 'The callback was never fired.');
+        s.pull(valueEquals(test, _.nil));
+        test.done();
     }
 };
 
