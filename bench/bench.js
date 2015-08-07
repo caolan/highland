@@ -77,29 +77,25 @@ for (var i = 0; i < 1000000; i++) {
 }
 
 benchmark('.map(square) x 10,000', {
-    'underscore': function () { underscore(arr10K).map(square); },
-    'lodash': function () { lodash(arr10K).map(square); },
+    'underscore': function () { underscore(arr10K).chain().map(square).value(); },
+    'lodash': function () { lodash(arr10K).map(square).value(); },
     'highland': function () { highland(arr10K).map(square).resume(); }
 });
 
 benchmark('.map(square) x 100,000', {
-    'underscore': function () { underscore(arr100K).map(square); },
-    'lodash': function () { lodash(arr100K).map(square); },
+    'underscore': function () { underscore(arr100K).chain().map(square).value(); },
+    'lodash': function () { lodash(arr100K).map(square).value(); },
     'highland': function () { highland(arr100K).map(square).resume(); }
 });
 
-
 benchmark('.map(square) x 1,000,000', {
-    'underscore': function () { underscore(arr1M).map(square); },
-    'lodash': function () { lodash(arr1M).map(square); },
+    'underscore': function () { underscore(arr1M).chain().map(square).value(); },
+    'lodash': function () { lodash(arr1M).map(square).value(); },
     'highland': function () { highland(arr1M).map(square).resume(); }
 });
 
-
-/*
-benchmark('.map(square).filter(isEven) x 1,000,000', {
-    'underscore': function () { underscore(arr1M).map(square).filter(isEven); },
-    'lodash': function () { lodash(arr1M).map(square).filter(isEven); },
-    'highland': function () { highland(arr1M).map(square).filter(isEven).resume(); }
+benchmark('.map(square).filter(isEven).take(100) x 1,000,000', {
+    'underscore': function () { underscore(arr1M).chain().map(square).filter(isEven).take(100).value(); },
+    'lodash': function () { lodash(arr1M).map(square).filter(isEven).take(100).value(); },
+    'highland': function () { highland(arr1M).map(square).filter(isEven).take(100).resume(); }
 });
-*/

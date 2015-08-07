@@ -314,6 +314,54 @@ exports['nil should not equate to any empty object'] = function (test) {
     });
 };
 
+exports['pull'] = {
+    'pull should take one element - ArrayStream': function (test) {
+        test.expect(2);
+        var s = _([1, 2, 3]);
+        s.pull(valueEquals(test, 1));
+        s.toArray(function (xs) {
+            test.same(xs, [2, 3]);
+            test.done();
+        });
+    },
+    'pull should take one element - GeneratorStream': function (test) {
+        test.expect(2);
+        var i = 1;
+        var s = _(function (push, next) {
+            push(null, i++);
+            if (i < 4) {
+                next();
+            }
+            else {
+                push(null, _.nil);
+            }
+        });
+        s.pull(valueEquals(test, 1));
+        s.toArray(function (xs) {
+            test.same(xs, [2, 3]);
+            test.done();
+        });
+    },
+    'pull should take one element - GeneratorStream next called first (issue #325)': function (test) {
+        test.expect(2);
+        var i = 1;
+        var s = _(function (push, next) {
+            if (i < 4) {
+                next();
+            }
+            push(null, i++);
+            if (i >= 4) {
+                push(null, _.nil);
+            }
+        });
+        s.pull(valueEquals(test, 1));
+        s.toArray(function (xs) {
+            test.same(xs, [2, 3]);
+            test.done();
+        });
+    }
+};
+
 exports['async consume'] = function (test) {
     _([1,2,3,4]).consume(function (err, x, push, next) {
         if (x === _.nil) {
@@ -1905,6 +1953,19 @@ exports['wrap EventEmitter (or jQuery) on handler with args wrapping by array'] 
     };
     _('myevent', ee, ['one', 'two', 'three']).each(function (x) {
         test.same(x, {'one': 1, 'two': 2, 'three': 3});
+        test.done()
+    });
+};
+
+exports['wrap EventEmitter default mapper discards all but first arg'] = function (test) {
+    var ee = {
+        on: function (name, f) {
+            test.same(name, 'myevent');
+            f(1, 2, 3);
+        }
+    };
+    _('myevent', ee).each(function (x) {
+        test.same(x, 1);
         test.done()
     });
 };
@@ -5364,6 +5425,28 @@ exports['parallel - throw descriptive error on not-stream'] = function (test) {
     test.done();
 }
 
+exports['parallel - parallel should not drop data if paused (issue #328)'] = function (test) {
+    test.expect(1);
+    var s1 = _([1, 2, 3]);
+    var s2 = _([11, 12, 13]);
+    _([s1.fork(), s2, s1.fork()])
+        .parallel(3)
+        .consume(function (err, x, push, next) {
+            push(err, x);
+            if (x.buf === 21) {
+                // Pause for a while.
+                setTimeout(next, 1000);
+            }
+            else if (x !== _.nil) {
+                next();
+            }
+        })
+        .toArray(function (xs) {
+            test.same(xs, [1, 2, 3, 11, 12, 13, 1, 2, 3]);
+            test.done();
+        });
+};
+
 exports['throttle'] = {
     setUp: function (callback) {
         this.clock = sinon.useFakeTimers();
@@ -6118,6 +6201,49 @@ exports['wrapCallback - substream'] = function (test) {
     };
     test.ok(s.wrapCallback(f)().foo);
     test.done();
+};
+
+exports['wrapCallback - with args wrapping by function'] = function (test) {
+    function f(cb) {
+        cb(null, 1, 2, 3);
+    }
+    function mapper(){
+        return Array.prototype.slice.call(arguments);
+    }
+    _.wrapCallback(f, mapper)().each(function (x) {
+        test.same(x, [1, 2, 3]);
+        test.done();
+    });
+};
+
+exports['wrapCallback - with args wrapping by number'] = function (test) {
+    function f(cb) {
+        cb(null, 1, 2, 3);
+    }
+    _.wrapCallback(f, 2)().each(function (x) {
+        test.same(x, [1, 2]);
+        test.done();
+    });
+};
+
+exports['wrapCallback - with args wrapping by array'] = function (test) {
+    function f(cb) {
+        cb(null, 1, 2, 3);
+    }
+    _.wrapCallback(f, ['one', 'two', 'three'])().each(function (x) {
+        test.same(x, {'one': 1, 'two': 2, 'three': 3});
+        test.done()
+    });
+};
+
+exports['wrapCallback - default mapper discards all but first arg'] = function (test) {
+    function f(cb) {
+        cb(null, 1, 2, 3);
+    }
+    _.wrapCallback(f)().each(function (x) {
+        test.same(x, 1);
+        test.done()
+    });
 };
 
 exports['streamifyAll'] = {
