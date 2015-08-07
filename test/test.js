@@ -809,6 +809,17 @@ exports['asNodeWritable'] = {
         var s = _().map(_.add(1));
         test.throws(s.asNodeWritable.bind(s));
         test.done();
+    },
+    'pipes to writable works': function (test) {
+        test.expect(2);
+        var s = _();
+        streamify([1, 2, 3]).pipe(s.asNodeWritable());
+        test.same(s._incoming.length, 0);
+
+        s.toArray(function (xs) {
+            test.same(xs, [1, 2, 3]);
+            test.done();
+        });
     }
 };
 
