@@ -440,7 +440,7 @@ exports['constructor'] = {
         };
         s.emit('drain');
 
-        test.ok(!writtenTo, 'Drain should not cause write to be called');
+        test.ok(!writtenTo, 'Drain should not cause write to be called.');
         test.done();
     },
     'throws error for unsupported object': function (test) {
