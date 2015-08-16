@@ -5924,3 +5924,14 @@ exports['not'] = function (test) {
     test.equal(_.not(undefined), true);
     return test.done();
 };
+
+exports['exposes functions needed for plugins'] = {
+    'constructor': function(test) {
+        test.notEqual(_.Stream, undefined);
+        return test.done();
+    },
+    'exposeMethod': function(test) {
+        test.notEqual(_.exposeMethod, undefined);
+        return test.done();
+    }
+};
