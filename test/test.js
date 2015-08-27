@@ -4679,6 +4679,50 @@ exports['splitBy - GeneratorStream'] = function (test) {
     });
 };
 
+exports['splitByWithTimeout - GeneratorStream'] = {
+    setUp: function (callback) {
+        this.clock = sinon.useFakeTimers();
+
+        function delay(push, ms, x) {
+            setTimeout(function () {
+                push(null, x);
+            }, ms);
+        }
+        this.generator = function (push) {
+            delay(push, 10, 'one__two');
+            delay(push, 30, 'three__four');
+            delay(push, 50, 'five');
+            delay(push, 500, 'aaa__');
+            delay(push, 510, 'six__seven');
+        };
+
+        this.tester = function (stream, test) {
+            var results = [];
+
+            stream.each(function (x) {
+                results.push(x);
+            });
+
+            this.clock.tick(9);
+            test.same(results, []);
+            this.clock.tick(300);
+            test.same(results, ['one', 'twothree', 'fourfive']);
+            this.clock.tick(300);
+            test.same(results, ['one', 'twothree', 'fourfive', 'aaa', 'six']);
+            test.done();
+        };
+
+        callback();
+    },
+    tearDown: function (callback) {
+        this.clock.restore();
+        callback();
+    },
+    'async generator': function (test) {
+        this.tester(_(this.generator).splitByWithTimeout('__', 200), test);
+    }
+};
+
 exports['split'] = function (test) {
     test.expect(3);
     _(['a\n', 'b\nc\n', 'd', '\ne']).split().toArray(function(xs) {
