@@ -411,7 +411,7 @@ exports['constructor'] = {
         test.strictEqual(s, _(s));
         test.done();
     },
-    'from Readable stream with next function - issue #303': function (test) {
+    'from Readable with next function - issue #303': function (test) {
         var Readable = Stream.Readable;
 
         var rs = new Readable;
@@ -422,6 +422,25 @@ exports['constructor'] = {
         rs.push(null);
         _(rs).invoke('toString', ['utf8'])
             .toArray(this.tester(['a', 'b', 'c'], test));
+        test.done();
+    },
+    'from Readable - unpipes on destroy': function (test) {
+        var rs = streamify([1, 2, 3]);
+
+        var s = _(rs);
+        s.pull(valueEquals(test, 1));
+        s.destroy();
+
+        var writtenTo = false;
+        var write = s.write;
+        s.write = function () {
+            console.log('writtenTo');
+            writtenTo = true;
+            write.call(s, arguments);
+        };
+        s.emit('drain');
+
+        test.ok(!writtenTo, 'Drain should not cause write to be called.');
         test.done();
     },
     'throws error for unsupported object': function (test) {
