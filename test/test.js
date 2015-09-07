@@ -2058,50 +2058,130 @@ exports['sequence - returnsSameStream'] = returnsSameStreamTest(function(s) {
     return s.sequence();
 }, [1], [[1]]);
 
-exports['fork'] = function (test) {
-    test.expect(9);
-    var s = _([1,2,3,4]);
-    s.id = 's';
-    var ss2 = s.fork();
-    ss2.id = 'ss2';
-    var s2 = ss2.map(function (x) {
-        return x * 2;
-    });
-    s2.id = 's2';
-    var s3 = s.fork().map(function (x) {
-        return x * 3;
-    });
-    s3.id = 's3';
-    var s2_data = [];
-    var s3_data = [];
+exports['fork'] = {
+    'simple test': function (test) {
+        test.expect(9);
+        var s = _([1,2,3,4]);
+        s.id = 's';
+        var ss2 = s.fork();
+        ss2.id = 'ss2';
+        var s2 = ss2.map(function (x) {
+            return x * 2;
+        });
+        s2.id = 's2';
+        var s3 = s.fork().map(function (x) {
+            return x * 3;
+        });
+        s3.id = 's3';
+        var s2_data = [];
+        var s3_data = [];
 
-    takeNext(s2, s2_data, 1);
+        takeNext(s2, s2_data, 1);
 
-    // don't start until both consumers resume
-    test.same(s2_data, []);
+        // don't start until both consumers resume
+        test.same(s2_data, []);
 
-    takeNext(s3, s3_data, 2);
-    test.same(s2_data, [2]);
-    test.same(s3_data, [3]);
+        takeNext(s3, s3_data, 2);
+        test.same(s2_data, [2]);
+        test.same(s3_data, [3]);
 
-    takeNext(s2, s2_data, 1);
-    test.same(s2_data, [2,4]);
-    test.same(s3_data, [3,6]);
+        takeNext(s2, s2_data, 1);
+        test.same(s2_data, [2,4]);
+        test.same(s3_data, [3,6]);
 
-    takeNext(s3, s3_data, 2);
-    test.same(s2_data, [2,4]);
-    test.same(s3_data, [3,6]);
+        takeNext(s3, s3_data, 2);
+        test.same(s2_data, [2,4]);
+        test.same(s3_data, [3,6]);
 
-    takeNext(s2, s2_data, 2);
-    test.same(s2_data, [2,4,6,8]);
-    test.same(s3_data, [3,6,9,12]);
+        takeNext(s2, s2_data, 2);
+        test.same(s2_data, [2,4,6,8]);
+        test.same(s3_data, [3,6,9,12]);
 
-    test.done();
+        test.done();
+    },
+    'returnsSameStream': returnsSameStreamTest(function(s) {
+        return s.fork();
+    }, [1]),
+    'multiplex at emit time - pull then add fork': function (test) {
+        test.expect(2);
+        var s1Arr, s2Arr;
+        var s = _();
+
+        s.fork().toArray(function (a) {
+            s1Arr = a;
+            if (s1Arr != null && s2Arr != null) {
+                runTest();
+            }
+        });
+
+        var s2 = s.fork();
+        s.write(1);
+
+        s2.toArray(function (a) {
+            s2Arr = a;
+            if (s1Arr != null && s2Arr != null) {
+                runTest();
+            }
+        });
+
+        s.end();
+
+        function runTest() {
+            test.same(s1Arr, [1]);
+            test.same(s2Arr, [1]);
+            test.done();
+        }
+    },
+    'multiplex at emit time - pull then add pulling fork': function (test) {
+        test.expect(2);
+        var s1Arr, s2Arr;
+        var s = _();
+
+        s.fork().toArray(function (a) {
+            s1Arr = a;
+            if (s1Arr != null && s2Arr != null) {
+                runTest();
+            }
+        });
+
+        s.fork().toArray(function (a) {
+            s2Arr = a;
+            if (s1Arr != null && s2Arr != null) {
+                runTest();
+            }
+        });
+
+        s.write(1);
+        s.end();
+
+        function runTest() {
+            test.same(s1Arr, [1]);
+            test.same(s2Arr, [1]);
+            test.done();
+        }
+    },
+    'fork shuffling before emit': function (test) {
+        test.expect(1);
+        var arr;
+        var s = _();
+        var s1 = s.fork();
+        var s2 = s.fork();
+
+        s1.toArray(function (a) {
+            arr = ['garbage'];
+        });
+        s2.toArray(function (a) {
+            arr = a;
+        });
+        s1.destroy();
+
+        s.write(1);
+        s.end();
+        test.same(arr, [1]);
+        test.done();
+    }
+
 };
-
-exports['fork - returnsSameStream'] = returnsSameStreamTest(function(s) {
-    return s.fork();
-}, [1]);
 
 exports['observe'] = function (test) {
     test.expect(11);
