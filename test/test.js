@@ -369,6 +369,34 @@ exports['consume - push nil async (issue #173)'] = function (test) {
     });
 };
 
+exports['consume - fork after consume should not throw (issue #366)'] = function (test) {
+    test.expect(2);
+    var arr1, arr2;
+
+    var s = _();
+    var s1 = s.toArray(function (a) {
+        arr1 = a;
+        if (arr1 && arr2) {
+            runTest();
+        }
+    });
+    var s2 = s.fork().toArray(function (a) {
+        arr2 = a;
+        if (arr1 && arr2) {
+            runTest();
+        }
+    });
+
+    s.write(1);
+    s.end();
+
+    function runTest() {
+        test.same(arr1, [1]);
+        test.same(arr2, [1]);
+        test.done();
+    }
+}
+
 exports['constructor'] = {
     setUp: function (callback) {
         this.clock = sinon.useFakeTimers();
@@ -748,7 +776,7 @@ exports['generator throws error if push called after nil'] = function (test) {
     test.done();
 };
 
-exports['consume throws error if push called after nil'] = function (test) {
+exports['consume - throws error if push called after nil'] = function (test) {
     test.expect(1);
     var s = _([1,2,3]);
     var s2 = s.consume(function (err, x, push, next) {
@@ -765,7 +793,7 @@ exports['consume throws error if push called after nil'] = function (test) {
     test.done();
 };
 
-exports['consume throws error if next called after nil'] = function (test) {
+exports['consume - throws error if next called after nil'] = function (test) {
     test.expect(1);
     var s = _([1,2,3]);
     var nil_seen = false;
@@ -2001,6 +2029,35 @@ exports['observe - observers should be destroyed (issue #208)'] = function (test
     test.same(o._observers, [], 'o._observers should be empty after destroy.');
     test.same(s._observers, [], 'source._observers should be empty after destroy.');
     test.done();
+};
+
+exports['observe - observe consume before source emit should not throw'] = function (test) {
+    test.expect(2);
+    var arr1, arr2;
+
+    var s = _();
+    var s1 = s.observe().toArray(function (a) {
+        arr1 = a;
+        if (arr1 && arr2) {
+            runTest();
+        }
+    });
+    var s2 = s.observe().toArray(function (a) {
+        arr2 = a;
+        if (arr1 && arr2) {
+            runTest();
+        }
+    });
+
+    s.write(1);
+    s.end();
+    s.resume();
+
+    function runTest() {
+        test.same(arr1, [1]);
+        test.same(arr2, [1]);
+        test.done();
+    }
 };
 
 // TODO: test redirect after fork, forked streams should transfer over
