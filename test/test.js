@@ -369,6 +369,21 @@ exports['consume - push nil async (issue #173)'] = function (test) {
     });
 };
 
+exports['consume - consume push mutates _consumers list (issue #366)'] = function (test) {
+    test.expect(1);
+    var spy =  sinon.spy();
+
+    var s = _();
+    s.tap(noop).tap(noop).each(noop).done(spy);
+    s.fork().tap(noop).each(noop).done(spy);
+    s.end();
+
+    function noop () {}
+
+    test.equals(spy.callCount, 2);
+    test.done();
+};
+
 exports['constructor'] = {
     setUp: function (callback) {
         this.clock = sinon.useFakeTimers();
