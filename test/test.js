@@ -5659,15 +5659,28 @@ exports['pipeline'] = {
         });
     },
     'should have backpressure': function (test) {
-        test.expect(2);
-        var pipeline = _.pipeline(function (x) {
-            return x;
-        });
+        test.expect(3);
+        var arr = [];
+        var pipeline1 = _.pipeline(_.map(function (x) {
+            return x + 10;
+        }));
 
-        test.ok(pipeline.paused, 'pipeline should be paused.');
-        test.strictEqual(pipeline.write(1), false,
+        test.ok(pipeline1.paused, 'pipeline should be paused.');
+        test.strictEqual(pipeline1.write(1), false,
                'pipeline should return false for calls to write since it is paused.');
-        test.done();
+
+        var pipeline2 = _.pipeline(_.map(function (x) {
+            return x + 10;
+        }));
+
+        _([1, 2, 3])
+            .doto(arr.push.bind(arr))
+            .pipe(pipeline2)
+            .each(arr.push.bind(arr))
+            .done(function () {
+                test.same(arr, [1, 11, 2, 12, 3, 13]);
+                test.done();
+            });
     }
 };
 
