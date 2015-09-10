@@ -5665,7 +5665,8 @@ exports['pipeline'] = {
         });
 
         test.ok(pipeline.paused, 'pipeline should be paused.');
-        test.ok(!pipeline.write(1), 'pipeline should return false for calls to write since it is paused.');
+        test.strictEqual(pipeline.write(1), false,
+               'pipeline should return false for calls to write since it is paused.');
         test.done();
     }
 };
