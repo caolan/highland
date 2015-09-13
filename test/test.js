@@ -3104,6 +3104,47 @@ exports['merge'] = {
     }
 };
 
+exports['mergeLimit'] = {
+    setUp: function (callback) {
+        this.clock = sinon.useFakeTimers();
+        this.__delay = function (n){
+            return _(function (push, next) {
+                setTimeout(function () {
+                    push(null, n);
+                    push(null, _.nil);
+                }, n*10);
+            });
+        };
+        callback();
+    },
+    tearDown: function (callback) {
+        this.clock.restore();
+        delete this.__delay
+        callback();
+    },
+    'run three at a time': function (test) {
+        _.mergeLimit(3, [5,3,4,4,2].map(this.__delay)).toArray(function (xs) {
+            test.same(xs, [3,4,5,2,4]);
+            test.done();
+        });
+        this.clock.tick(100);
+    },
+    'run two at a time': function (test) {
+        _.mergeLimit(2, [4,3,2,3,1].map(this.__delay)).toArray(function (xs) {
+            test.same(xs, [3,4,2,1,3]);
+            test.done();
+        });
+        this.clock.tick(100);
+    },
+    'run one at a time': function (test) {
+        _.mergeLimit(1, [4,3,2,3,1].map(this.__delay)).toArray(function (xs) {
+            test.same(xs, [4,3,2,3,1]);
+            test.done();
+        });
+        this.clock.tick(150);
+    }
+};
+
 exports['invoke'] = function (test) {
     test.expect(2);
     _.invoke('toString', [], [1,2,3,4]).toArray(function (xs) {
