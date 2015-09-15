@@ -3104,7 +3104,7 @@ exports['merge'] = {
     }
 };
 
-exports['mergeLimit'] = {
+exports['mergeWithLimit'] = {
     setUp: function (callback) {
         this.clock = sinon.useFakeTimers();
         this.__delay = function (n){
@@ -3123,26 +3123,43 @@ exports['mergeLimit'] = {
         callback();
     },
     'run three at a time': function (test) {
-        _.mergeLimit(3, [5,3,4,4,2].map(this.__delay)).toArray(function (xs) {
+        _.mergeWithLimit(3, [5,3,4,4,2].map(this.__delay)).toArray(function (xs) {
             test.same(xs, [3,4,5,2,4]);
             test.done();
         });
         this.clock.tick(100);
     },
     'run two at a time': function (test) {
-        _.mergeLimit(2, [4,3,2,3,1].map(this.__delay)).toArray(function (xs) {
+        _.mergeWithLimit(2, [4,3,2,3,1].map(this.__delay)).toArray(function (xs) {
             test.same(xs, [3,4,2,1,3]);
             test.done();
         });
         this.clock.tick(100);
     },
     'run one at a time': function (test) {
-        _.mergeLimit(1, [4,3,2,3,1].map(this.__delay)).toArray(function (xs) {
+        _.mergeWithLimit(1, [4,3,2,3,1].map(this.__delay)).toArray(function (xs) {
             test.same(xs, [4,3,2,3,1]);
             test.done();
         });
         this.clock.tick(150);
-    }
+    },
+    'handle backpressure': function (test) {
+        var s1 = _([1,2,3,4]);
+        var s2 = _([5,6,7,8]);
+        var s = _.mergeWithLimit(10, [s1, s2]);
+        s.take(5).toArray(function (xs) {
+            test.same(xs, [1,5,2,6,3]);
+            _.setImmediate(function () {
+                test.equal(s._outgoing.length, 0);
+                test.equal(s._incoming.length, 1);
+                test.equal(s1._incoming.length, 2);
+                test.equal(s2._incoming.length, 2);
+                test.done();
+            });
+        });
+        this.clock.tick(100);
+    },
+    'noValueOnError': noValueOnErrorTest(_.mergeWithLimit(1)),
 };
 
 exports['invoke'] = function (test) {
