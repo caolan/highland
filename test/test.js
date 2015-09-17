@@ -5660,6 +5660,26 @@ exports['pipeline - no arguments'] = function (test) {
     });
 };
 
+exports['pipeline - backpressure'] = function (test) {
+    var i = 0;
+    var src = _(function(push, next) {
+        if (i < 10000) {
+            push(null, ++i);
+            next();
+        } else {
+            push(null, _.nil);
+        }
+    });
+    var through = _.pipeline(
+        _.map(_.wrapCallback(function(){})),
+        _.series
+    );
+    src.pipe(through).toArray();
+
+    test.equal(i, 1);
+    test.done();
+}
+
 
 // TODO: test lazy getting of values from obj keys (test using getters?)
 exports['values'] = function (test) {
