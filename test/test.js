@@ -4,10 +4,16 @@ var EventEmitter = require('events').EventEmitter,
     Stream = require('stream'),
     streamify = require('stream-array'),
     concat = require('concat-stream'),
-    Promise = require('es6-promise').Promise,
+    RSVP = require('rsvp'),
+    Promise = RSVP.Promise,
     transducers = require('transducers-js'),
     _ = require('../lib/index');
 
+// Use setTimeout. The default is process.nextTick, which sinon doesn't
+// handle.
+RSVP.configure('async', function (f, arg) {
+    setTimeout(f.bind(this, arg), 1);
+});
 
 /**
  * Useful function to use in tests.
@@ -425,7 +431,6 @@ exports['consume - fork after consume should not throw (issue #366)'] = function
 
 exports['constructor'] = {
     setUp: function (callback) {
-        this.clock = sinon.useFakeTimers();
         this.createTestIterator = function(array, error, lastVal) {
             var count = 0,
                 length = array.length;
@@ -456,10 +461,6 @@ exports['constructor'] = {
         };
         callback();
     },
-    tearDown: function (callback) {
-        this.clock.restore();
-        callback();
-    },
     'passing Stream to constructor returns original': function (test) {
         var s = _([1,2,3]);
         test.strictEqual(s, _(s));
@@ -488,7 +489,6 @@ exports['constructor'] = {
         var writtenTo = false;
         var write = s.write;
         s.write = function () {
-            console.log('writtenTo');
             writtenTo = true;
             write.call(s, arguments);
         };
