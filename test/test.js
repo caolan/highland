@@ -4,10 +4,16 @@ var EventEmitter = require('events').EventEmitter,
     Stream = require('stream'),
     streamify = require('stream-array'),
     concat = require('concat-stream'),
-    Promise = require('es6-promise').Promise,
+    RSVP = require('rsvp'),
+    Promise = RSVP.Promise,
     transducers = require('transducers-js'),
     _ = require('../lib/index');
 
+// Use setTimeout. The default is process.nextTick, which sinon doesn't
+// handle.
+RSVP.configure('async', function (f, arg) {
+    setTimeout(f.bind(this, arg), 1);
+});
 
 /**
  * Useful function to use in tests.
@@ -83,18 +89,28 @@ function generatorStream(input, timeout) {
     });
 }
 
-function takeNext(xs, array, times, cb) {
+function takeNextCb(xs, times, array, cb) {
+    if (!array) {
+        array = [];
+    }
+
     xs.pull(function (err, x) {
+        array.push(x);
         if (x !== _.nil) {
-            array.push(x);
             if (times - 1 > 0) {
-                takeNext(xs, array, times - 1, cb);
+                takeNextCb(xs, times - 1, array, cb);
             }
         }
 
         if (cb && (times <= 1 || x === _.nil)) {
             cb(array);
         }
+    });
+}
+
+function takeNext(xs, times, array) {
+    return new Promise(function (res, rej) {
+        takeNextCb(xs, times, array, res);
     });
 }
 
@@ -418,11 +434,33 @@ exports['consume - source resume should buffer'] = function (test) {
     test.done();
 };
 
-exports['passing Stream to constructor returns original'] = function (test) {
-    var s = _([1,2,3]);
-    test.strictEqual(s, _(s));
-    test.done();
-};
+exports['consume - fork after consume should not throw (issue #366)'] = function (test) {
+    test.expect(2);
+    var arr1, arr2;
+
+    var s = _();
+    var s1 = s.fork().toArray(function (a) {
+        arr1 = a;
+        if (arr1 && arr2) {
+            runTest();
+        }
+    });
+    var s2 = s.fork().toArray(function (a) {
+        arr2 = a;
+        if (arr1 && arr2) {
+            runTest();
+        }
+    });
+
+    s.write(1);
+    s.end();
+
+    function runTest() {
+        test.same(arr1, [1]);
+        test.same(arr2, [1]);
+        test.done();
+    }
+}
 
 exports['constructor'] = {
     setUp: function (callback) {
@@ -461,7 +499,7 @@ exports['constructor'] = {
         test.strictEqual(s, _(s));
         test.done();
     },
-    'constructor from Readable stream with next function - issue #303': function (test) {
+    'from Readable with next function - issue #303': function (test) {
         var Readable = Stream.Readable;
 
         var rs = new Readable;
@@ -474,17 +512,35 @@ exports['constructor'] = {
             .toArray(this.tester(['a', 'b', 'c'], test));
         test.done();
     },
-    'constructor - throws error for unsupported object': function (test) {
+    'from Readable - unpipes on destroy': function (test) {
+        var rs = streamify([1, 2, 3]);
+
+        var s = _(rs);
+        s.pull(valueEquals(test, 1));
+        s.destroy();
+
+        var writtenTo = false;
+        var write = s.write;
+        s.write = function () {
+            writtenTo = true;
+            write.call(s, arguments);
+        };
+        s.emit('drain');
+
+        test.ok(!writtenTo, 'Drain should not cause write to be called.');
+        test.done();
+    },
+    'throws error for unsupported object': function (test) {
         test.throws(function () {
             _({}).done(function () {});
         }, Error, 'Object was not a stream, promise, iterator or iterable: object');
         test.done();
     },
-    'constructor from promise': function (test) {
+    'from promise': function (test) {
         _(Promise.resolve(3)).toArray(this.tester([3], test));
         test.done();
     },
-    'constructor from promise - errors': function (test) {
+    'from promise - errors': function (test) {
         test.expect(3);
         var errs = [];
         _(Promise.reject(new Error('boom')))
@@ -498,18 +554,18 @@ exports['constructor'] = {
                 test.done();
             });
     },
-    'constructor from iterator': function (test) {
+    'from iterator': function (test) {
         _(this.createTestIterator([1, 2, 3, 4, 5]))
             .toArray(this.tester([1, 2, 3, 4, 5], test));
         test.done();
     },
-    'constructor from iterator - error': function (test) {
+    'from iterator - error': function (test) {
         _(this.createTestIterator([1, 2, 3, 4, 5], new Error('Error at index 2'))).errors(function (err) {
             test.equals(err.message, 'Error at index 2');
         }).toArray(this.tester([1, 2], test));
         test.done();
     },
-    'constructor from iterator - final return falsy': function (test) {
+    'from iterator - final return falsy': function (test) {
         test.expect(1);
         _(this.createTestIterator([1, 2, 3, 4, 5], void 0, 0)).toArray(this.tester([1, 2, 3, 4, 5, 0], test));
         test.done();
@@ -869,7 +925,7 @@ exports['generator throws error if push called after nil'] = function (test) {
     test.done();
 };
 
-exports['consume throws error if push called after nil'] = function (test) {
+exports['consume - throws error if push called after nil'] = function (test) {
     test.expect(1);
     var s = _([1,2,3]);
     var s2 = s.consume(function (err, x, push, next) {
@@ -886,7 +942,7 @@ exports['consume throws error if push called after nil'] = function (test) {
     test.done();
 };
 
-exports['consume throws error if next called after nil'] = function (test) {
+exports['consume - throws error if next called after nil'] = function (test) {
     test.expect(1);
     var s = _([1,2,3]);
     var nil_seen = false;
@@ -2076,24 +2132,24 @@ exports['fork'] = {
         var s2_data = [];
         var s3_data = [];
 
-        takeNext(s2, s2_data, 1);
+        takeNext(s2, 1, s2_data);
 
         // don't start until both consumers resume
         test.same(s2_data, []);
 
-        takeNext(s3, s3_data, 2);
+        takeNext(s3, 2, s3_data);
         test.same(s2_data, [2]);
         test.same(s3_data, [3]);
 
-        takeNext(s2, s2_data, 1);
+        takeNext(s2, 1, s2_data);
         test.same(s2_data, [2,4]);
         test.same(s3_data, [3,6]);
 
-        takeNext(s3, s3_data, 2);
+        takeNext(s3, 2, s3_data);
         test.same(s2_data, [2,4]);
         test.same(s3_data, [3,6]);
 
-        takeNext(s2, s2_data, 2);
+        takeNext(s2, 2, s2_data);
         test.same(s2_data, [2,4,6,8]);
         test.same(s3_data, [3,6,9,12]);
 
@@ -2202,25 +2258,25 @@ exports['observe'] = function (test) {
     var s2_data = [];
     var s3_data = [];
 
-    takeNext(s2, s2_data, 1);
+    takeNext(s2, 1, s2_data);
 
     test.same(s2_data, [2]);
     test.same(s3_data, []);
     test.same(s3_source._outgoing.toArray(), [1]);
 
-    takeNext(s3, s3_data, 2);
+    takeNext(s3, 2, s3_data);
     test.same(s2_data, [2]);
     test.same(s3_data, [3]);
 
-    takeNext(s2, s2_data, 1);
+    takeNext(s2, 1, s2_data);
     test.same(s2_data, [2,4]);
     test.same(s3_data, [3,6]);
 
-    takeNext(s3, s3_data, 2);
+    takeNext(s3, 2, s3_data);
     test.same(s2_data, [2,4]);
     test.same(s3_data, [3,6]);
 
-    takeNext(s2, s2_data, 2);
+    takeNext(s2, 2, s2_data);
     test.same(s2_data, [2,4,6,8]);
     test.same(s3_data, [3,6,9,12]);
     test.done();
@@ -2289,6 +2345,35 @@ exports['observe - returnsSameStream'] = returnsSameStreamTest(function(s) {
     return s.observe();
 }, [1]);
 */
+
+exports['observe - observe consume before source emit should not throw'] = function (test) {
+    test.expect(2);
+    var arr1, arr2;
+
+    var s = _();
+    var s1 = s.observe().toArray(function (a) {
+        arr1 = a;
+        if (arr1 && arr2) {
+            runTest();
+        }
+    });
+    var s2 = s.observe().toArray(function (a) {
+        arr2 = a;
+        if (arr1 && arr2) {
+            runTest();
+        }
+    });
+
+    s.write(1);
+    s.end();
+    s.resume();
+
+    function runTest() {
+        test.same(arr1, [1]);
+        test.same(arr2, [1]);
+        test.done();
+    }
+};
 
 // TODO: test redirect after fork, forked streams should transfer over
 // TODO: test redirect after observe, observed streams should transfer over
@@ -3309,7 +3394,7 @@ exports['merge'] = {
         var s2 = _([5,6,7,8]);
         var s = _.merge([s1, s2]);
 
-        takeNext(s, [], 5, function (xs) {
+        takeNext(s, 5).then(function (xs) {
             test.same(xs, [1,5,2,6,3]);
             _.setImmediate(function () {
                 test.equal(s._outgoing.length, 1);
@@ -3340,17 +3425,20 @@ exports['merge'] = {
         var s = _([s1, s2]).merge();
         s.id = 's';
 
-        takeNext(s, [], 1, function (xs) {
+        var self = this;
+        takeNext(s, 1).then(function (xs) {
             test.same(xs, [1]);
-            setTimeout(function () {
-                takeNext(s, [], 4, function (xs) {
-                    test.same(xs, [5,2,6,3]);
-                    takeNext(s, [], 4, function (xs) {
-                        test.same(xs, [4,7,8]);
-                        test.done();
-                    });
-                });
-            }, 150);
+            return new Promise(function (res, rej) {
+                setTimeout(function () {
+                    takeNext(s, 4).then(res, rej);
+                }, 150);
+            });
+        }).then(function (xs) {
+            test.same(xs, [5,2,6,3]);
+            return takeNext(s, 4);
+        }).then(function (xs) {
+            test.same(xs, [4,7,8,_.nil]);
+            test.done();
         });
         this.clock.tick(400);
     },
@@ -3371,6 +3459,63 @@ exports['merge'] = {
             .each(test.ok.bind(test, false, 'each should not be called'));
         test.done();
     }
+};
+
+exports['mergeWithLimit'] = {
+    setUp: function (callback) {
+        this.clock = sinon.useFakeTimers();
+        this.__delay = function (n){
+            return _(function (push, next) {
+                setTimeout(function () {
+                    push(null, n);
+                    push(null, _.nil);
+                }, n*10);
+            });
+        };
+        callback();
+    },
+    tearDown: function (callback) {
+        this.clock.restore();
+        delete this.__delay
+        callback();
+    },
+    'run three at a time': function (test) {
+        _.mergeWithLimit(3, [5,3,4,4,2].map(this.__delay)).toArray(function (xs) {
+            test.same(xs, [3,4,5,2,4]);
+            test.done();
+        });
+        this.clock.tick(100);
+    },
+    'run two at a time': function (test) {
+        _.mergeWithLimit(2, [4,3,2,3,1].map(this.__delay)).toArray(function (xs) {
+            test.same(xs, [3,4,2,1,3]);
+            test.done();
+        });
+        this.clock.tick(100);
+    },
+    'run one at a time': function (test) {
+        _.mergeWithLimit(1, [4,3,2,3,1].map(this.__delay)).toArray(function (xs) {
+            test.same(xs, [4,3,2,3,1]);
+            test.done();
+        });
+        this.clock.tick(150);
+    },
+    'handle backpressure': function (test) {
+        var s1 = _([1,2,3,4]);
+        var s2 = _([5,6,7,8]);
+        var s = _.mergeWithLimit(10, [s1, s2]);
+        takeNext(s, 5).then(function (xs) {
+            test.same(xs, [1,5,2,6,3]);
+            _.setImmediate(function () {
+                test.equal(s._outgoing.length, 1);
+                test.equal(s1._outgoing.length, 2);
+                test.equal(s2._outgoing.length, 2);
+                test.done();
+            });
+        });
+        this.clock.tick(100);
+    },
+    'noValueOnError': noValueOnErrorTest(_.mergeWithLimit(1)),
 };
 
 exports['invoke'] = function (test) {
@@ -6018,59 +6163,120 @@ exports['through'] = {
     }
 };
 
-exports['pipeline'] = function (test) {
-    var parser = through(
-        function (data) {
-            this.queue(JSON.parse(data));
-        },
-        function () {
-            this.queue(null);
-        }
-    );
-    var doubler = _.map(function (x) {
-        return x * 2;
-    });
-    var parseDouble = _.pipeline(parser, doubler);
-    var s = _(function (push, next) {
-        push(null, 1);
-        setTimeout(function () { push(null, 2); }, 10);
-        setTimeout(function () { push(null, 3); }, 20);
-        setTimeout(function () { push(null, 4); }, 30);
-        setTimeout(function () { push(null, _.nil); }, 40);
-    });
-    s.pipe(parseDouble).toArray(function (xs) {
-        test.same(xs, [2,4,6,8]);
-        test.done();
-    });
-};
+exports['pipeline'] = {
+    'usage test': function (test) {
+        var parser = through(
+            function (data) {
+                this.queue(JSON.parse(data));
+            },
+            function () {
+                this.queue(null);
+            }
+        );
+        var doubler = _.map(function (x) {
+            return x * 2;
+        });
+        var parseDouble = _.pipeline(parser, doubler);
+        var s = _(function (push, next) {
+            push(null, 1);
+            setTimeout(function () { push(null, 2); }, 10);
+            setTimeout(function () { push(null, 3); }, 20);
+            setTimeout(function () { push(null, 4); }, 30);
+            setTimeout(function () { push(null, _.nil); }, 40);
+        });
+        s.pipe(parseDouble).toArray(function (xs) {
+            test.same(xs, [2,4,6,8]);
+            test.done();
+        });
+    },
+    'single through function': function (test) {
+        var src = streamify([1,2,3,4]);
+        var through = _.pipeline(function (s) {
+            return s
+                .filter(function (x) {
+                    return x % 2;
+                })
+                .map(function (x) {
+                    return x * 2;
+                })
+                .map(function (x) {
+                    return x + 10;
+                });
+        });
+        src.pipe(through).toArray(function (xs) {
+            test.same(xs, [12, 16]);
+            test.done();
+        });
+    },
+    'no arguments': function (test) {
+        var src = streamify([1,2,3,4]);
+        var through = _.pipeline();
+        src.pipe(through).toArray(function (xs) {
+            test.same(xs, [1,2,3,4]);
+            test.done();
+        });
+    },
+    'should have backpressure': function (test) {
+        test.expect(3);
+        var arr = [];
+        var pipeline1 = _.pipeline(_.map(function (x) {
+            return x + 10;
+        }));
 
-exports['pipeline - single through function'] = function (test) {
-    var src = streamify([1,2,3,4]);
-    var through = _.pipeline(function (s) {
-        return s
-            .filter(function (x) {
-                return x % 2;
-            })
-            .map(function (x) {
-                return x * 2;
-            })
-            .map(function (x) {
-                return x + 10;
+        test.ok(pipeline1.paused, 'pipeline should be paused.');
+        test.strictEqual(pipeline1.write(1), false,
+               'pipeline should return false for calls to write since it is paused.');
+
+        var pipeline2 = _.pipeline(_.map(function (x) {
+            return x + 10;
+        }));
+
+        _([1, 2, 3])
+            .doto(arr.push.bind(arr))
+            .pipe(pipeline2)
+            .each(arr.push.bind(arr))
+            .done(function () {
+                test.same(arr, [1, 11, 2, 12, 3, 13]);
+                test.done();
             });
-    });
-    src.pipe(through).toArray(function (xs) {
-        test.same(xs, [12, 16]);
-        test.done();
-    });
-};
+    },
+    'drain should only be called when there is a need': function (test) {
+        test.expect(14);
+        var pipeline = _.pipeline(_.flatMap(function (x) {
+            return _([x, x + 10]);
+        }));
 
-exports['pipeline - no arguments'] = function (test) {
-    var src = streamify([1,2,3,4]);
-    var through = _.pipeline();
-    src.pipe(through).toArray(function (xs) {
-        test.same(xs, [1,2,3,4]);
-        test.done();
-    });
+        var spy = sinon.spy();
+        pipeline.on('drain', spy);
+
+        var s = _([1, 2, 3]).pipe(pipeline);
+
+        takeNext(s, 1)
+            .then(expect(1, 0))
+            .then(expect(11, 0))
+            .then(expect(2, 1))
+            .then(expect(12, 1))
+            .then(expect(3, 2))
+            .then(expect(13, 2))
+            .then(expectDone(3));
+
+        function expect(value, spyCount) {
+            return function (arr) {
+                test.strictEqual(spy.callCount, spyCount);
+                test.deepEqual(arr, [value]);
+                return takeNext(s, 1);
+            };
+        }
+
+        function expectDone(spyCount) {
+            return function (arr) {
+                test.strictEqual(spy.callCount, spyCount);
+                test.deepEqual(arr, [_.nil]);
+                test.done();
+                return [];
+            };
+        }
+    }
 };
 
 exports['pipeline - substream'] = function (test) {

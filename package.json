@@ -16,7 +16,6 @@
   "devDependencies": {
     "browserify": "~3.30.1",
     "concat-stream": "~1.4.1",
-    "es6-promise": "~0.1.1",
     "grunt": "~0.4.2",
     "grunt-browserify": "~1.3.1",
     "grunt-bump": "0.0.13",
@@ -34,7 +33,8 @@
     "tape": "~2.4.2",
     "through": "~2.3.4",
     "transducers-js": "~0.4.135",
-    "eslint": "~0.10.0"
+    "eslint": "~0.10.0",
+    "rsvp": "~3.1.0"
   },
   "scripts": {
     "test": "eslint Gruntfile.js lib && nodeunit test/test.js"
