@@ -76,7 +76,7 @@ function takeNextCb(xs, times, array, cb) {
         array.push(x);
         if (x !== _.nil) {
             if (times - 1 > 0) {
-                takeNext(xs, times - 1, array, cb);
+                takeNextCb(xs, times - 1, array, cb);
             }
         }
 
