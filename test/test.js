@@ -67,6 +67,32 @@ function generatorStream(input, timeout) {
     });
 }
 
+function takeNextCb(xs, times, array, cb) {
+    if (!array) {
+        array = [];
+    }
+
+    xs.pull(function (err, x) {
+        array.push(x);
+        if (x !== _.nil) {
+            if (times - 1 > 0) {
+                takeNext(xs, times - 1, array, cb);
+            }
+        }
+
+        if (cb && (times <= 1 || x === _.nil)) {
+            cb(array);
+        }
+    });
+}
+
+function takeNext(xs, times, array) {
+    return new Promise(function (res, rej) {
+        takeNextCb(xs, times, array, res);
+    });
+}
+
+
 exports['ratelimit'] = {
     setUp: function (callback) {
         this.clock = sinon.useFakeTimers();
@@ -5739,6 +5765,43 @@ exports['pipeline'] = {
                 test.same(arr, [1, 11, 2, 12, 3, 13]);
                 test.done();
             });
+    },
+    'drain should only be called when there is a need': function (test) {
+        test.expect(14);
+        var pipeline = _.pipeline(_.flatMap(function (x) {
+            return _([x, x + 10]);
+        }));
+
+        var spy = sinon.spy();
+        pipeline.on('drain', spy);
+
+        var s = _([1, 2, 3]).pipe(pipeline);
+
+        takeNext(s, 1)
+            .then(expect(1, 0))
+            .then(expect(11, 0))
+            .then(expect(2, 1))
+            .then(expect(12, 1))
+            .then(expect(3, 2))
+            .then(expect(13, 2))
+            .then(expectDone(3));
+
+        function expect(value, spyCount) {
+            return function (arr) {
+                test.strictEqual(spy.callCount, spyCount);
+                test.deepEqual(arr, [value]);
+                return takeNext(s, 1);
+            };
+        }
+
+        function expectDone(spyCount) {
+            return function (arr) {
+                test.strictEqual(spy.callCount, spyCount);
+                test.deepEqual(arr, [_.nil]);
+                test.done();
+                return [];
+            };
+        }
     }
 };
 
