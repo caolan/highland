@@ -5663,59 +5663,83 @@ exports['through'] = {
     }
 };
 
-exports['pipeline'] = function (test) {
-    var parser = through(
-        function (data) {
-            this.queue(JSON.parse(data));
-        },
-        function () {
-            this.queue(null);
-        }
-    );
-    var doubler = _.map(function (x) {
-        return x * 2;
-    });
-    var parseDouble = _.pipeline(parser, doubler);
-    var s = _(function (push, next) {
-        push(null, 1);
-        setTimeout(function () { push(null, 2); }, 10);
-        setTimeout(function () { push(null, 3); }, 20);
-        setTimeout(function () { push(null, 4); }, 30);
-        setTimeout(function () { push(null, _.nil); }, 40);
-    });
-    s.pipe(parseDouble).toArray(function (xs) {
-        test.same(xs, [2,4,6,8]);
-        test.done();
-    });
-};
+exports['pipeline'] = {
+    'usage test': function (test) {
+        var parser = through(
+            function (data) {
+                this.queue(JSON.parse(data));
+            },
+            function () {
+                this.queue(null);
+            }
+        );
+        var doubler = _.map(function (x) {
+            return x * 2;
+        });
+        var parseDouble = _.pipeline(parser, doubler);
+        var s = _(function (push, next) {
+            push(null, 1);
+            setTimeout(function () { push(null, 2); }, 10);
+            setTimeout(function () { push(null, 3); }, 20);
+            setTimeout(function () { push(null, 4); }, 30);
+            setTimeout(function () { push(null, _.nil); }, 40);
+        });
+        s.pipe(parseDouble).toArray(function (xs) {
+            test.same(xs, [2,4,6,8]);
+            test.done();
+        });
+    },
+    'single through function': function (test) {
+        var src = streamify([1,2,3,4]);
+        var through = _.pipeline(function (s) {
+            return s
+                .filter(function (x) {
+                    return x % 2;
+                })
+                .map(function (x) {
+                    return x * 2;
+                })
+                .map(function (x) {
+                    return x + 10;
+                });
+        });
+        src.pipe(through).toArray(function (xs) {
+            test.same(xs, [12, 16]);
+            test.done();
+        });
+    },
+    'no arguments': function (test) {
+        var src = streamify([1,2,3,4]);
+        var through = _.pipeline();
+        src.pipe(through).toArray(function (xs) {
+            test.same(xs, [1,2,3,4]);
+            test.done();
+        });
+    },
+    'should have backpressure': function (test) {
+        test.expect(3);
+        var arr = [];
+        var pipeline1 = _.pipeline(_.map(function (x) {
+            return x + 10;
+        }));
 
-exports['pipeline - single through function'] = function (test) {
-    var src = streamify([1,2,3,4]);
-    var through = _.pipeline(function (s) {
-        return s
-            .filter(function (x) {
-                return x % 2;
-            })
-            .map(function (x) {
-                return x * 2;
-            })
-            .map(function (x) {
-                return x + 10;
+        test.ok(pipeline1.paused, 'pipeline should be paused.');
+        test.strictEqual(pipeline1.write(1), false,
+               'pipeline should return false for calls to write since it is paused.');
+
+        var pipeline2 = _.pipeline(_.map(function (x) {
+            return x + 10;
+        }));
+
+        _([1, 2, 3])
+            .doto(arr.push.bind(arr))
+            .pipe(pipeline2)
+            .each(arr.push.bind(arr))
+            .done(function () {
+                test.same(arr, [1, 11, 2, 12, 3, 13]);
+                test.done();
             });
-    });
-    src.pipe(through).toArray(function (xs) {
-        test.same(xs, [12, 16]);
-        test.done();
-    });
-};
-
-exports['pipeline - no arguments'] = function (test) {
-    var src = streamify([1,2,3,4]);
-    var through = _.pipeline();
-    src.pipe(through).toArray(function (xs) {
-        test.same(xs, [1,2,3,4]);
-        test.done();
-    });
+    }
 };
 
 
