@@ -1914,6 +1914,13 @@ exports['sequence - Streams of Streams of Arrays'] = function (test) {
     });
 }
 
+exports['sequence - PromiseStream'] = function (test) {
+    _([Promise.resolve(3)]).sequence().toArray(function (xs) {
+        test.same(xs, [3]);
+        test.done();
+    });
+};
+
 exports['fork'] = function (test) {
     var s = _([1,2,3,4]);
     s.id = 's';
@@ -3485,6 +3492,17 @@ exports['flatMap - GeneratorStream'] = function (test) {
     });
     s.flatMap(f).toArray(function (xs) {
         test.same(xs, [2,4,6,8]);
+        test.done();
+    });
+};
+
+exports['flatMap - map to PromiseStream'] = function (test) {
+    test.expect(1);
+    var f = function (x) {
+        return Promise.resolve(x);
+    };
+    var s = _([1,2,3,4]).flatMap(f).toArray(function (xs) {
+        test.same(xs, [1,2,3,4]);
         test.done();
     });
 };
