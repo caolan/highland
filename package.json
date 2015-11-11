@@ -35,7 +35,7 @@
     "stream-array": "~1.0.1",
     "tape": "~2.4.2",
     "through": "~2.3.4",
-    "transducers-js": "~0.4.135"
+    "transducers-js": "~0.4.174"
   },
   "scripts": {
     "test": "eslint Gruntfile.js lib && nodeunit test/test.js"
