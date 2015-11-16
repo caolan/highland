@@ -21,7 +21,9 @@ module.exports = function (grunt) {
                     'dist/highland.js': ['lib/index.js']
                 },
                 options: {
-                    standalone: 'highland'
+                    browserifyOptions: {
+                        standalone: 'highland'
+                    }
                 }
             },
             'test-browser': {
