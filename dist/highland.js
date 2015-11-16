@@ -1,4 +1,4 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.highland = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 (function (process,global){
 /**
  * Highland: the high-level streams library
@@ -2586,7 +2586,8 @@ Stream.prototype.slice = function(start, end) {
 
     if (start === 0 && end === Infinity) {
         return this;
-    } else if (start >= end) {
+    }
+    else if (start >= end) {
         return _([]);
     }
     var s = this.consume(function (err, x, push, next) {
@@ -3071,7 +3072,7 @@ Stream.prototype.parallel = function (n) {
                     // got a new source, add it to the running array
                     var run = {stream: x, buffer: []};
                     running.push(run);
-                    x.consume(function (err, y, _push, _next) {
+                    x.consume(function (_err, y, _push, _next) {
                         if (running[0] === run) {
                             // current output stream
                             if (y === nil) {
@@ -3084,12 +3085,12 @@ Stream.prototype.parallel = function (n) {
                             }
                             else {
                                 // push directly onto parallel output stream
-                                push(err, y);
+                                push(_err, y);
                             }
                         }
                         else {
                             // we're reading ahead, buffer the output
-                            run.buffer.push([err, y]);
+                            run.buffer.push([_err, y]);
                         }
                         if (y !== nil) {
                             // keep reading until we hit nil
@@ -3476,9 +3477,9 @@ Stream.prototype.transduce = function transduce(xf) {
         }
     });
 
-    function runResult(push, memo) {
+    function runResult(push, _memo) {
         try {
-            transform['@@transducer/result'](memo);
+            transform['@@transducer/result'](_memo);
         }
         catch (e) {
             push(e);
@@ -3486,9 +3487,9 @@ Stream.prototype.transduce = function transduce(xf) {
         push(null, _.nil);
     }
 
-    function runStep(push, memo, x) {
+    function runStep(push, _memo, x) {
         try {
-            return transform['@@transducer/step'](memo, x);
+            return transform['@@transducer/step'](_memo, x);
         }
         catch (e) {
             push(e);
@@ -3692,7 +3693,7 @@ Stream.prototype.mergeWithLimit = function (n){
     var processCount = 0;
     var waiting = false;
     if (typeof n !== 'number' || n < 1) {
-        throw new Error('mergeWithLimit expects a positive number, but got: ' + n)
+        throw new Error('mergeWithLimit expects a positive number, but got: ' + n);
     }
     if (n === Infinity) {
         return this.merge();
@@ -4262,6 +4263,7 @@ function streamifyAll (inp, suffix) {
             val = inp[key];
         }
         catch (e) {
+            // Ignore
         }
 
         if (val && typeof val === 'function' && !isClass(val) &&
@@ -7359,4 +7361,5 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":10,"_process":8,"inherits":6}]},{},[1]);
+},{"./support/isBuffer":10,"_process":8,"inherits":6}]},{},[1])(1)
+});
