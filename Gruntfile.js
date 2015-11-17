@@ -33,6 +33,14 @@ module.exports = function (grunt) {
             }
         },
 
+        uglify: {
+            main: {
+                files: {
+                    'dist/highland.min.js': ['dist/highland.js']
+                }
+            }
+        },
+
         nodeunit: {
             all: ['test/test.js']
         },
@@ -81,6 +89,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-eslint');
     grunt.loadNpmTasks('grunt-contrib-nodeunit');
     grunt.loadNpmTasks('grunt-browserify');
+    grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-gh-pages');
     grunt.loadNpmTasks('grunt-bump');
     grunt.loadNpmTasks('grunt-npm');
@@ -128,7 +137,7 @@ module.exports = function (grunt) {
     ]);
 
     grunt.registerTask('test', ['eslint:all', 'nodeunit:all']);
-    grunt.registerTask('build', ['browserify:main', 'docs']);
+    grunt.registerTask('build', ['browserify:main', 'uglify:main', 'docs']);
     grunt.registerTask('default', ['build']);
 
 };
