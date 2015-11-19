@@ -69,7 +69,7 @@
         <a href="http://lodash.com">utility</a>
         <a href="https://github.com/caolan/async">belt</a>,
         Highland manages synchronous and asynchronous code easily, using nothing more than
-        standard JavaScript and Node-like Streams.
+        standard JavaScript and Node-like streams.
         You may be familiar with Promises, EventEmitters and callbacks, but moving
         between them is far from seamless. Thankfully, there exists a deeper abstraction
         which can free our code. By updating the tools we use on Arrays, and applying them
@@ -185,11 +185,11 @@ var nums = _(['1', '2', '3']).map(function (x) {
 });
 
 // calls === 0</code></pre>
-      <p>To get the map iterator to be called, we must pull some data from the Stream. This is called a <strong><em>thunk</em></strong>, and some Highland methods will cause them (e.g., <code>each</code>, <code>done</code>, <code>apply</code>, <code>toArray</code>, <code>pipe</code>, <code>resume</code>).</p>
+      <p>To get the map iterator to be called, we must <em>consume</em> the stream. A number of Highland methods will do so (e.g., <code>each</code>, <code>done</code>, <code>apply</code>, <code>toArray</code>, <code>pipe</code>, <code>resume</code>). A stream may only be consumed once and consuming an already-consumed stream will result in undefined behavior.</p>
       <pre><code class="javascript">nums.each(function (n) { console.log(n); });
 
 // calls === 3</code></pre>
-      <p>Equally, when we tell Highland to map a Stream of filenames to the readFile function, it doesn't actually go and read all the files at once, it let's us decide on how we want to read them:</p>
+      <p>Equally, when we tell Highland to map a Stream of filenames to the `readFile` function, it doesn't actually go and read all the files at once, it let's us decide on how we want to read them:</p>
       <pre><code class="javascript">filenames.map(readFile).series();
 filenames.map(readFile).parallel(10)</code></pre>
 
@@ -214,7 +214,7 @@ source.observe().map(_.log);</code></pre>
 _.map(doubled, mystream)</code></pre>
       <p>By convention, all top-level functions are "curryable", meaning you can partially apply their arguments. In the above example, this could be called as:</p>
       <pre><code class="javascript">_.map(doubled)(mystream);</code></pre>
-      <p>In real-world use, this means you can define the behaviour you'd like before knowing what Stream you'd like to perform it on:</p>
+      <p>In real-world use, this means you can define the behaviour you'd like before knowing what stream you'd like to perform it on:</p>
       <pre><code class="javascript">// partially apply the filter() function to create a new function
 var getBlogposts = _.filter(function (doc) {
     return doc.type === 'blogpost';
