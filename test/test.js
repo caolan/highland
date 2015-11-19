@@ -4390,6 +4390,19 @@ exports['uniq'] = function(test) {
     test.done();
 };
 
+exports['uniq - preserves Nan'] = function(test) {
+    test.expect(5);
+    var xs = [ 'blue', 'red', NaN, 'red', 'yellow', 'blue', 'red', NaN ];
+    _.uniq(xs).toArray(function(xs) {
+        test.equal(xs[0], 'blue');
+        test.equal(xs[1], 'red');
+        test.equal(xs[2] !== xs[2], true);
+        test.equal(xs[3], 'yellow');
+        test.equal(xs[4] !== xs[4], true);
+    });
+    test.done();
+};
+
 exports['uniq - noValueOnError'] = noValueOnErrorTest(_.uniq());
 
 exports['zip'] = function (test) {
