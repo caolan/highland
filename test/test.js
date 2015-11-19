@@ -1,4 +1,4 @@
-var EventEmitter = require('events').EventEmitter,
+var _, EventEmitter = require('events').EventEmitter,
     through = require('through'),
     sinon = require('sinon'),
     Stream = require('stream'),
@@ -6,8 +6,13 @@ var EventEmitter = require('events').EventEmitter,
     concat = require('concat-stream'),
     RSVP = require('rsvp'),
     Promise = RSVP.Promise,
-    transducers = require('transducers-js'),
+    transducers = require('transducers-js');
+
+if (global.highland != null) {
+    _ = global.highland;
+} else {
     _ = require('../lib/index');
+}
 
 // Use setTimeout. The default is process.nextTick, which sinon doesn't
 // handle.

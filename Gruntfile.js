@@ -29,6 +29,9 @@ module.exports = function (grunt) {
             'test-browser': {
                 files: {
                     'test/bundle.js': ['test/browser.js']
+                },
+                options: {
+                    exclude: 'lib/**'
                 }
             }
         },
