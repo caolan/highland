@@ -139,6 +139,7 @@ module.exports = function (grunt) {
         'gh-pages'
     ]);
 
+    grunt.registerTask('build-browser-tests', ['build', 'browserify:test-browser']);
     grunt.registerTask('test', ['eslint:all', 'nodeunit:all']);
     grunt.registerTask('build', ['browserify:main', 'uglify:main', 'docs']);
     grunt.registerTask('default', ['build']);
