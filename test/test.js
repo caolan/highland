@@ -438,7 +438,7 @@ exports['race'] = {
         this.clock.restore();
         callback();
     },
-    'no re-entry of consume callback': function (test) {
+    'no re-entry of consume callback (issue #388)': function (test) {
         test.expect(1);
         // This triggers a race condition. Be careful about changing the source.
         var stream = _();
