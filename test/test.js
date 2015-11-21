@@ -64,6 +64,49 @@ function noValueOnErrorTest(transform, expected) {
     }
 }
 
+function onDestroyTest(transform) {
+    var i = 0,
+        destroy1 = false,
+        destroy2 = false;
+    return function (test) {
+        var clock = sinon.useFakeTimers();
+        var s = _(function generator(push, next) {
+            setTimeout(function () {
+                push(null, i++);
+                next();
+            }, 10);
+        });
+
+        s.onDestroy(function destructor1() {
+            setTimeout(function () {
+                destroy1 = true;
+            }, 15);
+        }).through(transform).onDestroy(function destructor2() {
+            setTimeout(function () {
+                destroy2 = true;
+            }, 15);
+        }).take(1).resume();
+
+        clock.tick(5);
+        test.same(destroy1, false);
+        test.same(destroy2, false);
+        test.same(i, 0);
+
+        clock.tick(5);
+        test.same(destroy1, false);
+        test.same(destroy2, false);
+        test.same(i, 1);
+
+        clock.tick(15);
+        test.same(destroy1, true);
+        test.same(destroy2, true);
+        test.same(i, 1);
+
+        clock.restore();
+        test.done();
+    }
+}
+
 function returnsSameStreamTest(transform, expected, initial) {
     var sub = _.use({
         substream: true
