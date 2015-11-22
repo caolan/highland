@@ -64,15 +64,16 @@ function noValueOnErrorTest(transform, expected) {
     }
 }
 
-function onDestroyTest(transform) {
-    var i = 0,
+function onDestroyTest(transform, input) {
+    var called = 0,
         destroy1 = false,
         destroy2 = false;
     return function (test) {
         var clock = sinon.useFakeTimers();
         var s = _(function generator(push, next) {
             setTimeout(function () {
-                push(null, i++);
+                called++;
+                push(null, input);
                 next();
             }, 10);
         });
@@ -90,17 +91,17 @@ function onDestroyTest(transform) {
         clock.tick(5);
         test.same(destroy1, false);
         test.same(destroy2, false);
-        test.same(i, 0);
+        test.same(called, 0);
 
         clock.tick(5);
         test.same(destroy1, false);
         test.same(destroy2, false);
-        test.same(i, 1);
+        test.same(called, 1);
 
         clock.tick(15);
         test.same(destroy1, true);
         test.same(destroy2, true);
-        test.same(i, 1);
+        test.same(called, 1);
 
         clock.restore();
         test.done();
@@ -1509,7 +1510,7 @@ exports['done'] = function (test) {
     });
 
     test.done();
-}
+};
 
 exports['done - ArrayStream'] = function (test) {
     var calls = [];
@@ -1519,7 +1520,7 @@ exports['done - ArrayStream'] = function (test) {
         test.same(calls, [1,2,3]);
         test.done();
     });
-}
+};
 
 exports['done - GeneratorStream'] = function (test) {
     function delay(push, ms, x) {
@@ -1540,8 +1541,8 @@ exports['done - GeneratorStream'] = function (test) {
     }).done(function () {
         test.same(calls, [1,2,3]);
         test.done();
-    })
-}
+    });
+};
 
 exports['done - throw error if consumed'] = function (test) {
     var e = new Error('broken');
@@ -2078,6 +2079,8 @@ exports['sequence'] = function (test) {
 
 exports['sequence - noValueOnError'] = noValueOnErrorTest(_.sequence());
 
+exports['sequence - onDestroyTest'] = onDestroyTest(_.sequence, [1, 2, 3]);
+
 exports['sequence - ArrayStream'] = function (test) {
     _([[1,2], [3], [[4],5]]).sequence().toArray(function (xs) {
         test.same(xs, [1,2,3,[4],5]);
@@ -2429,6 +2432,8 @@ exports['flatten'] = function (test) {
 };
 
 exports['flatten - noValueOnError'] = noValueOnErrorTest(_.flatten());
+
+exports['flatten - onDestroyTest'] = onDestroyTest(_.flatten, 1);
 
 exports['flatten - ArrayStream'] = function (test) {
     _([1, [2, [3, 4], 5], [6]]).flatten().toArray(function (xs) {
