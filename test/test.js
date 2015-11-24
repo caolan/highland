@@ -434,6 +434,75 @@ exports['consume - fork after consume should not throw (issue #366)'] = function
     }
 }
 
+exports['race'] = {
+    setUp: function (callback) {
+        this.clock = sinon.useFakeTimers();
+        callback();
+    },
+    tearDown: function (callback) {
+        this.clock.restore();
+        callback();
+    },
+    'no re-entry of consume callback (issue #388)': function (test) {
+        test.expect(1);
+        // This triggers a race condition. Be careful about changing the source.
+        var stream = _();
+        var i = 0;
+
+        function write() {
+            var cont = false;
+            while ((cont = stream.write(i++)) && i <= 10) {
+            }
+            if (cont) {
+                i++;
+                stream.end();
+            }
+        }
+
+        // This stream mimics the behavior of things like database
+        // drivers.
+        stream.on('drain', function () {
+            if (i === 0) {
+                // The initial read is async.
+                setTimeout(write, 0);
+            } else if (i > 0 && i < 10) {
+                // The driver loads data in batches, so subsequent drains
+                // are sync to mimic pulling from a pre-loaded buffer.
+                write();
+            } else if (i === 10) {
+                i++;
+                setTimeout(stream.end.bind(stream), 0);
+            }
+        });
+
+        var done = false;
+        stream
+            // flatMap to disassociate from the source, since sequence
+            // returns a new stream not a consume stream.
+            .flatMap(function (x) {
+                return _([x]);
+            })
+            // batch(2) to get a transform that sometimes calls next
+            // without calling push beforehand.
+            .batch(2)
+            // Another flatMap to get an async transform.
+            .flatMap(function (x) {
+                return _(function (push) {
+                    setTimeout(function () {
+                        push(null, x);
+                        push(null, _.nil);
+                    }, 100);
+                });
+            })
+            .done(function () {
+                done = true;
+            });
+        this.clock.tick(1000);
+        test.ok(done, 'The stream never completed.');
+        test.done();
+    }
+};
+
 exports['constructor'] = {
     setUp: function (callback) {
         this.createTestIterator = function(array, error, lastVal) {
