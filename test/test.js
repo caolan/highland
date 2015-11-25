@@ -64,10 +64,12 @@ function noValueOnErrorTest(transform, expected) {
     }
 }
 
-function onDestroyTest(transform, input) {
+function onDestroyTest(transform, input, takeFirst) {
     var called = 0,
         destroy1 = false,
-        destroy2 = false;
+        destroy2 = false,
+        takeFirst = takeFirst && true;
+    var identity = function(x) { return x};
     return function (test) {
         var clock = sinon.useFakeTimers();
         var s = _(function generator(push, next) {
@@ -78,15 +80,39 @@ function onDestroyTest(transform, input) {
             }, 10);
         });
 
-        s.onDestroy(function destructor1() {
+        var destructor1 = function destructor1() {
             setTimeout(function () {
                 destroy1 = true;
             }, 15);
-        }).through(transform).onDestroy(function destructor2() {
+        };
+
+        var destructor2 =function destructor2() {
             setTimeout(function () {
                 destroy2 = true;
             }, 15);
-        }).take(1).resume();
+        };
+
+        var wrapOnDestroy = _.curry(function (destructor, xs) {
+            return xs.onDestroy(destructor);
+        });
+
+        var xs = _.seq(wrapOnDestroy(destructor1),
+            takeFirst ? _.take(1) : identity,
+            _.through(transform),
+            wrapOnDestroy(destructor2),
+            takeFirst ? identity : _.take(1))(s);
+
+        xs.resume();
+
+        //s.onDestroy(function destructor1() {
+        //    setTimeout(function () {
+        //        destroy1 = true;
+        //    }, 15);
+        //}).through(transform).onDestroy(function destructor2() {
+        //    setTimeout(function () {
+        //        destroy2 = true;
+        //    }, 15);
+        //}).take(1).resume();
 
         clock.tick(5);
         test.same(destroy1, false);
@@ -260,10 +286,10 @@ exports['ratelimit'] = {
         this.clock.tick(1000);
         test.same(results, [1, 2, 3, 4, 5]);
         test.done();
-    }
+    },
+    'noValueOnError': noValueOnErrorTest(_.ratelimit(1, 10)),
+    'onDestroy': onDestroyTest(_.ratelimit(1, 1), 1)
 };
-
-exports['ratelimit - noValueOnError'] = noValueOnErrorTest(_.ratelimit(1, 10));
 
 exports['curry'] = function (test) {
     var fn = _.curry(function (a, b, c, d) {
@@ -956,6 +982,16 @@ exports['generator throws error if next called after nil'] = function (test) {
     test.done();
 };
 
+exports['consume - onDestroy'] = onDestroyTest(
+    _.consume(function (err, x, push, next) {
+        if (x === _.nil) {
+            push(null, _.nil);
+        } else {
+            push(null, x + 1);
+            next();
+        }
+    }), 1)
+
 exports['generator throws error if push called after nil'] = function (test) {
     test.expect(1);
     var s = _(function(push, next) {
@@ -1113,6 +1149,14 @@ exports['errors - GeneratorStream'] = function (test) {
     });
 };
 
+exports['errors - onDestroy'] = onDestroyTest(
+    _.seq(_.map(function () {
+            throw new Error('err');
+        }),
+        _.errors(function (err, push) {
+            push(null, 1);
+        })), 1);
+
 exports['errors - returnsSameStream'] = returnsSameStreamTest(function(s) {
     return s.errors();
 }, [1]);
@@ -1196,6 +1240,14 @@ exports['stopOnError - GeneratorStream'] = function (test) {
         test.done();
     });
 };
+
+exports['stopOnError - onDestroy'] = onDestroyTest(
+    _.seq(_.map(function () {
+            throw new Error('err');
+        }),
+        _.stopOnError(function (err) {
+            /// do nothing
+        })), 1);
 
 exports['stopOnError - returnsSameStream'] = returnsSameStreamTest(function(s) {
     return s.stopOnError();
@@ -1318,6 +1370,7 @@ exports['slice'] = {
         test.done();
     },
     'noValueOnError': noValueOnErrorTest(_.slice(2, 3)),
+    'onDestroyTest': onDestroyTest(_.slice(0, 1), 1),
     'returnsSameStream': returnsSameStreamTest(function(s) {
         return s.slice(0, 1);
     }, [1])
@@ -2512,6 +2565,8 @@ exports['otherwise'] = function (test) {
 
 exports['otherwise - noValueOnError'] = noValueOnErrorTest(_.otherwise(_([])));
 
+exports['otherwise - onDestroyTest'] = onDestroyTest(_.otherwise(_([])), 1);
+
 exports['otherwise - ArrayStream'] = function (test) {
     test.expect(5);
     _([1,2,3]).otherwise([4,5,6]).toArray(function (xs) {
@@ -2621,6 +2676,8 @@ exports['append'] = function (test) {
 
 exports['append - noValueOnError'] = noValueOnErrorTest(_.append(1), [1]);
 
+exports['append - onDestroy'] = onDestroyTest(_.append(2), 1, true);
+
 exports['append - ArrayStream'] = function (test) {
     _([1,2,3]).append(4).toArray(function (xs) {
         test.same(xs, [1,2,3,4]);
@@ -2663,6 +2720,7 @@ exports['reduce'] = function (test) {
     test.done();
 };
 exports['reduce - noValueOnError'] = noValueOnErrorTest(_.reduce(_.add, 0), [0]);
+exports['reduce - onDestroy'] = onDestroyTest(_.reduce(_.add, 0), 1, true);
 exports['reduce - argument function throws'] = function (test) {
     test.expect(2);
     var err = new Error('error');
@@ -2727,48 +2785,7 @@ exports['reduce1'] = function (test) {
 
 exports['reduce1 - noValueOnError'] = noValueOnErrorTest(_.reduce1(_.add));
 
-exports['reduce1 - onDestroyTest'] = function (test) {
-    var called = 0;
-    var destroy1 = false,
-        destroy2= false;
-    var clock = sinon.useFakeTimers();
-    var s = _(function generator(push, next) {
-        setTimeout(function () {
-            called++;
-            push(null, 1);
-            next();
-        }, 10);
-    });
-
-    s.onDestroy(function destructor2() {
-        setTimeout(function () {
-            destroy2 = true;
-        }, 15);
-    }).take(1).reduce1(_.add).onDestroy(function destructor1() {
-        setTimeout(function () {
-            destroy1 = true;
-        }, 15);
-    }).resume();
-
-    clock.tick(5);
-    test.same(destroy1, false);
-    test.same(destroy2, false);
-    test.same(called, 0);
-
-    clock.tick(5);
-    test.same(destroy1, false);
-    test.same(destroy2, false);
-    test.same(called, 1);
-
-    clock.tick(15);
-    test.same(destroy1, true);
-    test.same(destroy2, true);
-    test.same(called, 1);
-
-    clock.restore();
-    test.done();
-};
-
+exports['reduce1 - onDestroy'] = onDestroyTest(_.reduce1(_.add), 1, true);
 
 exports['reduce1 - argument function throws'] = function (test) {
     test.expect(2);
@@ -2834,6 +2851,8 @@ exports['scan'] = function (test) {
     test.done();
 };
 exports['scan - noValueOnError'] = noValueOnErrorTest(_.scan(_.add, 0), [0]);
+
+exports['scan - onDestroy'] = onDestroyTest(_.scan(_.add, 0), 1, true);
 
 exports['scan - argument function throws'] = function (test) {
     test.expect(5);
@@ -3013,6 +3032,8 @@ exports['collect'] = function (test) {
 
 exports['collect - noValueOnError'] = noValueOnErrorTest(_.collect(), [[]]);
 
+exports['collect - onDestroy'] = onDestroyTest(_.collect, 1, true);
+
 exports['collect - ArrayStream'] = function (test) {
     _([1,2,3,4]).collect().toArray(function (xs) {
         test.same(xs, [[1,2,3,4]]);
@@ -3183,6 +3204,9 @@ exports['transduce'] = {
     },
     'noValueOnError': function (test) {
         noValueOnErrorTest(_.transduce(this.xf))(test);
+    },
+    'onDestroy': function (test) {
+        onDestroyTest(_.transduce(this.xf), 1)(test);
     },
     'returnsSameStream': function (test) {
         var self = this;
@@ -3764,6 +3788,8 @@ exports['map'] = function (test) {
 
 exports['map - noValueOnError'] = noValueOnErrorTest(_.map(function (x) { return x }));
 
+exports['map - onDestroyTest'] = onDestroyTest(_.map(function (x) { return x }), 1);
+
 exports['map - returnsSameStream'] = returnsSameStreamTest(function(s) {
     return s.map(function (x) { return x });
 });
@@ -3964,6 +3990,8 @@ exports['pluck'] = function (test) {
 };
 
 exports['pluck - noValueOnError'] = noValueOnErrorTest(_.pluck('foo'));
+
+exports['pluck - onDestroy'] = onDestroyTest(_.pluck('foo'), {foo: 1, bar: 2});
 
 exports['pluck - returnsSameStream'] = returnsSameStreamTest(function(s) {
     return s.pluck('foo');
@@ -4286,6 +4314,8 @@ exports['filter'] = function (test) {
 };
 
 exports['filter - noValueOnError'] = noValueOnErrorTest(_.filter(function (x) { return true }));
+
+exports['filter - onDestroy'] = onDestroyTest(_.filter(function (x) { return true }), 1);
 
 exports['filter - returnsSameStream'] = returnsSameStreamTest(function(s) {
     return s.filter(function (x) { return true });
@@ -4876,6 +4906,8 @@ exports['uniqBy - compare error'] = function(test) {
 
 exports['uniqBy - noValueOnError'] = noValueOnErrorTest(_.uniqBy(function(a,b) { return a === b }));
 
+exports['uniqBy - onDestroy'] = onDestroyTest(_.uniqBy(function(a,b) { return a === b }), 1);
+
 exports['uniqBy - returnsSameStream'] = returnsSameStreamTest(function(s) {
     return s.uniqBy(function(a,b) { return a === b });
 });
@@ -4908,8 +4940,6 @@ exports['zip'] = function (test) {
 };
 
 exports['zip - noValueOnError'] = noValueOnErrorTest(_.zip([1]));
-
-exports['zip - onDestroy'] = onDestroyTest(_.zip([1]), 1);
 
 exports['zip - returnsSameStream'] = returnsSameStreamTest(function(s) {
     return s.zip([1]);
@@ -5289,6 +5319,7 @@ exports['batchWithTimeOrCount'] = {
 };
 
 exports['batchWithTimeOrCount - noValueOnError'] = noValueOnErrorTest(_.batchWithTimeOrCount(10, 2));
+exports['batchWithTimeOrCount - onDestroy'] = onDestroyTest(_.batchWithTimeOrCount(1, 1), 1);
 exports['batchWithTimeOrCount - returnsSameStream'] = returnsSameStreamTest(function(s) {
     return s.batchWithTimeOrCount(10, 2);
 }, [[1]]);
@@ -5320,6 +5351,8 @@ exports['splitBy - delimiter at end of stream'] = function(test) {
 };
 
 exports['splitBy - noValueOnError'] = noValueOnErrorTest(_.splitBy(' '));
+
+exports['splitBy - onDestroyTest'] = onDestroyTest(_.splitBy('s'), 'miss');
 
 exports['splitBy - returnsSameStreamTest'] = returnsSameStreamTest(function(s) {
     return s.splitBy(' ');
@@ -5399,6 +5432,8 @@ exports['intersperse'] = function(test) {
 }
 
 exports['intersperse - noValueOnError'] = noValueOnErrorTest(_.intersperse(1));
+
+exports['intersperse - onDestroyTest'] = onDestroyTest(_.intersperse('b'), 'e');
 
 exports['intersperse - returnsSameStream'] = returnsSameStreamTest(function(s) {
     return s.intersperse(1);
@@ -5849,6 +5884,7 @@ exports['throttle'] = {
         this.clock.tick(90);
     },
     'noValueOnError': noValueOnErrorTest(_.throttle(10)),
+    'onDestroy': onDestroyTest(_.throttle(1), 1),
     'returnsSameStream': returnsSameStreamTest(function(s) {
         return s.throttle(10);
     })
@@ -5939,6 +5975,7 @@ exports['debounce'] = {
         this.clock.tick(300);
     },
     'noValueOnError': noValueOnErrorTest(_.debounce(10)),
+    'onDestroy': onDestroyTest(_.debounce(1), 1, true),
     'returnsSameStream': returnsSameStreamTest(function(s) {
         return s.debounce(10);
     })
@@ -6055,6 +6092,8 @@ exports['latest'] = {
         this.clock.tick(1000);
         test.done();
     },
+    noValueOnError: noValueOnErrorTest(_.latest),
+    onDestroy: onDestroyTest(_.latest, 1, true),
     returnsSameStream: returnsSameStreamTest(function(s) {
         return s.latest();
     })
@@ -6075,6 +6114,9 @@ exports['last'] = function (test) {
 };
 
 exports['last - noValueOnError'] = noValueOnErrorTest(_.last());
+
+exports['last - onDestroyTest'] = onDestroyTest(_.last, 1, true);
+
 exports['last - returnsSameStream'] = returnsSameStreamTest(function(s) {
     return s.last();
 });
