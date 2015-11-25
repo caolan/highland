@@ -104,16 +104,6 @@ function onDestroyTest(transform, input, takeFirst) {
 
         xs.resume();
 
-        //s.onDestroy(function destructor1() {
-        //    setTimeout(function () {
-        //        destroy1 = true;
-        //    }, 15);
-        //}).through(transform).onDestroy(function destructor2() {
-        //    setTimeout(function () {
-        //        destroy2 = true;
-        //    }, 15);
-        //}).take(1).resume();
-
         clock.tick(5);
         test.same(destroy1, false);
         test.same(destroy2, false);
