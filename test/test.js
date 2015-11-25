@@ -190,7 +190,7 @@ exports['ratelimit'] = {
             delay(push, 40, 4);
             delay(push, 50, 5);
             delay(push, 60, _.nil);
-        })
+        });
         var results = [];
         source.ratelimit(2, 100).each(function (x) {
             results.push(x);
@@ -2079,8 +2079,6 @@ exports['sequence'] = function (test) {
 
 exports['sequence - noValueOnError'] = noValueOnErrorTest(_.sequence());
 
-exports['sequence - onDestroyTest'] = onDestroyTest(_.sequence, [1, 2, 3]);
-
 exports['sequence - ArrayStream'] = function (test) {
     _([[1,2], [3], [[4],5]]).sequence().toArray(function (xs) {
         test.same(xs, [1,2,3,[4],5]);
@@ -2729,6 +2727,48 @@ exports['reduce1'] = function (test) {
 
 exports['reduce1 - noValueOnError'] = noValueOnErrorTest(_.reduce1(_.add));
 
+exports['reduce1 - onDestroyTest'] = function (test) {
+    var called = 0;
+    var destroy1 = false,
+        destroy2= false;
+    var clock = sinon.useFakeTimers();
+    var s = _(function generator(push, next) {
+        setTimeout(function () {
+            called++;
+            push(null, 1);
+            next();
+        }, 10);
+    });
+
+    s.onDestroy(function destructor2() {
+        setTimeout(function () {
+            destroy2 = true;
+        }, 15);
+    }).take(1).reduce1(_.add).onDestroy(function destructor1() {
+        setTimeout(function () {
+            destroy1 = true;
+        }, 15);
+    }).resume();
+
+    clock.tick(5);
+    test.same(destroy1, false);
+    test.same(destroy2, false);
+    test.same(called, 0);
+
+    clock.tick(5);
+    test.same(destroy1, false);
+    test.same(destroy2, false);
+    test.same(called, 1);
+
+    clock.tick(15);
+    test.same(destroy1, true);
+    test.same(destroy2, true);
+    test.same(called, 1);
+
+    clock.restore();
+    test.done();
+};
+
 
 exports['reduce1 - argument function throws'] = function (test) {
     test.expect(2);
@@ -2888,6 +2928,8 @@ exports['scan1'] = function (test) {
 };
 
 exports['scan1 - noValueOnError'] = noValueOnErrorTest(_.scan1(_.add));
+
+exports['scan1 - onDestroyTest'] = onDestroyTest(_.scan1(_.add), 1);
 
 exports['scan1 - argument function throws'] = function (test) {
     test.expect(4);
@@ -4866,6 +4908,8 @@ exports['zip'] = function (test) {
 };
 
 exports['zip - noValueOnError'] = noValueOnErrorTest(_.zip([1]));
+
+exports['zip - onDestroy'] = onDestroyTest(_.zip([1]), 1);
 
 exports['zip - returnsSameStream'] = returnsSameStreamTest(function(s) {
     return s.zip([1]);
