@@ -28,8 +28,7 @@
     "grunt-gh-pages": "~0.9.0",
     "grunt-npm": "0.0.2",
     "handlebars": "~4.0.5",
-    "nodeunit": "~0.8.6",
-    "nodeunit-tape": "~0.2.0",
+    "nodeunit": "~0.9.1",
     "rsvp": "~3.1.0",
     "scrawl": "0.0.5",
     "sinon": "~1.15.4",
@@ -41,18 +40,5 @@
   },
   "scripts": {
     "test": "eslint Gruntfile.js lib && nodeunit test/test.js"
-  },
-  "testling": {
-    "files": "test/testling.js",
-    "browsers": [
-      "ie/8..latest",
-      "chrome/latest",
-      "firefox/latest",
-      "safari/latest",
-      "opera/latest",
-      "iphone/latest",
-      "ipad/latest",
-      "android-browser/latest"
-    ]
   }
 }
