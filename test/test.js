@@ -3830,14 +3830,23 @@ exports['map - GeneratorStream'] = function (test) {
     });
 };
 
-exports['map to value'] = function (test) {
+exports['map non-function throws'] = function (test) {
     test.expect(2);
-    _.map('foo', [1, 2]).toArray(function (xs) {
-        test.same(xs, ['foo', 'foo']);
-    });
-    _([1, 2, 3]).map(1).toArray(function (xs) {
-        test.same(xs, [1,1,1]);
-    });
+
+    test.throws(function () {
+            _.map('foo', [1, 2]).toArray(function (xs) {
+                test.ok(false, "shouldn't be called");
+            });
+        },
+        'map expects a function as its only argument.');
+
+    test.throws(function () {
+            _([1, 2, 3]).map(1).toArray(function (xs) {
+                test.ok(false, "shouldn't be called");
+            });
+        },
+        'map expects a function as its only argument.');
+
     test.done();
 };
 
