@@ -2304,26 +2304,43 @@ exports['fork'] = {
         }
     },
     'fork shuffling before emit': function (test) {
-        test.expect(1);
-        var arr;
+        test.expect(2);
+        var arr1 = [];
+        var arr2 = [];
         var s = _();
         var s1 = s.fork();
         var s2 = s.fork();
 
         s1.toArray(function (a) {
-            arr = ['garbage'];
+            arr1 = a;
         });
         s2.toArray(function (a) {
-            arr = a;
+            arr2 = a;
         });
         s1.destroy();
 
         s.write(1);
         s.end();
-        test.same(arr, [1]);
+        test.same(arr1, []);
+        test.same(arr2, [1]);
+        test.done();
+    },
+    'destroyed forks should not exert backpressure': function (test) {
+        test.expect(2);
+        var s = _([1, 2, 3]);
+        var s1 = s.fork();
+        var s2 = s.fork().take(1);
+
+        s1.toArray(function (arr) {
+            test.deepEqual(arr, [1, 2, 3]);
+        });
+
+        s2.toArray(function (arr) {
+            test.deepEqual(arr, [1]);
+        });
+
         test.done();
     }
-
 };
 
 exports['observe'] = function (test) {
