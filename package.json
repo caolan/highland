@@ -31,7 +31,7 @@
     "nodeunit": "~0.9.1",
     "rsvp": "~3.1.0",
     "scrawl": "0.0.5",
-    "sinon": "~1.15.4",
+    "sinon": "~1.17.2",
     "stream-array": "~1.0.1",
     "tape": "~2.4.2",
     "through": "~2.3.4",
