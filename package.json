@@ -20,7 +20,7 @@
     "eslint": "^1.9.0",
     "grunt": "~0.4.2",
     "grunt-browserify": "^4.0.1",
-    "grunt-bump": "0.0.13",
+    "grunt-bump": "0.7.0",
     "grunt-contrib-nodeunit": "~0.3.0",
     "grunt-contrib-uglify": "^0.10.1",
     "grunt-contrib-watch": "~0.5.3",
