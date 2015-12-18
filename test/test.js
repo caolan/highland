@@ -5317,6 +5317,22 @@ exports['parallel - parallel should not drop data if paused (issue #328)'] = fun
         });
 };
 
+exports['parallel - should throw if arg is not a number (issue #420)'] = function (test) {
+    test.expect(1);
+    test.throws(function () {
+        _([]).parallel();
+    });
+    test.done();
+};
+
+exports['parallel - should throw if arg is not positive'] = function (test) {
+    test.expect(1);
+    test.throws(function () {
+        _([]).parallel(-1);
+    });
+    test.done();
+};
+
 exports['throttle'] = {
     setUp: function (callback) {
         this.clock = sinon.useFakeTimers();
