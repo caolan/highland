@@ -40,5 +40,8 @@
   },
   "scripts": {
     "test": "eslint Gruntfile.js lib && nodeunit test/test.js"
+  },
+  "dependencies": {
+    "util-deprecate": "^1.0.2"
   }
 }
