@@ -33,7 +33,7 @@
     "scrawl": "0.0.5",
     "sinon": "~1.15.4",
     "stream-array": "~1.0.1",
-    "tape": "~2.4.2",
+    "tape": "~4.4.0",
     "through": "~2.3.4",
     "transducers-js": "~0.4.174",
     "uglify-js": "^2.6.1"
