@@ -11,6 +11,7 @@
 
 
 var inherits = require('util').inherits;
+var deprecate = require('util-deprecate');
 var EventEmitter = require('events').EventEmitter;
 var Decoder = require('string_decoder').StringDecoder;
 
@@ -47,15 +48,13 @@ var Decoder = require('string_decoder').StringDecoder;
  * You can pass a mapping hint as the third argument, which specifies how
  * event arguments are pushed into the stream. If no mapping hint is provided,
  * only the first value emitted with the event to the will be pushed onto the
- * Stream. (NB: in a future version, if more than one argument is passed to the
- * event, an array of all arguments will be pushed to the stream; currently the
- * extra arguments are dropped)
+ * Stream.
  *
- * If mappingHint is a number, an array of that length will be pushed
- * onto the stream, containing exactly that many parameters from the event. If
- * it's an array, it's used as keys to map the arguments into an object which
- * is pushed to the tream. If the mapping hint is a function, it's called with
- * the event arguments, and the returned value is pushed.
+ * If `mappingHint` is a number, an array of that length will be pushed onto
+ * the stream, containing exactly that many parameters from the event. If it's
+ * an array, it's used as keys to map the arguments into an object which is
+ * pushed to the tream. If it is a function, it's called with the event
+ * arguments, and the returned value is pushed.
  *
  * **Promise -** Accepts an ES6 / jQuery style promise and returns a
  * Highland Stream which will emit a single value (or an error).
@@ -72,7 +71,10 @@ var Decoder = require('string_decoder').StringDecoder;
  * @id _(source)
  * @section Stream Objects
  * @name _(source)
- * @param {Array | Function | Readable Stream | Promise | Iterator | Iterable} source - (optional) source to take values from from
+ * @param {Array | Function | Iterator | Iterable | Promise | Readable Stream | String} source - (optional) source to take values from from
+ * @param {EventEmitter | jQuery Element} eventEmitter - (optional) an event emitter. Only valid if `source` is a String.
+ * @param {Array | Function | Number} mappingHint - (optional) how to pass the
+ * arguments to the callback. Only valid if `source` is a String.
  * @api public
  *
  * // from an Array
@@ -150,17 +152,11 @@ _.isArray = Array.isArray || function (x) {
     return Object.prototype.toString.call(x) === '[object Array]';
 };
 
-// setImmediate implementation with browser and older node fallbacks
+// setImmediate browser fallback
 if (typeof setImmediate === 'undefined') {
-    if (typeof process === 'undefined' || !(process.nextTick)) {
-        _.setImmediate = function (fn) {
-            setTimeout(fn, 0);
-        };
-    }
-    else {
-        // use nextTick on old node versions
-        _.setImmediate = process.nextTick;
-    }
+    _.setImmediate = function (fn) {
+        setTimeout(fn, 0);
+    };
 }
 // check no process.stdout to detect browserify
 else if (typeof process === 'undefined' || !(process.stdout)) {
@@ -172,7 +168,6 @@ else if (typeof process === 'undefined' || !(process.stdout)) {
 else {
     _.setImmediate = setImmediate;
 }
-
 
 /**
  * The end of stream marker. This is sent along the data channel of a Stream
@@ -352,8 +347,8 @@ _.compose = function (/*functions...*/) {
 };
 
 /**
- * The reversed version of compose. Where arguments are in the order of
- * application.
+ * The reversed version of [compose](#compose). Where arguments are in the
+ * order of application.
  *
  * @id seq
  * @name _.seq(fn1, fn2, ...)
@@ -575,6 +570,8 @@ function Stream(/*optional*/xs, /*optional*/ee, /*optional*/mappingHint) {
     this._nil_seen = false;
     this._delegate = null;
     this._is_observer = false;
+    this._in_consume_cb = false;
+    this._repeat_resume = false;
     this.source = null;
 
     // Old-style node Stream.pipe() checks for this
@@ -786,6 +783,8 @@ Stream.prototype._send = function (err, x) {
 /**
  * Pauses the stream. All Highland Streams start in the paused state.
  *
+ * It is unlikely that you will need to manually call this method.
+ *
  * @id pause
  * @section Stream Objects
  * @name Stream.pause()
@@ -876,7 +875,9 @@ Stream.prototype._sendOutgoing = function () {
 
 /**
  * Resumes a paused Stream. This will either read from the Stream's incoming
- * buffer or request more data from an upstream source.
+ * buffer or request more data from an upstream source. Never call this method
+ * on a stream that has been consumed (via a call to [consume](#consume) or any
+ * other transform).
  *
  * @id resume
  * @section Stream Objects
@@ -889,7 +890,7 @@ Stream.prototype._sendOutgoing = function () {
 
 Stream.prototype.resume = function () {
     //console.log(['resume', this.id]);
-    if (this._resume_running) {
+    if (this._resume_running || this._in_consume_cb) {
         //console.log(['resume already processing _incoming buffer, ignore resume call']);
         // already processing _incoming buffer, ignore resume call
         this._repeat_resume = true;
@@ -1228,14 +1229,25 @@ Stream.prototype.consume = function (f) {
     s._send = function (err, x) {
         async = false;
         next_called = false;
+        s._in_consume_cb = true;
+
         f(err, x, push, next);
+
+        s._in_consume_cb = false;
         async = true;
+
         // Don't pause if x is nil -- as next will never be called after
         if (!next_called && x !== nil) {
             s.pause();
         }
+
+        if (s._repeat_resume) {
+            s._repeat_resume = false;
+            s.resume();
+        }
     };
     self._addConsumer(s);
+    self._already_consumed = true;
     return s;
 };
 exposeMethod('consume');
@@ -1320,6 +1332,11 @@ Stream.prototype.write = function (x) {
  * back-pressure. A stream forked to multiple consumers will only pull values
  * from it's source as fast as the slowest consumer can handle them.
  *
+ * *Deprecation warning:* It is currently possible to `fork` a stream after
+ * [consuming](#consume) it (e.g., via a [transform](#Transforms)). This will
+ * no longer be possible in the next major release. If you are going to `fork`
+ * a stream, always call `fork` on it.
+ *
  * @id fork
  * @section Higher-order Streams
  * @name Stream.fork()
@@ -1336,7 +1353,17 @@ Stream.prototype.write = function (x) {
  * zs.resume();
  */
 
+// Hack our way around the fact that util.deprecate is all-or-nothing for a
+// function.
+var warnForkAfterConsume = deprecate(function () {
+}, 'Highland: Calling Stream.fork() on a stream that has already been consumed is deprecated. Always call fork() on a stream that is meant to be forked.');
+
 Stream.prototype.fork = function () {
+    if (this._already_consumed) {
+        // Trigger deprecation warning.
+        warnForkAfterConsume();
+    }
+
     var s = new Stream();
     s.id = 'fork:' + s.id;
     s.source = this;
@@ -1449,10 +1476,13 @@ exposeMethod('stopOnError');
 
 /**
  * Iterates over every value from the Stream, calling the iterator function
- * on each of them. This function causes a **thunk**.
+ * on each of them. This method consumes the Stream.
  *
  * If an error from the Stream reaches the `each` call, it will emit an
  * error event (which will cause it to throw if unhandled).
+ *
+ * While `each` consumes the stream, it is possible to chain [done](#done) (and
+ * *only* `done`) after it.
  *
  * @id each
  * @section Consumption
@@ -1485,7 +1515,7 @@ Stream.prototype.each = function (f) {
 exposeMethod('each');
 
 /**
- * Applies all values from a Stream as arguments to a function. This function causes a **thunk**.
+ * Applies all values from a Stream as arguments to a function. This method consumes the stream.
  * `f` will always be called when the `nil` token is encountered, even when the stream is empty.
  *
  * @id apply
@@ -1515,7 +1545,7 @@ exposeMethod('apply');
 
 /**
  * Collects all values from a Stream into an Array and calls a function with
- * the result. This function causes a **thunk**.
+ * the result. This method consumes the stream.
  *
  * If an error from the Stream reaches the `toArray` call, it will emit an
  * error event (which will cause it to throw if unhandled).
@@ -1544,11 +1574,14 @@ Stream.prototype.toArray = function (f) {
 };
 
 /**
- * Calls a function once the Stream has ended. This function causes a **thunk**.
+ * Calls a function once the Stream has ended. This method consumes the stream.
  * If the Stream has already ended, the function is called immediately.
  *
  * If an error from the Stream reaches the `done` call, it will emit an
  * error event (which will cause it to throw if unhandled).
+ *
+ * As a special case, it is possible to chain `done` after a call to
+ * [each](#each) even though both methods consume the stream.
  *
  * @id done
  * @section Consumption
@@ -1589,21 +1622,28 @@ Stream.prototype.done = function (f) {
  * a non-function value for convenience, and it will emit that value
  * for every data event on the source Stream.
  *
+ * *Deprecation warning:* The use of the convenience non-function argument for
+ * `map` is deprecated and will be removed in the next major version.
+ *
  * @id map
  * @section Transforms
  * @name Stream.map(f)
- * @param f - the transformation function or value to map to
+ * @param {Function} f - the transformation function or value to map to
  * @api public
  *
  * var doubled = _([1, 2, 3, 4]).map(function (x) {
  *     return x * 2;
  * });
- *
- * _([1, 2, 3]).map('hi')  // => 'hi', 'hi', 'hi'
  */
+
+// Hack our way around the fact that util.deprecate is all-or-nothing for a
+// function.
+var warnMapWithValue = deprecate(function() {
+}, 'Highland: Calling Stream.map() with a non-function argument is deprecated.');
 
 Stream.prototype.map = function (f) {
     if (!_.isFunction(f)) {
+        warnMapWithValue();
         var val = f;
         f = function () {
             return val;
@@ -1640,7 +1680,7 @@ exposeMethod('map');
  * @id doto
  * @section Transforms
  * @name Stream.doto(f)
- * @param f - the function to apply
+ * @param {Function} f - the function to apply
  * @api public
  *
  * var appended = _([[1], [2], [3], [4]]).doto(function (x) {
@@ -1668,7 +1708,7 @@ exposeMethod('doto');
  * @id tap
  * @section Transforms
  * @name Stream.tap(f)
- * @param f - the function to apply
+ * @param {Function} f - the function to apply
  * @api public
  *
  * _([1, 2, 3]).tap(console.log)
@@ -1732,12 +1772,15 @@ exposeMethod('ratelimit');
  * iterator function which must return a (possibly empty) Stream. Each item on
  * these result Streams are then emitted on a single output Stream.
  *
+ * This transform is functionally equivalent to `.map(f).sequence()`.
+ *
  * @id flatMap
  * @section Higher-order Streams
  * @name Stream.flatMap(f)
  * @param {Function} f - the iterator function
  * @api public
  *
+ * var readFile = _.wrapCallback(fs.readFile);
  * filenames.flatMap(readFile)
  */
 
@@ -1918,12 +1961,12 @@ Stream.prototype.pick = function (properties) {
 exposeMethod('pick');
 
 /**
- * Creates a new Stream including only the values which pass a truth test.
+ * Creates a new Stream that includes only the values that pass a truth test.
  *
  * @id filter
  * @section Transforms
  * @name Stream.filter(f)
- * @param f - the truth test function
+ * @param {Function} f - the truth test function
  * @api public
  *
  * var evens = _([1, 2, 3, 4]).filter(function (x) {
@@ -1974,7 +2017,8 @@ exposeMethod('filter');
  * @param {Function} f - the truth test function which returns a Stream
  * @api public
  *
- * var checkExists = _.wrapCallback(fs.exists);
+ * var checkExists = _.wrapCallback(fs.access);
+ *
  * filenames.flatFilter(checkExists)
  */
 
@@ -2016,7 +2060,7 @@ exposeMethod('reject');
 
 /**
  * A convenient form of [filter](#filter), which returns the first object from a
- * Stream that passes the provided truth test
+ * Stream that passes the provided truth test.
  *
  * @id find
  * @section Transforms
@@ -2087,7 +2131,7 @@ exposeMethod('findWhere');
  * @id group
  * @section Transforms
  * @name Stream.group(f)
- * @param {Function|String} f - the function or property name on which to group,
+ * @param {Function | String} f - the function or property name on which to group,
  *                              toString() is called on the result of a function.
  * @api public
  *
@@ -2180,15 +2224,18 @@ Stream.prototype.where = function (props) {
 exposeMethod('where');
 
 /**
- * A way to keep only unique objects from a Stream
- * The definition of 'unicity' is given by a Function argument.
+ * Filters out all duplicate values from the stream and keeps only the first
+ * occurence of each value, using the provided function to define equality.
  *
  * Note:
- *   - memory: in order to guarantee that each unique item is chosen only once, we need to keep an
- *     internal buffer of all unique values. This may outgrow the available memory if you are not
- *     cautious about the size of your stream and the number of unique objects you may receive on that
- *     stream
- *   - errors: the transformation will emit an error for each comparison that throws an error
+ *
+ * - Memory: In order to guarantee that each unique item is chosen only once,
+ *   we need to keep an internal buffer of all unique values. This may outgrow
+ *   the available memory if you are not cautious about the size of your stream
+ *   and the number of unique objects you may receive on it.
+ * - Errors: The comparison function should never throw an error. However, if
+ *   it does, this transform will emit an error for each all that throws. This
+ *   means that one value may turn into multiple errors.
  *
  * @id uniqBy
  * @section Transforms
@@ -2198,7 +2245,7 @@ exposeMethod('where');
  *
  * var colors = [ 'blue', 'red', 'red', 'yellow', 'blue', 'red' ]
  *
- * _(colors).uniqBy(function(a,b) { return a[1] === b[1] })
+ * _(colors).uniqBy(function(a, b) { return a[1] === b[1]; })
  * // => 'blue'
  * // => 'red'
  *
@@ -2243,8 +2290,12 @@ Stream.prototype.uniqBy = function (compare) {
 exposeMethod('uniqBy');
 
 /**
- * Takes all unique values in a stream.
- * It uses uniqBy internally, using the strict equality === operator to define unicity
+ * Filters out all duplicate values from the stream and keeps only the first
+ * occurence of each value, using `===` to define equality.
+ *
+ * Like [uniqBy](#uniqBy), this transform needs to store a buffer containing
+ * all unique values that has been encountered. Be careful about using this
+ * transform on a stream that has many unique values.
  *
  * @id uniq
  * @section Transforms
@@ -2260,6 +2311,34 @@ exposeMethod('uniqBy');
  */
 
 Stream.prototype.uniq = function () {
+    if (!_.isUndefined(_global.Set)) {
+        var uniques = new Set(),
+            size = uniques.size;
+
+        return this.consume(function (err, x, push, next) {
+            if (err) {
+                push(err);
+                next();
+            }
+            else if (x === nil) {
+                push(err, x);
+            }
+            // pass NaN through as Set does not respect strict
+            // equality in this case.
+            else if (x !== x) {
+                push(null, x);
+                next();
+            }
+            else {
+                uniques.add(x);
+                if (uniques.size > size) {
+                    size = uniques.size;
+                    push(null, x);
+                }
+                next();
+            }
+        });
+    }
     return this.uniqBy(function (a, b) {
         return a === b;
     });
@@ -2271,6 +2350,9 @@ exposeMethod('uniq');
  * element from each separate stream is combined into a single data event,
  * followed by the second elements of each stream and so on until the shortest
  * input stream is exhausted.
+ *
+ * *Note:* This transform will be renamed `zipAll` in the next major version
+ * release.
  *
  * @id zipAll0
  * @section Higher-order Streams
@@ -2344,6 +2426,9 @@ exposeMethod('zipAll0');
  * Takes a stream and a `finite` stream of `N` streams
  * and returns a stream of the corresponding `(N+1)`-tuples.
  *
+ * *Note:* This transform will be renamed `zipEach` in the next major version
+ * release.
+ *
  * @id zipAll
  * @section Higher-order Streams
  * @name Stream.zipAll(ys)
@@ -2364,7 +2449,8 @@ Stream.prototype.zipAll = function (ys) {
 exposeMethod('zipAll');
 
 /**
- * Takes two Streams and returns a Stream of corresponding pairs.
+ * Takes two Streams and returns a Stream of corresponding pairs. The size of
+ * the resulting stream is the smaller of the two source streams.
  *
  * @id zip
  * @section Higher-order Streams
@@ -2373,6 +2459,8 @@ exposeMethod('zipAll');
  * @api public
  *
  * _(['a', 'b', 'c']).zip([1, 2, 3])  // => ['a', 1], ['b', 2], ['c', 3]
+ *
+ * _(['a', 'b', 'c']).zip(_([1]))  // => ['a', 1]
  */
 
 Stream.prototype.zip = function (ys) {
@@ -2459,12 +2547,12 @@ exposeMethod('batchWithTimeOrCount');
 /**
  * Creates a new Stream with the separator interspersed between the elements of the source.
  *
- * intersperse is effectively the inverse of [splitBy](#splitBy).
+ * `intersperse` is effectively the inverse of [splitBy](#splitBy).
  *
  * @id intersperse
  * @section Transforms
  * @name Stream.intersperse(sep)
- * @param sep - the value to intersperse between the source elements
+ * @param {String} sep - the value to intersperse between the source elements
  * @api public
  *
  * _(['ba', 'a', 'a']).intersperse('n')  // => ba, n, a, n, a
@@ -2499,12 +2587,12 @@ exposeMethod('intersperse');
 /**
  * Splits the source Stream by a separator and emits the pieces in between, much like splitting a string.
  *
- * splitBy is effectively the inverse of [intersperse](#intersperse).
+ * `splitBy` is effectively the inverse of [intersperse](#intersperse).
  *
  * @id splitBy
  * @section Transforms
  * @name Stream.splitBy(sep)
- * @param sep - the separator to split on
+ * @param {String | RegExp} sep - the separator to split on
  * @api public
  *
  * _(['mis', 'si', 's', 'sippi']).splitBy('ss')  // => mi, i, ippi
@@ -2700,14 +2788,24 @@ Stream.prototype.last = function () {
 exposeMethod('last');
 
 /**
- * Collects all values together then emits each value individually but in sorted order.
- * The method for sorting the elements is defined by the comparator function supplied
- * as a parameter.
+ * Collects all values together then emits each value individually in sorted
+ * order. The method for sorting the elements is defined by the comparator
+ * function supplied as a parameter.
+ *
+ * The comparison function takes two arguments `a` and `b` and should return
+ *
+ * - a negative number if `a` should sort before `b`.
+ * - a positive number if `a` should sort after `b`.
+ * - zero if `a` and `b` may sort in any order (i.e., they are equal).
+ *
+ * This function must also define a [partial
+ * order](https://en.wikipedia.org/wiki/Partially_ordered_set). If it does not,
+ * the resulting ordering is undefined.
  *
  * @id sortBy
  * @section Transforms
  * @name Stream.sortBy(f)
- * @param f - the sorting function
+ * @param {Function} f - the comparison function
  * @api public
  *
  * var sorts = _([3, 1, 4, 2]).sortBy(function (a, b) {
@@ -2742,14 +2840,22 @@ exposeMethod('sort');
 
 
 /**
- * Passes the current Stream to a function, returning the result. Can also
- * be used to pipe the current Stream through another Stream. It will always
- * return a Highland Stream (instead of the piped to target directly as in
- * Node.js). Any errors emitted will be propagated as Highland errors.
+ * Transforms a stream using an arbitrary target transform.
+ *
+ * If `target` is a function, this transform passes the current Stream to it,
+ * returning the result.
+ *
+ * If `target` is a [Duplex
+ * Stream](https://nodejs.org/api/stream.html#stream_class_stream_duplex_1),
+ * this transform pipes the current Stream through it. It will always return a
+ * Highland Stream (instead of the piped to target directly as in
+ * [pipe](#pipe)). Any errors emitted will be propagated as Highland errors.
  *
  * @id through
  * @section Higher-order Streams
  * @name Stream.through(target)
+ * @param {Function | Duplex Stream} target - the stream to pipe through or a
+ * function to call.
  * @api public
  *
  * function oddDoubler(s) {
@@ -2873,10 +2979,10 @@ _.pipeline = function (/*through...*/) {
 };
 
 /**
- * Reads values from a Stream of Streams, emitting them on a single output
- * Stream. This can be thought of as a flatten, just one level deep. Often
- * used for resolving asynchronous actions such as a HTTP request or reading
- * a file.
+ * Reads values from a Stream of Streams or Arrays, emitting them on a single
+ * output Stream. This can be thought of as a [flatten](#flatten), just one
+ * level deep, often used for resolving asynchronous actions such as a HTTP
+ * request or reading a file.
  *
  * @id sequence
  * @section Higher-order Streams
@@ -2891,6 +2997,7 @@ _.pipeline = function (/*through...*/) {
  * nums.sequence()  // => 1, 2, 3, 4, 5, 6
  *
  * // using sequence to read from files in series
+ * var readFile = _.wrapCallback(fs.readFile);
  * filenames.map(readFile).sequence()
  */
 
@@ -2968,6 +3075,7 @@ exposeMethod('sequence');
  * @name Stream.series()
  * @api public
  *
+ * var readFile = _.wrapCallback(fs.readFile);
  * filenames.map(readFile).series()
  */
 
@@ -3052,6 +3160,14 @@ Stream.prototype.parallel = function (n) {
     var running = [];
     var ended = false;
     var reading_source = false;
+
+    if (typeof n !== 'number') {
+        throw new Error('Must specify a number to parallel().');
+    }
+
+    if (n <= 0) {
+        throw new Error('The parallelism factor must be positive');
+    }
 
     return _(function (push, next) {
         if (running.length < n && !ended && !reading_source) {
@@ -3206,6 +3322,9 @@ exposeMethod('append');
  * If the iterator throws an error, the reduction stops and the resulting
  * stream will emit that error instead of a value.
  *
+ * *Note:* The order of the `memo` and `iterator` arguments will be flipped in
+ * the next major version release.
+ *
  * @id reduce
  * @section Transforms
  * @name Stream.reduce(memo, iterator)
@@ -3284,7 +3403,7 @@ exposeMethod('reduce1');
 /**
  * Groups all values into an Array and passes down the stream as a single
  * data event. This is a bit like doing [toArray](#toArray), but instead
- * of accepting a callback and causing a *thunk*, it passes the value on.
+ * of accepting a callback and consuming the stream, it passes the value on.
  *
  * @id collect
  * @section Transforms
@@ -3322,6 +3441,9 @@ exposeMethod('collect');
  * If the iterator throws an error, the scan will stop and the stream will
  * emit that error. Any intermediate values that were produced before the
  * error will still be emitted.
+ *
+ * *Note:* The order of the `memo` and `iterator` arguments will be flipped in
+ * the next major version release.
  *
  * @id scan
  * @section Transforms
@@ -3546,6 +3668,8 @@ exposeMethod('concat');
  * @name Stream.merge()
  * @api public
  *
+ * var readFile = _.wrapCallback(fs.readFile);
+ *
  * var txt = _(['foo.txt', 'bar.txt']).map(readFile)
  * var md = _(['baz.md']).map(readFile)
  *
@@ -3677,6 +3801,8 @@ exposeMethod('merge');
  * @param {Number} n - the maximum number of streams to run in parallel
  * @api public
  *
+ * var readFile = _.wrapCallback(fs.readFile);
+ *
  * var txt = _(['foo.txt', 'bar.txt']).flatMap(readFile)
  * var md = _(['baz.md']).flatMap(readFile)
  * var js = _(['bosh.js']).flatMap(readFile)
@@ -3748,7 +3874,8 @@ exposeMethod('mergeWithLimit');
  *
  * _(['foo', 'bar']).invoke('toUpperCase', [])  // => FOO, BAR
  *
- * filenames.map(readFile).sequence().invoke('toString', ['utf8']);
+ * var readFile = _.wrapCallback(fs.readFile);
+ * filenames.flatMap(readFile).invoke('toString', ['utf8']);
  */
 
 Stream.prototype.invoke = function (method, args) {
@@ -4150,16 +4277,22 @@ _.log = function () {
  * so you can safely use it as a method without binding (see the second
  * example below).
  *
- * wrapCallback also accepts a mapping hint, which specifies how callback
- * arguments are pushed to the stream. This can be a function, number, or
- * array. See the documentation on [EventEmitter Stream Objects](#Stream Objects)
- * for details.
+ * `wrapCallback` also accepts an optional `mappingHint`, which specifies how
+ * callback arguments are pushed to the stream. This can be used to handle
+ * non-standard callback protocols that pass back more than one value.
+ *
+ * `mappingHint` can be a function, number, or array. See the documentation on
+ * [EventEmitter Stream Objects](#Stream Objects) for details on the mapping
+ * hint. If `mappingHint` is a function, it will be called with all but the
+ * first argument that is passed to the callback. The first is still assumed to
+ * be the error argument.
  *
  * @id wrapCallback
  * @section Utils
  * @name _.wrapCallback(f)
  * @param {Function} f - the node-style function to wrap
- * @param {Function | Number | Array} mappingHint - how to pass the arguments to the callback (optional)
+ * @param {Array | Function | Number} mappingHint - (optional) how to pass the
+ * arguments to the callback
  * @api public
  *
  * var fs = require('fs');
@@ -4325,133 +4458,7 @@ _.not = function (x) {
 };
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":8,"events":4,"string_decoder":9,"util":11}],2:[function(require,module,exports){
-var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-
-;(function (exports) {
-	'use strict';
-
-  var Arr = (typeof Uint8Array !== 'undefined')
-    ? Uint8Array
-    : Array
-
-	var PLUS   = '+'.charCodeAt(0)
-	var SLASH  = '/'.charCodeAt(0)
-	var NUMBER = '0'.charCodeAt(0)
-	var LOWER  = 'a'.charCodeAt(0)
-	var UPPER  = 'A'.charCodeAt(0)
-	var PLUS_URL_SAFE = '-'.charCodeAt(0)
-	var SLASH_URL_SAFE = '_'.charCodeAt(0)
-
-	function decode (elt) {
-		var code = elt.charCodeAt(0)
-		if (code === PLUS ||
-		    code === PLUS_URL_SAFE)
-			return 62 // '+'
-		if (code === SLASH ||
-		    code === SLASH_URL_SAFE)
-			return 63 // '/'
-		if (code < NUMBER)
-			return -1 //no match
-		if (code < NUMBER + 10)
-			return code - NUMBER + 26 + 26
-		if (code < UPPER + 26)
-			return code - UPPER
-		if (code < LOWER + 26)
-			return code - LOWER + 26
-	}
-
-	function b64ToByteArray (b64) {
-		var i, j, l, tmp, placeHolders, arr
-
-		if (b64.length % 4 > 0) {
-			throw new Error('Invalid string. Length must be a multiple of 4')
-		}
-
-		// the number of equal signs (place holders)
-		// if there are two placeholders, than the two characters before it
-		// represent one byte
-		// if there is only one, then the three characters before it represent 2 bytes
-		// this is just a cheap hack to not do indexOf twice
-		var len = b64.length
-		placeHolders = '=' === b64.charAt(len - 2) ? 2 : '=' === b64.charAt(len - 1) ? 1 : 0
-
-		// base64 is 4/3 + up to two characters of the original data
-		arr = new Arr(b64.length * 3 / 4 - placeHolders)
-
-		// if there are placeholders, only get up to the last complete 4 chars
-		l = placeHolders > 0 ? b64.length - 4 : b64.length
-
-		var L = 0
-
-		function push (v) {
-			arr[L++] = v
-		}
-
-		for (i = 0, j = 0; i < l; i += 4, j += 3) {
-			tmp = (decode(b64.charAt(i)) << 18) | (decode(b64.charAt(i + 1)) << 12) | (decode(b64.charAt(i + 2)) << 6) | decode(b64.charAt(i + 3))
-			push((tmp & 0xFF0000) >> 16)
-			push((tmp & 0xFF00) >> 8)
-			push(tmp & 0xFF)
-		}
-
-		if (placeHolders === 2) {
-			tmp = (decode(b64.charAt(i)) << 2) | (decode(b64.charAt(i + 1)) >> 4)
-			push(tmp & 0xFF)
-		} else if (placeHolders === 1) {
-			tmp = (decode(b64.charAt(i)) << 10) | (decode(b64.charAt(i + 1)) << 4) | (decode(b64.charAt(i + 2)) >> 2)
-			push((tmp >> 8) & 0xFF)
-			push(tmp & 0xFF)
-		}
-
-		return arr
-	}
-
-	function uint8ToBase64 (uint8) {
-		var i,
-			extraBytes = uint8.length % 3, // if we have 1 byte left, pad 2 bytes
-			output = "",
-			temp, length
-
-		function encode (num) {
-			return lookup.charAt(num)
-		}
-
-		function tripletToBase64 (num) {
-			return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F)
-		}
-
-		// go through the array every three bytes, we'll deal with trailing stuff later
-		for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
-			temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
-			output += tripletToBase64(temp)
-		}
-
-		// pad the end with zeros, but make sure to not forget the extra bytes
-		switch (extraBytes) {
-			case 1:
-				temp = uint8[uint8.length - 1]
-				output += encode(temp >> 2)
-				output += encode((temp << 4) & 0x3F)
-				output += '=='
-				break
-			case 2:
-				temp = (uint8[uint8.length - 2] << 8) + (uint8[uint8.length - 1])
-				output += encode(temp >> 10)
-				output += encode((temp >> 4) & 0x3F)
-				output += encode((temp << 2) & 0x3F)
-				output += '='
-				break
-		}
-
-		return output
-	}
-
-	exports.toByteArray = b64ToByteArray
-	exports.fromByteArray = uint8ToBase64
-}(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
-
-},{}],3:[function(require,module,exports){
+},{"_process":8,"events":6,"string_decoder":9,"util":11,"util-deprecate":12}],2:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -4461,9 +4468,11 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
  */
 /* eslint-disable no-proto */
 
+'use strict'
+
 var base64 = require('base64-js')
 var ieee754 = require('ieee754')
-var isArray = require('is-array')
+var isArray = require('isarray')
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -4543,8 +4552,10 @@ function Buffer (arg) {
     return new Buffer(arg)
   }
 
-  this.length = 0
-  this.parent = undefined
+  if (!Buffer.TYPED_ARRAY_SUPPORT) {
+    this.length = 0
+    this.parent = undefined
+  }
 
   // Common case.
   if (typeof arg === 'number') {
@@ -4675,6 +4686,10 @@ function fromJsonObject (that, object) {
 if (Buffer.TYPED_ARRAY_SUPPORT) {
   Buffer.prototype.__proto__ = Uint8Array.prototype
   Buffer.__proto__ = Uint8Array
+} else {
+  // pre-set for values that may exist in the future
+  Buffer.prototype.length = undefined
+  Buffer.prototype.parent = undefined
 }
 
 function allocate (that, length) {
@@ -4824,10 +4839,6 @@ function byteLength (string, encoding) {
   }
 }
 Buffer.byteLength = byteLength
-
-// pre-set for values that may exist in the future
-Buffer.prototype.length = undefined
-Buffer.prototype.parent = undefined
 
 function slowToString (encoding, start, end) {
   var loweredCase = false
@@ -5920,7 +5931,7 @@ function utf8ToBytes (string, units) {
       }
 
       // valid surrogate pair
-      codePoint = leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00 | 0x10000
+      codePoint = (leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00) + 0x10000
     } else if (leadSurrogate) {
       // valid bmp char, but last char was a lead
       if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
@@ -5999,7 +6010,226 @@ function blitBuffer (src, dst, offset, length) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":2,"ieee754":5,"is-array":7}],4:[function(require,module,exports){
+},{"base64-js":3,"ieee754":4,"isarray":5}],3:[function(require,module,exports){
+var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+;(function (exports) {
+	'use strict';
+
+  var Arr = (typeof Uint8Array !== 'undefined')
+    ? Uint8Array
+    : Array
+
+	var PLUS   = '+'.charCodeAt(0)
+	var SLASH  = '/'.charCodeAt(0)
+	var NUMBER = '0'.charCodeAt(0)
+	var LOWER  = 'a'.charCodeAt(0)
+	var UPPER  = 'A'.charCodeAt(0)
+	var PLUS_URL_SAFE = '-'.charCodeAt(0)
+	var SLASH_URL_SAFE = '_'.charCodeAt(0)
+
+	function decode (elt) {
+		var code = elt.charCodeAt(0)
+		if (code === PLUS ||
+		    code === PLUS_URL_SAFE)
+			return 62 // '+'
+		if (code === SLASH ||
+		    code === SLASH_URL_SAFE)
+			return 63 // '/'
+		if (code < NUMBER)
+			return -1 //no match
+		if (code < NUMBER + 10)
+			return code - NUMBER + 26 + 26
+		if (code < UPPER + 26)
+			return code - UPPER
+		if (code < LOWER + 26)
+			return code - LOWER + 26
+	}
+
+	function b64ToByteArray (b64) {
+		var i, j, l, tmp, placeHolders, arr
+
+		if (b64.length % 4 > 0) {
+			throw new Error('Invalid string. Length must be a multiple of 4')
+		}
+
+		// the number of equal signs (place holders)
+		// if there are two placeholders, than the two characters before it
+		// represent one byte
+		// if there is only one, then the three characters before it represent 2 bytes
+		// this is just a cheap hack to not do indexOf twice
+		var len = b64.length
+		placeHolders = '=' === b64.charAt(len - 2) ? 2 : '=' === b64.charAt(len - 1) ? 1 : 0
+
+		// base64 is 4/3 + up to two characters of the original data
+		arr = new Arr(b64.length * 3 / 4 - placeHolders)
+
+		// if there are placeholders, only get up to the last complete 4 chars
+		l = placeHolders > 0 ? b64.length - 4 : b64.length
+
+		var L = 0
+
+		function push (v) {
+			arr[L++] = v
+		}
+
+		for (i = 0, j = 0; i < l; i += 4, j += 3) {
+			tmp = (decode(b64.charAt(i)) << 18) | (decode(b64.charAt(i + 1)) << 12) | (decode(b64.charAt(i + 2)) << 6) | decode(b64.charAt(i + 3))
+			push((tmp & 0xFF0000) >> 16)
+			push((tmp & 0xFF00) >> 8)
+			push(tmp & 0xFF)
+		}
+
+		if (placeHolders === 2) {
+			tmp = (decode(b64.charAt(i)) << 2) | (decode(b64.charAt(i + 1)) >> 4)
+			push(tmp & 0xFF)
+		} else if (placeHolders === 1) {
+			tmp = (decode(b64.charAt(i)) << 10) | (decode(b64.charAt(i + 1)) << 4) | (decode(b64.charAt(i + 2)) >> 2)
+			push((tmp >> 8) & 0xFF)
+			push(tmp & 0xFF)
+		}
+
+		return arr
+	}
+
+	function uint8ToBase64 (uint8) {
+		var i,
+			extraBytes = uint8.length % 3, // if we have 1 byte left, pad 2 bytes
+			output = "",
+			temp, length
+
+		function encode (num) {
+			return lookup.charAt(num)
+		}
+
+		function tripletToBase64 (num) {
+			return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F)
+		}
+
+		// go through the array every three bytes, we'll deal with trailing stuff later
+		for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
+			temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
+			output += tripletToBase64(temp)
+		}
+
+		// pad the end with zeros, but make sure to not forget the extra bytes
+		switch (extraBytes) {
+			case 1:
+				temp = uint8[uint8.length - 1]
+				output += encode(temp >> 2)
+				output += encode((temp << 4) & 0x3F)
+				output += '=='
+				break
+			case 2:
+				temp = (uint8[uint8.length - 2] << 8) + (uint8[uint8.length - 1])
+				output += encode(temp >> 10)
+				output += encode((temp >> 4) & 0x3F)
+				output += encode((temp << 2) & 0x3F)
+				output += '='
+				break
+		}
+
+		return output
+	}
+
+	exports.toByteArray = b64ToByteArray
+	exports.fromByteArray = uint8ToBase64
+}(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
+
+},{}],4:[function(require,module,exports){
+exports.read = function (buffer, offset, isLE, mLen, nBytes) {
+  var e, m
+  var eLen = nBytes * 8 - mLen - 1
+  var eMax = (1 << eLen) - 1
+  var eBias = eMax >> 1
+  var nBits = -7
+  var i = isLE ? (nBytes - 1) : 0
+  var d = isLE ? -1 : 1
+  var s = buffer[offset + i]
+
+  i += d
+
+  e = s & ((1 << (-nBits)) - 1)
+  s >>= (-nBits)
+  nBits += eLen
+  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8) {}
+
+  m = e & ((1 << (-nBits)) - 1)
+  e >>= (-nBits)
+  nBits += mLen
+  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8) {}
+
+  if (e === 0) {
+    e = 1 - eBias
+  } else if (e === eMax) {
+    return m ? NaN : ((s ? -1 : 1) * Infinity)
+  } else {
+    m = m + Math.pow(2, mLen)
+    e = e - eBias
+  }
+  return (s ? -1 : 1) * m * Math.pow(2, e - mLen)
+}
+
+exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
+  var e, m, c
+  var eLen = nBytes * 8 - mLen - 1
+  var eMax = (1 << eLen) - 1
+  var eBias = eMax >> 1
+  var rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0)
+  var i = isLE ? 0 : (nBytes - 1)
+  var d = isLE ? 1 : -1
+  var s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0
+
+  value = Math.abs(value)
+
+  if (isNaN(value) || value === Infinity) {
+    m = isNaN(value) ? 1 : 0
+    e = eMax
+  } else {
+    e = Math.floor(Math.log(value) / Math.LN2)
+    if (value * (c = Math.pow(2, -e)) < 1) {
+      e--
+      c *= 2
+    }
+    if (e + eBias >= 1) {
+      value += rt / c
+    } else {
+      value += rt * Math.pow(2, 1 - eBias)
+    }
+    if (value * c >= 2) {
+      e++
+      c /= 2
+    }
+
+    if (e + eBias >= eMax) {
+      m = 0
+      e = eMax
+    } else if (e + eBias >= 1) {
+      m = (value * c - 1) * Math.pow(2, mLen)
+      e = e + eBias
+    } else {
+      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen)
+      e = 0
+    }
+  }
+
+  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8) {}
+
+  e = (e << mLen) | m
+  eLen += mLen
+  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8) {}
+
+  buffer[offset + i - d] |= s * 128
+}
+
+},{}],5:[function(require,module,exports){
+var toString = {}.toString;
+
+module.exports = Array.isArray || function (arr) {
+  return toString.call(arr) == '[object Array]';
+};
+
+},{}],6:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -6302,93 +6532,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],5:[function(require,module,exports){
-exports.read = function (buffer, offset, isLE, mLen, nBytes) {
-  var e, m
-  var eLen = nBytes * 8 - mLen - 1
-  var eMax = (1 << eLen) - 1
-  var eBias = eMax >> 1
-  var nBits = -7
-  var i = isLE ? (nBytes - 1) : 0
-  var d = isLE ? -1 : 1
-  var s = buffer[offset + i]
-
-  i += d
-
-  e = s & ((1 << (-nBits)) - 1)
-  s >>= (-nBits)
-  nBits += eLen
-  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8) {}
-
-  m = e & ((1 << (-nBits)) - 1)
-  e >>= (-nBits)
-  nBits += mLen
-  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8) {}
-
-  if (e === 0) {
-    e = 1 - eBias
-  } else if (e === eMax) {
-    return m ? NaN : ((s ? -1 : 1) * Infinity)
-  } else {
-    m = m + Math.pow(2, mLen)
-    e = e - eBias
-  }
-  return (s ? -1 : 1) * m * Math.pow(2, e - mLen)
-}
-
-exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
-  var e, m, c
-  var eLen = nBytes * 8 - mLen - 1
-  var eMax = (1 << eLen) - 1
-  var eBias = eMax >> 1
-  var rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0)
-  var i = isLE ? 0 : (nBytes - 1)
-  var d = isLE ? 1 : -1
-  var s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0
-
-  value = Math.abs(value)
-
-  if (isNaN(value) || value === Infinity) {
-    m = isNaN(value) ? 1 : 0
-    e = eMax
-  } else {
-    e = Math.floor(Math.log(value) / Math.LN2)
-    if (value * (c = Math.pow(2, -e)) < 1) {
-      e--
-      c *= 2
-    }
-    if (e + eBias >= 1) {
-      value += rt / c
-    } else {
-      value += rt * Math.pow(2, 1 - eBias)
-    }
-    if (value * c >= 2) {
-      e++
-      c /= 2
-    }
-
-    if (e + eBias >= eMax) {
-      m = 0
-      e = eMax
-    } else if (e + eBias >= 1) {
-      m = (value * c - 1) * Math.pow(2, mLen)
-      e = e + eBias
-    } else {
-      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen)
-      e = 0
-    }
-  }
-
-  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8) {}
-
-  e = (e << mLen) | m
-  eLen += mLen
-  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8) {}
-
-  buffer[offset + i - d] |= s * 128
-}
-
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -6412,41 +6556,6 @@ if (typeof Object.create === 'function') {
     ctor.prototype.constructor = ctor
   }
 }
-
-},{}],7:[function(require,module,exports){
-
-/**
- * isArray
- */
-
-var isArray = Array.isArray;
-
-/**
- * toString
- */
-
-var str = Object.prototype.toString;
-
-/**
- * Whether or not the given `val`
- * is an array.
- *
- * example:
- *
- *        isArray([]);
- *        // > true
- *        isArray(arguments);
- *        // > false
- *        isArray('');
- *        // > false
- *
- * @param {mixed} val
- * @return {bool}
- */
-
-module.exports = isArray || function (val) {
-  return !! val && '[object Array]' == str.call(val);
-};
 
 },{}],8:[function(require,module,exports){
 // shim for using process in browser
@@ -6764,7 +6873,7 @@ function base64DetectIncompleteChar(buffer) {
   this.charLength = this.charReceived ? 3 : 0;
 }
 
-},{"buffer":3}],10:[function(require,module,exports){
+},{"buffer":2}],10:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
@@ -7361,5 +7470,76 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":10,"_process":8,"inherits":6}]},{},[1])(1)
+},{"./support/isBuffer":10,"_process":8,"inherits":7}],12:[function(require,module,exports){
+(function (global){
+
+/**
+ * Module exports.
+ */
+
+module.exports = deprecate;
+
+/**
+ * Mark that a method should not be used.
+ * Returns a modified function which warns once by default.
+ *
+ * If `localStorage.noDeprecation = true` is set, then it is a no-op.
+ *
+ * If `localStorage.throwDeprecation = true` is set, then deprecated functions
+ * will throw an Error when invoked.
+ *
+ * If `localStorage.traceDeprecation = true` is set, then deprecated functions
+ * will invoke `console.trace()` instead of `console.error()`.
+ *
+ * @param {Function} fn - the function to deprecate
+ * @param {String} msg - the string to print to the console when `fn` is invoked
+ * @returns {Function} a new "deprecated" version of `fn`
+ * @api public
+ */
+
+function deprecate (fn, msg) {
+  if (config('noDeprecation')) {
+    return fn;
+  }
+
+  var warned = false;
+  function deprecated() {
+    if (!warned) {
+      if (config('throwDeprecation')) {
+        throw new Error(msg);
+      } else if (config('traceDeprecation')) {
+        console.trace(msg);
+      } else {
+        console.warn(msg);
+      }
+      warned = true;
+    }
+    return fn.apply(this, arguments);
+  }
+
+  return deprecated;
+}
+
+/**
+ * Checks `localStorage` for boolean values for the given `name`.
+ *
+ * @param {String} name
+ * @returns {Boolean}
+ * @api private
+ */
+
+function config (name) {
+  // accessing global.localStorage can trigger a DOMException in sandboxed iframes
+  try {
+    if (!global.localStorage) return false;
+  } catch (_) {
+    return false;
+  }
+  var val = global.localStorage[name];
+  if (null == val) return false;
+  return String(val).toLowerCase() === 'true';
+}
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}]},{},[1])(1)
 });

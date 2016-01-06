@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="css/highland.css">
     <link rel="stylesheet" href="css/highlight.github.css">
     <script src="js/vendor/modernizr.js"></script>
-    <script src="https://cdn.rawgit.com/caolan/highland/2.5.1/dist/highland.js" type="text/javascript"></script>
+    <script src="https://cdn.rawgit.com/caolan/highland/2.6.0/dist/highland.js" type="text/javascript"></script>
 
   </head>
   <body>
@@ -30,11 +30,13 @@
       <p>The high-level streams library for Node.js and the browser.</p>
       <pre class="npm-install">$ npm install highland</pre>
       <p class="show-for-small-only">
-        <a class="button small" href="https://cdn.rawgit.com/caolan/highland/2.5.1/dist/highland.js">Download</a>
+        <a class="button small" href="https://cdn.rawgit.com/caolan/highland/2.6.0/dist/highland.js">Download</a>
+        <a class="button small" href="https://cdn.rawgit.com/caolan/highland/2.6.0/dist/highland.min.js">Download (minified)</a>
         <a class="button small" href="https://github.com/caolan/highland"><i style="margin-right: 3px" class="fi-social-github"></i> Source code</a>
       </p>
       <p class="show-for-medium-up">
-        <a class="button" href="https://cdn.rawgit.com/caolan/highland/2.5.1/dist/highland.js">Download</a>
+        <a class="button" href="https://cdn.rawgit.com/caolan/highland/2.6.0/dist/highland.js">Download</a>
+        <a class="button" href="https://cdn.rawgit.com/caolan/highland/2.6.0/dist/highland.min.js">Download (minified)</a>
         <a class="button" href="https://github.com/caolan/highland"><i style="margin-right: 3px" class="fi-social-github"></i> Source code</a>
       </p>
     </div>
@@ -51,213 +53,105 @@
         <li><a href="#backpressure">Back-pressure</a></li>
         <li><a href="#currying">Currying</a></li>
         <li><a href="#events">Events</a></li>
-        
         <li class="heading"><a href="#Stream Objects">Stream Objects</a></li>
-        
         <li><a href="#_(source)">_(source)</a></li>
-        
         <li><a href="#destroy">destroy</a></li>
-        
         <li><a href="#end">end</a></li>
-        
         <li><a href="#pause">pause</a></li>
-        
         <li><a href="#resume">resume</a></li>
-        
         <li><a href="#write">write</a></li>
-        
-        
         <li class="heading"><a href="#Transforms">Transforms</a></li>
-        
         <li><a href="#append">append</a></li>
-        
         <li><a href="#batch">batch</a></li>
-        
         <li><a href="#batchWithTimeOrCount">batchWithTimeOrCount</a></li>
-        
         <li><a href="#collect">collect</a></li>
-        
         <li><a href="#compact">compact</a></li>
-        
         <li><a href="#consume">consume</a></li>
-        
         <li><a href="#debounce">debounce</a></li>
-        
         <li><a href="#doto">doto</a></li>
-        
         <li><a href="#drop">drop</a></li>
-        
         <li><a href="#errors">errors</a></li>
-        
         <li><a href="#filter">filter</a></li>
-        
         <li><a href="#find">find</a></li>
-        
         <li><a href="#findWhere">findWhere</a></li>
-        
         <li><a href="#group">group</a></li>
-        
         <li><a href="#head">head</a></li>
-        
         <li><a href="#intersperse">intersperse</a></li>
-        
         <li><a href="#invoke">invoke</a></li>
-        
         <li><a href="#last">last</a></li>
-        
         <li><a href="#latest">latest</a></li>
-        
         <li><a href="#map">map</a></li>
-        
         <li><a href="#nfcall">nfcall</a></li>
-        
         <li><a href="#pick">pick</a></li>
-        
         <li><a href="#pickBy">pickBy</a></li>
-        
         <li><a href="#pluck">pluck</a></li>
-        
         <li><a href="#ratelimit">ratelimit</a></li>
-        
         <li><a href="#reduce">reduce</a></li>
-        
         <li><a href="#reduce1">reduce1</a></li>
-        
         <li><a href="#reject">reject</a></li>
-        
         <li><a href="#scan">scan</a></li>
-        
         <li><a href="#scan1">scan1</a></li>
-        
         <li><a href="#slice">slice</a></li>
-        
         <li><a href="#sort">sort</a></li>
-        
         <li><a href="#sortBy">sortBy</a></li>
-        
         <li><a href="#split">split</a></li>
-        
         <li><a href="#splitBy">splitBy</a></li>
-        
         <li><a href="#stopOnError">stopOnError</a></li>
-        
         <li><a href="#take">take</a></li>
-        
         <li><a href="#tap">tap</a></li>
-        
         <li><a href="#throttle">throttle</a></li>
-        
         <li><a href="#transduce">transduce</a></li>
-        
         <li><a href="#uniq">uniq</a></li>
-        
         <li><a href="#uniqBy">uniqBy</a></li>
-        
         <li><a href="#where">where</a></li>
-        
-        
         <li class="heading"><a href="#Higher-order Streams">Higher-order Streams</a></li>
-        
         <li><a href="#concat">concat</a></li>
-        
         <li><a href="#flatFilter">flatFilter</a></li>
-        
         <li><a href="#flatMap">flatMap</a></li>
-        
         <li><a href="#flatten">flatten</a></li>
-        
         <li><a href="#fork">fork</a></li>
-        
         <li><a href="#merge">merge</a></li>
-        
         <li><a href="#mergeWithLimit">mergeWithLimit</a></li>
-        
         <li><a href="#observe">observe</a></li>
-        
         <li><a href="#otherwise">otherwise</a></li>
-        
         <li><a href="#parallel">parallel</a></li>
-        
         <li><a href="#pipeline">pipeline</a></li>
-        
         <li><a href="#sequence">sequence</a></li>
-        
         <li><a href="#series">series</a></li>
-        
         <li><a href="#through">through</a></li>
-        
         <li><a href="#zip">zip</a></li>
-        
         <li><a href="#zipAll">zipAll</a></li>
-        
         <li><a href="#zipAll0">zipAll0</a></li>
-        
-        
         <li class="heading"><a href="#Consumption">Consumption</a></li>
-        
         <li><a href="#apply">apply</a></li>
-        
         <li><a href="#done">done</a></li>
-        
         <li><a href="#each">each</a></li>
-        
         <li><a href="#pipe">pipe</a></li>
-        
         <li><a href="#pull">pull</a></li>
-        
         <li><a href="#toArray">toArray</a></li>
-        
-        
         <li class="heading"><a href="#Utils">Utils</a></li>
-        
         <li><a href="#isStream">isStream</a></li>
-        
         <li><a href="#log">log</a></li>
-        
         <li><a href="#nil">nil</a></li>
-        
         <li><a href="#streamifyAll">streamifyAll</a></li>
-        
         <li><a href="#wrapCallback">wrapCallback</a></li>
-        
-        
         <li class="heading"><a href="#Objects">Objects</a></li>
-        
         <li><a href="#extend">extend</a></li>
-        
         <li><a href="#get">get</a></li>
-        
         <li><a href="#keys">keys</a></li>
-        
         <li><a href="#pairs">pairs</a></li>
-        
         <li><a href="#set">set</a></li>
-        
         <li><a href="#values">values</a></li>
-        
-        
         <li class="heading"><a href="#Functions">Functions</a></li>
-        
         <li><a href="#compose">compose</a></li>
-        
         <li><a href="#curry">curry</a></li>
-        
         <li><a href="#flip">flip</a></li>
-        
         <li><a href="#ncurry">ncurry</a></li>
-        
         <li><a href="#partial">partial</a></li>
-        
         <li><a href="#seq">seq</a></li>
-        
-        
         <li class="heading"><a href="#Operators">Operators</a></li>
-        
         <li><a href="#add">add</a></li>
-        
         <li><a href="#not">not</a></li>
-        
-        
       </ul>
     </nav>
 
@@ -270,7 +164,7 @@
         <a href="http://lodash.com">utility</a>
         <a href="https://github.com/caolan/async">belt</a>,
         Highland manages synchronous and asynchronous code easily, using nothing more than
-        standard JavaScript and Node-like Streams.
+        standard JavaScript and Node-like streams.
         You may be familiar with Promises, EventEmitters and callbacks, but moving
         between them is far from seamless. Thankfully, there exists a deeper abstraction
         which can free our code. By updating the tools we use on Arrays, and applying them
@@ -286,15 +180,15 @@
       <h3 id="browser">Usage in the browser</h3>
       <p>
         Highland can be used both in Node.js and in the browser. When you install the highland package,
-        you will find a <i>dist/highland.js</i> file in the package hierarchy.
+        you will find a <code>dist/highland.js</code> file in the package hierarchy.
         This file has been prepared with browserify in order to bring a browser-ready version of highland.
       </p>
       <p>
-        Simply load this script with a &lt;script&gt; tag, and a <i>highland</i> variable
+      Simply load this script with a <code>&lt;script&gt;</code> tag, and a <code>highland</code> variable
         will be made available in the global javascript scope.
       </p>
       <p>
-        If you prefer using highland under the name <i>_</i> like is done in the examples below,
+        If you prefer using highland under the name <code>_</code> like is done in the examples below,
         you can then simply use:
       </p>
       <pre><code class="javascript">var _ = highland</code></pre>
@@ -366,7 +260,7 @@ counter.each(function (n) {
         });
     });
 };</code></pre>
-      <p>First, we return a new Stream which when read from will read a file (this is called lazy evaluation). When <code>fs.readFile</code> calls its callback, we push the error and data values onto the Stream. Finally, we push <code>_.nil</code> onto the Stream. This is the "end of stream" marker and will tell any consumers of this stream to stop reading.</p>
+      <p>First, we return a new Stream which when read from will read a file (this is called <em>lazy evaluation</em>). When <code>fs.readFile</code> calls its callback, we push the error and data values onto the Stream. Finally, we push <code>_.nil</code> onto the Stream. This is the "end of stream" marker and will tell any consumers of this stream to stop reading.</p>
       <p>Since wrapping a callback is a fairly common thing to do, there is a convenience function:</p>
       <pre><code class="javascript">var getData = _.wrapCallback(fs.readFile);</code></pre>
       <p>Now we have a new asynchronous source, we can run the exact same code from the Array examples on it:</p>
@@ -377,7 +271,7 @@ counter.each(function (n) {
       <pre><code class="javascript">var foo = _($.getJSON('/api/foo'));</code></pre>
 
       <h3 id="laziness">Laziness</h3>
-      <p>When you call <code>map</code> in Highland, it doesn't go off and immediately map over all your data. Rather it defines your intention, and the hard work occurs as you pull data from the Stream. This is 'lazy evaluation' and it's what enables Highland to manage back-pressure and also the sequencing of asynchronous actions, such as reading from a file.</p>
+      <p>When you call <code>map</code> in Highland, it doesn't go off and immediately map over all your data. Rather it defines your intention, and the hard work occurs as you pull data from the Stream. This is <em>lazy evaluation</em> and it's what enables Highland to manage back-pressure and also the sequencing of asynchronous actions, such as reading from a file.</p>
       <pre><code class="javascript">var calls = 0;
 
 var nums = _(['1', '2', '3']).map(function (x) {
@@ -386,11 +280,11 @@ var nums = _(['1', '2', '3']).map(function (x) {
 });
 
 // calls === 0</code></pre>
-      <p>To get the map iterator to be called, we must pull some data from the Stream. This is called a <strong><em>thunk</em></strong>, and some Highland methods will cause them (eg, <code>each</code>, <code>done</code>, <code>apply</code>, <code>toArray</code>, <code>pipe</code>, <code>resume</code>).</p>
+      <p>To get the map iterator to be called, we must <em>consume</em> the stream. A number of Highland methods will do so (e.g., <code>each</code>, <code>done</code>, <code>apply</code>, <code>toArray</code>, <code>pipe</code>, <code>resume</code>). A stream may only be consumed once and consuming an already-consumed stream will result in undefined behavior.</p>
       <pre><code class="javascript">nums.each(function (n) { console.log(n); });
 
 // calls === 3</code></pre>
-      <p>Equally, when we tell Highland to map a Stream of filenames to the readFile function, it doesn't actually go and read all the files at once, it let's us decide on how we want to read them:</p>
+      <p>Equally, when we tell Highland to map a Stream of filenames to the `readFile` function, it doesn't actually go and read all the files at once, it let's us decide on how we want to read them:</p>
       <pre><code class="javascript">filenames.map(readFile).series();
 filenames.map(readFile).parallel(10)</code></pre>
 
@@ -413,9 +307,9 @@ source.observe().map(_.log);</code></pre>
       <pre><code class="javascript">mystream.map(doubled)
 // is equivalent to
 _.map(doubled, mystream)</code></pre>
-      <p>By convention, all top-level functions are 'curryable', meaning you can partially apply their arguments. In the above example, this could be called as:</p>
+      <p>By convention, all top-level functions are "curryable", meaning you can partially apply their arguments. In the above example, this could be called as:</p>
       <pre><code class="javascript">_.map(doubled)(mystream);</code></pre>
-      <p>In real-world use, this means you can define the behaviour you'd like before knowing what Stream you'd like to perform it on:</p>
+      <p>In real-world use, this means you can define the behaviour you'd like before knowing what stream you'd like to perform it on:</p>
       <pre><code class="javascript">// partially apply the filter() function to create a new function
 var getBlogposts = _.filter(function (doc) {
     return doc.type === 'blogpost';
@@ -446,15 +340,13 @@ results.each(function (result) {
     // display result
 });</code></pre>
 
-      
         <h2 id="Stream Objects">Stream Objects</h2>
 
         <div class="doc-items">
-        
           <div id=_(source) class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L15"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L16"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#_(source)"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_(source)</pre>
@@ -492,15 +384,13 @@ argument emitted to the event handler will be written to the new Stream.</p>
 <p>You can pass a mapping hint as the third argument, which specifies how
 event arguments are pushed into the stream. If no mapping hint is provided,
 only the first value emitted with the event to the will be pushed onto the
-Stream. (NB: in a future version, if more than one argument is passed to the
-event, an array of all arguments will be pushed to the stream; currently the
-extra arguments are dropped)</p>
+Stream.</p>
 
-<p>If mappingHint is a number, an array of that length will be pushed
-onto the stream, containing exactly that many parameters from the event. If
-it's an array, it's used as keys to map the arguments into an object which
-is pushed to the tream. If the mapping hint is a function, it's called with
-the event arguments, and the returned value is pushed.</p>
+<p>If <code>mappingHint</code> is a number, an array of that length will be pushed onto
+the stream, containing exactly that many parameters from the event. If it's
+an array, it's used as keys to map the arguments into an object which is
+pushed to the tream. If it is a function, it's called with the event
+arguments, and the returned value is pushed.</p>
 
 <p><strong>Promise -</strong> Accepts an ES6 / jQuery style promise and returns a
 Highland Stream which will emit a single value (or an error).</p>
@@ -514,20 +404,25 @@ and the stream will be ended with no further calls to <code>next()</code>.</p>
 i.e., contains a method that returns an object that conforms to the iterator protocol. The stream will use the
 iterator defined in the <code>Symbol.iterator</code> property of the iterable object to generate emitted values.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>source</code>
-                   - <em>Array | Function | Readable Stream | Promise | Iterator | Iterable</em>
+                   - <em>Array | Function | Iterator | Iterable | Promise | Readable Stream | String</em>
                    - (optional) source to take values from from
                 </li>
-              
+                <li>
+                  <code>eventEmitter</code>
+                   - <em>EventEmitter | jQuery Element</em>
+                   - (optional) an event emitter. Only valid if &#x60;source&#x60; is a String.
+                </li>
+                <li>
+                  <code>mappingHint</code>
+                   - <em>Array | Function | Number</em>
+                   - (optional) how to pass the arguments to the callback. Only valid if &#x60;source&#x60; is a String.
+                </li>
             </ul>
-            
 
-            
             <pre><code class="javascript">// from an Array
 _([1, 2, 3, 4]);
 
@@ -539,7 +434,7 @@ _(function (push, next) {
 });
 
 // a stream with no source, can pipe node streams through it etc.
-var through = _();
+var through &#x3D; _();
 
 // wrapping a Node Readable Stream so you can easily manipulate it
 _(readable).filter(hasSomething).pipe(writeable);
@@ -551,24 +446,22 @@ _(&#x27;click&#x27;, btn).each(handleEvent);
 _(&#x27;request&#x27;, httpServer, [&#x27;req&#x27;, &#x27;res&#x27;]).each(handleEvent);
 
 // from a Promise object
-var foo = _($.getJSON(&#x27;/api/foo&#x27;));
+var foo &#x3D; _($.getJSON(&#x27;/api/foo&#x27;));
 
 //from an iterator
-var map = new Map([[&#x27;a&#x27;, 1], [&#x27;b&#x27;, 2]]);
-var bar = _(map.values()).toArray(_.log);
-//=&gt; [1, 2]
+var map &#x3D; new Map([[&#x27;a&#x27;, 1], [&#x27;b&#x27;, 2]]);
+var bar &#x3D; _(map.values()).toArray(_.log);
+//&#x3D;&gt; [1, 2]
 
 //from an iterable
-var set = new Set([1, 2, 2, 3, 4]);
-var bar = _(set).toArray(_.log);
-//=&gt; [ 1, 2, 3, 4]</code></pre>
-            
+var set &#x3D; new Set([1, 2, 2, 3, 4]);
+var bar &#x3D; _(set).toArray(_.log);
+//&#x3D;&gt; [ 1, 2, 3, 4]</code></pre>
           </div>
-        
           <div id=destroy class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L993"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L994"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#destroy"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.destroy()</pre>
@@ -580,15 +473,12 @@ stream as a consumer of any source stream.</p>
 
 <p>This function calls end() on the stream and unlinks it from any piped-to streams.</p>
 
-            
 
-            
           </div>
-        
           <div id=end class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L929"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L930"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#end"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.end()</pre>
@@ -602,17 +492,13 @@ you pipe in.</p>
 <p>Only call this function on streams that were constructed with no source
 (i.e., with <code>_()</code>).</p>
 
-            
 
-            
             <pre><code class="javascript">mystream.end();</code></pre>
-            
           </div>
-        
           <div id=pause class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L784"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L781"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pause"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.pause()</pre>
@@ -620,38 +506,34 @@ you pipe in.</p>
 
             <p>Pauses the stream. All Highland Streams start in the paused state.</p>
 
-            
+<p>It is unlikely that you will need to manually call this method.</p>
 
-            
-            <pre><code class="javascript">var xs = _(generator);
+
+            <pre><code class="javascript">var xs &#x3D; _(generator);
 xs.pause();</code></pre>
-            
           </div>
-        
           <div id=resume class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L875"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L874"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#resume"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.resume()</pre>
             </div>
 
             <p>Resumes a paused Stream. This will either read from the Stream's incoming
-buffer or request more data from an upstream source.</p>
+buffer or request more data from an upstream source. Never call this method
+on a stream that has been consumed (via a call to <a href="#consume">consume</a> or any
+other transform).</p>
 
-            
 
-            
-            <pre><code class="javascript">var xs = _(generator);
+            <pre><code class="javascript">var xs &#x3D; _(generator);
 xs.resume();</code></pre>
-            
           </div>
-        
           <div id=write class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L1269"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L1281"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#write"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.write(x)</pre>
@@ -668,21 +550,16 @@ functions which treat Highland Streams as a <a href="http://nodejs.org/api/strea
 <p>Only call this function on streams that were constructed with no source
 (i.e., with <code>_()</code>).</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>x</code>
                   
                    - the value to write to the Stream
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var xs = _();
+            <pre><code class="javascript">var xs &#x3D; _();
 xs.write(1);
 xs.write(2);
 xs.end();
@@ -692,22 +569,18 @@ xs.toArray(function (ys) {
 });
 
 // Do *not* do this.
-var xs2 = _().toArray(_.log);
+var xs2 &#x3D; _().toArray(_.log);
 xs2.write(1); // This call is illegal.</code></pre>
-            
           </div>
-        
         </div>
 
-      
         <h2 id="Transforms">Transforms</h2>
 
         <div class="doc-items">
-        
           <div id=append class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L3172"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L3288"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#append"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.append(y)</pre>
@@ -715,28 +588,21 @@ xs2.write(1); // This call is illegal.</code></pre>
 
             <p>Adds a value to the end of a Stream.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>y</code>
                   
                    - the value to append to the Stream
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">_([1, 2, 3]).append(4)  // =&gt; 1, 2, 3, 4</code></pre>
-            
+            <pre><code class="javascript">_([1, 2, 3]).append(4)  // &#x3D;&gt; 1, 2, 3, 4</code></pre>
           </div>
-        
           <div id=batch class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2381"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2469"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#batch"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.batch(n)</pre>
@@ -744,28 +610,21 @@ xs2.write(1); // This call is illegal.</code></pre>
 
             <p>Takes one Stream and batches incoming data into arrays of given length</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>n</code>
                    - <em>Number</em>
                    - length of the array to batch
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">_([1, 2, 3, 4, 5]).batch(2)  // =&gt; [1, 2], [3, 4], [5]</code></pre>
-            
+            <pre><code class="javascript">_([1, 2, 3, 4, 5]).batch(2)  // &#x3D;&gt; [1, 2], [3, 4], [5]</code></pre>
           </div>
-        
           <div id=batchWithTimeOrCount class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2398"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2486"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#batchWithTimeOrCount"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.batchWithTimeOrCount(ms, n)</pre>
@@ -774,26 +633,20 @@ xs2.write(1); // This call is illegal.</code></pre>
             <p>Takes one Stream and batches incoming data within a maximum time frame
 into arrays of a maximum length.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>ms</code>
                    - <em>Number</em>
                    - the maximum milliseconds to buffer a batch
                 </li>
-              
                 <li>
                   <code>n</code>
                    - <em>Number</em>
                    - the maximum length of the array to batch
                 </li>
-              
             </ul>
-            
 
-            
             <pre><code class="javascript">_(function (push) {
     push(1);
     push(2);
@@ -801,14 +654,12 @@ into arrays of a maximum length.</p>
     setTimeout(push, 20, 4);
 }).batchWithTimeOrCount(10, 2)
 
-// =&gt; [1, 2], [3], [4]</code></pre>
-            
+// &#x3D;&gt; [1, 2], [3], [4]</code></pre>
           </div>
-        
           <div id=collect class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L3282"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L3401"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#collect"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.collect()</pre>
@@ -816,21 +667,17 @@ into arrays of a maximum length.</p>
 
             <p>Groups all values into an Array and passes down the stream as a single
 data event. This is a bit like doing <a href="#toArray">toArray</a>, but instead
-of accepting a callback and causing a <em>thunk</em>, it passes the value on.</p>
+of accepting a callback and consuming the stream, it passes the value on.</p>
 
-            
 
-            
             <pre><code class="javascript">_([&#x27;foo&#x27;, &#x27;bar&#x27;]).collect().toArray(function (xs) {
     // xs will be [[&#x27;foo&#x27;, &#x27;bar&#x27;]]
 });</code></pre>
-            
           </div>
-        
           <div id=compact class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2121"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2165"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#compact"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.compact()</pre>
@@ -838,18 +685,14 @@ of accepting a callback and causing a <em>thunk</em>, it passes the value on.</p
 
             <p>Filters a Stream to drop all non-truthy values.</p>
 
-            
 
-            
-            <pre><code class="javascript">var compacted = _([0, 1, false, 3, null, undefined, 6]).compact();
-// =&gt; 1, 3, 6</code></pre>
-            
+            <pre><code class="javascript">var compacted &#x3D; _([0, 1, false, 3, null, undefined, 6]).compact();
+// &#x3D;&gt; 1, 3, 6</code></pre>
           </div>
-        
           <div id=consume class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L1134"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L1135"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#consume"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.consume(f)</pre>
@@ -862,28 +705,23 @@ you to optionally push values onto using the provided push / next functions.</p>
 It will not cause a paused stream to immediately resume, but behaves more
 like a 'through' stream, handling values as they are read.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>f</code>
                    - <em>Function</em>
                    - the function to handle errors and values
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var filter = function (f, source) {
+            <pre><code class="javascript">var filter &#x3D; function (f, source) {
     return source.consume(function (err, x, push, next) {
         if (err) {
             // pass errors along the stream and consume next value
             push(err);
             next();
         }
-        else if (x === _.nil) {
+        else if (x &#x3D;&#x3D;&#x3D; _.nil) {
             // pass nil (end event) along the stream
             push(null, x);
         }
@@ -896,13 +734,11 @@ like a 'through' stream, handling values as they are read.</p>
         }
     });
 };</code></pre>
-            
           </div>
-        
           <div id=debounce class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L3851"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L3978"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#debounce"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.debounce(ms)</pre>
@@ -912,29 +748,22 @@ like a 'through' stream, handling values as they are read.</p>
 data for <code>ms</code> milliseconds. Sends the last value that occurred before
 the delay, discarding all other values.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>ms</code>
                    - <em>Number</em>
                    - the milliseconds to wait before sending data
                 </li>
-              
             </ul>
-            
 
-            
             <pre><code class="javascript">// sends last keyup event after user has stopped typing for 1 second
 $(&#x27;keyup&#x27;, textbox).debounce(1000);</code></pre>
-            
           </div>
-        
           <div id=doto class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L1633"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L1673"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#doto"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.doto(f)</pre>
@@ -944,21 +773,16 @@ $(&#x27;keyup&#x27;, textbox).debounce(1000);</code></pre>
 and re-emits the source value. Useful when you want to mutate the value or
 perform side effects</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>f</code>
-                  
+                   - <em>Function</em>
                    - the function to apply
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var appended = _([[1], [2], [3], [4]]).doto(function (x) {
+            <pre><code class="javascript">var appended &#x3D; _([[1], [2], [3], [4]]).doto(function (x) {
     x.push(1);
 });
 
@@ -966,14 +790,12 @@ _([1, 2, 3]).doto(console.log)
 // 1
 // 2
 // 3
-// =&gt; 1, 2, 3</code></pre>
-            
+// &#x3D;&gt; 1, 2, 3</code></pre>
           </div>
-        
           <div id=drop class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2632"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2720"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#drop"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.drop(n)</pre>
@@ -983,28 +805,21 @@ _([1, 2, 3]).doto(console.log)
 first <code>n</code> values and then emits the rest. <code>n</code> must be of type <code>Number</code>, if not the whole stream will
 be returned. All errors (even ones emitted before the nth value) will be emitted.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>n</code>
                    - <em>Number</em>
                    - integer representing number of values to read from source
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">_([1, 2, 3, 4]).drop(2) // =&gt; 3, 4</code></pre>
-            
+            <pre><code class="javascript">_([1, 2, 3, 4]).drop(2) // &#x3D;&gt; 3, 4</code></pre>
           </div>
-        
           <div id=errors class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L1375"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L1402"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#errors"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.errors(f)</pre>
@@ -1015,22 +830,17 @@ function. Returns a new Stream with the errors removed (unless the error
 handler chooses to rethrow them using <code>push</code>). Errors can also be
 transformed and put back onto the Stream as values.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>f</code>
                    - <em>Function</em>
                    - the function to pass all errors to
                 </li>
-              
             </ul>
-            
 
-            
             <pre><code class="javascript">getDocument.errors(function (err, push) {
-    if (err.statusCode === 404) {
+    if (err.statusCode &#x3D;&#x3D;&#x3D; 404) {
         // not found, return empty doc
         push(null, {});
     }
@@ -1039,91 +849,75 @@ transformed and put back onto the Stream as values.</p>
         push(err);
     }
 });</code></pre>
-            
           </div>
-        
           <div id=filter class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L1918"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L1961"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#filter"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.filter(f)</pre>
             </div>
 
-            <p>Creates a new Stream including only the values which pass a truth test.</p>
+            <p>Creates a new Stream that includes only the values that pass a truth test.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>f</code>
-                  
+                   - <em>Function</em>
                    - the truth test function
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var evens = _([1, 2, 3, 4]).filter(function (x) {
-    return x % 2 === 0;
+            <pre><code class="javascript">var evens &#x3D; _([1, 2, 3, 4]).filter(function (x) {
+    return x % 2 &#x3D;&#x3D;&#x3D; 0;
 });</code></pre>
-            
           </div>
-        
           <div id=find class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2015"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2059"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#find"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.find(f)</pre>
             </div>
 
             <p>A convenient form of <a href="#filter">filter</a>, which returns the first object from a
-Stream that passes the provided truth test</p>
+Stream that passes the provided truth test.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>f</code>
                    - <em>Function</em>
                    - the truth test function which returns a Stream
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var docs = [
+            <pre><code class="javascript">var docs &#x3D; [
     {type: &#x27;blogpost&#x27;, title: &#x27;foo&#x27;},
     {type: &#x27;blogpost&#x27;, title: &#x27;bar&#x27;},
     {type: &#x27;comment&#x27;, title: &#x27;foo&#x27;}
 ];
 
-var f = function (x) {
-    return x.type == &#x27;blogpost&#x27;;
+var f &#x3D; function (x) {
+    return x.type &#x3D;&#x3D; &#x27;blogpost&#x27;;
 };
 
 _(docs).find(f);
-// =&gt; {type: &#x27;blogpost&#x27;, title: &#x27;foo&#x27;}
+// &#x3D;&gt; {type: &#x27;blogpost&#x27;, title: &#x27;foo&#x27;}
 
 // example with partial application
-var firstBlogpost = _.find(f);
+var firstBlogpost &#x3D; _.find(f);
 
 firstBlogpost(docs)
-// =&gt; {type: &#x27;blogpost&#x27;, title: &#x27;foo&#x27;}</code></pre>
-            
+// &#x3D;&gt; {type: &#x27;blogpost&#x27;, title: &#x27;foo&#x27;}</code></pre>
           </div>
-        
           <div id=findWhere class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2050"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2094"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#findWhere"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.findWhere(props)</pre>
@@ -1132,41 +926,34 @@ firstBlogpost(docs)
             <p>A convenient form of <a href="#where">where</a>, which returns the first object from a
 Stream that matches a set of property values. findWhere is to <a href="#where">where</a> as <a href="#find">find</a> is to <a href="#filter">filter</a>.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>props</code>
                    - <em>Object</em>
                    - the properties to match against
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var docs = [
+            <pre><code class="javascript">var docs &#x3D; [
     {type: &#x27;blogpost&#x27;, title: &#x27;foo&#x27;},
     {type: &#x27;blogpost&#x27;, title: &#x27;bar&#x27;},
     {type: &#x27;comment&#x27;, title: &#x27;foo&#x27;}
 ];
 
 _(docs).findWhere({type: &#x27;blogpost&#x27;})
-// =&gt; {type: &#x27;blogpost&#x27;, title: &#x27;foo&#x27;}
+// &#x3D;&gt; {type: &#x27;blogpost&#x27;, title: &#x27;foo&#x27;}
 
 // example with partial application
-var firstBlogpost = _.findWhere({type: &#x27;blogpost&#x27;});
+var firstBlogpost &#x3D; _.findWhere({type: &#x27;blogpost&#x27;});
 
 firstBlogpost(docs)
-// =&gt; {type: &#x27;blogpost&#x27;, title: &#x27;foo&#x27;}</code></pre>
-            
+// &#x3D;&gt; {type: &#x27;blogpost&#x27;, title: &#x27;foo&#x27;}</code></pre>
           </div>
-        
           <div id=group class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2082"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2126"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#group"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.group(f)</pre>
@@ -1174,42 +961,35 @@ firstBlogpost(docs)
 
             <p>A convenient form of <a href="#reduce">reduce</a>, which groups items based on a function or property name</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>f</code>
-                   - <em>Function|String</em>
+                   - <em>Function | String</em>
                    - the function or property name on which to group, toString() is called on the result of a function.
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var docs = [
+            <pre><code class="javascript">var docs &#x3D; [
     {type: &#x27;blogpost&#x27;, title: &#x27;foo&#x27;},
     {type: &#x27;blogpost&#x27;, title: &#x27;bar&#x27;},
     {type: &#x27;comment&#x27;, title: &#x27;foo&#x27;}
 ];
 
-var f = function (x) {
+var f &#x3D; function (x) {
     return x.type;
 };
 
 _(docs).group(f); OR _(docs).group(&#x27;type&#x27;);
-// =&gt; {
-// =&gt;    &#x27;blogpost&#x27;: [{type: &#x27;blogpost&#x27;, title: &#x27;foo&#x27;}, {type: &#x27;blogpost&#x27;, title: &#x27;bar&#x27;}]
-// =&gt;    &#x27;comment&#x27;: [{type: &#x27;comment&#x27;, title: &#x27;foo&#x27;}]
-// =&gt;  }</code></pre>
-            
+// &#x3D;&gt; {
+// &#x3D;&gt;    &#x27;blogpost&#x27;: [{type: &#x27;blogpost&#x27;, title: &#x27;foo&#x27;}, {type: &#x27;blogpost&#x27;, title: &#x27;bar&#x27;}]
+// &#x3D;&gt;    &#x27;comment&#x27;: [{type: &#x27;comment&#x27;, title: &#x27;foo&#x27;}]
+// &#x3D;&gt;  }</code></pre>
           </div>
-        
           <div id=head class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2651"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2739"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#head"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.head()</pre>
@@ -1217,17 +997,13 @@ _(docs).group(f); OR _(docs).group(&#x27;type&#x27;);
 
             <p>Creates a new Stream with only the first value from the source.</p>
 
-            
 
-            
-            <pre><code class="javascript">_([1, 2, 3, 4]).head() // =&gt; 1</code></pre>
-            
+            <pre><code class="javascript">_([1, 2, 3, 4]).head() // &#x3D;&gt; 1</code></pre>
           </div>
-        
           <div id=intersperse class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2457"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2545"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#intersperse"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.intersperse(sep)</pre>
@@ -1235,32 +1011,25 @@ _(docs).group(f); OR _(docs).group(&#x27;type&#x27;);
 
             <p>Creates a new Stream with the separator interspersed between the elements of the source.</p>
 
-<p>intersperse is effectively the inverse of <a href="#splitBy">splitBy</a>.</p>
+<p><code>intersperse</code> is effectively the inverse of <a href="#splitBy">splitBy</a>.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>sep</code>
-                  
+                   - <em>String</em>
                    - the value to intersperse between the source elements
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">_([&#x27;ba&#x27;, &#x27;a&#x27;, &#x27;a&#x27;]).intersperse(&#x27;n&#x27;)  // =&gt; ba, n, a, n, a
-_([&#x27;mississippi&#x27;]).splitBy(&#x27;ss&#x27;).intersperse(&#x27;ss&#x27;)  // =&gt; mi, ss, i, ss, ippi
-_([&#x27;foo&#x27;]).intersperse(&#x27;bar&#x27;)  // =&gt; foo</code></pre>
-            
+            <pre><code class="javascript">_([&#x27;ba&#x27;, &#x27;a&#x27;, &#x27;a&#x27;]).intersperse(&#x27;n&#x27;)  // &#x3D;&gt; ba, n, a, n, a
+_([&#x27;mississippi&#x27;]).splitBy(&#x27;ss&#x27;).intersperse(&#x27;ss&#x27;)  // &#x3D;&gt; mi, ss, i, ss, ippi
+_([&#x27;foo&#x27;]).intersperse(&#x27;bar&#x27;)  // &#x3D;&gt; foo</code></pre>
           </div>
-        
           <div id=invoke class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L3736"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L3862"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#invoke"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.invoke(method, args)</pre>
@@ -1269,36 +1038,29 @@ _([&#x27;foo&#x27;]).intersperse(&#x27;bar&#x27;)  // =&gt; foo</code></pre>
             <p>Calls a named method on each object from the Stream - returning
 a new stream with the result of those calls.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>method</code>
                    - <em>String</em>
                    - the method name to call
                 </li>
-              
                 <li>
                   <code>args</code>
                    - <em>Array</em>
                    - the arguments to call the method with
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">_([&#x27;foo&#x27;, &#x27;bar&#x27;]).invoke(&#x27;toUpperCase&#x27;, [])  // =&gt; FOO, BAR
+            <pre><code class="javascript">_([&#x27;foo&#x27;, &#x27;bar&#x27;]).invoke(&#x27;toUpperCase&#x27;, [])  // &#x3D;&gt; FOO, BAR
 
-filenames.map(readFile).sequence().invoke(&#x27;toString&#x27;, [&#x27;utf8&#x27;]);</code></pre>
-            
+var readFile &#x3D; _.wrapCallback(fs.readFile);
+filenames.flatMap(readFile).invoke(&#x27;toString&#x27;, [&#x27;utf8&#x27;]);</code></pre>
           </div>
-        
           <div id=last class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2667"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2755"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#last"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.last()</pre>
@@ -1306,17 +1068,13 @@ filenames.map(readFile).sequence().invoke(&#x27;toString&#x27;, [&#x27;utf8&#x27
 
             <p>Drops all values from the Stream apart from the last one (if any).</p>
 
-            
 
-            
-            <pre><code class="javascript">_([1, 2, 3, 4]).last()  // =&gt; 4</code></pre>
-            
+            <pre><code class="javascript">_([1, 2, 3, 4]).last()  // &#x3D;&gt; 4</code></pre>
           </div>
-        
           <div id=latest class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L3898"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L4025"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#latest"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.latest()</pre>
@@ -1327,19 +1085,15 @@ seen value from the source. The source stream does not experience
 back-pressure. Useful if you're using a Stream to model a changing
 property which you need to query periodically.</p>
 
-            
 
-            
             <pre><code class="javascript">// slowThing will always get the last known mouse position
 // when it asks for more data from the mousePosition stream
 mousePosition.latest().map(slowThing)</code></pre>
-            
           </div>
-        
           <div id=map class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L1584"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L1617"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#map"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.map(f)</pre>
@@ -1350,32 +1104,26 @@ value from the source. The transformation function can be replaced with
 a non-function value for convenience, and it will emit that value
 for every data event on the source Stream.</p>
 
-            
+<p><em>Deprecation warning:</em> The use of the convenience non-function argument for
+<code>map</code> is deprecated and will be removed in the next major version.</p>
+
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>f</code>
-                  
+                   - <em>Function</em>
                    - the transformation function or value to map to
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var doubled = _([1, 2, 3, 4]).map(function (x) {
+            <pre><code class="javascript">var doubled &#x3D; _([1, 2, 3, 4]).map(function (x) {
     return x * 2;
-});
-
-_([1, 2, 3]).map(&#x27;hi&#x27;)  // =&gt; &#x27;hi&#x27;, &#x27;hi&#x27;, &#x27;hi&#x27;</code></pre>
-            
+});</code></pre>
           </div>
-        
           <div id=nfcall class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L3759"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L3886"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#nfcall"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.nfcall(args)</pre>
@@ -1397,20 +1145,15 @@ A few rough correspondences include:</p>
 <li><code>.nfcall(args).series()</code> to <code>async.applyEachSeries(..., args)</code></li>
 </ul>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>args</code>
                    - <em>Array</em>
                    - the arguments to call each function with
                 </li>
-              
             </ul>
-            
 
-            
             <pre><code class="javascript">_([
   function (callback) {
     setTimeout(function () {
@@ -1436,13 +1179,11 @@ _([
 ]).nfcall([&#x27;example.txt&#x27;, &#x27;hello&#x27;]).series().toArray(function() {
   // example.txt now contains &#x27;hellohello&#x27;
 });</code></pre>
-            
           </div>
-        
           <div id=pick class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L1868"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L1911"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pick"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.pick(properties)</pre>
@@ -1452,21 +1193,16 @@ _([
 with only the whitelisted keys. If one of the whitelisted
 keys does not exist, it will be ignored.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>properties</code>
                    - <em>Array</em>
                    - property names to white filter
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var dogs = [
+            <pre><code class="javascript">var dogs &#x3D; [
      {breed: &#x27;chihuahua&#x27;, name: &#x27;Princess&#x27;, age: 5},
      {breed: &#x27;labrador&#x27;, name: &#x27;Rocky&#x27;, age: 3},
      {breed: &#x27;german-shepherd&#x27;, name: &#x27;Waffles&#x27;, age: 9}
@@ -1489,13 +1225,11 @@ _(dogs).pick([&#x27;owner&#x27;]).toArray(function (xs) {
          {}
      ]
 });</code></pre>
-            
           </div>
-        
           <div id=pickBy class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L1808"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L1851"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pickBy"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.pickBy(f)</pre>
@@ -1506,21 +1240,16 @@ that satisfy a given predicate. Note: When using ES3,
 only enumerable elements are selected. Both enumerable
 and non-enumerable elements are selected when using ES5.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>f</code>
                    - <em>Function</em>
                    - the predicate function
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript"> var dogs = [
+            <pre><code class="javascript"> var dogs &#x3D; [
      {breed: &#x27;chihuahua&#x27;, name: &#x27;Princess&#x27;, age: 5},
      {breed: &#x27;labrador&#x27;, name: &#x27;Rocky&#x27;, age: 3},
      {breed: &#x27;german-shepherd&#x27;, name: &#x27;Waffles&#x27;, age: 9}
@@ -1536,13 +1265,11 @@ and non-enumerable elements are selected when using ES5.</p>
      { age: 9 }
    ]
  });</code></pre>
-            
           </div>
-        
           <div id=pluck class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L1747"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L1790"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pluck"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.pluck(property)</pre>
@@ -1551,21 +1278,16 @@ and non-enumerable elements are selected when using ES5.</p>
             <p>Retrieves values associated with a given property from all elements in
 the collection.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>prop</code>
                    - <em>String</em>
                    - the property to which values should be associated
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var docs = [
+            <pre><code class="javascript">var docs &#x3D; [
     {type: &#x27;blogpost&#x27;, title: &#x27;foo&#x27;},
     {type: &#x27;blogpost&#x27;, title: &#x27;bar&#x27;},
     {type: &#x27;comment&#x27;, title: &#x27;baz&#x27;}
@@ -1574,13 +1296,11 @@ the collection.</p>
 _(docs).pluck(&#x27;title&#x27;).toArray(function (xs) {
    // xs is now [&#x27;foo&#x27;, &#x27;bar&#x27;, &#x27;baz&#x27;]
 });</code></pre>
-            
           </div>
-        
           <div id=ratelimit class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L1678"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L1718"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#ratelimit"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.ratelimit(num, ms)</pre>
@@ -1590,38 +1310,30 @@ _(docs).pluck(&#x27;title&#x27;).toArray(function (xs) {
 per window. Errors are not limited but allowed to pass through as soon as
 they are read from the source.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>num</code>
                    - <em>Number</em>
                    - the number of operations to perform per window
                 </li>
-              
                 <li>
                   <code>ms</code>
                    - <em>Number</em>
                    - the window of time to limit the operations in (in ms)
                 </li>
-              
             </ul>
-            
 
-            
             <pre><code class="javascript">_([1, 2, 3, 4, 5]).ratelimit(2, 100);
 
-// after 0ms =&gt; 1, 2
-// after 100ms =&gt; 1, 2, 3, 4
-// after 200ms =&gt; 1, 2, 3, 4, 5</code></pre>
-            
+// after 0ms &#x3D;&gt; 1, 2
+// after 100ms &#x3D;&gt; 1, 2, 3, 4
+// after 200ms &#x3D;&gt; 1, 2, 3, 4, 5</code></pre>
           </div>
-        
           <div id=reduce class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L3198"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L3314"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#reduce"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.reduce(memo, iterator)</pre>
@@ -1635,38 +1347,33 @@ the memo and the next value.</p>
 <p>If the iterator throws an error, the reduction stops and the resulting
 stream will emit that error instead of a value.</p>
 
-            
+<p><em>Note:</em> The order of the <code>memo</code> and <code>iterator</code> arguments will be flipped in
+the next major version release.</p>
+
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>memo</code>
                   
                    - the initial state of the reduction
                 </li>
-              
                 <li>
                   <code>iterator</code>
                    - <em>Function</em>
                    - the function which reduces the values
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var add = function (a, b) {
+            <pre><code class="javascript">var add &#x3D; function (a, b) {
     return a + b;
 };
 
-_([1, 2, 3, 4]).reduce(0, add)  // =&gt; 10</code></pre>
-            
+_([1, 2, 3, 4]).reduce(0, add)  // &#x3D;&gt; 10</code></pre>
           </div>
-        
           <div id=reduce1 class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L3250"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L3369"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#reduce1"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.reduce1(iterator)</pre>
@@ -1675,28 +1382,21 @@ _([1, 2, 3, 4]).reduce(0, add)  // =&gt; 10</code></pre>
             <p>Same as <a href="#reduce">reduce</a>, but uses the first element as the initial
 state instead of passing in a <code>memo</code> value.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>iterator</code>
                    - <em>Function</em>
                    - the function which reduces the values
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">_([1, 2, 3, 4]).reduce1(add)  // =&gt; 10</code></pre>
-            
+            <pre><code class="javascript">_([1, 2, 3, 4]).reduce1(add)  // &#x3D;&gt; 10</code></pre>
           </div>
-        
           <div id=reject class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L1996"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2040"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#reject"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.reject(f)</pre>
@@ -1704,30 +1404,23 @@ state instead of passing in a <code>memo</code> value.</p>
 
             <p>The inverse of <a href="#filter">filter</a>.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>f</code>
                    - <em>Function</em>
                    - the truth test function
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var odds = _([1, 2, 3, 4]).reject(function (x) {
-    return x % 2 === 0;
+            <pre><code class="javascript">var odds &#x3D; _([1, 2, 3, 4]).reject(function (x) {
+    return x % 2 &#x3D;&#x3D;&#x3D; 0;
 });</code></pre>
-            
           </div>
-        
           <div id=scan class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L3316"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L3435"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#scan"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.scan(memo, iterator)</pre>
@@ -1740,34 +1433,29 @@ reduction as it is calculated.</p>
 emit that error. Any intermediate values that were produced before the
 error will still be emitted.</p>
 
-            
+<p><em>Note:</em> The order of the <code>memo</code> and <code>iterator</code> arguments will be flipped in
+the next major version release.</p>
+
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>memo</code>
                   
                    - the initial state of the reduction
                 </li>
-              
                 <li>
                   <code>iterator</code>
                    - <em>Function</em>
                    - the function which reduces the values
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">_([1, 2, 3, 4]).scan(0, add)  // =&gt; 0, 1, 3, 6, 10</code></pre>
-            
+            <pre><code class="javascript">_([1, 2, 3, 4]).scan(0, add)  // &#x3D;&gt; 0, 1, 3, 6, 10</code></pre>
           </div>
-        
           <div id=scan1 class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L3363"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L3485"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#scan1"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.scan1(iterator)</pre>
@@ -1776,28 +1464,21 @@ error will still be emitted.</p>
             <p>Same as <a href="#scan">scan</a>, but uses the first element as the initial
 state instead of passing in a <code>memo</code> value.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>iterator</code>
                    - <em>Function</em>
                    - the function which reduces the values
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">_([1, 2, 3, 4]).scan1(add)  // =&gt; 1, 3, 6, 10</code></pre>
-            
+            <pre><code class="javascript">_([1, 2, 3, 4]).scan1(add)  // &#x3D;&gt; 1, 3, 6, 10</code></pre>
           </div>
-        
           <div id=slice class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2564"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2652"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#slice"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.slice(start, end)</pre>
@@ -1808,34 +1489,26 @@ state instead of passing in a <code>memo</code> value.</p>
 and, likewise, <code>end</code> will default to <code>Infinity</code>: this could result in the whole stream being be
 returned.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>start</code>
                    - <em>Number</em>
                    - integer representing index to start reading from source (inclusive)
                 </li>
-              
                 <li>
                   <code>stop</code>
                    - <em>Number</em>
                    - integer representing index to stop reading from source (exclusive)
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">_([1, 2, 3, 4]).slice(1, 3) // =&gt; 2, 3</code></pre>
-            
+            <pre><code class="javascript">_([1, 2, 3, 4]).slice(1, 3) // &#x3D;&gt; 2, 3</code></pre>
           </div>
-        
           <div id=sort class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2723"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2821"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#sort"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.sort()</pre>
@@ -1844,53 +1517,54 @@ returned.</p>
             <p>Collects all values together then emits each value individually but in sorted order.
 The method for sorting the elements is ascending lexical.</p>
 
-            
 
-            
-            <pre><code class="javascript">var sorted = _([&#x27;b&#x27;, &#x27;z&#x27;, &#x27;g&#x27;, &#x27;r&#x27;]).sort().toArray(_.log);
-// =&gt; [&#x27;b&#x27;, &#x27;g&#x27;, &#x27;r&#x27;, &#x27;z&#x27;]</code></pre>
-            
+            <pre><code class="javascript">var sorted &#x3D; _([&#x27;b&#x27;, &#x27;z&#x27;, &#x27;g&#x27;, &#x27;r&#x27;]).sort().toArray(_.log);
+// &#x3D;&gt; [&#x27;b&#x27;, &#x27;g&#x27;, &#x27;r&#x27;, &#x27;z&#x27;]</code></pre>
           </div>
-        
           <div id=sortBy class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2700"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2788"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#sortBy"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.sortBy(f)</pre>
             </div>
 
-            <p>Collects all values together then emits each value individually but in sorted order.
-The method for sorting the elements is defined by the comparator function supplied
-as a parameter.</p>
+            <p>Collects all values together then emits each value individually in sorted
+order. The method for sorting the elements is defined by the comparator
+function supplied as a parameter.</p>
 
-            
+<p>The comparison function takes two arguments <code>a</code> and <code>b</code> and should return</p>
+
+<ul>
+<li>a negative number if <code>a</code> should sort before <code>b</code>.</li>
+<li>a positive number if <code>a</code> should sort after <code>b</code>.</li>
+<li>zero if <code>a</code> and <code>b</code> may sort in any order (i.e., they are equal).</li>
+</ul>
+
+<p>This function must also define a <a href="https://en.wikipedia.org/wiki/Partially_ordered_set">partial
+order</a>. If it does not,
+the resulting ordering is undefined.</p>
+
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>f</code>
-                  
-                   - the sorting function
+                   - <em>Function</em>
+                   - the comparison function
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var sorts = _([3, 1, 4, 2]).sortBy(function (a, b) {
+            <pre><code class="javascript">var sorts &#x3D; _([3, 1, 4, 2]).sortBy(function (a, b) {
     return b - a;
 }).toArray(_.log);
 
-//=&gt; [4, 3, 2, 1]</code></pre>
-            
+//&#x3D;&gt; [4, 3, 2, 1]</code></pre>
           </div>
-        
           <div id=split class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2547"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2635"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#split"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.split()</pre>
@@ -1898,18 +1572,14 @@ as a parameter.</p>
 
             <p><a href="#splitBy">splitBy</a> over newlines.</p>
 
-            
 
-            
-            <pre><code class="javascript">_([&#x27;a\n&#x27;, &#x27;b\nc\n&#x27;, &#x27;d&#x27;, &#x27;\ne&#x27;]).split()  // =&gt; a, b, c, d, e
-_([&#x27;a\r\nb\nc&#x27;]]).split()  // =&gt; a, b, c</code></pre>
-            
+            <pre><code class="javascript">_([&#x27;a\n&#x27;, &#x27;b\nc\n&#x27;, &#x27;d&#x27;, &#x27;\ne&#x27;]).split()  // &#x3D;&gt; a, b, c, d, e
+_([&#x27;a\r\nb\nc&#x27;]]).split()  // &#x3D;&gt; a, b, c</code></pre>
           </div>
-        
           <div id=splitBy class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2497"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2585"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#splitBy"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.splitBy(sep)</pre>
@@ -1917,32 +1587,25 @@ _([&#x27;a\r\nb\nc&#x27;]]).split()  // =&gt; a, b, c</code></pre>
 
             <p>Splits the source Stream by a separator and emits the pieces in between, much like splitting a string.</p>
 
-<p>splitBy is effectively the inverse of <a href="#intersperse">intersperse</a>.</p>
+<p><code>splitBy</code> is effectively the inverse of <a href="#intersperse">intersperse</a>.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>sep</code>
-                  
+                   - <em>String | RegExp</em>
                    - the separator to split on
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">_([&#x27;mis&#x27;, &#x27;si&#x27;, &#x27;s&#x27;, &#x27;sippi&#x27;]).splitBy(&#x27;ss&#x27;)  // =&gt; mi, i, ippi
-_([&#x27;ba&#x27;, &#x27;a&#x27;, &#x27;a&#x27;]).intersperse(&#x27;n&#x27;).splitBy(&#x27;n&#x27;)  // =&gt; ba, a, a
-_([&#x27;foo&#x27;]).splitBy(&#x27;bar&#x27;)  // =&gt; foo</code></pre>
-            
+            <pre><code class="javascript">_([&#x27;mis&#x27;, &#x27;si&#x27;, &#x27;s&#x27;, &#x27;sippi&#x27;]).splitBy(&#x27;ss&#x27;)  // &#x3D;&gt; mi, i, ippi
+_([&#x27;ba&#x27;, &#x27;a&#x27;, &#x27;a&#x27;]).intersperse(&#x27;n&#x27;).splitBy(&#x27;n&#x27;)  // &#x3D;&gt; ba, a, a
+_([&#x27;foo&#x27;]).splitBy(&#x27;bar&#x27;)  // &#x3D;&gt; foo</code></pre>
           </div>
-        
           <div id=stopOnError class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L1416"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L1443"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#stopOnError"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.stopOnError(f)</pre>
@@ -1951,30 +1614,23 @@ _([&#x27;foo&#x27;]).splitBy(&#x27;bar&#x27;)  // =&gt; foo</code></pre>
             <p>Like the <a href="#errors">errors</a> method, but emits a Stream end marker after
 an Error is encountered.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>f</code>
                    - <em>Function</em>
                    - the function to handle an error
                 </li>
-              
             </ul>
-            
 
-            
             <pre><code class="javascript">brokenStream.stopOnError(function (err) {
     //console.error(&#x27;Something broke: &#x27; + err);
 });</code></pre>
-            
           </div>
-        
           <div id=take class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2612"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2700"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#take"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.take(n)</pre>
@@ -1983,28 +1639,21 @@ an Error is encountered.</p>
             <p>Creates a new Stream with the first <code>n</code> values from the source. <code>n</code> must be of type <code>Number</code>,
 if not the whole stream will be returned.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>n</code>
                    - <em>Number</em>
                    - integer representing number of values to read from source
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">_([1, 2, 3, 4]).take(2) // =&gt; 1, 2</code></pre>
-            
+            <pre><code class="javascript">_([1, 2, 3, 4]).take(2) // &#x3D;&gt; 1, 2</code></pre>
           </div>
-        
           <div id=tap class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L1663"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L1703"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#tap"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.tap(f)</pre>
@@ -2012,28 +1661,21 @@ if not the whole stream will be returned.</p>
 
             <p>An alias for the <a href="#doto">doto</a> method.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>f</code>
-                  
+                   - <em>Function</em>
                    - the function to apply
                 </li>
-              
             </ul>
-            
 
-            
             <pre><code class="javascript">_([1, 2, 3]).tap(console.log)</code></pre>
-            
           </div>
-        
           <div id=throttle class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L3815"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L3942"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#throttle"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.throttle(ms)</pre>
@@ -2042,28 +1684,21 @@ if not the whole stream will be returned.</p>
             <p>Ensures that only one data event is push downstream (or into the buffer)
 every <code>ms</code> milliseconds, any other values are dropped.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>ms</code>
                    - <em>Number</em>
                    - the minimum milliseconds between each value
                 </li>
-              
             </ul>
-            
 
-            
             <pre><code class="javascript">_(&#x27;mousemove&#x27;, document).throttle(1000);</code></pre>
-            
           </div>
-        
           <div id=transduce class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L3414"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L3536"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#transduce"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.transduce(xf)</pre>
@@ -2084,95 +1719,86 @@ will be the <code>push</code> function provided by the <a href="#consume">consum
 will stop and emit that error. Any intermediate values that were produced
 before the error will still be emitted.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>xf</code>
                    - <em>Function</em>
                    - The transducer.
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var xf = require(&#x27;transducer-js&#x27;).map(_.add(1));
+            <pre><code class="javascript">var xf &#x3D; require(&#x27;transducer-js&#x27;).map(_.add(1));
 _([1, 2, 3, 4]).transduce(xf);
-// =&gt; [2, 3, 4, 5]</code></pre>
-            
+// &#x3D;&gt; [2, 3, 4, 5]</code></pre>
           </div>
-        
           <div id=uniq class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2243"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2290"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#uniq"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.uniq()</pre>
             </div>
 
-            <p>Takes all unique values in a stream.
-It uses uniqBy internally, using the strict equality === operator to define unicity</p>
+            <p>Filters out all duplicate values from the stream and keeps only the first
+occurence of each value, using <code>===</code> to define equality.</p>
 
-            
+<p>Like <a href="#uniqBy">uniqBy</a>, this transform needs to store a buffer containing
+all unique values that has been encountered. Be careful about using this
+transform on a stream that has many unique values.</p>
 
-            
-            <pre><code class="javascript">var colors = [ &#x27;blue&#x27;, &#x27;red&#x27;, &#x27;red&#x27;, &#x27;yellow&#x27;, &#x27;blue&#x27;, &#x27;red&#x27; ]
+
+            <pre><code class="javascript">var colors &#x3D; [ &#x27;blue&#x27;, &#x27;red&#x27;, &#x27;red&#x27;, &#x27;yellow&#x27;, &#x27;blue&#x27;, &#x27;red&#x27; ]
 
 _(colors).uniq()
-// =&gt; &#x27;blue&#x27;
-// =&gt; &#x27;red&#x27;
-// =&gt; &#x27;yellow&#x27;</code></pre>
-            
+// &#x3D;&gt; &#x27;blue&#x27;
+// &#x3D;&gt; &#x27;red&#x27;
+// &#x3D;&gt; &#x27;yellow&#x27;</code></pre>
           </div>
-        
           <div id=uniqBy class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2180"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2224"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#uniqBy"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.uniqBy(compare)</pre>
             </div>
 
-            <p>A way to keep only unique objects from a Stream
-The definition of 'unicity' is given by a Function argument.</p>
+            <p>Filters out all duplicate values from the stream and keeps only the first
+occurence of each value, using the provided function to define equality.</p>
 
-<p>Note:
-  - memory: in order to guarantee that each unique item is chosen only once, we need to keep an
-    internal buffer of all unique values. This may outgrow the available memory if you are not
-    cautious about the size of your stream and the number of unique objects you may receive on that
-    stream
-  - errors: the transformation will emit an error for each comparison that throws an error</p>
+<p>Note:</p>
 
-            
+<ul>
+<li>Memory: In order to guarantee that each unique item is chosen only once,
+we need to keep an internal buffer of all unique values. This may outgrow
+the available memory if you are not cautious about the size of your stream
+and the number of unique objects you may receive on it.</li>
+<li>Errors: The comparison function should never throw an error. However, if
+it does, this transform will emit an error for each all that throws. This
+means that one value may turn into multiple errors.</li>
+</ul>
+
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>compare</code>
                    - <em>Function</em>
                    - custom equality predicate
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var colors = [ &#x27;blue&#x27;, &#x27;red&#x27;, &#x27;red&#x27;, &#x27;yellow&#x27;, &#x27;blue&#x27;, &#x27;red&#x27; ]
+            <pre><code class="javascript">var colors &#x3D; [ &#x27;blue&#x27;, &#x27;red&#x27;, &#x27;red&#x27;, &#x27;yellow&#x27;, &#x27;blue&#x27;, &#x27;red&#x27; ]
 
-_(colors).uniqBy(function(a,b) { return a[1] === b[1] })
-// =&gt; &#x27;blue&#x27;
-// =&gt; &#x27;red&#x27;</code></pre>
-            
+_(colors).uniqBy(function(a, b) { return a[1] &#x3D;&#x3D;&#x3D; b[1]; })
+// &#x3D;&gt; &#x27;blue&#x27;
+// &#x3D;&gt; &#x27;red&#x27;</code></pre>
           </div>
-        
           <div id=where class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2140"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2184"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#where"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.where(props)</pre>
@@ -2181,50 +1807,41 @@ _(colors).uniqBy(function(a,b) { return a[1] === b[1] })
             <p>A convenient form of <a href="#filter">filter</a>, which returns all objects from a Stream
 which match a set of property values.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>props</code>
                    - <em>Object</em>
                    - the properties to match against
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var docs = [
+            <pre><code class="javascript">var docs &#x3D; [
     {type: &#x27;blogpost&#x27;, title: &#x27;foo&#x27;},
     {type: &#x27;blogpost&#x27;, title: &#x27;bar&#x27;},
     {type: &#x27;comment&#x27;, title: &#x27;foo&#x27;}
 ];
 
 _(docs).where({title: &#x27;foo&#x27;})
-// =&gt; {type: &#x27;blogpost&#x27;, title: &#x27;foo&#x27;}
-// =&gt; {type: &#x27;comment&#x27;, title: &#x27;foo&#x27;}
+// &#x3D;&gt; {type: &#x27;blogpost&#x27;, title: &#x27;foo&#x27;}
+// &#x3D;&gt; {type: &#x27;comment&#x27;, title: &#x27;foo&#x27;}
 
 // example with partial application
-var getBlogposts = _.where({type: &#x27;blogpost&#x27;});
+var getBlogposts &#x3D; _.where({type: &#x27;blogpost&#x27;});
 
 getBlogposts(docs)
-// =&gt; {type: &#x27;blogpost&#x27;, title: &#x27;foo&#x27;}
-// =&gt; {type: &#x27;blogpost&#x27;, title: &#x27;bar&#x27;}</code></pre>
-            
+// &#x3D;&gt; {type: &#x27;blogpost&#x27;, title: &#x27;foo&#x27;}
+// &#x3D;&gt; {type: &#x27;blogpost&#x27;, title: &#x27;bar&#x27;}</code></pre>
           </div>
-        
         </div>
 
-      
         <h2 id="Higher-order Streams">Higher-order Streams</h2>
 
         <div class="doc-items">
-        
           <div id=concat class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L3501"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L3623"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#concat"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.concat(ys)</pre>
@@ -2236,29 +1853,22 @@ getBlogposts(docs)
 order to what you'd expect <code>_([a], [b]) =&gt; b, a</code>, as this follows the
 convention of other top-level exported functions which do <code>x</code> to <code>y</code>.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>ys</code>
                    - <em>Stream | Array</em>
                    - the values to concatenate onto this Stream
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">_([1, 2]).concat([3, 4])  // =&gt; 1, 2, 3, 4
-_.concat([3, 4], [1, 2])  // =&gt; 1, 2, 3, 4</code></pre>
-            
+            <pre><code class="javascript">_([1, 2]).concat([3, 4])  // &#x3D;&gt; 1, 2, 3, 4
+_.concat([3, 4], [1, 2])  // &#x3D;&gt; 1, 2, 3, 4</code></pre>
           </div>
-        
           <div id=flatFilter class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L1962"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2005"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#flatFilter"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.flatFilter(f)</pre>
@@ -2270,29 +1880,23 @@ be convenient. The Stream returned from the filter function should have
 a Boolean as it's first value (all other values on the Stream will be
 disregarded).</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>f</code>
                    - <em>Function</em>
                    - the truth test function which returns a Stream
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var checkExists = _.wrapCallback(fs.exists);
+            <pre><code class="javascript">var checkExists &#x3D; _.wrapCallback(fs.access);
+
 filenames.flatFilter(checkExists)</code></pre>
-            
           </div>
-        
           <div id=flatMap class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L1728"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L1768"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#flatMap"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.flatMap(f)</pre>
@@ -2302,28 +1906,24 @@ filenames.flatFilter(checkExists)</code></pre>
 iterator function which must return a (possibly empty) Stream. Each item on
 these result Streams are then emitted on a single output Stream.</p>
 
-            
+<p>This transform is functionally equivalent to <code>.map(f).sequence()</code>.</p>
+
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>f</code>
                    - <em>Function</em>
                    - the iterator function
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">filenames.flatMap(readFile)</code></pre>
-            
+            <pre><code class="javascript">var readFile &#x3D; _.wrapCallback(fs.readFile);
+filenames.flatMap(readFile)</code></pre>
           </div>
-        
           <div id=flatten class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2975"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L3083"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#flatten"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.flatten()</pre>
@@ -2333,24 +1933,20 @@ these result Streams are then emitted on a single output Stream.</p>
 or Arrays. As values or errors are encountered, they are emitted on a
 single output Stream.</p>
 
-            
 
-            
-            <pre><code class="javascript">_([1, [2, 3], [[4]]]).flatten();  // =&gt; 1, 2, 3, 4
+            <pre><code class="javascript">_([1, [2, 3], [[4]]]).flatten();  // &#x3D;&gt; 1, 2, 3, 4
 
-var nums = _(
+var nums &#x3D; _(
     _([1, 2, 3]),
     _([4, _([5, 6]) ])
 );
 
-nums.flatten();  // =&gt; 1, 2, 3, 4, 5, 6</code></pre>
-            
+nums.flatten();  // &#x3D;&gt; 1, 2, 3, 4, 5, 6</code></pre>
           </div>
-        
           <div id=fork class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L1316"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L1328"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#fork"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.fork()</pre>
@@ -2360,25 +1956,26 @@ nums.flatten();  // =&gt; 1, 2, 3, 4, 5, 6</code></pre>
 back-pressure. A stream forked to multiple consumers will only pull values
 from it's source as fast as the slowest consumer can handle them.</p>
 
-            
+<p><em>Deprecation warning:</em> It is currently possible to <code>fork</code> a stream after
+<a href="#consume">consuming</a> it (e.g., via a <a href="#Transforms">transform</a>). This will
+no longer be possible in the next major release. If you are going to <code>fork</code>
+a stream, always call <code>fork</code> on it.</p>
 
-            
-            <pre><code class="javascript">var xs = _([1, 2, 3, 4]);
-var ys = xs.fork();
-var zs = xs.fork();
+
+            <pre><code class="javascript">var xs &#x3D; _([1, 2, 3, 4]);
+var ys &#x3D; xs.fork();
+var zs &#x3D; xs.fork();
 
 // no values will be pulled from xs until zs also resume
 ys.resume();
 
 // now both ys and zs will get values from xs
 zs.resume();</code></pre>
-            
           </div>
-        
           <div id=merge class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L3532"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L3654"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#merge"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.merge()</pre>
@@ -2393,21 +1990,19 @@ values for each stream end up in the merged stream. Values in the
 merged stream will, however, respect the order they were emitted from
 their respective streams.</p>
 
-            
 
-            
-            <pre><code class="javascript">var txt = _([&#x27;foo.txt&#x27;, &#x27;bar.txt&#x27;]).map(readFile)
-var md = _([&#x27;baz.md&#x27;]).map(readFile)
+            <pre><code class="javascript">var readFile &#x3D; _.wrapCallback(fs.readFile);
+
+var txt &#x3D; _([&#x27;foo.txt&#x27;, &#x27;bar.txt&#x27;]).map(readFile)
+var md &#x3D; _([&#x27;baz.md&#x27;]).map(readFile)
 
 _([txt, md]).merge();
-// =&gt; contents of foo.txt, bar.txt and baz.txt in the order they were read</code></pre>
-            
+// &#x3D;&gt; contents of foo.txt, bar.txt and baz.txt in the order they were read</code></pre>
           </div>
-        
           <div id=mergeWithLimit class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L3662"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L3786"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#mergeWithLimit"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.mergeWithLimit(n)</pre>
@@ -2422,35 +2017,30 @@ values for each stream end up in the merged stream. Values in the
 merged stream will, however, respect the order they were emitted from
 their respective streams.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>n</code>
                    - <em>Number</em>
                    - the maximum number of streams to run in parallel
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var txt = _([&#x27;foo.txt&#x27;, &#x27;bar.txt&#x27;]).flatMap(readFile)
-var md = _([&#x27;baz.md&#x27;]).flatMap(readFile)
-var js = _([&#x27;bosh.js&#x27;]).flatMap(readFile)
+            <pre><code class="javascript">var readFile &#x3D; _.wrapCallback(fs.readFile);
+
+var txt &#x3D; _([&#x27;foo.txt&#x27;, &#x27;bar.txt&#x27;]).flatMap(readFile)
+var md &#x3D; _([&#x27;baz.md&#x27;]).flatMap(readFile)
+var js &#x3D; _([&#x27;bosh.js&#x27;]).flatMap(readFile)
 
 _([txt, md, js]).mergeWithLimit(2);
-// =&gt; contents of foo.txt, bar.txt, baz.txt and bosh.js in the order
+// &#x3D;&gt; contents of foo.txt, bar.txt, baz.txt and bosh.js in the order
 // they were read, but bosh.js is not read until either foo.txt and bar.txt
 // has completely been read or baz.txt has been read</code></pre>
-            
           </div>
-        
           <div id=observe class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L1346"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L1373"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#observe"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.observe()</pre>
@@ -2462,22 +2052,18 @@ be useful when you are performing two related queries on a stream where one
 would block the other. Just be aware that a slow observer could fill up it's
 buffer and cause memory issues. Where possible, you should use <a href="#fork">fork</a>.</p>
 
-            
 
-            
-            <pre><code class="javascript">var xs = _([1, 2, 3, 4]);
-var ys = xs.fork();
-var zs = xs.observe();
+            <pre><code class="javascript">var xs &#x3D; _([1, 2, 3, 4]);
+var ys &#x3D; xs.fork();
+var zs &#x3D; xs.observe();
 
 // now both zs and ys will receive data as fast as ys can handle it
 ys.resume();</code></pre>
-            
           </div>
-        
           <div id=otherwise class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L3130"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L3246"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#otherwise"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.otherwise(ys)</pre>
@@ -2485,32 +2071,25 @@ ys.resume();</code></pre>
 
             <p>Switches source to an alternate Stream if the current Stream is empty.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>ys</code>
                    - <em>Stream | Function</em>
                    - alternate stream (or stream-returning function) to use if this stream is empty
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">_([1,2,3]).otherwise([&#x27;foo&#x27;])  // =&gt; 1, 2, 3
-_([]).otherwise([&#x27;foo&#x27;])       // =&gt; &#x27;foo&#x27;
+            <pre><code class="javascript">_([1,2,3]).otherwise([&#x27;foo&#x27;])  // &#x3D;&gt; 1, 2, 3
+_([]).otherwise([&#x27;foo&#x27;])       // &#x3D;&gt; &#x27;foo&#x27;
 
-_.otherwise(_([&#x27;foo&#x27;]), _([1,2,3]))    // =&gt; 1, 2, 3
-_.otherwise(_([&#x27;foo&#x27;]), _([]))         // =&gt; &#x27;foo&#x27;</code></pre>
-            
+_.otherwise(_([&#x27;foo&#x27;]), _([1,2,3]))    // &#x3D;&gt; 1, 2, 3
+_.otherwise(_([&#x27;foo&#x27;]), _([]))         // &#x3D;&gt; &#x27;foo&#x27;</code></pre>
           </div>
-        
           <div id=parallel class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L3030"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L3138"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#parallel"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.parallel(n)</pre>
@@ -2520,32 +2099,25 @@ _.otherwise(_([&#x27;foo&#x27;]), _([]))         // =&gt; &#x27;foo&#x27;</code>
 the results until they can be returned to the consumer in their original
 order.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>n</code>
                    - <em>Number</em>
                    - the maximum number of concurrent reads/buffers
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var readFile = _.wrapCallback(fs.readFile);
-var filenames = _([&#x27;foo.txt&#x27;, &#x27;bar.txt&#x27;, &#x27;baz.txt&#x27;]);
+            <pre><code class="javascript">var readFile &#x3D; _.wrapCallback(fs.readFile);
+var filenames &#x3D; _([&#x27;foo.txt&#x27;, &#x27;bar.txt&#x27;, &#x27;baz.txt&#x27;]);
 
 // read from up to 10 files at once
 filenames.map(readFile).parallel(10);</code></pre>
-            
           </div>
-        
           <div id=pipeline class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2797"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2903"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pipeline"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.pipeline(...)</pre>
@@ -2559,10 +2131,8 @@ Node-compatible Through Stream.</p>
 <p>This is not a method on a Stream, and it only exposed at the top-level
 as <code>_.pipeline</code>. It takes an arbitrary number of arguments.</p>
 
-            
 
-            
-            <pre><code class="javascript">var through = _.pipeline(
+            <pre><code class="javascript">var through &#x3D; _.pipeline(
     _.map(parseJSON),
     _.filter(isBlogpost),
     _.reduce(collectCategories)
@@ -2574,45 +2144,40 @@ readStream.pipe(through).pipe(outStream);
 // Alternatively, you can use pipeline to manipulate a stream in
 // the chained method call style:
 
-var through2 = _.pipeline(function (s) {
+var through2 &#x3D; _.pipeline(function (s) {
     return s.map(parseJSON).filter(isBlogpost); // etc.
 });</code></pre>
-            
           </div>
-        
           <div id=sequence class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2873"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2979"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#sequence"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.sequence()</pre>
             </div>
 
-            <p>Reads values from a Stream of Streams, emitting them on a single output
-Stream. This can be thought of as a flatten, just one level deep. Often
-used for resolving asynchronous actions such as a HTTP request or reading
-a file.</p>
+            <p>Reads values from a Stream of Streams or Arrays, emitting them on a single
+output Stream. This can be thought of as a <a href="#flatten">flatten</a>, just one
+level deep, often used for resolving asynchronous actions such as a HTTP
+request or reading a file.</p>
 
-            
 
-            
-            <pre><code class="javascript">var nums = _([
+            <pre><code class="javascript">var nums &#x3D; _([
     _([1, 2, 3]),
     _([4, 5, 6])
 ]);
 
-nums.sequence()  // =&gt; 1, 2, 3, 4, 5, 6
+nums.sequence()  // &#x3D;&gt; 1, 2, 3, 4, 5, 6
 
 // using sequence to read from files in series
+var readFile &#x3D; _.wrapCallback(fs.readFile);
 filenames.map(readFile).sequence()</code></pre>
-            
           </div>
-        
           <div id=series class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2961"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L3068"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#series"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.series()</pre>
@@ -2620,30 +2185,39 @@ filenames.map(readFile).sequence()</code></pre>
 
             <p>An alias for the <a href="#sequence">sequence</a> method.</p>
 
-            
 
-            
-            <pre><code class="javascript">filenames.map(readFile).series()</code></pre>
-            
+            <pre><code class="javascript">var readFile &#x3D; _.wrapCallback(fs.readFile);
+filenames.map(readFile).series()</code></pre>
           </div>
-        
           <div id=through class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2742"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2840"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#through"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.through(target)</pre>
             </div>
 
-            <p>Passes the current Stream to a function, returning the result. Can also
-be used to pipe the current Stream through another Stream. It will always
-return a Highland Stream (instead of the piped to target directly as in
-Node.js). Any errors emitted will be propagated as Highland errors.</p>
+            <p>Transforms a stream using an arbitrary target transform.</p>
 
-            
+<p>If <code>target</code> is a function, this transform passes the current Stream to it,
+returning the result.</p>
 
-            
+<p>If <code>target</code> is a <a href="https://nodejs.org/api/stream.html#stream_class_stream_duplex_1">Duplex
+Stream</a>,
+this transform pipes the current Stream through it. It will always return a
+Highland Stream (instead of the piped to target directly as in
+<a href="#pipe">pipe</a>). Any errors emitted will be propagated as Highland errors.</p>
+
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+                <li>
+                  <code>target</code>
+                   - <em>Function | Duplex Stream</em>
+                   - the stream to pipe through or a function to call.
+                </li>
+            </ul>
+
             <pre><code class="javascript">function oddDoubler(s) {
     return s.filter(function (x) {
         return x % 2; // odd numbers only
@@ -2664,44 +2238,38 @@ _(filenames).through(jsonParser).map(function (obj) {
 
 // All errors will be propagated as Highland errors
 _([&#x27;zz{&quot;a&quot;: 1}&#x27;]).through(jsonParser).errors(function (err) {
-  console.log(err); // =&gt; SyntaxError: Unexpected token z
+  console.log(err); // &#x3D;&gt; SyntaxError: Unexpected token z
 });</code></pre>
-            
           </div>
-        
           <div id=zip class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2364"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2449"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#zip"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.zip(ys)</pre>
             </div>
 
-            <p>Takes two Streams and returns a Stream of corresponding pairs.</p>
+            <p>Takes two Streams and returns a Stream of corresponding pairs. The size of
+the resulting stream is the smaller of the two source streams.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>ys</code>
                    - <em>Array | Stream</em>
                    - the other stream to combine values with
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">_([&#x27;a&#x27;, &#x27;b&#x27;, &#x27;c&#x27;]).zip([1, 2, 3])  // =&gt; [&#x27;a&#x27;, 1], [&#x27;b&#x27;, 2], [&#x27;c&#x27;, 3]</code></pre>
-            
+            <pre><code class="javascript">_([&#x27;a&#x27;, &#x27;b&#x27;, &#x27;c&#x27;]).zip([1, 2, 3])  // &#x3D;&gt; [&#x27;a&#x27;, 1], [&#x27;b&#x27;, 2], [&#x27;c&#x27;, 3]
+
+_([&#x27;a&#x27;, &#x27;b&#x27;, &#x27;c&#x27;]).zip(_([1]))  // &#x3D;&gt; [&#x27;a&#x27;, 1]</code></pre>
           </div>
-        
           <div id=zipAll class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2341"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2423"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#zipAll"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.zipAll(ys)</pre>
@@ -2710,33 +2278,29 @@ _([&#x27;zz{&quot;a&quot;: 1}&#x27;]).through(jsonParser).errors(function (err) 
             <p>Takes a stream and a <code>finite</code> stream of <code>N</code> streams
 and returns a stream of the corresponding <code>(N+1)</code>-tuples.</p>
 
-            
+<p><em>Note:</em> This transform will be renamed <code>zipEach</code> in the next major version
+release.</p>
+
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>ys</code>
                    - <em>Array | Stream</em>
                    - the array of streams to combine values with
                 </li>
-              
             </ul>
-            
 
-            
             <pre><code class="javascript">_([1,2,3]).zipAll([[4, 5, 6], [7, 8, 9], [10, 11, 12]])
-// =&gt; [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]
+// &#x3D;&gt; [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]
 
 // shortest stream determines length of output stream
 _([1, 2, 3, 4]).zipAll([[5, 6, 7, 8], [9, 10, 11, 12], [13, 14]])
-// =&gt; [ [ 1, 5, 9, 13 ], [ 2, 6, 10, 14 ] ]</code></pre>
-            
+// &#x3D;&gt; [ [ 1, 5, 9, 13 ], [ 2, 6, 10, 14 ] ]</code></pre>
           </div>
-        
           <div id=zipAll0 class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L2267"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L2346"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#zipAll0"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.zipAll0()</pre>
@@ -2747,16 +2311,17 @@ element from each separate stream is combined into a single data event,
 followed by the second elements of each stream and so on until the shortest
 input stream is exhausted.</p>
 
-            
+<p><em>Note:</em> This transform will be renamed <code>zipAll</code> in the next major version
+release.</p>
 
-            
+
             <pre><code class="javascript">_([
     _([1, 2, 3]),
     _([4, 5, 6]),
     _([7, 8, 9]),
     _([10, 11, 12])
 ]).zipAll0()
-// =&gt; [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]
+// &#x3D;&gt; [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]
 
 // shortest stream determines length of output stream
 _([
@@ -2765,133 +2330,114 @@ _([
     _([9, 10, 11, 12]),
     _([13, 14])
 ]).zipAll0()
-// =&gt; [ [ 1, 5, 9, 13 ], [ 2, 6, 10, 14 ] ]</code></pre>
-            
+// &#x3D;&gt; [ [ 1, 5, 9, 13 ], [ 2, 6, 10, 14 ] ]</code></pre>
           </div>
-        
         </div>
 
-      
         <h2 id="Consumption">Consumption</h2>
 
         <div class="doc-items">
-        
           <div id=apply class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L1485"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L1515"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#apply"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.apply(f)</pre>
             </div>
 
-            <p>Applies all values from a Stream as arguments to a function. This function causes a <strong>thunk</strong>.
+            <p>Applies all values from a Stream as arguments to a function. This method consumes the stream.
 <code>f</code> will always be called when the <code>nil</code> token is encountered, even when the stream is empty.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>f</code>
                    - <em>Function</em>
                    - the function to apply arguments to
                 </li>
-              
             </ul>
-            
 
-            
             <pre><code class="javascript">_([1, 2, 3]).apply(function (a, b, c) {
-    // a === 1
-    // b === 2
-    // c === 3
+    // a &#x3D;&#x3D;&#x3D; 1
+    // b &#x3D;&#x3D;&#x3D; 2
+    // c &#x3D;&#x3D;&#x3D; 3
 });
 
 _([1, 2, 3]).apply(function (a) {
-    // arguments.length === 3
-    // a === 1
+    // arguments.length &#x3D;&#x3D;&#x3D; 3
+    // a &#x3D;&#x3D;&#x3D; 1
 });</code></pre>
-            
           </div>
-        
           <div id=done class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L1544"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L1574"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#done"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.done(f)</pre>
             </div>
 
-            <p>Calls a function once the Stream has ended. This function causes a <strong>thunk</strong>.
+            <p>Calls a function once the Stream has ended. This method consumes the stream.
 If the Stream has already ended, the function is called immediately.</p>
 
 <p>If an error from the Stream reaches the <code>done</code> call, it will emit an
 error event (which will cause it to throw if unhandled).</p>
 
-            
+<p>As a special case, it is possible to chain <code>done</code> after a call to
+<a href="#each">each</a> even though both methods consume the stream.</p>
+
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>f</code>
                    - <em>Function</em>
                    - the callback
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var total = 0;
+            <pre><code class="javascript">var total &#x3D; 0;
 _([1, 2, 3, 4]).each(function (x) {
-    total += x;
+    total +&#x3D; x;
 }).done(function () {
     // total will be 10
 });</code></pre>
-            
           </div>
-        
           <div id=each class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L1448"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L1475"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#each"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.each(f)</pre>
             </div>
 
             <p>Iterates over every value from the Stream, calling the iterator function
-on each of them. This function causes a <strong>thunk</strong>.</p>
+on each of them. This method consumes the Stream.</p>
 
 <p>If an error from the Stream reaches the <code>each</code> call, it will emit an
 error event (which will cause it to throw if unhandled).</p>
 
-            
+<p>While <code>each</code> consumes the stream, it is possible to chain <a href="#done">done</a> (and
+<em>only</em> <code>done</code>) after it.</p>
+
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>f</code>
                    - <em>Function</em>
                    - the iterator function
                 </li>
-              
             </ul>
-            
 
-            
             <pre><code class="javascript">_([1, 2, 3, 4]).each(function (x) {
     // will be called 4 times with x being 1, 2, 3 and 4
 });</code></pre>
-            
           </div>
-        
           <div id=pipe class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L950"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L951"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pipe"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.pipe(dest)</pre>
@@ -2910,33 +2456,26 @@ this function will throw errors if there is no <code>error</code> handler instal
 the stream. Use <a href="#through">through</a> if you are piping to another Highland
 stream and want errors as well as values to be propagated.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>dest</code>
                    - <em>Writable Stream</em>
                    - the destination to write all data to
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var source = _(generator);
-var dest = fs.createWriteStream(&#x27;myfile.txt&#x27;)
+            <pre><code class="javascript">var source &#x3D; _(generator);
+var dest &#x3D; fs.createWriteStream(&#x27;myfile.txt&#x27;)
 source.pipe(dest);
 
 // chained call
 source.pipe(through).pipe(dest);</code></pre>
-            
           </div>
-        
           <div id=pull class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L1241"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L1253"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pull"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.pull(f)</pre>
@@ -2949,72 +2488,56 @@ as soon as it has a single error, value or nil from the source.</p>
 <p>You probably won't need to use this directly, but it is used internally by
 some functions in the Highland library.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>f</code>
                    - <em>Function</em>
                    - the function to handle data
                 </li>
-              
             </ul>
-            
 
-            
             <pre><code class="javascript">xs.pull(function (err, x) {
     // do something
 });</code></pre>
-            
           </div>
-        
           <div id=toArray class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L1514"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L1544"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#toArray"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.toArray(f)</pre>
             </div>
 
             <p>Collects all values from a Stream into an Array and calls a function with
-the result. This function causes a <strong>thunk</strong>.</p>
+the result. This method consumes the stream.</p>
 
 <p>If an error from the Stream reaches the <code>toArray</code> call, it will emit an
 error event (which will cause it to throw if unhandled).</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>f</code>
                    - <em>Function</em>
                    - the callback to provide the completed Array to
                 </li>
-              
             </ul>
-            
 
-            
             <pre><code class="javascript">_([1, 2, 3, 4]).toArray(function (x) {
     // parameter x will be [1,2,3,4]
 });</code></pre>
-            
           </div>
-        
         </div>
 
-      
         <h2 id="Utils">Utils</h2>
 
         <div class="doc-items">
-        
           <div id=isStream class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L716"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L713"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#isStream"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.isStream(x)</pre>
@@ -3022,29 +2545,22 @@ error event (which will cause it to throw if unhandled).</p>
 
             <p>Returns true if <code>x</code> is a Highland Stream.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>x</code>
                   
                    - the object to test
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">_.isStream(&#x27;foo&#x27;)  // =&gt; false
-_.isStream(_([1,2,3]))  // =&gt; true</code></pre>
-            
+            <pre><code class="javascript">_.isStream(&#x27;foo&#x27;)  // &#x3D;&gt; false
+_.isStream(_([1,2,3]))  // &#x3D;&gt; true</code></pre>
           </div>
-        
           <div id=log class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L4125"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L4252"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#log"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.log(args..)</pre>
@@ -3054,19 +2570,15 @@ _.isStream(_([1,2,3]))  // =&gt; true</code></pre>
 it suitable for passing to other functions by reference without having to
 call <code>bind</code>.</p>
 
-            
 
-            
             <pre><code class="javascript">_.log(&#x27;Hello, world!&#x27;);
 
 _([1, 2, 3, 4]).each(_.log);</code></pre>
-            
           </div>
-        
           <div id=nil class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L175"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L170"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#nil"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.nil</pre>
@@ -3081,16 +2593,14 @@ to access, but more importantly lets Streams from different Highland
 instances work together and detect end-of-stream properly. This is mostly
 useful for NPM where you may have many different Highland versions installed.</p>
 
-            
 
-            
-            <pre><code class="javascript">var map = function (iter, source) {
+            <pre><code class="javascript">var map &#x3D; function (iter, source) {
     return source.consume(function (err, val, push, next) {
         if (err) {
             push(err);
             next();
         }
-        else if (val === _.nil) {
+        else if (val &#x3D;&#x3D;&#x3D; _.nil) {
             push(null, val);
         }
         else {
@@ -3099,13 +2609,11 @@ useful for NPM where you may have many different Highland versions installed.</p
         }
     });
 };</code></pre>
-            
           </div>
-        
           <div id=streamifyAll class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L4207"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L4340"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#streamifyAll"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.streamifyAll(source)</pre>
@@ -3117,32 +2625,25 @@ Passed constructors will also have their prototype functions
 streamified.  This is useful for wrapping many node style async
 functions at once, and for preserving those functions' context.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>source</code>
                    - <em>Object | Function</em>
                    - the function or object with node-style function properties.
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var fs = _.streamifyAll(require(&#x27;fs&#x27;));
+            <pre><code class="javascript">var fs &#x3D; _.streamifyAll(require(&#x27;fs&#x27;));
 
 fs.readFileStream(&#x27;example.txt&#x27;).apply(function (data) {
     // data is now the contents of example.txt
 });</code></pre>
-            
           </div>
-        
           <div id=wrapCallback class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L4144"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L4271"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#wrapCallback"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.wrapCallback(f)</pre>
@@ -3154,62 +2655,57 @@ returns a Highland Stream instead. The wrapped function keeps its context,
 so you can safely use it as a method without binding (see the second
 example below).</p>
 
-<p>wrapCallback also accepts a mapping hint, which specifies how callback
-arguments are pushed to the stream. This can be a function, number, or
-array. See the documentation on <a href="#Stream Objects">EventEmitter Stream Objects</a>
-for details.</p>
+<p><code>wrapCallback</code> also accepts an optional <code>mappingHint</code>, which specifies how
+callback arguments are pushed to the stream. This can be used to handle
+non-standard callback protocols that pass back more than one value.</p>
 
-            
+<p><code>mappingHint</code> can be a function, number, or array. See the documentation on
+<a href="#Stream Objects">EventEmitter Stream Objects</a> for details on the mapping
+hint. If <code>mappingHint</code> is a function, it will be called with all but the
+first argument that is passed to the callback. The first is still assumed to
+be the error argument.</p>
+
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>f</code>
                    - <em>Function</em>
                    - the node-style function to wrap
                 </li>
-              
                 <li>
                   <code>mappingHint</code>
-                   - <em>Function | Number | Array</em>
-                   - how to pass the arguments to the callback (optional)
+                   - <em>Array | Function | Number</em>
+                   - (optional) how to pass the arguments to the callback
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var fs = require(&#x27;fs&#x27;);
+            <pre><code class="javascript">var fs &#x3D; require(&#x27;fs&#x27;);
 
-var readFile = _.wrapCallback(fs.readFile);
+var readFile &#x3D; _.wrapCallback(fs.readFile);
 
 readFile(&#x27;example.txt&#x27;).apply(function (data) {
     // data is now the contents of example.txt
 });
 
 function Reader(file) {
-    this.file = file;
+    this.file &#x3D; file;
 }
 
-Reader.prototype.read = function(cb) {
+Reader.prototype.read &#x3D; function(cb) {
     fs.readFile(this.file, cb);
 };
 
-Reader.prototype.readStream = _.wrapCallback(Reader.prototype.read);</code></pre>
-            
+Reader.prototype.readStream &#x3D; _.wrapCallback(Reader.prototype.read);</code></pre>
           </div>
-        
         </div>
 
-      
         <h2 id="Objects">Objects</h2>
 
         <div class="doc-items">
-        
           <div id=extend class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L4041"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L4168"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#extend"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.extend(a, b)</pre>
@@ -3220,41 +2716,33 @@ arguments are in the reverse order of other libraries such as
 underscore. This is so it follows the convention of other functions in
 this library and so you can more meaningfully partially apply it.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>a</code>
                    - <em>Object</em>
                    - the properties to extend b with
                 </li>
-              
                 <li>
                   <code>b</code>
                    - <em>Object</em>
                    - the original object to extend
                 </li>
-              
             </ul>
-            
 
-            
             <pre><code class="javascript">_.extend({name: &#x27;bar&#x27;}, {name: &#x27;foo&#x27;, price: 20})
-// =&gt; {name: &#x27;bar&#x27;, price: 20}
+// &#x3D;&gt; {name: &#x27;bar&#x27;, price: 20}
 
 // example of partial application
-var publish = _.extend({published: true});
+var publish &#x3D; _.extend({published: true});
 
 publish({title: &#x27;test post&#x27;})
-// =&gt; {title: &#x27;test post&#x27;, published: true}</code></pre>
-            
+// &#x3D;&gt; {title: &#x27;test post&#x27;, published: true}</code></pre>
           </div>
-        
           <div id=get class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L4073"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L4200"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#get"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.get(prop, obj)</pre>
@@ -3262,44 +2750,36 @@ publish({title: &#x27;test post&#x27;})
 
             <p>Returns a property from an object.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>prop</code>
                    - <em>String</em>
                    - the property to return
                 </li>
-              
                 <li>
                   <code>obj</code>
                    - <em>Object</em>
                    - the object to read properties from
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var obj = {foo: &#x27;bar&#x27;, baz: 123};
-_.get(&#x27;foo&#x27;, obj) // =&gt; &#x27;bar&#x27;
+            <pre><code class="javascript">var obj &#x3D; {foo: &#x27;bar&#x27;, baz: 123};
+_.get(&#x27;foo&#x27;, obj) // &#x3D;&gt; &#x27;bar&#x27;
 
 // making use of partial application
-var posts = [
+var posts &#x3D; [
   {title: &#x27;one&#x27;},
   {title: &#x27;two&#x27;},
   {title: &#x27;three&#x27;}
 ];
 
-_(posts).map(_.get(&#x27;title&#x27;))  // =&gt; &#x27;one&#x27;, &#x27;two&#x27;, &#x27;three&#x27;</code></pre>
-            
+_(posts).map(_.get(&#x27;title&#x27;))  // &#x3D;&gt; &#x27;one&#x27;, &#x27;two&#x27;, &#x27;three&#x27;</code></pre>
           </div>
-        
           <div id=keys class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L3994"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L4121"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#keys"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.keys(obj)</pre>
@@ -3307,28 +2787,21 @@ _(posts).map(_.get(&#x27;title&#x27;))  // =&gt; &#x27;one&#x27;, &#x27;two&#x27
 
             <p>Returns keys from an Object as a Stream.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>obj</code>
                    - <em>Object</em>
                    - the object to return keys from
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">_.keys({foo: 1, bar: 2, baz: 3})  // =&gt; &#x27;foo&#x27;, &#x27;bar&#x27;, &#x27;baz&#x27;</code></pre>
-            
+            <pre><code class="javascript">_.keys({foo: 1, bar: 2, baz: 3})  // &#x3D;&gt; &#x27;foo&#x27;, &#x27;bar&#x27;, &#x27;baz&#x27;</code></pre>
           </div>
-        
           <div id=pairs class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L4020"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L4147"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pairs"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.pairs(obj)</pre>
@@ -3339,28 +2812,21 @@ lazily, so if you don't read from all keys on an object, not
 all properties will be read from (may have an effect where getters
 are used).</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>obj</code>
                    - <em>Object</em>
                    - the object to return key/value pairs from
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">_.pairs({foo: 1, bar: 2})  // =&gt; [&#x27;foo&#x27;, 1], [&#x27;bar&#x27;, 2]</code></pre>
-            
+            <pre><code class="javascript">_.pairs({foo: 1, bar: 2})  // &#x3D;&gt; [&#x27;foo&#x27;, 1], [&#x27;bar&#x27;, 2]</code></pre>
           </div>
-        
           <div id=set class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L4100"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L4227"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#set"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.set(prop, value, obj)</pre>
@@ -3368,46 +2834,37 @@ are used).</p>
 
             <p>Updates a property on an object, returning the updated object.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>prop</code>
                    - <em>String</em>
                    - the property to return
                 </li>
-              
                 <li>
                   <code>value</code>
                   
                    - the value to set the property to
                 </li>
-              
                 <li>
                   <code>obj</code>
                    - <em>Object</em>
                    - the object to set properties on
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var obj = {foo: &#x27;bar&#x27;, baz: 123};
-_.set(&#x27;foo&#x27;, &#x27;wheeee&#x27;, obj) // =&gt; {foo: &#x27;wheeee&#x27;, baz: 123}
+            <pre><code class="javascript">var obj &#x3D; {foo: &#x27;bar&#x27;, baz: 123};
+_.set(&#x27;foo&#x27;, &#x27;wheeee&#x27;, obj) // &#x3D;&gt; {foo: &#x27;wheeee&#x27;, baz: 123}
 
 // making use of partial application
-var publish = _.set(&#x27;published&#x27;, true);
+var publish &#x3D; _.set(&#x27;published&#x27;, true);
 
-publish({title: &#x27;example&#x27;})  // =&gt; {title: &#x27;example&#x27;, published: true}</code></pre>
-            
+publish({title: &#x27;example&#x27;})  // &#x3D;&gt; {title: &#x27;example&#x27;, published: true}</code></pre>
           </div>
-        
           <div id=values class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L3973"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L4100"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#values"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.values(obj)</pre>
@@ -3418,35 +2875,26 @@ lazily, so if you don't read from all keys on an object, not
 all properties will be read from (may have an effect where getters
 are used).</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>obj</code>
                    - <em>Object</em>
                    - the object to return values from
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">_.values({foo: 1, bar: 2, baz: 3})  // =&gt; 1, 2, 3</code></pre>
-            
+            <pre><code class="javascript">_.values({foo: 1, bar: 2, baz: 3})  // &#x3D;&gt; 1, 2, 3</code></pre>
           </div>
-        
         </div>
 
-      
         <h2 id="Functions">Functions</h2>
 
         <div class="doc-items">
-        
           <div id=compose class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L329"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L324"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#compose"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.compose(fn1, fn2, ...)</pre>
@@ -3457,21 +2905,17 @@ the results of function2. You can pass an arbitrary number of arguments
 and have them composed. This means you can't partially apply the compose
 function itself.</p>
 
-            
 
-            
-            <pre><code class="javascript">var add1 = add(1);
-var mul3 = mul(3);
+            <pre><code class="javascript">var add1 &#x3D; add(1);
+var mul3 &#x3D; mul(3);
 
-var add1mul3 = compose(mul3, add1);
-add1mul3(2) == 9</code></pre>
-            
+var add1mul3 &#x3D; compose(mul3, add1);
+add1mul3(2) &#x3D;&#x3D; 9</code></pre>
           </div>
-        
           <div id=curry class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L221"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L216"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#curry"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.curry(fn, [*arguments])</pre>
@@ -3483,40 +2927,32 @@ the arguments list is saturated.</p>
 
 <p>This function is not itself curryable.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>fn</code>
                    - <em>Function</em>
                    - the function to curry
                 </li>
-              
                 <li>
                   <code>args..</code>
                   
                    - any number of arguments to pre-apply to the function
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">fn = curry(function (a, b, c) {
+            <pre><code class="javascript">fn &#x3D; curry(function (a, b, c) {
     return a + b + c;
 });
 
-fn(1)(2)(3) == fn(1, 2, 3)
-fn(1, 2)(3) == fn(1, 2, 3)
-fn(1)(2, 3) == fn(1, 2, 3)</code></pre>
-            
+fn(1)(2)(3) &#x3D;&#x3D; fn(1, 2, 3)
+fn(1, 2)(3) &#x3D;&#x3D; fn(1, 2, 3)
+fn(1)(2, 3) &#x3D;&#x3D; fn(1, 2, 3)</code></pre>
           </div>
-        
           <div id=flip class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L310"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L305"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#flip"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.flip(fn, [x, y])</pre>
@@ -3525,42 +2961,33 @@ fn(1)(2, 3) == fn(1, 2, 3)</code></pre>
             <p>Evaluates the function <code>fn</code> with the argument positions swapped. Only
 works with functions that accept two arguments.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>fn</code>
                    - <em>Function</em>
                    - function to flip argument application for
                 </li>
-              
                 <li>
                   <code>x</code>
                   
                    - parameter to apply to the right hand side of f
                 </li>
-              
                 <li>
                   <code>y</code>
                   
                    - parameter to apply to the left hand side of f
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">div(2, 4) == 0.5
-flip(div, 2, 4) == 2
-flip(div)(2, 4) == 2</code></pre>
-            
+            <pre><code class="javascript">div(2, 4) &#x3D;&#x3D; 0.5
+flip(div, 2, 4) &#x3D;&#x3D; 2
+flip(div)(2, 4) &#x3D;&#x3D; 2</code></pre>
           </div>
-        
           <div id=ncurry class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L250"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L245"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#ncurry"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.ncurry(n, fn, [args...])</pre>
@@ -3571,46 +2998,37 @@ useful when functions do not explicitly define all its parameters.</p>
 
 <p>This function is not itself curryable.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>n</code>
                    - <em>Number</em>
                    - the number of arguments to wait for before apply fn
                 </li>
-              
                 <li>
                   <code>fn</code>
                    - <em>Function</em>
                    - the function to curry
                 </li>
-              
                 <li>
                   <code>args...</code>
                   
                    - any number of arguments to pre-apply to the function
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">fn = ncurry(3, function () {
+            <pre><code class="javascript">fn &#x3D; ncurry(3, function () {
     return Array.prototype.join.call(arguments, &#x27;.&#x27;);
 });
 
-fn(1, 2, 3) == &#x27;1.2.3&#x27;;
-fn(1, 2)(3) == &#x27;1.2.3&#x27;;
-fn(1)(2)(3) == &#x27;1.2.3&#x27;;</code></pre>
-            
+fn(1, 2, 3) &#x3D;&#x3D; &#x27;1.2.3&#x27;;
+fn(1, 2)(3) &#x3D;&#x3D; &#x27;1.2.3&#x27;;
+fn(1)(2)(3) &#x3D;&#x3D; &#x27;1.2.3&#x27;;</code></pre>
           </div>
-        
           <div id=partial class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L283"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L278"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#partial"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.partial(fn, args...)</pre>
@@ -3620,69 +3038,55 @@ fn(1)(2)(3) == &#x27;1.2.3&#x27;;</code></pre>
 called on it). This will always postpone execution until at least the next
 call of the partially applied function.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>fn</code>
                    - <em>Function</em>
                    - function to partial apply
                 </li>
-              
                 <li>
                   <code>args...</code>
                   
                    - the arguments to apply to the function
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">var addAll = function () {
-    var args = Array.prototype.slice.call(arguments);
+            <pre><code class="javascript">var addAll &#x3D; function () {
+    var args &#x3D; Array.prototype.slice.call(arguments);
     return foldl1(add, args);
 };
-var f = partial(addAll, 1, 2);
-f(3, 4) == 10</code></pre>
-            
+var f &#x3D; partial(addAll, 1, 2);
+f(3, 4) &#x3D;&#x3D; 10</code></pre>
           </div>
-        
           <div id=seq class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L352"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L347"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#seq"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.seq(fn1, fn2, ...)</pre>
             </div>
 
-            <p>The reversed version of compose. Where arguments are in the order of
-application.</p>
+            <p>The reversed version of <a href="#compose">compose</a>. Where arguments are in the
+order of application.</p>
 
-            
 
-            
-            <pre><code class="javascript">var add1 = add(1);
-var mul3 = mul(3);
+            <pre><code class="javascript">var add1 &#x3D; add(1);
+var mul3 &#x3D; mul(3);
 
-var add1mul3 = seq(add1, mul3);
-add1mul3(2) == 9</code></pre>
-            
+var add1mul3 &#x3D; seq(add1, mul3);
+add1mul3(2) &#x3D;&#x3D; 9</code></pre>
           </div>
-        
         </div>
 
-      
         <h2 id="Operators">Operators</h2>
 
         <div class="doc-items">
-        
           <div id=add class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L4291"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L4424"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#add"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.add(a, b)</pre>
@@ -3690,18 +3094,14 @@ add1mul3(2) == 9</code></pre>
 
             <p>Add two values. Can be partially applied.</p>
 
-            
 
-            
-            <pre><code class="javascript">_.add(1, 2) === 3
-_.add(1)(5) === 6</code></pre>
-            
+            <pre><code class="javascript">_.add(1, 2) &#x3D;&#x3D;&#x3D; 3
+_.add(1)(5) &#x3D;&#x3D;&#x3D; 6</code></pre>
           </div>
-        
           <div id=not class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/2.5.1/lib/index.js#L4307"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/2.6.0/lib/index.js#L4440"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#not"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.not(x)</pre>
@@ -3710,28 +3110,20 @@ _.add(1)(5) === 6</code></pre>
             <p>Perform logical negation on a value. If <code>x</code> is truthy then returns false,
 otherwise returns true.</p>
 
-            
             <div class="doc-params-heading">Parameters</div>
             <ul>
-              
                 <li>
                   <code>x</code>
                   
                    - the value to negate
                 </li>
-              
             </ul>
-            
 
-            
-            <pre><code class="javascript">_.not(true)   // =&gt; false
-_.not(false)  // =&gt; true</code></pre>
-            
+            <pre><code class="javascript">_.not(true)   // &#x3D;&gt; false
+_.not(false)  // &#x3D;&gt; true</code></pre>
           </div>
-        
         </div>
 
-      
 
     </main>
 
