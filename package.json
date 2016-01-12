@@ -21,7 +21,7 @@
     "grunt": "~0.4.2",
     "grunt-browserify": "^4.0.1",
     "grunt-bump": "0.7.0",
-    "grunt-contrib-nodeunit": "~0.3.0",
+    "grunt-contrib-nodeunit": "~0.4.1",
     "grunt-contrib-uglify": "^0.10.1",
     "grunt-contrib-watch": "~0.5.3",
     "grunt-eslint": "^17.3.1",
