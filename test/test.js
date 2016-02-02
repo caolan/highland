@@ -7,6 +7,7 @@ var EventEmitter = require('events').EventEmitter,
     RSVP = require('rsvp'),
     Promise = RSVP.Promise,
     transducers = require('transducers-js'),
+    runTask = require('orchestrator/lib/runTask'),
     _ = require('../lib/index');
 
 // Use setTimeout. The default is process.nextTick, which sinon doesn't
@@ -628,6 +629,33 @@ exports['constructor'] = {
     'from iterator - final return falsy': function (test) {
         test.expect(1);
         _(this.createTestIterator([1, 2, 3, 4, 5], void 0, 0)).toArray(this.tester([1, 2, 3, 4, 5, 0], test));
+        test.done();
+    },
+    'only gutless streams and pipelines are writable': function (test) {
+        test.ok(_().writable, "gutless stream should be writable");
+        test.ok(_.pipeline(_.map(function (x) { return x + 1; })).writable, "pipelines should be writable");
+
+        test.ok(!_([]).writable, "empty stream should not be writable");
+        test.ok(!_([1, 2, 3]).writable, "non-empty stream should not be writable");
+        test.ok(!_(through()).writable, "wrapped stream should not be writable");
+        test.ok(!_(function (push, next) {}).writable, "generator stream should not be writable");
+        test.ok(!_('event', new EventEmitter()).writable, "event stream should not be writable");
+        test.ok(!_(new Promise(function (res, rej) {})).writable, "promise stream should not be writable");
+
+        if (global.Set) {
+            test.ok(!_(new Set()).writable, "iterable stream should not be writable");
+        }
+
+        if (global.Symbol) {
+            test.ok(!_(new Set().values()).writable, "iterator stream should not be writable");
+        }
+
+        // This is a stand-in for basically every stream transformation method.
+        test.ok(!_().fork().writable, "forked stream should not be writable");
+        test.ok(!_().map(function (x) { return x + 1; }).writable, "mapped stream should not be writable");
+        test.ok(!_().merge().writable, "merged stream should not be writable");
+        test.ok(!_().observe().writable, "observed stream should not be writable");
+
         test.done();
     }
 };
@@ -6426,6 +6454,22 @@ exports['pipeline'] = {
                 return [];
             };
         }
+    },
+    'ended pipelines should be neither readable nor writable': function (test) {
+        var p = _.pipeline(_.map(function (x) { return x + 1; }));
+        test.ok(p.readable);
+        test.ok(p.writable);
+        p.write(0);
+        test.ok(p.readable);
+        test.ok(p.writable);
+        p.end();
+        test.ok(p.readable);
+        test.ok(!p.writable);
+        p.done(function (err, x) {
+            test.ok(!p.readable);
+            test.ok(!p.writable);
+            test.done();
+        });
     }
 };
 
@@ -6888,4 +6932,54 @@ exports['use'] = {
         test.ok(Sub.bar().foo);
         test.done();
     }
+};
+
+exports['streams can be used as orchestrator tasks (issue #438)'] = function (test) {
+    var isReady = false;
+    var s = _();
+    runTask(function () { return s; }, function () {
+        test.ok(isReady, "task finished too early");
+        test.done();
+    });
+    setTimeout(function () {
+        isReady = true;
+        s.end();
+    }, 10);
+};
+
+exports['ended streams should be neither readable nor writable'] = function (test) {
+    var s = _();
+    test.ok(s.readable);
+    test.ok(s.writable);
+    s.write(1);
+    test.ok(s.readable);
+    test.ok(s.writable);
+    s.end();
+    test.ok(s.readable);
+    test.ok(!s.writable);
+    s.done(function (err, x) {
+        test.ok(!s.readable);
+        test.ok(!s.writable);
+        test.done();
+    });
+};
+
+exports['errored streams should not be readable'] = function (test) {
+    var s = _();
+    var s1 = s.map(function () { throw new Error(); });
+    s1.resume();
+    test.ok(s1.readable);
+    s.write(1);
+    test.ok(!s1.readable);
+    test.done();
+};
+
+exports['destroyed streams should be neither readable nor writable'] = function (test) {
+    var s = _();
+    test.ok(s.readable);
+    test.ok(s.writable);
+    s.destroy();
+    test.ok(!s.readable);
+    test.ok(!s.writable);
+    test.done();
 };
