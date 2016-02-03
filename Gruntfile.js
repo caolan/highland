@@ -29,6 +29,17 @@ module.exports = function (grunt) {
             'test-browser': {
                 files: {
                     'test/bundle.js': ['test/browser.js']
+                },
+                options: {
+                    exclude: 'lib/**'
+                }
+            }
+        },
+
+        uglify: {
+            main: {
+                files: {
+                    'dist/highland.min.js': ['dist/highland.js']
                 }
             }
         },
@@ -59,7 +70,7 @@ module.exports = function (grunt) {
                 pushTo: 'origin',
                 commit: true,
                 commitMessage: 'Release %VERSION%',
-                commitFiles: ['package.json', 'dist/highland.js', 'docs/index.html'],
+                commitFiles: ['package.json', 'dist/highland.js', 'dist/highland.min.js', 'docs/index.html'],
                 createTag: true,
                 tagName: '%VERSION%',
                 tagMessage: 'Version %VERSION%'
@@ -81,6 +92,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-eslint');
     grunt.loadNpmTasks('grunt-contrib-nodeunit');
     grunt.loadNpmTasks('grunt-browserify');
+    grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-gh-pages');
     grunt.loadNpmTasks('grunt-bump');
     grunt.loadNpmTasks('grunt-npm');
@@ -127,8 +139,9 @@ module.exports = function (grunt) {
         'gh-pages'
     ]);
 
+    grunt.registerTask('build-browser-tests', ['build', 'browserify:test-browser']);
     grunt.registerTask('test', ['eslint:all', 'nodeunit:all']);
-    grunt.registerTask('build', ['browserify:main', 'docs']);
+    grunt.registerTask('build', ['browserify:main', 'uglify:main', 'docs']);
     grunt.registerTask('default', ['build']);
 
 };

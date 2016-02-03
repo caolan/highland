@@ -1,4 +1,4 @@
-var EventEmitter = require('events').EventEmitter,
+var _, EventEmitter = require('events').EventEmitter,
     through = require('through'),
     sinon = require('sinon'),
     Stream = require('stream'),
@@ -7,8 +7,13 @@ var EventEmitter = require('events').EventEmitter,
     RSVP = require('rsvp'),
     Promise = RSVP.Promise,
     transducers = require('transducers-js'),
-    runTask = require('orchestrator/lib/runTask'),
+    runTask = require('orchestrator/lib/runTask');
+
+if (global.highland != null) {
+    _ = global.highland;
+} else {
     _ = require('../lib/index');
+}
 
 // Use setTimeout. The default is process.nextTick, which sinon doesn't
 // handle.
@@ -115,7 +120,12 @@ function onDestroyTest(transform, input, takeFirst) {
         test.same(destroy2, false);
         test.same(called, 1);
 
-        clock.tick(15);
+        // tick(20) because there are some nested setImmediates in the
+        // execution and sinon/lolex delays those.
+        // See:
+        // https://github.com/sinonjs/lolex/pull/12
+        // https://github.com/sinonjs/sinon/issues/593
+        clock.tick(20);
         test.same(destroy1, true);
         test.same(destroy2, true);
         test.same(called, 1);
@@ -522,6 +532,75 @@ exports['consume - fork after consume should not throw (issue #366)'] = function
         test.done();
     }
 }
+
+exports['race'] = {
+    setUp: function (callback) {
+        this.clock = sinon.useFakeTimers();
+        callback();
+    },
+    tearDown: function (callback) {
+        this.clock.restore();
+        callback();
+    },
+    'no re-entry of consume callback (issue #388)': function (test) {
+        test.expect(1);
+        // This triggers a race condition. Be careful about changing the source.
+        var stream = _();
+        var i = 0;
+
+        function write() {
+            var cont = false;
+            while ((cont = stream.write(i++)) && i <= 10) {
+            }
+            if (cont) {
+                i++;
+                stream.end();
+            }
+        }
+
+        // This stream mimics the behavior of things like database
+        // drivers.
+        stream.on('drain', function () {
+            if (i === 0) {
+                // The initial read is async.
+                setTimeout(write, 0);
+            } else if (i > 0 && i < 10) {
+                // The driver loads data in batches, so subsequent drains
+                // are sync to mimic pulling from a pre-loaded buffer.
+                write();
+            } else if (i === 10) {
+                i++;
+                setTimeout(stream.end.bind(stream), 0);
+            }
+        });
+
+        var done = false;
+        stream
+            // flatMap to disassociate from the source, since sequence
+            // returns a new stream not a consume stream.
+            .flatMap(function (x) {
+                return _([x]);
+            })
+            // batch(2) to get a transform that sometimes calls next
+            // without calling push beforehand.
+            .batch(2)
+            // Another flatMap to get an async transform.
+            .flatMap(function (x) {
+                return _(function (push) {
+                    setTimeout(function () {
+                        push(null, x);
+                        push(null, _.nil);
+                    }, 100);
+                });
+            })
+            .done(function () {
+                done = true;
+            });
+        this.clock.tick(1000);
+        test.ok(done, 'The stream never completed.');
+        test.done();
+    }
+};
 
 exports['constructor'] = {
     setUp: function (callback) {
@@ -4925,7 +5004,7 @@ exports['uniqBy'] = function(test) {
     var xs = [ 'blue', 'red', 'red', 'yellow', 'blue', 'red' ]
     _.uniqBy(function(a,b) { return a[1] === b[1] }, xs).toArray(function(xs) {
       test.same(xs, [ 'blue', 'red' ])
-    })
+    });
     test.done();
 };
 
@@ -4935,16 +5014,16 @@ exports['uniqBy - compare error'] = function(test) {
     var s = _.uniqBy(function(a,b) { if (a === "yellow") throw new Error('yellow'); return a === b; }, xs)
     s.pull(function(err, x) {
         test.equal(x, 'blue');
-    })
+    });
     s.pull(function(err, x) {
         test.equal(x, 'red');
-    })
+    });
     s.pull(function(err, x) {
         test.equal(err.message, 'yellow');
-    })
+    });
     s.pull(function(err, x) {
         test.equal(x, _.nil);
-    })
+    });
     test.done();
 };
 
@@ -4958,10 +5037,23 @@ exports['uniqBy - returnsSameStream'] = returnsSameStreamTest(function(s) {
 
 exports['uniq'] = function(test) {
     test.expect(1);
-    var xs = [ 'blue', 'red', 'red', 'yellow', 'blue', 'red' ]
+    var xs = [ 'blue', 'red', 'red', 'yellow', 'blue', 'red' ];
     _.uniq(xs).toArray(function(xs) {
       test.same(xs, [ 'blue', 'red', 'yellow' ])
-    })
+    });
+    test.done();
+};
+
+exports['uniq - preserves Nan'] = function(test) {
+    test.expect(5);
+    var xs = [ 'blue', 'red', NaN, 'red', 'yellow', 'blue', 'red', NaN ];
+    _.uniq(xs).toArray(function(xs) {
+        test.equal(xs[0], 'blue');
+        test.equal(xs[1], 'red');
+        test.equal(xs[2] !== xs[2], true);
+        test.equal(xs[3], 'yellow');
+        test.equal(xs[4] !== xs[4], true);
+    });
     test.done();
 };
 
@@ -5841,6 +5933,22 @@ exports['parallel - parallel should not drop data if paused (issue #328)'] = fun
             test.same(xs, [1, 2, 3, 11, 12, 13, 1, 2, 3]);
             test.done();
         });
+};
+
+exports['parallel - should throw if arg is not a number (issue #420)'] = function (test) {
+    test.expect(1);
+    test.throws(function () {
+        _([]).parallel();
+    });
+    test.done();
+};
+
+exports['parallel - should throw if arg is not positive'] = function (test) {
+    test.expect(1);
+    test.throws(function () {
+        _([]).parallel(-1);
+    });
+    test.done();
 };
 
 exports['throttle'] = {
