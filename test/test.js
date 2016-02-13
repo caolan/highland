@@ -1629,85 +1629,153 @@ exports['lazily evalute stream'] = function (test) {
     test.done();
 };
 
-
-exports['pipe old-style node stream to highland stream'] = function (test) {
-    var xs = [];
-    var src = streamify([1,2,3,4]);
-    var s1 = _();
-    var s2 = s1.consume(function (err, x, push, next) {
-        xs.push(x);
-        next();
-    });
-    Stream.prototype.pipe.call(src, s1);
-    setTimeout(function () {
-        test.same(s1._incoming, [1]);
-        test.same(s2._incoming, []);
-        test.same(xs, []);
-        s2.resume();
+exports['pipe'] = {
+    'old-style node stream to highland stream': function (test) {
+        var xs = [];
+        var src = streamify([1,2,3,4]);
+        var s1 = _();
+        var s2 = s1.consume(function (err, x, push, next) {
+            xs.push(x);
+            next();
+        });
+        Stream.prototype.pipe.call(src, s1);
         setTimeout(function () {
-            test.same(s1._incoming, []);
+            test.same(s1._incoming, [1]);
             test.same(s2._incoming, []);
-            test.same(xs, [1,2,3,4,_.nil]);
-            test.done();
+            test.same(xs, []);
+            s2.resume();
+            setTimeout(function () {
+                test.same(s1._incoming, []);
+                test.same(s2._incoming, []);
+                test.same(xs, [1,2,3,4,_.nil]);
+                test.done();
+            }, 100);
         }, 100);
-    }, 100);
-};
-
-exports['pipe node stream to highland stream'] = function (test) {
-    var xs = [];
-    var src = streamify([1,2,3,4]);
-    var s1 = _();
-    var s2 = s1.consume(function (err, x, push, next) {
-        xs.push(x);
-        next();
-    });
-    src.pipe(s1);
-    setTimeout(function () {
-        test.same(s1._incoming, [1]);
-        test.same(s2._incoming, []);
-        test.same(xs, []);
-        s2.resume();
+    },
+    'node stream to highland stream': function (test) {
+        var xs = [];
+        var src = streamify([1,2,3,4]);
+        var s1 = _();
+        var s2 = s1.consume(function (err, x, push, next) {
+            xs.push(x);
+            next();
+        });
+        src.pipe(s1);
         setTimeout(function () {
-            test.same(s1._incoming, []);
+            test.same(s1._incoming, [1]);
             test.same(s2._incoming, []);
-            test.same(xs, [1,2,3,4,_.nil]);
-            test.done();
+            test.same(xs, []);
+            s2.resume();
+            setTimeout(function () {
+                test.same(s1._incoming, []);
+                test.same(s2._incoming, []);
+                test.same(xs, [1,2,3,4,_.nil]);
+                test.done();
+            }, 100);
         }, 100);
-    }, 100);
+    },
+    'highland stream to node stream': function (test) {
+        var src = _(['a','b','c']);
+        var dest = concat(function (data) {
+            test.same(data, 'abc');
+            test.done();
+        });
+        src.pipe(dest);
+    },
+    'pipe to node stream with backpressure': function (test) {
+        test.expect(3);
+        var src = _([1,2,3,4]);
+        var xs = [];
+        var dest = new EventEmitter();
+        dest.writable = true;
+        dest.write = function (x) {
+            xs.push(x);
+            if (xs.length === 2) {
+                _.setImmediate(function () {
+                    test.same(xs, [1,2]);
+                    test.ok(src.paused);
+                    dest.emit('drain');
+                });
+                return false;
+            }
+        };
+        dest.end = function () {
+            test.same(xs, [1,2,3,4]);
+            test.done();
+        };
+        src.pipe(dest);
+    },
+    'emits "pipe" event when piping (issue #449)': function (test) {
+        test.expect(1);
+
+        var src = _();
+        var dest = _();
+        dest.on('pipe', function (_src) {
+            test.strictEqual(_src, src);
+            test.done();
+        });
+        src.pipe(dest);
+    },
+    'pipe with {end:false} option should not end': function (test) {
+        test.expect(1);
+
+        var clock = sinon.useFakeTimers();
+        var dest = _();
+        var ended = false;
+        dest.end = function () {
+            ended = true;
+        };
+
+        _([1, 2, 3]).pipe(dest);
+
+        clock.tick(10000);
+        clock.restore();
+        test.ok(!ended, 'The destination should not have been ended.');
+        test.done();
+    }
 };
 
-exports['pipe highland stream to node stream'] = function (test) {
-    var src = _(['a','b','c']);
-    var dest = concat(function (data) {
-        test.same(data, 'abc');
-        test.done();
-    });
-    src.pipe(dest);
-};
+// ignore these tests in non-node.js environments
+if (typeof process !== 'undefined' && process.stdout) {
+    exports['pipe']['highland stream to stdout'] = function (test) {
+        test.expect(1)
+        var src = _(['']);
+        test.doesNotThrow(function () {
+            src.pipe(process.stdout);
+        })
+        test.done()
+    };
 
-exports['pipe to node stream with backpressure'] = function (test) {
-    test.expect(3);
-    var src = _([1,2,3,4]);
-    var xs = [];
-    var dest = new EventEmitter();
-    dest.writable = true;
-    dest.write = function (x) {
-        xs.push(x);
-        if (xs.length === 2) {
-            _.setImmediate(function () {
-                test.same(xs, [1,2]);
-                test.ok(src.paused);
-                dest.emit('drain');
-            });
-            return false;
-        }
+    exports['pipe']['highland stream to stdout with {end:true}'] = function (test) {
+        test.expect(1)
+        var src = _(['']);
+        test.doesNotThrow(function () {
+            src.pipe(process.stdout, {end: true});
+        })
+        test.done()
     };
-    dest.end = function () {
-        test.same(xs, [1,2,3,4]);
-        test.done();
+}
+
+// ignore these tests in non-node.js environments
+if (typeof process !== 'undefined' && process.stderr) {
+    exports['pipe']['highland stream to stderr'] = function (test) {
+        test.expect(1)
+        var src = _(['']);
+        test.doesNotThrow(function () {
+            src.pipe(process.stderr);
+        })
+        test.done()
     };
-    src.pipe(dest);
-};
+
+    exports['pipe']['highland stream to stderr with {end:true}'] = function (test) {
+        test.expect(1)
+        var src = _(['']);
+        test.doesNotThrow(function () {
+            src.pipe(process.stderr, {end: true});
+        })
+        test.done()
+    };
+}
 
 exports['wrap node stream and pipe'] = function (test) {
     test.expect(7);
@@ -1755,30 +1823,6 @@ exports['wrap node stream with error'] = function (test) {
         test.done();
     }).each(function () {});
 };
-
-// ignore these tests in non-node.js environments
-if (typeof process !== 'undefined' && process.stdout) {
-    exports['pipe highland stream to stdout'] = function (test) {
-        test.expect(1)
-        var src = _(['']);
-        test.doesNotThrow(function () {
-            src.pipe(process.stdout);
-        })
-        test.done()
-    }
-}
-
-// ignore these tests in non-node.js environments
-if (typeof process !== 'undefined' && process.stderr) {
-    exports['pipe highland stream to stderr'] = function (test) {
-        test.expect(1)
-        var src = _(['']);
-        test.doesNotThrow(function () {
-            src.pipe(process.stderr);
-        })
-        test.done()
-    }
-}
 
 exports['attach data event handler'] = function (test) {
     var s = _([1,2,3,4]);
