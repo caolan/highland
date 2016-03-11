@@ -19,7 +19,7 @@
     "concat-stream": "~1.4.1",
     "eslint": "^2.0.0",
     "grunt": "~0.4.2",
-    "grunt-browserify": "^4.0.1",
+    "grunt-browserify": "^5.0.0",
     "grunt-bump": "0.7.0",
     "grunt-contrib-nodeunit": "~0.4.1",
     "grunt-contrib-uglify": "^1.0.0",
