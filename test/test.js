@@ -1732,6 +1732,32 @@ exports['pipe'] = {
         clock.restore();
         test.ok(!ended, 'The destination should not have been ended.');
         test.done();
+    },
+    'clean up drain handler when done': function (test) {
+        test.expect(2);
+
+        var dest = _();
+        var boundListener = false;
+        var unboundListener = false;
+
+        dest.on('newListener', function (ev) {
+            if (ev === 'drain') {
+                boundListener = true;
+            }
+        });
+
+        dest.on('removeListener', function (ev) {
+            if (ev === 'drain') {
+                unboundListener = true;
+            }
+        });
+
+        _([1, 2, 3]).pipe(dest)
+            .resume();
+
+        test.ok(boundListener, 'No drain listener was bound.');
+        test.ok(unboundListener, 'No drain listener was unbound.');
+        test.done();
     }
 };
 
