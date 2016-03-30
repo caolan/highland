@@ -757,6 +757,23 @@ exports['write when not paused sends to consumer'] = function (test) {
     test.done();
 };
 
+exports['write - callbacks called when value emitted'] = function (test) {
+    test.expect(4);
+    var s = _();
+    var cbFired = false;
+
+    s.write(1, null, function () {
+        cbFired = true;
+    });
+    s.end();
+
+    test.ok(!cbFired, 'The callback fired before the value was consumed.');
+    s.pull(valueEquals(test, 1));
+    test.ok(cbFired, 'The callback was never fired.');
+    s.pull(valueEquals(test, _.nil));
+    test.done();
+};
+
 exports['buffered incoming data released on resume'] = function (test) {
     var vals = [];
     var s1 = _();
@@ -912,6 +929,62 @@ exports['consume - throws error if next called after nil'] = function (test) {
         s2.resume();
     });
     test.done();
+};
+
+exports['asNodeWritable'] = {
+    'writable forwards data': function (test) {
+        test.expect(1);
+        var s = _();
+        s.toArray(function (xs) {
+            test.same(xs, [1, 2, 3]);
+            test.done();
+        });
+
+        var writable = s.asNodeWritable();
+        writable.write(1);
+        writable.write(2);
+        writable.end(3);
+    },
+    'same writable returned every time': function (test) {
+        test.expect(1);
+        var s = _();
+        test.strictEqual(s.asNodeWritable(), s.asNodeWritable());
+        test.done();
+    },
+    'throws if not writable': function (test) {
+        test.expect(1);
+        var s = _().map(_.add(1));
+        test.throws(s.asNodeWritable.bind(s));
+        test.done();
+    },
+    'pipes to writable works': function (test) {
+        test.expect(2);
+        var s = _();
+        streamify([1, 2, 3]).pipe(s.asNodeWritable());
+        test.same(s._incoming.length, 0);
+
+        s.toArray(function (xs) {
+            test.same(xs, [1, 2, 3]);
+            test.done();
+        });
+    },
+    'callbacks fired when value emitted': function (test) {
+        test.expect(4);
+        var cbFired = false;
+        var s = _();
+        var writable = s.asNodeWritable();
+
+        writable.write(1, null, function () {
+            cbFired = true;
+        });
+        writable.end();
+
+        test.ok(!cbFired, 'The callback fired before the value was consumed.');
+        s.pull(valueEquals(test, 1));
+        test.ok(cbFired, 'The callback was never fired.');
+        s.pull(valueEquals(test, _.nil));
+        test.done();
+    }
 };
 
 exports['errors'] = function (test) {
