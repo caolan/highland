@@ -2047,6 +2047,36 @@ exports['pipe'] = {
         clock.restore();
         test.ok(!ended, 'The destination should not have been ended.');
         test.done();
+    },
+    'clean up drain handler when done': function (test) {
+        test.expect(2);
+
+        var dest = _();
+        var boundListener = false;
+        var unboundListener = false;
+
+        dest.on('newListener', function (ev) {
+            if (ev === 'drain') {
+                boundListener = true;
+            }
+        });
+
+        dest.on('removeListener', function (ev) {
+            if (ev === 'drain') {
+                unboundListener = true;
+            }
+        });
+
+        var src = _([1, 2, 3]);
+        src.pipe(dest);
+
+        src.onDestroy(function () {
+            test.ok(boundListener, 'No drain listener was bound.');
+            test.ok(unboundListener, 'No drain listener was unbound.');
+            test.done();
+        });
+
+        dest.resume();
     }
 };
 
@@ -5845,6 +5875,7 @@ exports['parallel - GeneratorStream'] = function (test) {
 };
 
 exports['parallel consume from async generator'] = function (test) {
+    test.expect(1);
     function delay(push, ms, x) {
         setTimeout(function () {
             push(null, x);
