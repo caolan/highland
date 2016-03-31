@@ -5,6 +5,14 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
+next
+-----
+### Bugfix
+* `pipe` now properly unbinds its `drain` handler from the destination when it
+  is done. Previously, there would have been a memory leak if the destination is
+  long-lived (e.g., as with `process.stdout`).
+  [#466](https://github.com/caolan/highland/pull/466).
+
 2.7.2
 -----
 ### Bugfix
