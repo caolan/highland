@@ -528,12 +528,12 @@ function generatorPush(stream, write) {
     }
 
     return function (err, x) {
-        if (stream._nil_seen) {
-            throw new Error('Can not write to stream after nil');
+        if (stream._nil_pushed) {
+            throw new Error('Cannot write to stream after nil');
         }
 
         if (x === nil) {
-            stream._nil_seen = true;
+            stream._nil_pushed = true;
         }
 
         write.call(stream, err ? new StreamError(err) : x);
@@ -569,7 +569,7 @@ function Stream(/*optional*/xs, /*optional*/ee, /*optional*/mappingHint) {
     this._observers = [];
     this._destructors = [];
     this._send_events = false;
-    this._nil_seen = false;
+    this._nil_pushed = false;
     this._delegate = null;
     this._is_observer = false;
     this._in_consume_cb = false;
@@ -615,8 +615,8 @@ function Stream(/*optional*/xs, /*optional*/ee, /*optional*/mappingHint) {
         this._generator = xs;
         this._generator_push = generatorPush(this);
         this._generator_next = function (s) {
-            if (self._nil_seen) {
-                throw new Error('Can not call next after nil');
+            if (self._nil_pushed) {
+                throw new Error('Cannot call next after nil');
             }
 
             if (s) {
@@ -754,9 +754,6 @@ Stream.prototype._send = function (err, x) {
     //console.log(['_send', this.id, err, x]);
     var token;
 
-    if (x === nil) {
-        this.ended = true;
-    }
     if (this._consumers.length) {
         token = err ? new StreamError(err) : x;
         // this._consumers may be changed from under us,
@@ -786,6 +783,57 @@ Stream.prototype._send = function (err, x) {
             this.emit('data', x);
         }
     }
+
+    if (x === nil) {
+        this._onEnd();
+    }
+};
+
+
+Stream.prototype._onEnd = function _onEnd() {
+    if (this.ended) {
+        return;
+    }
+
+    this.pause();
+
+    this.ended = true;
+
+    if (this.source) {
+        var source = this.source;
+        source._removeConsumer(this);
+        source._removeObserver(this);
+    }
+
+    var i, len;
+
+    // _removeConsumer may modify this._consumers.
+    var consumers = this._consumers;
+    for (i = 0, len = consumers.length; i < len; i++) {
+        this._removeConsumer(consumers[i]);
+    }
+
+    // Don't use _removeObserver for efficiency reasons.
+    var observer;
+    for (i = 0, len = this._observers.length; i < len; i++) {
+        observer = this._observers[i];
+        if (observer.source === this) {
+            observer.source = null;
+        }
+    }
+
+    for (i = 0, len = this._destructors.length; i < len; i++) {
+        this._destructors[i].call(this);
+    }
+
+    this.source = null;
+    this._consumers = [];
+    this._incoming = [];
+    this._outgoing = [];
+    this._delegate = null;
+    this._generator = null;
+    this._observers = [];
+    this._destructors = [];
 };
 
 /**
@@ -1024,23 +1072,11 @@ Stream.prototype.pipe = function (dest, options) {
  */
 
 Stream.prototype.destroy = function () {
-    var self = this;
-    this.end();
-    _(this._consumers).each(function (consumer) {
-        self._removeConsumer(consumer);
-    });
-    _(this._observers).each(function (observer) {
-        self._removeObserver(observer);
-    });
-
-    if (this.source) {
-        var source = this.source;
-        source._removeConsumer(this);
-        source._removeObserver(this);
+    if (this.ended) {
+        return;
     }
-    _(this._destructors).each(function (destructor) {
-        destructor.call(self);
-    });
+    this.end();
+    this._onEnd();
 };
 
 /**
@@ -1196,12 +1232,12 @@ Stream.prototype.consume = function (f) {
     var _send = s._send;
     var push = function (err, x) {
         //console.log(['push', err, x, s.paused]);
-        if (s._nil_seen) {
-            throw new Error('Can not write to stream after nil');
+        if (s._nil_pushed) {
+            throw new Error('Cannot write to stream after nil');
         }
         if (x === nil) {
             // ended, remove consumer from source
-            s._nil_seen = true;
+            s._nil_pushed = true;
             self._removeConsumer(s);
         }
         if (s.paused) {
@@ -1220,8 +1256,8 @@ Stream.prototype.consume = function (f) {
     var next_called;
     var next = function (s2) {
         //console.log(['next', async]);
-        if (s._nil_seen) {
-            throw new Error('Can not call next after nil');
+        if (s._nil_pushed) {
+            throw new Error('Cannot call next after nil');
         }
         if (s2) {
             // we MUST pause to get the redirect object into the _incoming
@@ -4487,17 +4523,12 @@ var revLookup = []
 var Arr = typeof Uint8Array !== 'undefined' ? Uint8Array : Array
 
 function init () {
-  var i
   var code = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-  var len = code.length
-
-  for (i = 0; i < len; i++) {
+  for (var i = 0, len = code.length; i < len; ++i) {
     lookup[i] = code[i]
-  }
-
-  for (i = 0; i < len; ++i) {
     revLookup[code.charCodeAt(i)] = i
   }
+
   revLookup['-'.charCodeAt(0)] = 62
   revLookup['_'.charCodeAt(0)] = 63
 }
@@ -4529,8 +4560,8 @@ function toByteArray (b64) {
 
   for (i = 0, j = 0; i < l; i += 4, j += 3) {
     tmp = (revLookup[b64.charCodeAt(i)] << 18) | (revLookup[b64.charCodeAt(i + 1)] << 12) | (revLookup[b64.charCodeAt(i + 2)] << 6) | revLookup[b64.charCodeAt(i + 3)]
-    arr[L++] = (tmp & 0xFF0000) >> 16
-    arr[L++] = (tmp & 0xFF00) >> 8
+    arr[L++] = (tmp >> 16) & 0xFF
+    arr[L++] = (tmp >> 8) & 0xFF
     arr[L++] = tmp & 0xFF
   }
 
@@ -4881,17 +4912,12 @@ Buffer.compare = function compare (a, b) {
   var x = a.length
   var y = b.length
 
-  var i = 0
-  var len = Math.min(x, y)
-  while (i < len) {
-    if (a[i] !== b[i]) break
-
-    ++i
-  }
-
-  if (i !== len) {
-    x = a[i]
-    y = b[i]
+  for (var i = 0, len = Math.min(x, y); i < len; ++i) {
+    if (a[i] !== b[i]) {
+      x = a[i]
+      y = b[i]
+      break
+    }
   }
 
   if (x < y) return -1
@@ -5052,7 +5078,6 @@ Buffer.prototype.inspect = function inspect () {
 
 Buffer.prototype.compare = function compare (b) {
   if (!Buffer.isBuffer(b)) throw new TypeError('Argument must be a Buffer')
-  if (this === b) return 0
   return Buffer.compare(this, b)
 }
 
