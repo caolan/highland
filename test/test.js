@@ -3329,6 +3329,22 @@ exports['mergeWithLimit'] = {
         });
         this.clock.tick(100);
     },
+    'correctly forwards errors - issue #475': function (test) {
+        test.expect(2);
+        var s1 = _([1, 2, 3, 4]);
+        var s2 = _(function (push, next) {
+            push(new Error('error'))
+            push(null, _.nil);
+        });
+        _([s1, s2]).mergeWithLimit(2)
+            .errors(function (err) {
+                test.equal(err.message, 'error');
+            })
+            .toArray(function (xs) {
+                test.same(xs, [1, 2, 3, 4]);
+                test.done();
+            });
+    },
     'noValueOnError': noValueOnErrorTest(_.mergeWithLimit(1)),
 };
 

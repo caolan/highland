@@ -5,6 +5,12 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
+2.7.4
+-----
+### Bugfix
+* `mergeOnError` no longer causes an `// Unhandled 'error' event` error when one
+  of its sources emits an error.
+
 2.7.3
 -----
 ### Bugfix
