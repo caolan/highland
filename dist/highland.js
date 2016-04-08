@@ -3875,6 +3875,7 @@ Stream.prototype.mergeWithLimit = function (n){
     if (typeof n !== 'number' || n < 1) {
         throw new Error('mergeWithLimit expects a positive number, but got: ' + n);
     }
+
     if (n === Infinity) {
         return this.merge();
     }
@@ -3892,7 +3893,7 @@ Stream.prototype.mergeWithLimit = function (n){
                 processCount++;
                 push(err, x);
                 // console.log('start', x.id);
-                x.once('end', function(){
+                x._destructors.push(function(){
                     processCount--;
                     // console.log('end', x.id);
                     if (waiting) {
