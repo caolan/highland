@@ -574,6 +574,44 @@ exports['constructor'] = {
         test.ok(!writtenTo, 'Drain should not cause write to be called.');
         test.done();
     },
+    "from Readable that emits 'close' not 'end' - issue #478": function (test) {
+        test.expect(1);
+        var rs = new Stream.Readable();
+        rs._read = function (size) {
+            this.emit('close');
+        }
+        var s = _(rs);
+        s.pull(valueEquals(test, _.nil));
+        test.done();
+    },
+    "from Readable that emits 'close' and 'end' - issue #478": function (test) {
+        test.expect(2);
+        var rs = new Stream.Readable();
+        rs._read = function (size) {
+            this.push(null);
+        }
+        rs.on('end', function () {
+            _.setImmediate(function () {
+                rs.emit('close');
+            });
+        });
+        var s = _(rs);
+        var oldEnd = s.end;
+        var numTimesEndCalled = 0;
+        s.end = function () {
+            numTimesEndCalled++;
+            oldEnd.call(s);
+        };
+        rs.on('close', function () {
+            // Wait for the rest of the close handlers to be called before
+            // checking.
+            _.setImmediate(function () {
+                test.equal(numTimesEndCalled, 1, 'end() should only be called once.');
+                test.done();
+            });
+        });
+        s.pull(valueEquals(test, _.nil));
+    },
     'throws error for unsupported object': function (test) {
         test.expect(1);
         test.throws(function () {
