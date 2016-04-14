@@ -5,11 +5,23 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
+2.7.5
+-----
+### Bugfix
+* A Highland Stream that wraps `Readable` now properly handles the case where
+  the `Readable` emits the `close` event but not the `end` event (this can
+  happen with an `fs` read stream when it encounters an error). Before, such a
+  stream would simply emit the error and never end.
+  [#479](https://github.com/caolan/highland/pull/479).
+  Fixes [#478](https://github.com/caolan/highland/issues/478).
+
 2.7.4
 -----
 ### Bugfix
 * `mergeOnError` no longer causes an `// Unhandled 'error' event` error when one
   of its sources emits an error.
+  [#476](https://github.com/caolan/highland/pull/476).
+  Fixes [#475](https://github.com/caolan/highland/issues/475).
 
 2.7.3
 -----
