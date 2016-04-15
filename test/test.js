@@ -574,22 +574,22 @@ exports['constructor'] = {
         test.ok(!writtenTo, 'Drain should not cause write to be called.');
         test.done();
     },
-    "from Readable that emits 'close' not 'end' - issue #478": function (test) {
+    "from Readable - emits 'close' not 'end' - issue #478": function (test) {
         test.expect(1);
         var rs = new Stream.Readable();
         rs._read = function (size) {
             this.emit('close');
-        }
+        };
         var s = _(rs);
         s.pull(valueEquals(test, _.nil));
         test.done();
     },
-    "from Readable that emits 'close' and 'end' - issue #478": function (test) {
+    "from Readable - emits 'close' and 'end' - issue #478": function (test) {
         test.expect(2);
         var rs = new Stream.Readable();
         rs._read = function (size) {
             this.push(null);
-        }
+        };
         rs.on('end', function () {
             _.setImmediate(function () {
                 rs.emit('close');
@@ -611,6 +611,18 @@ exports['constructor'] = {
             });
         });
         s.pull(valueEquals(test, _.nil));
+    },
+    "from Readable - emits 'error' - issue #478": function (test) {
+        test.expect(2);
+        var rs = new Stream.Readable();
+        rs._read = function (size) {
+            // Infinite stream!
+        };
+        var s = _(rs);
+        rs.emit('error', new Error('error'));
+        s.pull(errorEquals(test, 'error'));
+        s.pull(valueEquals(test, _.nil));
+        test.done();
     },
     'throws error for unsupported object': function (test) {
         test.expect(1);
