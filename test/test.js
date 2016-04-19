@@ -531,16 +531,19 @@ exports['constructor'] = {
         this.tester = function (expected, test) {
             return function (xs) {
                 test.same(xs, expected);
+                test.done();
             };
         };
         callback();
     },
     'passing Stream to constructor returns original': function (test) {
+        test.expect(1);
         var s = _([1,2,3]);
         test.strictEqual(s, _(s));
         test.done();
     },
     'from Readable with next function - issue #303': function (test) {
+        test.expect(1);
         var Readable = Stream.Readable;
 
         var rs = new Readable;
@@ -551,9 +554,9 @@ exports['constructor'] = {
         rs.push(null);
         _(rs).invoke('toString', ['utf8'])
             .toArray(this.tester(['a', 'b', 'c'], test));
-        test.done();
     },
     'from Readable - unpipes on destroy': function (test) {
+        test.expect(2);
         var rs = streamify([1, 2, 3]);
 
         var s = _(rs);
@@ -571,15 +574,67 @@ exports['constructor'] = {
         test.ok(!writtenTo, 'Drain should not cause write to be called.');
         test.done();
     },
+    "from Readable - emits 'close' not 'end' - issue #478": function (test) {
+        test.expect(1);
+        var rs = new Stream.Readable();
+        rs._read = function (size) {
+            this.emit('close');
+        };
+        var s = _(rs);
+        s.pull(valueEquals(test, _.nil));
+        test.done();
+    },
+    "from Readable - emits 'close' and 'end' - issue #478": function (test) {
+        test.expect(2);
+        var rs = new Stream.Readable();
+        rs._read = function (size) {
+            this.push(null);
+        };
+        rs.on('end', function () {
+            _.setImmediate(function () {
+                rs.emit('close');
+            });
+        });
+        var s = _(rs);
+        var oldEnd = s.end;
+        var numTimesEndCalled = 0;
+        s.end = function () {
+            numTimesEndCalled++;
+            oldEnd.call(s);
+        };
+        rs.on('close', function () {
+            // Wait for the rest of the close handlers to be called before
+            // checking.
+            _.setImmediate(function () {
+                test.equal(numTimesEndCalled, 1, 'end() should only be called once.');
+                test.done();
+            });
+        });
+        s.pull(valueEquals(test, _.nil));
+    },
+    "from Readable - emits 'error' - issue #478": function (test) {
+        test.expect(2);
+        var rs = new Stream.Readable();
+        rs._read = function (size) {
+            // Infinite stream!
+        };
+        var s = _(rs);
+        rs.emit('error', new Error('error'));
+        s.pull(errorEquals(test, 'error'));
+        s.pull(valueEquals(test, _.nil));
+        test.done();
+    },
     'throws error for unsupported object': function (test) {
+        test.expect(1);
         test.throws(function () {
             _({}).done(function () {});
         }, Error, 'Object was not a stream, promise, iterator or iterable: object');
         test.done();
     },
     'from promise': function (test) {
-        _(Promise.resolve(3)).toArray(this.tester([3], test));
-        test.done();
+        test.expect(1);
+        _(Promise.resolve(3))
+            .toArray(this.tester([3], test));
     },
     'from promise - errors': function (test) {
         test.expect(3);
@@ -596,20 +651,22 @@ exports['constructor'] = {
             });
     },
     'from iterator': function (test) {
+        test.expect(1);
         _(this.createTestIterator([1, 2, 3, 4, 5]))
             .toArray(this.tester([1, 2, 3, 4, 5], test));
-        test.done();
     },
     'from iterator - error': function (test) {
-        _(this.createTestIterator([1, 2, 3, 4, 5], new Error('Error at index 2'))).errors(function (err) {
-            test.equals(err.message, 'Error at index 2');
-        }).toArray(this.tester([1, 2], test));
-        test.done();
+        test.expect(2);
+        _(this.createTestIterator([1, 2, 3, 4, 5], new Error('Error at index 2')))
+            .errors(function (err) {
+                test.equals(err.message, 'Error at index 2');
+            })
+            .toArray(this.tester([1, 2], test));
     },
     'from iterator - final return falsy': function (test) {
         test.expect(1);
-        _(this.createTestIterator([1, 2, 3, 4, 5], void 0, 0)).toArray(this.tester([1, 2, 3, 4, 5, 0], test));
-        test.done();
+        _(this.createTestIterator([1, 2, 3, 4, 5], void 0, 0))
+            .toArray(this.tester([1, 2, 3, 4, 5, 0], test));
     }
 };
 
