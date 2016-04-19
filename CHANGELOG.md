@@ -10,8 +10,9 @@ this library.
 ### Bugfix
 * A Highland Stream that wraps `Readable` now properly handles the case where
   the `Readable` emits the `close` event but not the `end` event (this can
-  happen with an `fs` read stream when it encounters an error). Before, such a
-  stream would simply emit the error and never end.
+  happen with an `fs` read stream when it encounters an error). It will also end
+  the wrapper stream when it encounters an error (this happens when reading from
+  a non-existent file). Before, such streams would simply never end.
   [#479](https://github.com/caolan/highland/pull/479).
   Fixes [#478](https://github.com/caolan/highland/issues/478).
 
