@@ -16,6 +16,10 @@ this library.
   [#479](https://github.com/caolan/highland/pull/479).
   Fixes [#478](https://github.com/caolan/highland/issues/478).
 
+### New additions
+* `complete`: Like `toArray`, but passes first error in first parameter, and the
+  result array as the second if no error was thrown.
+
 2.7.4
 -----
 ### Bugfix
