@@ -16,6 +16,12 @@ this library.
   [#479](https://github.com/caolan/highland/pull/479).
   Fixes [#478](https://github.com/caolan/highland/issues/478).
 
+### Improvements
+* A Highland Stream that wraps a bluebird promise can now handle bluebird
+  cancellation. When the promise is cancelled the wrapper stream is empty.
+  [#486](https://github.com/caolan/highland/issues/486)
+
+
 2.7.4
 -----
 ### Bugfix

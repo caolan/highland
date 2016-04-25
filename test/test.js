@@ -6,7 +6,8 @@ var _, EventEmitter = require('events').EventEmitter,
     concat = require('concat-stream'),
     RSVP = require('rsvp'),
     Promise = RSVP.Promise,
-    transducers = require('transducers-js');
+    transducers = require('transducers-js'),
+    bluebird = require('bluebird');
 
 if (global.highland != null) {
     _ = global.highland;
@@ -18,6 +19,11 @@ if (global.highland != null) {
 // handle.
 RSVP.configure('async', function (f, arg) {
     setTimeout(f.bind(this, arg), 1);
+});
+
+// Use bluebird cancellation. We want to test against it.
+bluebird.config({
+  cancellation: true
 });
 
 /**
@@ -649,6 +655,16 @@ exports['constructor'] = {
                 test.same(xs, []);
                 test.done();
             });
+    },
+    'from promise - bluebird cancellation': function (test) {
+        test.expect(1);
+        var promise = new bluebird.Promise(function(resolve, reject) {
+            setTimeout(function() {
+                resolve(1);
+            }, 10);
+        });
+        var stream = _(promise).toArray(this.tester([], test));
+        promise.cancel();
     },
     'from iterator': function (test) {
         test.expect(1);
