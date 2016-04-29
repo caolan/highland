@@ -25,7 +25,7 @@ this library.
 2.7.4
 -----
 ### Bugfix
-* `mergeOnError` no longer causes an `// Unhandled 'error' event` error when one
+* `mergeWithLimit` no longer causes an `// Unhandled 'error' event` error when one
   of its sources emits an error.
   [#476](https://github.com/caolan/highland/pull/476).
   Fixes [#475](https://github.com/caolan/highland/issues/475).
