@@ -1440,6 +1440,50 @@ exports['each - throw error if consumed'] = function (test) {
     test.done();
 };
 
+exports['complete'] = function (test) {
+    _([1,2,3,4]).complete(function (err, xs) {
+        test.same(xs, [1,2,3,4]);
+        test.done();
+    });
+};
+
+exports['complete - errors'] = function (test) {
+    var e = new Error('one');
+    var s = _(function (push, next) {
+        push(null, 1);
+        push(e);
+        push(null, 2);
+        push(null, _.nil);
+    }).complete(function (err, xs) {
+        test.same(xs, undefined);
+        test.same(err, e);
+        test.done();
+    });
+};
+
+exports['complete - ArrayStream'] = function (test) {
+    _([1,2,3,4]).complete(function (err, xs) {
+        test.same(xs, [1,2,3,4]);
+        test.done();
+    });
+};
+
+exports['complete - GeneratorStream'] = function (test) {
+    var s = _(function (push, next) {
+        setTimeout(function () {
+            push(null, 1);
+            push(null, 2);
+            push(null, 3);
+            push(null, 4);
+            push(null, _.nil);
+        }, 10);
+    });
+    s.complete(function (err, xs) {
+        test.same(xs, [1,2,3,4]);
+        test.done();
+    });
+};
+
 exports['done'] = function (test) {
     test.expect(3);
 
