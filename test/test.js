@@ -1515,6 +1515,60 @@ exports['done - throw error if consumed'] = function (test) {
     test.done();
 };
 
+exports['toCallback - ArrayStream'] = function(test) {
+    _([1,2,3,4]).collect().toCallback(function(err, result) {
+        test.same(result, [1,2,3,4]);
+        test.same(err, null);
+        test.done();
+    });
+}
+
+exports['toCallback - GeneratorStream'] = function (test) {
+    _(function(push, next) {
+        push(null, 1);
+        push(null, 2);
+        setTimeout(function() {
+          push(null, 3);
+          push(null, _.nil);
+        }, 40);
+    }).collect().toCallback(function(err, result){
+        test.same(result, [1,2,3]);
+        test.same(err, null);
+        test.done();
+    });
+}
+
+exports['toCallback - returns error for streams with multiple values'] = function (test) {
+    var s = _([1,2]);
+    test.throws(function () {
+        s.toCallback(function () {});
+    });
+    test.done();
+}
+
+exports['toCallback - calls back without arguments for empty stream'] = function (test) {
+    _([]).toCallback(function() {
+        test.same(arguments.length, 0);
+        test.done();
+    });
+}
+
+exports['toCallback - returns error when stream emits error'] = function (test) {
+    _(function(push, next) {
+        push(null, 1);
+        push(null, 2);
+        setTimeout(function() {
+          push(new Error('Test error'));
+          push(null, 3);
+          push(null, _.nil);
+        }, 40);
+    }).collect().toCallback(function(err, result){
+        test.same(err.message, 'Test error');
+        test.same(result, undefined);
+        test.done();
+    });
+}
+
 exports['calls generator on read'] = function (test) {
     var gen_calls = 0;
     var s = _(function (push, next) {
