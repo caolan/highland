@@ -16,6 +16,12 @@ this library.
   [#479](https://github.com/caolan/highland/pull/479).
   Fixes [#478](https://github.com/caolan/highland/issues/478).
 
+### New additions
+* `toCallback`: method for returning the result of a stream to a
+  nodejs-style callback function.
+  [#493](https://github.com/caolan/highland/pull/493)
+  Fixes [#484](https://github.com/caolan/highland/issues/484)
+
 ### Improvements
 * A Highland Stream that wraps a bluebird promise can now handle bluebird
   cancellation. When the promise is cancelled the wrapper stream is empty.
