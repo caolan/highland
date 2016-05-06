@@ -385,12 +385,12 @@ function pipeReadable(xs, stream) {
     var streamEnded = false;
 
     // write any errors into the stream
-    xs.on('error', writeStreamError);
+    xs.once('error', writeStreamError);
 
-    // We need to bind to 'close' because not all streams will emit 'end' when
-    // they are done. For example, FS streams that try to read a non-existant
-    // file.
-    xs.once('close', tryEndStream);
+    // It's possible that `close` is emitted *before* `end`, so we simply
+    // cannot handle that case. See
+    // https://github.com/caolan/highland/issues/490 for details.
+    //xs.once('close', tryEndStream);
 
     // We need to bind to 'end' because some streams will emit *both* 'end'
     // and 'close'. For example, FS streams that complete successfully. Such
@@ -405,7 +405,6 @@ function pipeReadable(xs, stream) {
     // TODO: Replace with onDestroy in v3.
     stream._destructors.push(function () {
         xs.removeListener('error', writeStreamError);
-        xs.removeListener('close', tryEndStream);
         xs.removeListener('end', recordStreamEnded);
 
         if (xs.unpipe) {
