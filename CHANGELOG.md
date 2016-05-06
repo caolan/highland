@@ -5,6 +5,23 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
+2.8.1
+-----
+### Bugfix
+* The `Readable` stream wrapper changes from `2.8.0` assumed that `close` would
+  never be emitted before `end` for any stream. This is not the case for
+  `Sockets`, which will `close` when the client disconnects but will `end` only
+  when it has piped all of its data. For a slow consumer, `end` may happen
+  *after* `close`, causing the Highland stream to drop all data after `close` is
+  emitted.
+
+  This release fixes the regression at the cost of restoring the old behavior of
+  never ending the Stream when only `close` is emitted. This does not affect the
+  case where `error` events are emitted without `end`. That still works fine. To
+  manually end a stream when it emits `close`, listen to the event and call
+  `stream.end()`.
+  Fixes [#490](https://github.com/caolan/highland/issues/490).
+
 2.8.0
 -----
 ### Bugfix

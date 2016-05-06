@@ -580,15 +580,36 @@ exports['constructor'] = {
         test.ok(!writtenTo, 'Drain should not cause write to be called.');
         test.done();
     },
-    "from Readable - emits 'close' not 'end' - issue #478": function (test) {
+    "from Readable - emits 'close' not 'end' - issue #490": function (test) {
         test.expect(1);
         var rs = new Stream.Readable();
         rs._read = function (size) {
             this.emit('close');
         };
         var s = _(rs);
-        s.pull(valueEquals(test, _.nil));
-        test.done();
+
+        var sawEnd = false;
+        s.pull(function (err, x) {
+            sawEnd = true;
+        });
+
+        setTimeout(function () {
+            test.ok(!sawEnd, 'Stream should not have ended.');
+            test.done();
+        }, 10);
+    },
+    "from Readable - emits 'close' before 'end' - issue #490": function (test) {
+        test.expect(1);
+        var rs = new Stream.Readable();
+        rs._read = function (size) {
+            this.push('1');
+            this.emit('close');
+            this.push('2');
+            this.push(null);
+        };
+        rs.setEncoding('utf-8');
+        var s = _(rs)
+            .toArray(this.tester(['1', '2'], test));
     },
     "from Readable - emits 'close' and 'end' - issue #478": function (test) {
         test.expect(2);
