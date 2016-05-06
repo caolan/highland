@@ -5,7 +5,7 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
-2.7.5
+2.8.0
 -----
 ### Bugfix
 * A Highland Stream that wraps `Readable` now properly handles the case where
@@ -19,13 +19,14 @@ this library.
 ### New additions
 * `toCallback`: method for returning the result of a stream to a
   nodejs-style callback function.
-  [#493](https://github.com/caolan/highland/pull/493)
-  Fixes [#484](https://github.com/caolan/highland/issues/484)
+  [#493](https://github.com/caolan/highland/pull/493).
+  Fixes [#484](https://github.com/caolan/highland/issues/484).
 
 ### Improvements
 * A Highland Stream that wraps a bluebird promise can now handle bluebird
   cancellation. When the promise is cancelled the wrapper stream is empty.
-  [#486](https://github.com/caolan/highland/issues/486)
+  [#487](https://github.com/caolan/highland/pull/487).
+  Fixes [#486](https://github.com/caolan/highland/issues/486).
 
 
 2.7.4
