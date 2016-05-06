@@ -1516,6 +1516,7 @@ exports['done - throw error if consumed'] = function (test) {
 };
 
 exports['toCallback - ArrayStream'] = function(test) {
+    test.expect(2);
     _([1,2,3,4]).collect().toCallback(function(err, result) {
         test.same(result, [1,2,3,4]);
         test.same(err, null);
@@ -1524,6 +1525,7 @@ exports['toCallback - ArrayStream'] = function(test) {
 }
 
 exports['toCallback - GeneratorStream'] = function (test) {
+    test.expect(2);
     _(function(push, next) {
         push(null, 1);
         push(null, 2);
@@ -1539,6 +1541,7 @@ exports['toCallback - GeneratorStream'] = function (test) {
 }
 
 exports['toCallback - returns error for streams with multiple values'] = function (test) {
+    test.expect(1);
     var s = _([1,2]).toCallback(function(err, result) {
         test.same(err.message, 'toCallback called on stream emitting multiple values')
         test.done();
@@ -1546,6 +1549,7 @@ exports['toCallback - returns error for streams with multiple values'] = functio
 }
 
 exports['toCallback - calls back without arguments for empty stream'] = function (test) {
+    test.expect(1);
     _([]).toCallback(function() {
         test.same(arguments.length, 0);
         test.done();
@@ -1553,6 +1557,7 @@ exports['toCallback - calls back without arguments for empty stream'] = function
 }
 
 exports['toCallback - returns error when stream emits error'] = function (test) {
+    test.expect(2);
     _(function(push, next) {
         push(null, 1);
         push(null, 2);
@@ -1569,7 +1574,7 @@ exports['toCallback - returns error when stream emits error'] = function (test) 
 }
 
 exports['toCallback - error handling edge cases'] = function (test) {
-    var numCalled = 0;
+    test.expect(4);
     _(function(push, next) {
         push(null, 1);
         push(new Error('Test error'));
@@ -1577,7 +1582,6 @@ exports['toCallback - error handling edge cases'] = function (test) {
     }).toCallback(function(err, result){
         test.same(err.message, 'toCallback called on stream emitting multiple values')
         test.same(result, undefined);
-        numCalled++;
     });
 
     _(function(push, next) {
@@ -1588,9 +1592,7 @@ exports['toCallback - error handling edge cases'] = function (test) {
     }).toCallback(function(err, result){
         test.same(err.message, 'toCallback called on stream emitting multiple values')
         test.same(result, undefined);
-        numCalled++;
     });
-    test.same(numCalled, 2);
     test.done();
 }
 
