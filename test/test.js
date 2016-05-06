@@ -1515,6 +1515,87 @@ exports['done - throw error if consumed'] = function (test) {
     test.done();
 };
 
+exports['toCallback - ArrayStream'] = function(test) {
+    test.expect(2);
+    _([1,2,3,4]).collect().toCallback(function(err, result) {
+        test.same(result, [1,2,3,4]);
+        test.same(err, null);
+        test.done();
+    });
+}
+
+exports['toCallback - GeneratorStream'] = function (test) {
+    test.expect(2);
+    _(function(push, next) {
+        push(null, 1);
+        push(null, 2);
+        setTimeout(function() {
+          push(null, 3);
+          push(null, _.nil);
+        }, 40);
+    }).collect().toCallback(function(err, result){
+        test.same(result, [1,2,3]);
+        test.same(err, null);
+        test.done();
+    });
+}
+
+exports['toCallback - returns error for streams with multiple values'] = function (test) {
+    test.expect(1);
+    var s = _([1,2]).toCallback(function(err, result) {
+        test.same(err.message, 'toCallback called on stream emitting multiple values')
+        test.done();
+    });
+}
+
+exports['toCallback - calls back without arguments for empty stream'] = function (test) {
+    test.expect(1);
+    _([]).toCallback(function() {
+        test.same(arguments.length, 0);
+        test.done();
+    });
+}
+
+exports['toCallback - returns error when stream emits error'] = function (test) {
+    test.expect(2);
+    _(function(push, next) {
+        push(null, 1);
+        push(null, 2);
+        setTimeout(function() {
+          push(new Error('Test error'));
+          push(null, 3);
+          push(null, _.nil);
+        }, 40);
+    }).collect().toCallback(function(err, result){
+        test.same(err.message, 'Test error');
+        test.same(result, undefined);
+        test.done();
+    });
+}
+
+exports['toCallback - error handling edge cases'] = function (test) {
+    test.expect(4);
+    _(function(push, next) {
+        push(null, 1);
+        push(new Error('Test error'));
+        push(null, _.nil);
+    }).toCallback(function(err, result){
+        test.same(err.message, 'toCallback called on stream emitting multiple values')
+        test.same(result, undefined);
+    });
+
+    _(function(push, next) {
+        push(null, 1);
+        push(null, 2);
+        push(new Error('Test error'));
+        push(null, _.nil);
+    }).toCallback(function(err, result){
+        test.same(err.message, 'toCallback called on stream emitting multiple values')
+        test.same(result, undefined);
+    });
+    test.done();
+}
+
 exports['calls generator on read'] = function (test) {
     var gen_calls = 0;
     var s = _(function (push, next) {
