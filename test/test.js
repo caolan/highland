@@ -1539,11 +1539,10 @@ exports['toCallback - GeneratorStream'] = function (test) {
 }
 
 exports['toCallback - returns error for streams with multiple values'] = function (test) {
-    var s = _([1,2]);
-    test.throws(function () {
-        s.toCallback(function () {});
+    var s = _([1,2]).toCallback(function(err, result) {
+        test.same(err.message, 'toCallback called on stream emitting multiple values')
+        test.done();
     });
-    test.done();
 }
 
 exports['toCallback - calls back without arguments for empty stream'] = function (test) {
@@ -1567,6 +1566,32 @@ exports['toCallback - returns error when stream emits error'] = function (test) 
         test.same(result, undefined);
         test.done();
     });
+}
+
+exports['toCallback - error handling edge cases'] = function (test) {
+    var numCalled = 0;
+    _(function(push, next) {
+        push(null, 1);
+        push(new Error('Test error'));
+        push(null, _.nil);
+    }).toCallback(function(err, result){
+        test.same(err.message, 'toCallback called on stream emitting multiple values')
+        test.same(result, undefined);
+        numCalled++;
+    });
+
+    _(function(push, next) {
+        push(null, 1);
+        push(null, 2);
+        push(new Error('Test error'));
+        push(null, _.nil);
+    }).toCallback(function(err, result){
+        test.same(err.message, 'toCallback called on stream emitting multiple values')
+        test.same(result, undefined);
+        numCalled++;
+    });
+    test.same(numCalled, 2);
+    test.done();
 }
 
 exports['calls generator on read'] = function (test) {
