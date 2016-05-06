@@ -57,7 +57,8 @@ var Decoder = require('string_decoder').StringDecoder;
  * arguments, and the returned value is pushed.
  *
  * **Promise -** Accepts an ES6 / jQuery style promise and returns a
- * Highland Stream which will emit a single value (or an error).
+ * Highland Stream which will emit a single value (or an error). In case you use
+ * [bluebird cancellation](http://bluebirdjs.com/docs/api/cancellation.html) Highland Stream will be empty for a cancelled promise.
  *
  * **Iterator -** Accepts an ES6 style iterator that implements the [iterator protocol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#The_.22iterator.22_protocol):
  * yields all the values from the iterator using its `next()` method and terminates when the
@@ -381,34 +382,81 @@ function nop() {
 }
 
 function pipeReadable(xs, stream) {
+    var streamEnded = false;
+
     // write any errors into the stream
     xs.on('error', writeStreamError);
+
+    // We need to bind to 'close' because not all streams will emit 'end' when
+    // they are done. For example, FS streams that try to read a non-existant
+    // file.
+    xs.once('close', tryEndStream);
+
+    // We need to bind to 'end' because some streams will emit *both* 'end'
+    // and 'close'. For example, FS streams that complete successfully. Such
+    // streams should not cause Stream#end() to be called twice. Well-behaved
+    // streams should call 'close' after 'end', so we don't have to worry
+    // about finding out about the end of the stream after emitEnd has been
+    // executed.
+    xs.once('end', recordStreamEnded);
+
     xs.pipe(stream);
 
     // TODO: Replace with onDestroy in v3.
     stream._destructors.push(function () {
+        xs.removeListener('error', writeStreamError);
+        xs.removeListener('close', tryEndStream);
+        xs.removeListener('end', recordStreamEnded);
+
         if (xs.unpipe) {
             xs.unpipe(stream);
         }
-        xs.removeListener('error', writeStreamError);
     });
 
     function writeStreamError(err) {
         stream.write(new StreamError(err));
+        tryEndStream();
+    }
+
+    function recordStreamEnded() {
+        streamEnded = true;
+    }
+
+    function tryEndStream() {
+        if (!streamEnded) {
+            streamEnded = true;
+            stream.end();
+        }
     }
 }
 
 function promiseStream(promise) {
-    return _(function (push) {
-        promise.then(function (value) {
-                push(null, value);
-                return push(null, nil);
-            },
-            function (err) {
-                push(err);
-                return push(null, nil);
-            });
-    });
+    if (_.isFunction(promise['finally'])) { // eslint-disable-line dot-notation
+        // Using finally handles also bluebird promise cancellation
+        return _(function (push) {
+            promise.then(function (value) {
+                    return push(null, value);
+                },
+                function (err) {
+                    return push(err);
+                })['finally'](function () { // eslint-disable-line dot-notation
+                    return push(null, nil);
+                });
+        });
+    }
+    else {
+        // Sticking to promise standard only
+        return _(function (push) {
+            promise.then(function (value) {
+                    push(null, value);
+                    return push(null, nil);
+                },
+                function (err) {
+                    push(err);
+                    return push(null, nil);
+                });
+        });
+    }
 }
 
 function iteratorStream(it) {
@@ -1531,8 +1579,9 @@ exposeMethod('stopOnError');
  * Iterates over every value from the Stream, calling the iterator function
  * on each of them. This method consumes the Stream.
  *
- * If an error from the Stream reaches the `each` call, it will emit an
- * error event (which will cause it to throw if unhandled).
+ * If an error from the Stream reaches this call, it will emit an `error` event
+ * (i.e., it will call `emit('error')` on the stream being consumed).  This
+ * event will cause an error to be thrown if unhandled.
  *
  * While `each` consumes the stream, it is possible to chain [done](#done) (and
  * *only* `done`) after it.
@@ -1600,8 +1649,9 @@ exposeMethod('apply');
  * Collects all values from a Stream into an Array and calls a function with
  * the result. This method consumes the stream.
  *
- * If an error from the Stream reaches the `toArray` call, it will emit an
- * error event (which will cause it to throw if unhandled).
+ * If an error from the Stream reaches this call, it will emit an `error` event
+ * (i.e., it will call `emit('error')` on the stream being consumed).  This
+ * event will cause an error to be thrown if unhandled.
  *
  * @id toArray
  * @section Consumption
@@ -1630,8 +1680,9 @@ Stream.prototype.toArray = function (f) {
  * Calls a function once the Stream has ended. This method consumes the stream.
  * If the Stream has already ended, the function is called immediately.
  *
- * If an error from the Stream reaches the `done` call, it will emit an
- * error event (which will cause it to throw if unhandled).
+ * If an error from the Stream reaches this call, it will emit an `error` event
+ * (i.e., it will call `emit('error')` on the stream being consumed).  This
+ * event will cause an error to be thrown if unhandled.
  *
  * As a special case, it is possible to chain `done` after a call to
  * [each](#each) even though both methods consume the stream.
@@ -1665,6 +1716,64 @@ Stream.prototype.done = function (f) {
         }
         else {
             next();
+        }
+    }).resume();
+};
+
+/**
+ * Returns the result of a stream to a nodejs-style callback function.
+ *
+ * If the stream contains a single value, it will call `cb`
+ * with the single item emitted by the stream (if present).
+ * If the stream is empty, `cb` will be called without any arguments.
+ * If an error is encountered in the stream, this function will stop
+ * consumption and call `cb` with the error.
+ * If the stream contains more than one item, it will throw an error.
+ *
+ * @id toCallback
+ * @section Consumption
+ * @name Stream.toCallback(cb)
+ * @param {Function} cb - the callback to provide the error/result to
+ * @api public
+ *
+ * _([1, 2, 3, 4]).collect().toCallback(function (err, result) {
+ *     // parameter result will be [1,2,3,4]
+ *     // parameter err will be null
+ * });
+ */
+
+Stream.prototype.toCallback = function (cb) {
+    var value;
+    var hasValue = false; // In case an emitted value === null or === undefined.
+
+    this.consume(function (err, x, push, next) {
+        if (err) {
+            push(null, nil);
+            if (hasValue) {
+                cb(new Error('toCallback called on stream emitting multiple values'));
+            }
+            else {
+                cb(err);
+            }
+        }
+        else if (x === nil) {
+            if (hasValue) {
+              cb(null, value);
+            }
+            else {
+              cb();
+            }
+        }
+        else {
+            if (hasValue) {
+                push(null, nil);
+                cb(new Error('toCallback called on stream emitting multiple values'));
+            }
+            else {
+                value = x;
+                hasValue = true;
+                next();
+            }
         }
     }).resume();
 };
