@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars, no-shadow, no-redeclare */
 var _, EventEmitter = require('events').EventEmitter,
     through = require('through'),
     sinon = require('sinon'),
