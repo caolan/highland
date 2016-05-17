@@ -2369,7 +2369,7 @@ exports['observe - observers should be destroyed (issue #208)'] = function (test
     test.expect(6);
     var s = _([]),
         o = s.observe();
-    o2 = o.observe();
+    var o2 = o.observe();
 
     test.same(o2.source, o, 'o2.source should not be null before destroy.');
     test.same(o._observers, [o2], 'o._observers should not be empty before destroy.');
