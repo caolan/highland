@@ -68,7 +68,7 @@ function anyError(test) {
 function noValueOnErrorTest(transform, expected) {
     return function (test) {
         test.expect(1);
-        if (!expected) expected = [];
+        if (!expected) { expected = []; }
         var thrower = _([1]).map(function () { throw new Error('error'); });
         transform(thrower).errors(function () {}).toArray(function (xs) {
             test.same(xs, expected, 'Value emitted for error');
@@ -1070,8 +1070,9 @@ exports['errors - rethrows + forwarding different stream'] = function (test) {
     var s2 = _(function (push, next) {
         s.pull(function (err, val) {
             push(err, val);
-            if (val !== _.nil)
+            if (val !== _.nil) {
                 next();
+            }
         });
     });
 
@@ -1151,8 +1152,9 @@ exports['stopOnError - rethrows + forwarding different stream'] = function (test
     var s2 = _(function (push, next) {
         s.pull(function (err, val) {
             push(err, val);
-            if (val !== _.nil)
+            if (val !== _.nil) {
                 next();
+            }
         });
     });
 
@@ -2645,7 +2647,7 @@ exports['reduce - argument function throws'] = function (test) {
     test.expect(2);
     var err = new Error('error');
     var s = _([1, 2, 3, 4, 5]).reduce(0, function (memo, x) {
-        if (x === 3) throw err;
+        if (x === 3) { throw err; }
         return memo + x;
     });
 
@@ -2709,7 +2711,7 @@ exports['reduce1 - argument function throws'] = function (test) {
     test.expect(2);
     var err = new Error('error');
     var s = _([1, 2, 3, 4, 5]).reduce1(function (memo, x) {
-        if (x === 3) throw err;
+        if (x === 3) { throw err; }
         return memo + x;
     });
 
@@ -2772,7 +2774,7 @@ exports['scan - argument function throws'] = function (test) {
     test.expect(5);
     var err = new Error('error');
     var s = _([1, 2, 3, 4, 5]).scan(0, function (memo, x) {
-        if (x === 3) throw err;
+        if (x === 3) { throw err; }
         return memo + x;
     });
 
@@ -2863,7 +2865,7 @@ exports['scan1 - argument function throws'] = function (test) {
     test.expect(4);
     var err = new Error('error');
     var s = _([1, 2, 3, 4, 5]).scan1(function (memo, x) {
-        if (x === 3) throw err;
+        if (x === 3) { throw err; }
         return memo + x;
     });
 
@@ -3669,7 +3671,7 @@ exports['map - argument function throws'] = function (test) {
     test.expect(6);
     var err = new Error('error');
     var s = _([1, 2, 3, 4, 5]).map(function (x) {
-        if (x === 3) throw err;
+        if (x === 3) { throw err; }
         return x + 1;
     });
 
@@ -3777,9 +3779,9 @@ exports['flatMap - argument function throws'] = function (test) {
     test.expect(4);
     var err = new Error('error');
     var s = _([1, 2, 3, 4]).flatMap(function (x) {
-        if (x === 1) return _([x]);
-        if (x === 2) throw err;
-        if (x === 3) return _([]);
+        if (x === 1) { return _([x]); }
+        if (x === 2) { throw err; }
+        if (x === 3) { return _([]); }
         return true;
     });
 
@@ -4169,8 +4171,8 @@ exports['filter - argument function throws'] = function (test) {
     test.expect(3);
     var err = new Error('error');
     var s = _([1, 2, 3]).filter(function (x) {
-        if (x === 2) throw err;
-        if (x === 3) return false;
+        if (x === 2) { throw err; }
+        if (x === 3) { return false; }
         return true;
     });
 
@@ -4225,9 +4227,9 @@ exports['flatFilter - argument function throws'] = function (test) {
     test.expect(4);
     var err = new Error('error');
     var s = _([1, 2, 3, 4]).flatFilter(function (x) {
-        if (x === 1) return _([false]);
-        if (x === 2) throw err;
-        if (x === 3) return _([]);
+        if (x === 1) { return _([false]); }
+        if (x === 2) { throw err; }
+        if (x === 3) { return _([]); }
         return true;
     });
 
@@ -4353,7 +4355,7 @@ exports['find - argument function throws'] = function (test) {
     test.expect(4);
     var err = new Error('error');
     var s = _([1, 2, 3, 4, 5]).find(function (x) {
-        if (x < 3) throw err;
+        if (x < 3) { throw err; }
         return true;
     });
 
@@ -4506,7 +4508,7 @@ exports['find - GeneratorStream'] = function (test) {
         test.expect(2);
         var err = new Error('error');
         var s = _([1, 2, 3, 4, 5]).group(function (x) {
-            if (x === 5) throw err;
+            if (x === 5) { throw err; }
             return x % 2 == 0 ? 'even' : 'odd';
         });
 
@@ -4705,7 +4707,12 @@ exports.uniqBy = function(test) {
 exports['uniqBy - compare error'] = function(test) {
     test.expect(4);
     var xs = ['blue', 'red', 'red', 'yellow', 'blue', 'red'];
-    var s = _.uniqBy(function(a, b) { if (a === 'yellow') throw new Error('yellow'); return a === b; }, xs);
+    var s = _.uniqBy(function(a, b) {
+        if (a === 'yellow') {
+            throw new Error('yellow');
+        }
+        return a === b;
+    }, xs);
     s.pull(function(err, x) {
         test.equal(x, 'blue');
     });
