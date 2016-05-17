@@ -556,7 +556,7 @@ exports.constructor = {
         test.expect(1);
         var Readable = Stream.Readable;
 
-        var rs = new Readable;
+        var rs = new Readable();
         rs.next = function() {};
         rs.push('a');
         rs.push('b');
@@ -3445,7 +3445,7 @@ exports.merge = {
         test.expect(1);
 
         var s = _(function (push, next) {
-            push(new Error);
+            push(new Error());
             push(null, _.nil);
         });
         _([s])
