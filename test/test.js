@@ -1880,6 +1880,7 @@ exports.pipe = {
                 });
                 return false;
             }
+            return true;
         };
         dest.end = function () {
             test.same(xs, [1, 2, 3, 4]);
@@ -2007,6 +2008,7 @@ exports['wrap node stream and pipe'] = function (test) {
             });
             return false;
         }
+        return true;
     };
     dest.end = function () {
         test.same(xs, [2, 4, 6, 8]);
