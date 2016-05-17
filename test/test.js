@@ -717,7 +717,7 @@ if (global.Map && global.Symbol) {
 
     exports['constructor from Map'] = function (test) {
         test.expect(1);
-        var map = new Map();
+        var map = new global.Map();
         map.set('a', 1);
         map.set('b', 2);
         map.set('c', 3);
@@ -730,7 +730,7 @@ if (global.Map && global.Symbol) {
 
     exports['constructor from Map iterator'] = function (test) {
         test.expect(1);
-        var map = new Map();
+        var map = new global.Map();
         map.set('a', 1);
         map.set('b', 2);
         map.set('c', 3);
@@ -743,7 +743,7 @@ if (global.Map && global.Symbol) {
 
     exports['constructor from empty Map iterator'] = function (test) {
         test.expect(1);
-        var map = new Map();
+        var map = new global.Map();
 
         _(map.entries()).toArray(function (xs) {
             test.same(xs, []);
@@ -757,7 +757,7 @@ if (global.Set && global.Symbol) {
 
     exports['constructor from Set'] = function (test) {
         test.expect(1);
-        var sett = new Set([1, 2, 2, 3, 4]);
+        var sett = new global.Set([1, 2, 2, 3, 4]);
 
         _(sett).toArray(function (xs) {
             test.same(xs, [1, 2, 3, 4]);
@@ -767,7 +767,7 @@ if (global.Set && global.Symbol) {
 
     exports['constructor from Set iterator'] = function (test) {
         test.expect(1);
-        var sett = new Set([1, 2, 2, 3, 4]);
+        var sett = new global.Set([1, 2, 2, 3, 4]);
 
         _(sett.values()).toArray(function (xs) {
             test.same(xs, [1, 2, 3, 4]);
@@ -777,7 +777,7 @@ if (global.Set && global.Symbol) {
 
     exports['constructor from empty Map iterator'] = function (test) {
         test.expect(1);
-        var sett = new Set();
+        var sett = new global.Set();
 
         _(sett.values()).toArray(function (xs) {
             test.same(xs, []);
