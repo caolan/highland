@@ -112,7 +112,7 @@ function takeNext(xs, times, array) {
 }
 
 
-exports['ratelimit'] = {
+exports.ratelimit = {
     setUp: function (callback) {
         this.clock = sinon.useFakeTimers();
         callback();
@@ -218,7 +218,7 @@ exports['ratelimit'] = {
 
 exports['ratelimit - noValueOnError'] = noValueOnErrorTest(_.ratelimit(1, 10));
 
-exports['curry'] = function (test) {
+exports.curry = function (test) {
     var fn = _.curry(function (a, b, c, d) {
         return a + b + c + d;
     });
@@ -232,7 +232,7 @@ exports['curry'] = function (test) {
     test.done();
 };
 
-exports['ncurry'] = function (test) {
+exports.ncurry = function (test) {
     var fn = _.ncurry(3, function (a, b, c, d) {
         return a + b + c + (d || 0);
     });
@@ -248,7 +248,7 @@ exports['ncurry'] = function (test) {
     test.done();
 };
 
-exports['compose'] = function (test) {
+exports.compose = function (test) {
     function append(x) {
         return function (str) {
             return str + x;
@@ -263,7 +263,7 @@ exports['compose'] = function (test) {
     test.done();
 };
 
-exports['partial'] = function (test) {
+exports.partial = function (test) {
     var addAll = function () {
         var args = Array.prototype.slice.call(arguments);
         return args.reduce(function (a, b) { return a + b; }, 0);
@@ -273,7 +273,7 @@ exports['partial'] = function (test) {
     test.done();
 };
 
-exports['flip'] = function (test) {
+exports.flip = function (test) {
     var subtract = function (a, b) {
         return a - b;
     };
@@ -284,7 +284,7 @@ exports['flip'] = function (test) {
     test.done();
 };
 
-exports['seq'] = function (test) {
+exports.seq = function (test) {
     function append(x) {
         return function (str) {
             return str + x;
@@ -299,7 +299,7 @@ exports['seq'] = function (test) {
     test.done();
 };
 
-exports['isStream'] = function (test) {
+exports.isStream = function (test) {
     test.ok(!_.isStream());
     test.ok(!_.isStream(undefined));
     test.ok(!_.isStream(null));
@@ -327,7 +327,7 @@ exports['nil should not equate to any empty object'] = function (test) {
     });
 };
 
-exports['pull'] = {
+exports.pull = {
     'pull should take one element - ArrayStream': function (test) {
         test.expect(2);
         var s = _([1, 2, 3]);
@@ -442,7 +442,7 @@ exports['consume - fork after consume should not throw (issue #366)'] = function
     }
 };
 
-exports['race'] = {
+exports.race = {
     setUp: function (callback) {
         this.clock = sinon.useFakeTimers();
         callback();
@@ -513,7 +513,7 @@ exports['race'] = {
     }
 };
 
-exports['constructor'] = {
+exports.constructor = {
     setUp: function (callback) {
         this.createTestIterator = function(array, error, lastVal) {
             var count = 0,
@@ -1013,7 +1013,7 @@ exports['consume - throws error if next called after nil'] = function (test) {
     test.done();
 };
 
-exports['errors'] = function (test) {
+exports.errors = function (test) {
     var errs = [];
     var err1 = new Error('one');
     var err2 = new Error('two');
@@ -1119,7 +1119,7 @@ exports['errors - GeneratorStream'] = function (test) {
     });
 };
 
-exports['stopOnError'] = function (test) {
+exports.stopOnError = function (test) {
     var errs = [];
     var err1 = new Error('one');
     var err2 = new Error('two');
@@ -1199,7 +1199,7 @@ exports['stopOnError - GeneratorStream'] = function (test) {
     });
 };
 
-exports['apply'] = function (test) {
+exports.apply = function (test) {
     test.expect(8);
     var fn = function (a, b, c) {
         test.equal(arguments.length, 3);
@@ -1250,7 +1250,7 @@ exports['apply - GeneratorStream'] = function (test) {
     });
 };
 
-exports['take'] = function (test) {
+exports.take = function (test) {
     test.expect(3);
     var s = _([1, 2, 3, 4]).take(2);
     s.pull(function (err, x) {
@@ -1265,7 +1265,7 @@ exports['take'] = function (test) {
     test.done();
 };
 
-exports['slice'] = {
+exports.slice = {
     setUp: function (cb) {
         this.input = [1, 2, 3, 4, 5];
         this.expected = [3, 4, 5];
@@ -1353,7 +1353,7 @@ exports['take 1'] = function (test) {
     test.done();
 };
 
-exports['drop'] = {
+exports.drop = {
     setUp: function (cb) {
         this.input = [1, 2, 3, 4, 5];
         this.expected = [3, 4, 5];
@@ -1398,7 +1398,7 @@ exports['drop'] = {
     'noValueOnError': noValueOnErrorTest(_.drop(2))
 };
 
-exports['head'] = function (test) {
+exports.head = function (test) {
     test.expect(2);
     var s = _([2, 1]).head();
     s.pull(function (err, x) {
@@ -1412,7 +1412,7 @@ exports['head'] = function (test) {
 
 exports['head - noValueOnError'] = noValueOnErrorTest(_.head());
 
-exports['each'] = function (test) {
+exports.each = function (test) {
     var calls = [];
     _.each(function (x) {
         calls.push(x);
@@ -1466,7 +1466,7 @@ exports['each - throw error if consumed'] = function (test) {
     test.done();
 };
 
-exports['done'] = function (test) {
+exports.done = function (test) {
     test.expect(3);
 
     var calls = [];
@@ -1809,7 +1809,7 @@ exports['lazily evalute stream'] = function (test) {
     test.done();
 };
 
-exports['pipe'] = {
+exports.pipe = {
     'old-style node stream to highland stream': function (test) {
         var xs = [];
         var src = streamify([1, 2, 3, 4]);
@@ -1943,7 +1943,7 @@ exports['pipe'] = {
 
 // ignore these tests in non-node.js environments
 if (typeof process !== 'undefined' && process.stdout) {
-    exports['pipe']['highland stream to stdout'] = function (test) {
+    exports.pipe['highland stream to stdout'] = function (test) {
         test.expect(1);
         var src = _(['']);
         test.doesNotThrow(function () {
@@ -1952,7 +1952,7 @@ if (typeof process !== 'undefined' && process.stdout) {
         test.done();
     };
 
-    exports['pipe']['highland stream to stdout with {end:true}'] = function (test) {
+    exports.pipe['highland stream to stdout with {end:true}'] = function (test) {
         test.expect(1);
         var src = _(['']);
         test.doesNotThrow(function () {
@@ -1964,7 +1964,7 @@ if (typeof process !== 'undefined' && process.stdout) {
 
 // ignore these tests in non-node.js environments
 if (typeof process !== 'undefined' && process.stderr) {
-    exports['pipe']['highland stream to stderr'] = function (test) {
+    exports.pipe['highland stream to stderr'] = function (test) {
         test.expect(1);
         var src = _(['']);
         test.doesNotThrow(function () {
@@ -1973,7 +1973,7 @@ if (typeof process !== 'undefined' && process.stderr) {
         test.done();
     };
 
-    exports['pipe']['highland stream to stderr with {end:true}'] = function (test) {
+    exports.pipe['highland stream to stderr with {end:true}'] = function (test) {
         test.expect(1);
         var src = _(['']);
         test.doesNotThrow(function () {
@@ -2154,7 +2154,7 @@ exports['wrap EventEmitter default mapper discards all but first arg'] = functio
     });
 };
 
-exports['sequence'] = function (test) {
+exports.sequence = function (test) {
     _.sequence([[1, 2], [3], [[4], 5]]).toArray(function (xs) {
         test.same(xs, [1, 2, 3, [4], 5]);
     });
@@ -2238,7 +2238,7 @@ exports['sequence - Streams of Streams of Arrays'] = function (test) {
     });
 };
 
-exports['fork'] = function (test) {
+exports.fork = function (test) {
     var s = _([1, 2, 3, 4]);
     s.id = 's';
     var s2 = s.map(function (x) {
@@ -2279,7 +2279,7 @@ exports['fork'] = function (test) {
     test.done();
 };
 
-exports['observe'] = function (test) {
+exports.observe = function (test) {
     var s = _([1, 2, 3, 4]);
     s.id = 's';
     var s2 = s.map(function (x) {
@@ -2413,7 +2413,7 @@ exports['observe - observe consume before source emit should not throw'] = funct
 // TODO: test redirect after fork, forked streams should transfer over
 // TODO: test redirect after observe, observed streams should transfer over
 
-exports['flatten'] = function (test) {
+exports.flatten = function (test) {
     _.flatten([1, [2, [3, 4], 5], [6]]).toArray(function (xs) {
         test.same(xs, [1, 2, 3, 4, 5, 6]);
         test.done();
@@ -2473,7 +2473,7 @@ exports['flatten - nested GeneratorStreams'] = function (test) {
     });
 };
 
-exports['otherwise'] = function (test) {
+exports.otherwise = function (test) {
     test.expect(5);
     _.otherwise(_([4, 5, 6]), _([1, 2, 3])).toArray(function (xs) {
         test.same(xs, [1, 2, 3]);
@@ -2587,7 +2587,7 @@ exports['otherwise - function'] = function (test) {
     test.done();
 };
 
-exports['append'] = function (test) {
+exports.append = function (test) {
     test.expect(2);
     _.append(4, [1, 2, 3]).toArray(function (xs) {
         test.same(xs, [1, 2, 3, 4]);
@@ -2621,7 +2621,7 @@ exports['append - GeneratorStream'] = function (test) {
     });
 };
 
-exports['reduce'] = function (test) {
+exports.reduce = function (test) {
     test.expect(3);
     function add(a, b) {
         return a + b;
@@ -2683,7 +2683,7 @@ exports['reduce - GeneratorStream'] = function (test) {
     });
 };
 
-exports['reduce1'] = function (test) {
+exports.reduce1 = function (test) {
     test.expect(3);
     function add(a, b) {
         return a + b;
@@ -2748,7 +2748,7 @@ exports['reduce1 - GeneratorStream'] = function (test) {
 };
 
 
-exports['scan'] = function (test) {
+exports.scan = function (test) {
     test.expect(3);
     function add(a, b) {
         return a + b;
@@ -2838,7 +2838,7 @@ exports['scan - GeneratorStream lazy'] = function (test) {
     });
 };
 
-exports['scan1'] = function (test) {
+exports.scan1 = function (test) {
     test.expect(3);
     function add(a, b) {
         return a + b;
@@ -2928,7 +2928,7 @@ exports['scan1 - GeneratorStream lazy'] = function (test) {
     });
 };
 
-exports['collect'] = function (test) {
+exports.collect = function (test) {
     _.collect([1, 2, 3, 4]).toArray(function (xs) {
         test.same(xs, [[1, 2, 3, 4]]);
         test.done();
@@ -2960,7 +2960,7 @@ exports['collect - GeneratorStream'] = function (test) {
     });
 };
 
-exports['transduce'] = {
+exports.transduce = {
     setUp: function (cb) {
         var self = this;
         this.xf = transducers.map(_.add(1));
@@ -3106,7 +3106,7 @@ exports['transduce'] = {
     }
 };
 
-exports['concat'] = function (test) {
+exports.concat = function (test) {
     test.expect(2);
     _.concat([3, 4], [1, 2]).toArray(function (xs) {
         test.same(xs, [1, 2, 3, 4]);
@@ -3184,7 +3184,7 @@ exports['concat - GeneratorStream'] = function (test) {
     });
 };
 
-exports['merge'] = {
+exports.merge = {
     setUp: function (callback) {
         this.clock = sinon.useFakeTimers();
         callback();
@@ -3454,7 +3454,7 @@ exports['merge'] = {
     }
 };
 
-exports['mergeWithLimit'] = {
+exports.mergeWithLimit = {
     setUp: function (callback) {
         this.clock = sinon.useFakeTimers();
         this.__delay = function (n){
@@ -3528,7 +3528,7 @@ exports['mergeWithLimit'] = {
     'noValueOnError': noValueOnErrorTest(_.mergeWithLimit(1))
 };
 
-exports['invoke'] = function (test) {
+exports.invoke = function (test) {
     test.expect(2);
     _.invoke('toString', [], [1, 2, 3, 4]).toArray(function (xs) {
         test.same(xs, ['1', '2', '3', '4']);
@@ -3565,7 +3565,7 @@ exports['invoke - GeneratorStream'] = function (test) {
     });
 };
 
-exports['nfcall'] = function (test) {
+exports.nfcall = function (test) {
     test.expect(4);
 
     function add(n) {
@@ -3648,7 +3648,7 @@ exports['nfcall - parallel result ordering'] = function (test) {
     });
 };
 
-exports['map'] = function (test) {
+exports.map = function (test) {
     test.expect(2);
     function doubled(x) {
         return x * 2;
@@ -3722,7 +3722,7 @@ exports['map to value'] = function (test) {
     test.done();
 };
 
-exports['doto'] = function (test) {
+exports.doto = function (test) {
     test.expect(4);
 
     var seen;
@@ -3756,7 +3756,7 @@ exports['tap - doto alias'] = function (test) {
     test.done();
 };
 
-exports['flatMap'] = function (test) {
+exports.flatMap = function (test) {
     var f = function (x) {
         return _(function (push, next) {
             setTimeout(function () {
@@ -3840,7 +3840,7 @@ exports['flatMap - map to Stream of Array'] = function (test) {
     });
 };
 
-exports['pluck'] = function (test) {
+exports.pluck = function (test) {
     var a = _([
         {type: 'blogpost', title: 'foo'},
         {type: 'blogpost', title: 'bar'},
@@ -3866,7 +3866,7 @@ exports['pluck - non-object argument'] = function (test) {
 };
 
 
-exports['pick'] = function (test) {
+exports.pick = function (test) {
     test.expect(2);
     var a = _([
         {breed: 'chihuahua', name: 'Princess', age: 5},
@@ -3979,7 +3979,7 @@ exports['pick - non-enumerable properties'] = function (test) {
     test.done();
 };
 
-exports['pickBy'] = function (test) {
+exports.pickBy = function (test) {
     test.expect(4);
 
     var objs = [{a: 1, _a: 2}, {a: 1, _c: 3}];
@@ -4148,7 +4148,7 @@ exports['pickBy - overridden properties'] = function (test) {
 };
 
 
-exports['filter'] = function (test) {
+exports.filter = function (test) {
     test.expect(2);
     function isEven(x) {
         return x % 2 === 0;
@@ -4209,7 +4209,7 @@ exports['filter - GeneratorStream'] = function (test) {
     });
 };
 
-exports['flatFilter'] = function (test) {
+exports.flatFilter = function (test) {
     var f = function (x) {
         return _([x % 2 === 0]);
     };
@@ -4277,7 +4277,7 @@ exports['flatFilter - GeneratorStream'] = function (test) {
     });
 };
 
-exports['reject'] = function (test) {
+exports.reject = function (test) {
     test.expect(2);
     function isEven(x) {
         return x % 2 === 0;
@@ -4323,7 +4323,7 @@ exports['reject - GeneratorStream'] = function (test) {
     });
 };
 
-exports['find'] = function (test) {
+exports.find = function (test) {
     test.expect(2);
     var xs = [
         {type: 'foo', name: 'wibble'},
@@ -4444,7 +4444,7 @@ exports['find - GeneratorStream'] = function (test) {
 
     var s = 'type';
 
-    exports['group'] = function (test) {
+    exports.group = function (test) {
         test.expect(8);
 
         _.group(f, xs).toArray(function (xs) {
@@ -4548,7 +4548,7 @@ exports['find - GeneratorStream'] = function (test) {
 }(exports));
 
 
-exports['compact'] = function (test) {
+exports.compact = function (test) {
     test.expect(1);
     _.compact([0, 1, false, 3, undefined, null, 6]).toArray(function (xs) {
         test.same(xs, [1, 3, 6]);
@@ -4565,7 +4565,7 @@ exports['compact - ArrayStream'] = function (test) {
     });
 };
 
-exports['where'] = function (test) {
+exports.where = function (test) {
     test.expect(2);
     var xs = [
         {type: 'foo', name: 'wibble'},
@@ -4637,7 +4637,7 @@ exports['where - GeneratorStream'] = function (test) {
     });
 };
 
-exports['findWhere'] = function (test) {
+exports.findWhere = function (test) {
     test.expect(2);
     var xs = [
         {type: 'foo', name: 'wibble'},
@@ -4693,7 +4693,7 @@ exports['findWhere - GeneratorStream'] = function (test) {
     });
 };
 
-exports['uniqBy'] = function(test) {
+exports.uniqBy = function(test) {
     test.expect(1);
     var xs = ['blue', 'red', 'red', 'yellow', 'blue', 'red'];
     _.uniqBy(function(a, b) { return a[1] === b[1]; }, xs).toArray(function(xs) {
@@ -4723,7 +4723,7 @@ exports['uniqBy - compare error'] = function(test) {
 
 exports['uniqBy - noValueOnError'] = noValueOnErrorTest(_.uniqBy(function(a, b) { return a === b; }));
 
-exports['uniq'] = function(test) {
+exports.uniq = function(test) {
     test.expect(1);
     var xs = ['blue', 'red', 'red', 'yellow', 'blue', 'red'];
     _.uniq(xs).toArray(function(xs) {
@@ -4747,7 +4747,7 @@ exports['uniq - preserves Nan'] = function(test) {
 
 exports['uniq - noValueOnError'] = noValueOnErrorTest(_.uniq());
 
-exports['zip'] = function (test) {
+exports.zip = function (test) {
     test.expect(2);
     _.zip([1, 2, 3], ['a', 'b', 'c']).toArray(function (xs) {
         test.same(xs, [['a', 1], ['b', 2], ['c', 3]]);
@@ -4822,7 +4822,7 @@ exports['zip - GeneratorStream'] = function (test) {
     });
 };
 
-exports['zipAll'] = function (test) {
+exports.zipAll = function (test) {
     test.expect(3);
     _.zipAll([[4, 5, 6], [7, 8, 9], [10, 11, 12]], [1, 2, 3]).toArray(function (xs) {
         test.same(xs, [[1, 4, 7, 10], [2, 5, 8, 11], [3, 6, 9, 12]]);
@@ -4903,7 +4903,7 @@ exports['zipAll - Differing length streams'] = function (test) {
     test.done();
 };
 
-exports['zipAll0'] = {
+exports.zipAll0 = {
     setUp: function (cb) {
         this.input = [
             _([1, 2, 3]),
@@ -5000,7 +5000,7 @@ exports['zipAll0'] = {
     }
 };
 
-exports['batch'] = function (test) {
+exports.batch = function (test) {
     test.expect(5);
     _.batch(3, [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]).toArray(function (xs) {
         test.same(xs, [[1, 2, 3], [4, 5, 6], [7, 8, 9], [0]]);
@@ -5069,7 +5069,7 @@ exports['batch - GeneratorStream'] = function (test) {
     });
 };
 
-exports['batchWithTimeOrCount'] = {
+exports.batchWithTimeOrCount = {
     setUp: function (callback) {
         this.clock = sinon.useFakeTimers();
 
@@ -5126,7 +5126,7 @@ exports['batchWithTimeOrCount'] = {
 
 exports['batchWithTimeOrCount - noValueOnError'] = noValueOnErrorTest(_.batchWithTimeOrCount(10, 2));
 
-exports['splitBy'] = function(test) {
+exports.splitBy = function(test) {
     test.expect(3);
     _.splitBy('ss', ['mis', 'si', 's', 'sippi']).toArray(function(xs) {
         test.same(xs, 'mississippi'.split('ss'));
@@ -5194,7 +5194,7 @@ exports['splitBy - GeneratorStream'] = function (test) {
     });
 };
 
-exports['split'] = function (test) {
+exports.split = function (test) {
     test.expect(3);
     _(['a\n', 'b\nc\n', 'd', '\ne']).split().toArray(function(xs) {
         test.same(xs, 'abcde'.split(''));
@@ -5209,7 +5209,7 @@ exports['split'] = function (test) {
     test.done();
 };
 
-exports['intersperse'] = function(test) {
+exports.intersperse = function(test) {
     test.expect(4);
     _.intersperse('n', ['ba', 'a', 'a']).toArray(function (xs) {
         test.same(xs.join(''), 'banana');
@@ -5260,7 +5260,7 @@ exports['intersperse - GeneratorStream'] = function(test) {
     });
 };
 
-exports['parallel'] = function (test) {
+exports.parallel = function (test) {
     var calls = [];
     var s1 = _(function (push, next) {
         setTimeout(function () {
@@ -5601,7 +5601,7 @@ exports['parallel - should throw if arg is not positive'] = function (test) {
     test.done();
 };
 
-exports['throttle'] = {
+exports.throttle = {
     setUp: function (callback) {
         this.clock = sinon.useFakeTimers();
         callback();
@@ -5688,7 +5688,7 @@ exports['throttle'] = {
     'noValueOnError': noValueOnErrorTest(_.throttle(10))
 };
 
-exports['debounce'] = {
+exports.debounce = {
     setUp: function (callback) {
         this.clock = sinon.useFakeTimers();
         callback();
@@ -5775,7 +5775,7 @@ exports['debounce'] = {
     'noValueOnError': noValueOnErrorTest(_.debounce(10))
 };
 
-exports['latest'] = {
+exports.latest = {
     setUp: function (callback) {
         this.clock = sinon.useFakeTimers();
         callback();
@@ -5888,7 +5888,7 @@ exports['latest'] = {
     }
 };
 
-exports['last'] = function (test) {
+exports.last = function (test) {
     test.expect(3);
     _([1, 2, 3, 4]).last().toArray(function (xs) {
         test.same(xs, [4]);
@@ -5904,7 +5904,7 @@ exports['last'] = function (test) {
 
 exports['last - noValueOnError'] = noValueOnErrorTest(_.last());
 
-exports['sortBy'] = {
+exports.sortBy = {
     setUp: function (cb) {
         this.input = [5, 2, 4, 1, 3];
         this.reversed = [5, 4, 3, 2, 1];
@@ -5932,7 +5932,7 @@ exports['sortBy'] = {
     'noValueOnError': noValueOnErrorTest(_.sortBy(this.compDesc))
 };
 
-exports['sort'] = {
+exports.sort = {
     setUp: function (cb) {
         this.input = ['e', 'a', 'd', 'c', 'b'];
         this.sorted = ['a', 'b', 'c', 'd', 'e'];
@@ -5957,7 +5957,7 @@ exports['sort'] = {
     'noValueOnError': noValueOnErrorTest(_.sort())
 };
 
-exports['through'] = {
+exports.through = {
     setUp: function (cb) {
         this.parser = through(
             function (data) {
@@ -6060,7 +6060,7 @@ exports['through'] = {
     }
 };
 
-exports['pipeline'] = {
+exports.pipeline = {
     'usage test': function (test) {
         var parser = through(
             function (data) {
@@ -6178,7 +6178,7 @@ exports['pipeline'] = {
 
 
 // TODO: test lazy getting of values from obj keys (test using getters?)
-exports['values'] = function (test) {
+exports.values = function (test) {
     var obj = {
         foo: 1,
         bar: 2,
@@ -6204,7 +6204,7 @@ exports['values - lazy property access'] = function (test) {
     });
 };
 
-exports['keys'] = function (test) {
+exports.keys = function (test) {
     test.expect(2);
     var obj = {
         foo: 1,
@@ -6228,7 +6228,7 @@ exports['keys'] = function (test) {
     test.done();
 };
 
-exports['pairs'] = function (test) {
+exports.pairs = function (test) {
     var obj = {
         foo: 1,
         bar: 2,
@@ -6261,7 +6261,7 @@ exports['pairs - lazy property access'] = function (test) {
     });
 };
 
-exports['extend'] = function (test) {
+exports.extend = function (test) {
     test.expect(8);
     var a = {a: 1, b: {num: 2, test: 'test'}};
 
@@ -6283,14 +6283,14 @@ exports['extend'] = function (test) {
     test.done();
 };
 
-exports['get'] = function (test) {
+exports.get = function (test) {
     var a = {foo: 'bar', baz: 123};
     test.equal(_.get('foo', a), 'bar');
     test.equal(_.get('baz')(a), 123);
     test.done();
 };
 
-exports['set'] = function (test) {
+exports.set = function (test) {
     var a = {foo: 'bar', baz: 123};
     test.equal(_.set('foo', 'asdf', a), a);
     test.equal(a.foo, 'asdf');
@@ -6307,7 +6307,7 @@ exports['set'] = function (test) {
 // flattened, but curiously, it worked by doing .consume().map().flatten()
 // where the map() was just map(function (x) { return x; })
 
-exports['log'] = function (test) {
+exports.log = function (test) {
     var calls = [];
     var _log = console.log;
     console.log = function (x) {
@@ -6320,7 +6320,7 @@ exports['log'] = function (test) {
     test.done();
 };
 
-exports['wrapCallback'] = function (test) {
+exports.wrapCallback = function (test) {
     var f = function (a, b, cb) {
         setTimeout(function () {
             cb(null, a + b);
@@ -6403,7 +6403,7 @@ exports['wrapCallback default mapper discards all but first arg'] = function (te
     });
 };
 
-exports['streamifyAll'] = {
+exports.streamifyAll = {
     'throws when passed a non-function non-object': function (test) {
         test.throws(function () {
             _.streamifyAll(1);
@@ -6499,13 +6499,13 @@ exports['streamifyAll'] = {
     }
 };
 
-exports['add'] = function (test) {
+exports.add = function (test) {
     test.equal(_.add(1, 2), 3);
     test.equal(_.add(3)(2), 5);
     return test.done();
 };
 
-exports['not'] = function (test) {
+exports.not = function (test) {
     test.equal(_.not(true), false);
     test.equal(_.not(123), false);
     test.equal(_.not('asdf'), false);
