@@ -1301,12 +1301,12 @@ exports.slice = {
     'error': function (test) {
         test.expect(2);
         var s = _(function (push, next) {
-            push(null, 1),
-            push(new Error('Slice error')),
-            push(null, 2),
-            push(null, 3),
-            push(null, 4),
-            push(null, 5),
+            push(null, 1);
+            push(new Error('Slice error'));
+            push(null, 2);
+            push(null, 3);
+            push(null, 4);
+            push(null, 5);
             push(null, _.nil);
         });
         s.slice(2, 4).errors(errorEquals(test, 'Slice error'))
@@ -1321,10 +1321,10 @@ exports['take - noValueOnError'] = noValueOnErrorTest(_.take(1));
 exports['take - errors'] = function (test) {
     test.expect(4);
     var s = _(function (push, next) {
-        push(null, 1),
-        push(new Error('error'), 2),
-        push(null, 3),
-        push(null, 4),
+        push(null, 1);
+        push(new Error('error'), 2);
+        push(null, 3);
+        push(null, 4);
         push(null, _.nil);
     });
     var f = s.take(2);
@@ -1385,12 +1385,12 @@ exports.drop = {
     'error': function (test) {
         test.expect(2);
         var s = _(function (push, next) {
-            push(null, 1),
-            push(new Error('Drop error')),
-            push(null, 2),
-            push(null, 3),
-            push(null, 4),
-            push(null, 5),
+            push(null, 1);
+            push(new Error('Drop error'));
+            push(null, 2);
+            push(null, 3);
+            push(null, 4);
+            push(null, 5);
             push(null, _.nil);
         });
         s.drop(2).errors(errorEquals(test, 'Drop error'))
