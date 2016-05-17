@@ -11,7 +11,8 @@ var _, EventEmitter = require('events').EventEmitter,
 
 if (global.highland != null) {
     _ = global.highland;
-} else {
+}
+else {
     _ = require('../lib/index');
 }
 
@@ -36,7 +37,8 @@ function valueEquals(test, expected) {
         // compute test.expect.
         if (err) {
             test.equal(err, null, 'Expected a value to be emitted.');
-        } else {
+        }
+        else {
             test.deepEqual(x, expected, 'Incorrect value emitted.');
         }
     };
@@ -471,11 +473,13 @@ exports['race'] = {
             if (i === 0) {
                 // The initial read is async.
                 setTimeout(write, 0);
-            } else if (i > 0 && i < 10) {
+            }
+            else if (i > 0 && i < 10) {
                 // The driver loads data in batches, so subsequent drains
                 // are sync to mimic pulling from a pre-loaded buffer.
                 write();
-            } else if (i === 10) {
+            }
+            else if (i === 10) {
                 i++;
                 setTimeout(stream.end.bind(stream), 0);
             }
@@ -977,7 +981,8 @@ exports['consume - throws error if push called after nil'] = function (test) {
         push(null, x);
         if (x === _.nil) {
             push(null, 4);
-        } else {
+        }
+        else {
             next();
         }
     });
@@ -4087,7 +4092,8 @@ exports['pickBy - non-enumerable properties'] = function (test) {
         test.equal(xs[0].a, 5);
         if (isES5) {
             test.equal(xs[0].b, 15);
-        } else {
+        }
+        else {
             test.ok(typeof (xs[0].b) === 'undefined');
         }
         test.ok(xs[0].hasOwnProperty('d'));
@@ -4095,7 +4101,8 @@ exports['pickBy - non-enumerable properties'] = function (test) {
         // neither c nor e was selected, b is not selected by keys
         if (isES5) {
             test.ok(Object.keys(xs[0]).length === 3);
-        } else {
+        }
+        else {
             test.ok(Object.keys(xs[0]).length === 2);
         }
     });
