@@ -4335,7 +4335,7 @@ exports.find = function (test) {
         {type: 'baz', name: 'asdf'}
     ];
     var f = function (x) {
-        return x.type == 'bar';
+        return x.type === 'bar';
     };
     _.find(f, xs).toArray(function (xs) {
         test.same(xs, [{type: 'bar', name: '123'}]);
@@ -4375,7 +4375,7 @@ exports['find - ArrayStream'] = function (test) {
         {type: 'baz', name: 'asdf'}
     ];
     var f = function (x) {
-        return x.type == 'bar';
+        return x.type === 'bar';
     };
     _(xs).find(f).toArray(function (xs) {
         test.same(xs, [{type: 'bar', name: '123'}]);
@@ -4395,7 +4395,7 @@ exports['find - GeneratorStream'] = function (test) {
         }, 10);
     });
     var f = function (x) {
-        return x.type == 'baz';
+        return x.type === 'baz';
     };
     _(xs).find(f).toArray(function (xs) {
         test.same(xs, [{type: 'baz', name: 'asdf'}]);
@@ -4509,7 +4509,7 @@ exports['find - GeneratorStream'] = function (test) {
         var err = new Error('error');
         var s = _([1, 2, 3, 4, 5]).group(function (x) {
             if (x === 5) { throw err; }
-            return x % 2 == 0 ? 'even' : 'odd';
+            return x % 2 === 0 ? 'even' : 'odd';
         });
 
         s.pull(errorEquals(test, 'error'));
