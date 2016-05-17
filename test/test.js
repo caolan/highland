@@ -23,7 +23,7 @@ RSVP.configure('async', function (f, arg) {
 
 // Use bluebird cancellation. We want to test against it.
 bluebird.config({
-  cancellation: true
+    cancellation: true
 });
 
 /**
@@ -67,12 +67,12 @@ function noValueOnErrorTest(transform, expected) {
     return function (test) {
         test.expect(1);
         if (!expected) expected = [];
-        var thrower = _([1]).map(function () { throw new Error('error') });
+        var thrower = _([1]).map(function () { throw new Error('error'); });
         transform(thrower).errors(function () {}).toArray(function (xs) {
             test.same(xs, expected, 'Value emitted for error');
             test.done();
         });
-    }
+    };
 }
 
 function generatorStream(input, timeout) {
@@ -121,10 +121,10 @@ exports['ratelimit'] = {
     },
     'invalid num per ms': function (test) {
         test.throws(function () {
-            _([1,2,3]).ratelimit(-10, 0);
+            _([1, 2, 3]).ratelimit(-10, 0);
         });
         test.throws(function () {
-            _([1,2,3]).ratelimit(0, 0);
+            _([1, 2, 3]).ratelimit(0, 0);
         });
         test.done();
     },
@@ -141,7 +141,7 @@ exports['ratelimit'] = {
             delay(push, 40, 4);
             delay(push, 50, 5);
             delay(push, 60, _.nil);
-        })
+        });
         var results = [];
         source.ratelimit(2, 100).each(function (x) {
             results.push(x);
@@ -197,7 +197,7 @@ exports['ratelimit'] = {
             delay(push, 40, 4);
             delay(push, 50, 5);
             delay(push, 60, _.nil);
-        })
+        });
         var results = [];
         _.ratelimit(2)(100)(source).each(function (x) {
             results.push(x);
@@ -220,13 +220,13 @@ exports['curry'] = function (test) {
     var fn = _.curry(function (a, b, c, d) {
         return a + b + c + d;
     });
-    test.equal(fn(1,2,3,4), fn(1,2)(3,4));
-    test.equal(fn(1,2,3,4), fn(1)(2)(3)(4));
+    test.equal(fn(1, 2, 3, 4), fn(1, 2)(3, 4));
+    test.equal(fn(1, 2, 3, 4), fn(1)(2)(3)(4));
     var fn2 = function (a, b, c, d) {
         return a + b + c + d;
     };
-    test.equal(_.curry(fn2)(1,2,3,4), _.curry(fn2,1,2,3,4));
-    test.equal(_.curry(fn2)(1,2,3,4), _.curry(fn2,1,2)(3,4));
+    test.equal(_.curry(fn2)(1, 2, 3, 4), _.curry(fn2, 1, 2, 3, 4));
+    test.equal(_.curry(fn2)(1, 2, 3, 4), _.curry(fn2, 1, 2)(3, 4));
     test.done();
 };
 
@@ -234,15 +234,15 @@ exports['ncurry'] = function (test) {
     var fn = _.ncurry(3, function (a, b, c, d) {
         return a + b + c + (d || 0);
     });
-    test.equal(fn(1,2,3,4), 6);
-    test.equal(fn(1,2,3,4), fn(1,2)(3));
-    test.equal(fn(1,2,3,4), fn(1)(2)(3));
+    test.equal(fn(1, 2, 3, 4), 6);
+    test.equal(fn(1, 2, 3, 4), fn(1, 2)(3));
+    test.equal(fn(1, 2, 3, 4), fn(1)(2)(3));
     var fn2 = function () {
         var args = Array.prototype.slice(arguments);
         return args.reduce(function (a, b) { return a + b; }, 0);
     };
-    test.equal(_.ncurry(3,fn2)(1,2,3,4), _.ncurry(3,fn2,1,2,3,4));
-    test.equal(_.ncurry(3,fn2)(1,2,3,4), _.ncurry(3,fn2,1,2)(3,4));
+    test.equal(_.ncurry(3, fn2)(1, 2, 3, 4), _.ncurry(3, fn2, 1, 2, 3, 4));
+    test.equal(_.ncurry(3, fn2)(1, 2, 3, 4), _.ncurry(3, fn2, 1, 2)(3, 4));
     test.done();
 };
 
@@ -275,8 +275,8 @@ exports['flip'] = function (test) {
     var subtract = function (a, b) {
         return a - b;
     };
-    test.equal(subtract(4,2), 2);
-    test.equal(_.flip(subtract)(4,2), -2);
+    test.equal(subtract(4, 2), 2);
+    test.equal(_.flip(subtract)(4, 2), -2);
     test.equal(_.flip(subtract, 4)(2), -2);
     test.equal(_.flip(subtract, 4, 2), -2);
     test.done();
@@ -295,7 +295,7 @@ exports['seq'] = function (test) {
     // more than two args
     test.equal(_.seq(fn1, fn2, fn1)('zero'), 'zero:one:two:one');
     test.done();
-}
+};
 
 exports['isStream'] = function (test) {
     test.ok(!_.isStream());
@@ -311,14 +311,14 @@ exports['isStream'] = function (test) {
 };
 
 exports['nil defines end'] = function (test) {
-    _([1,_.nil,3]).toArray(function (xs) {
+    _([1, _.nil, 3]).toArray(function (xs) {
         test.same(xs, [1]);
         test.done();
     });
 };
 
 exports['nil should not equate to any empty object'] = function (test) {
-    var s = [1,{},3];
+    var s = [1, {}, 3];
     _(s).toArray(function (xs) {
         test.same(xs, s);
         test.done();
@@ -374,13 +374,13 @@ exports['pull'] = {
 };
 
 exports['async consume'] = function (test) {
-    _([1,2,3,4]).consume(function (err, x, push, next) {
+    _([1, 2, 3, 4]).consume(function (err, x, push, next) {
         if (x === _.nil) {
             push(null, _.nil);
         }
         else {
             setTimeout(function(){
-                push(null, x*10);
+                push(null, x * 10);
                 next();
             }, 10);
         }
@@ -438,7 +438,7 @@ exports['consume - fork after consume should not throw (issue #366)'] = function
         test.same(arr2, [1]);
         test.done();
     }
-}
+};
 
 exports['race'] = {
     setUp: function (callback) {
@@ -529,7 +529,7 @@ exports['constructor'] = {
                     else {
                         return {
                             value: lastVal, done: true
-                        }
+                        };
                     }
                 }
             };
@@ -544,7 +544,7 @@ exports['constructor'] = {
     },
     'passing Stream to constructor returns original': function (test) {
         test.expect(1);
-        var s = _([1,2,3]);
+        var s = _([1, 2, 3]);
         test.strictEqual(s, _(s));
         test.done();
     },
@@ -580,7 +580,7 @@ exports['constructor'] = {
         test.ok(!writtenTo, 'Drain should not cause write to be called.');
         test.done();
     },
-    "from Readable - emits 'close' not 'end' - issue #490": function (test) {
+    'from Readable - emits \'close\' not \'end\' - issue #490': function (test) {
         test.expect(1);
         var rs = new Stream.Readable();
         rs._read = function (size) {
@@ -598,7 +598,7 @@ exports['constructor'] = {
             test.done();
         }, 10);
     },
-    "from Readable - emits 'close' before 'end' - issue #490": function (test) {
+    'from Readable - emits \'close\' before \'end\' - issue #490': function (test) {
         test.expect(1);
         var rs = new Stream.Readable();
         rs._read = function (size) {
@@ -611,7 +611,7 @@ exports['constructor'] = {
         var s = _(rs)
             .toArray(this.tester(['1', '2'], test));
     },
-    "from Readable - emits 'close' and 'end' - issue #478": function (test) {
+    'from Readable - emits \'close\' and \'end\' - issue #478': function (test) {
         test.expect(2);
         var rs = new Stream.Readable();
         rs._read = function (size) {
@@ -639,7 +639,7 @@ exports['constructor'] = {
         });
         s.pull(valueEquals(test, _.nil));
     },
-    "from Readable - emits 'error' - issue #478": function (test) {
+    'from Readable - emits \'error\' - issue #478': function (test) {
         test.expect(2);
         var rs = new Stream.Readable();
         rs._read = function (size) {
@@ -718,7 +718,7 @@ if (global.Map && global.Symbol) {
         map.set('c', 3);
 
         _(map).toArray(function (xs) {
-            test.same(xs, [ [ 'a', 1 ], [ 'b', 2 ], [ 'c', 3 ] ]);
+            test.same(xs, [['a', 1], ['b', 2], ['c', 3]]);
         });
         test.done();
     };
@@ -731,7 +731,7 @@ if (global.Map && global.Symbol) {
         map.set('c', 3);
 
         _(map.entries()).toArray(function (xs) {
-            test.same(xs, [ [ 'a', 1 ], [ 'b', 2 ], [ 'c', 3 ] ]);
+            test.same(xs, [['a', 1], ['b', 2], ['c', 3]]);
         });
         test.done();
     };
@@ -789,7 +789,7 @@ exports['if no consumers, buffer data'] = function (test) {
     s.write(1);
     s.write(2);
     s.toArray(function (xs) {
-        test.same(xs, [1,2,3]);
+        test.same(xs, [1, 2, 3]);
         test.done();
     });
     s.write(3);
@@ -825,7 +825,7 @@ exports['write when paused adds to incoming buffer'] = function (test) {
     test.strictEqual(s.write(1), false);
     test.same(s._incoming, [1]);
     test.strictEqual(s.write(2), false);
-    test.same(s._incoming, [1,2]);
+    test.same(s._incoming, [1, 2]);
     test.done();
 };
 
@@ -847,7 +847,7 @@ exports['write when not paused sends to consumer'] = function (test) {
     test.strictEqual(s1.write(2), true);
     test.same(s1._incoming, []);
     test.same(s2._incoming, []);
-    test.same(vals, [1,2]);
+    test.same(vals, [1, 2]);
     test.done();
 };
 
@@ -866,7 +866,7 @@ exports['buffered incoming data released on resume'] = function (test) {
     test.same(s1._incoming, []);
     test.same(s2._incoming, []);
     test.strictEqual(s1.write(2), true);
-    test.same(vals, [1,2]);
+    test.same(vals, [1, 2]);
     test.done();
 };
 
@@ -882,22 +882,22 @@ exports['restart buffering incoming data on pause'] = function (test) {
     test.strictEqual(s1.write(2), true);
     test.same(s1._incoming, []);
     test.same(s2._incoming, []);
-    test.same(vals, [1,2]);
+    test.same(vals, [1, 2]);
     s2.pause();
     test.strictEqual(s1.write(3), false);
     test.strictEqual(s1.write(4), false);
-    test.same(s1._incoming, [3,4]);
+    test.same(s1._incoming, [3, 4]);
     test.same(s2._incoming, []);
-    test.same(vals, [1,2]);
+    test.same(vals, [1, 2]);
     s2.resume();
     test.same(s1._incoming, []);
     test.same(s2._incoming, []);
-    test.same(vals, [1,2,3,4]);
+    test.same(vals, [1, 2, 3, 4]);
     test.done();
 };
 
 exports['redirect from consumer'] = function (test) {
-    var s = _([1,2,3]);
+    var s = _([1, 2, 3]);
     var s2 = s.consume(function (err, x, push, next) {
         next(_([4, 5, 6]));
     });
@@ -972,7 +972,7 @@ exports['generator throws error if push called after nil'] = function (test) {
 
 exports['consume - throws error if push called after nil'] = function (test) {
     test.expect(1);
-    var s = _([1,2,3]);
+    var s = _([1, 2, 3]);
     var s2 = s.consume(function (err, x, push, next) {
         push(null, x);
         if (x === _.nil) {
@@ -989,7 +989,7 @@ exports['consume - throws error if push called after nil'] = function (test) {
 
 exports['consume - throws error if next called after nil'] = function (test) {
     test.expect(1);
-    var s = _([1,2,3]);
+    var s = _([1, 2, 3]);
     var nil_seen = false;
     var s2 = s.consume(function (err, x, push, next) {
         // ensure we only call `next` after nil once
@@ -1084,7 +1084,7 @@ exports['errors - ArrayStream'] = function (test) {
         errs.push(err);
     };
     // kinda pointless
-    _([1,2]).errors(f).toArray(function (xs) {
+    _([1, 2]).errors(f).toArray(function (xs) {
         test.same(xs, [1, 2]);
         test.same(errs, []);
         test.done();
@@ -1164,8 +1164,8 @@ exports['stopOnError - ArrayStream'] = function (test) {
     var f = function (err, rethrow) {
         errs.push(err);
     };
-    _([1,2,3,4]).stopOnError(f).toArray(function (xs) {
-        test.same(xs, [1,2,3,4]);
+    _([1, 2, 3, 4]).stopOnError(f).toArray(function (xs) {
+        test.same(xs, [1, 2, 3, 4]);
         test.same(errs, []);
         test.done();
     });
@@ -1209,7 +1209,7 @@ exports['apply'] = function (test) {
 };
 
 exports['apply - ArrayStream'] = function (test) {
-    _([1,2,3]).apply(function (a, b, c) {
+    _([1, 2, 3]).apply(function (a, b, c) {
         test.equal(arguments.length, 3);
         test.equal(a, 1);
         test.equal(b, 2);
@@ -1219,7 +1219,7 @@ exports['apply - ArrayStream'] = function (test) {
 };
 
 exports['apply - varargs'] = function (test) {
-    _([1,2,3,4]).apply(function (a, b) {
+    _([1, 2, 3, 4]).apply(function (a, b) {
         test.equal(arguments.length, 4);
         test.equal(a, 1);
         test.equal(b, 2);
@@ -1247,7 +1247,7 @@ exports['apply - GeneratorStream'] = function (test) {
 
 exports['take'] = function (test) {
     test.expect(3);
-    var s = _([1,2,3,4]).take(2);
+    var s = _([1, 2, 3, 4]).take(2);
     s.pull(function (err, x) {
         test.equal(x, 1);
     });
@@ -1300,7 +1300,7 @@ exports['slice'] = {
             push(null, 3),
             push(null, 4),
             push(null, 5),
-            push(null, _.nil)
+            push(null, _.nil);
         });
         s.slice(2, 4).errors(errorEquals(test, 'Slice error'))
             .toArray(this.tester([3, 4], test));
@@ -1318,7 +1318,7 @@ exports['take - errors'] = function (test) {
         push(new Error('error'), 2),
         push(null, 3),
         push(null, 4),
-        push(null, _.nil)
+        push(null, _.nil);
     });
     var f = s.take(2);
     f.pull(function (err, x) {
@@ -1384,7 +1384,7 @@ exports['drop'] = {
             push(null, 3),
             push(null, 4),
             push(null, 5),
-            push(null, _.nil)
+            push(null, _.nil);
         });
         s.drop(2).errors(errorEquals(test, 'Drop error'))
             .toArray(this.tester(this.expected, test));
@@ -1411,22 +1411,22 @@ exports['each'] = function (test) {
     var calls = [];
     _.each(function (x) {
         calls.push(x);
-    }, [1,2,3]);
-    test.same(calls, [1,2,3]);
+    }, [1, 2, 3]);
+    test.same(calls, [1, 2, 3]);
     // partial application
     _.each(function (x) {
         calls.push(x);
-    })([1,2,3]);
-    test.same(calls, [1,2,3,1,2,3]);
+    })([1, 2, 3]);
+    test.same(calls, [1, 2, 3, 1, 2, 3]);
     test.done();
 };
 
 exports['each - ArrayStream'] = function (test) {
     var calls = [];
-    _([1,2,3]).each(function (x) {
+    _([1, 2, 3]).each(function (x) {
         calls.push(x);
     });
-    test.same(calls, [1,2,3]);
+    test.same(calls, [1, 2, 3]);
     test.done();
 };
 
@@ -1441,7 +1441,7 @@ exports['each - GeneratorStream'] = function (test) {
     s.each(function (x) {
         calls.push(x);
     });
-    test.same(calls, [1,2,3]);
+    test.same(calls, [1, 2, 3]);
     test.done();
 };
 
@@ -1468,37 +1468,37 @@ exports['done'] = function (test) {
     _.map(function (x) {
         calls.push(x);
         return x;
-    }, [1,2,3]).done(function () {
+    }, [1, 2, 3]).done(function () {
         test.same(calls, [1, 2, 3]);
     });
 
     calls = [];
     _.each(function (x) {
         calls.push(x);
-    }, [1,2,3]).done(function () {
-        test.same(calls, [1,2,3]);
+    }, [1, 2, 3]).done(function () {
+        test.same(calls, [1, 2, 3]);
     });
 
     // partial application
     calls = [];
     _.each(function (x) {
         calls.push(x);
-    })([1,2,3]).done(function () {
-        test.same(calls, [1,2,3]);
+    })([1, 2, 3]).done(function () {
+        test.same(calls, [1, 2, 3]);
     });
 
     test.done();
-}
+};
 
 exports['done - ArrayStream'] = function (test) {
     var calls = [];
-    _([1,2,3]).each(function (x) {
+    _([1, 2, 3]).each(function (x) {
         calls.push(x);
     }).done(function () {
-        test.same(calls, [1,2,3]);
+        test.same(calls, [1, 2, 3]);
         test.done();
     });
-}
+};
 
 exports['done - GeneratorStream'] = function (test) {
     function delay(push, ms, x) {
@@ -1517,10 +1517,10 @@ exports['done - GeneratorStream'] = function (test) {
     source.each(function (x) {
         calls.push(x);
     }).done(function () {
-        test.same(calls, [1,2,3]);
+        test.same(calls, [1, 2, 3]);
         test.done();
-    })
-}
+    });
+};
 
 exports['done - throw error if consumed'] = function (test) {
     var e = new Error('broken');
@@ -1538,12 +1538,12 @@ exports['done - throw error if consumed'] = function (test) {
 
 exports['toCallback - ArrayStream'] = function(test) {
     test.expect(2);
-    _([1,2,3,4]).collect().toCallback(function(err, result) {
-        test.same(result, [1,2,3,4]);
+    _([1, 2, 3, 4]).collect().toCallback(function(err, result) {
+        test.same(result, [1, 2, 3, 4]);
         test.same(err, null);
         test.done();
     });
-}
+};
 
 exports['toCallback - GeneratorStream'] = function (test) {
     test.expect(2);
@@ -1551,23 +1551,23 @@ exports['toCallback - GeneratorStream'] = function (test) {
         push(null, 1);
         push(null, 2);
         setTimeout(function() {
-          push(null, 3);
-          push(null, _.nil);
+            push(null, 3);
+            push(null, _.nil);
         }, 40);
     }).collect().toCallback(function(err, result){
-        test.same(result, [1,2,3]);
+        test.same(result, [1, 2, 3]);
         test.same(err, null);
         test.done();
     });
-}
+};
 
 exports['toCallback - returns error for streams with multiple values'] = function (test) {
     test.expect(1);
-    var s = _([1,2]).toCallback(function(err, result) {
-        test.same(err.message, 'toCallback called on stream emitting multiple values')
+    var s = _([1, 2]).toCallback(function(err, result) {
+        test.same(err.message, 'toCallback called on stream emitting multiple values');
         test.done();
     });
-}
+};
 
 exports['toCallback - calls back without arguments for empty stream'] = function (test) {
     test.expect(1);
@@ -1575,7 +1575,7 @@ exports['toCallback - calls back without arguments for empty stream'] = function
         test.same(arguments.length, 0);
         test.done();
     });
-}
+};
 
 exports['toCallback - returns error when stream emits error'] = function (test) {
     test.expect(2);
@@ -1583,16 +1583,16 @@ exports['toCallback - returns error when stream emits error'] = function (test) 
         push(null, 1);
         push(null, 2);
         setTimeout(function() {
-          push(new Error('Test error'));
-          push(null, 3);
-          push(null, _.nil);
+            push(new Error('Test error'));
+            push(null, 3);
+            push(null, _.nil);
         }, 40);
     }).collect().toCallback(function(err, result){
         test.same(err.message, 'Test error');
         test.same(result, undefined);
         test.done();
     });
-}
+};
 
 exports['toCallback - error handling edge cases'] = function (test) {
     test.expect(4);
@@ -1601,7 +1601,7 @@ exports['toCallback - error handling edge cases'] = function (test) {
         push(new Error('Test error'));
         push(null, _.nil);
     }).toCallback(function(err, result){
-        test.same(err.message, 'toCallback called on stream emitting multiple values')
+        test.same(err.message, 'toCallback called on stream emitting multiple values');
         test.same(result, undefined);
     });
 
@@ -1611,11 +1611,11 @@ exports['toCallback - error handling edge cases'] = function (test) {
         push(new Error('Test error'));
         push(null, _.nil);
     }).toCallback(function(err, result){
-        test.same(err.message, 'toCallback called on stream emitting multiple values')
+        test.same(err.message, 'toCallback called on stream emitting multiple values');
         test.same(result, undefined);
     });
     test.done();
-}
+};
 
 exports['calls generator on read'] = function (test) {
     var gen_calls = 0;
@@ -1651,9 +1651,9 @@ exports['generator consumers are sent values eagerly until pause'] = function (t
         }
     });
     consumer.resume();
-    test.same(JSON.stringify(calls), JSON.stringify([1,2]));
+    test.same(JSON.stringify(calls), JSON.stringify([1, 2]));
     consumer.resume();
-    test.same(calls, [1,2,3,_.nil]);
+    test.same(calls, [1, 2, 3, _.nil]);
     test.done();
 };
 
@@ -1706,7 +1706,7 @@ exports['calls generator multiple times if paused by next'] = function (test) {
 };
 
 exports['adding multiple consumers should error'] = function (test) {
-    var s = _([1,2,3,4]);
+    var s = _([1, 2, 3, 4]);
     s.consume(function () {});
     test.throws(function () {
         s.consume(function () {});
@@ -1807,7 +1807,7 @@ exports['lazily evalute stream'] = function (test) {
 exports['pipe'] = {
     'old-style node stream to highland stream': function (test) {
         var xs = [];
-        var src = streamify([1,2,3,4]);
+        var src = streamify([1, 2, 3, 4]);
         var s1 = _();
         var s2 = s1.consume(function (err, x, push, next) {
             xs.push(x);
@@ -1822,14 +1822,14 @@ exports['pipe'] = {
             setTimeout(function () {
                 test.same(s1._incoming, []);
                 test.same(s2._incoming, []);
-                test.same(xs, [1,2,3,4,_.nil]);
+                test.same(xs, [1, 2, 3, 4, _.nil]);
                 test.done();
             }, 100);
         }, 100);
     },
     'node stream to highland stream': function (test) {
         var xs = [];
-        var src = streamify([1,2,3,4]);
+        var src = streamify([1, 2, 3, 4]);
         var s1 = _();
         var s2 = s1.consume(function (err, x, push, next) {
             xs.push(x);
@@ -1844,13 +1844,13 @@ exports['pipe'] = {
             setTimeout(function () {
                 test.same(s1._incoming, []);
                 test.same(s2._incoming, []);
-                test.same(xs, [1,2,3,4,_.nil]);
+                test.same(xs, [1, 2, 3, 4, _.nil]);
                 test.done();
             }, 100);
         }, 100);
     },
     'highland stream to node stream': function (test) {
-        var src = _(['a','b','c']);
+        var src = _(['a', 'b', 'c']);
         var dest = concat(function (data) {
             test.same(data, 'abc');
             test.done();
@@ -1859,7 +1859,7 @@ exports['pipe'] = {
     },
     'pipe to node stream with backpressure': function (test) {
         test.expect(3);
-        var src = _([1,2,3,4]);
+        var src = _([1, 2, 3, 4]);
         var xs = [];
         var dest = new EventEmitter();
         dest.writable = true;
@@ -1867,7 +1867,7 @@ exports['pipe'] = {
             xs.push(x);
             if (xs.length === 2) {
                 _.setImmediate(function () {
-                    test.same(xs, [1,2]);
+                    test.same(xs, [1, 2]);
                     test.ok(src.paused);
                     dest.emit('drain');
                 });
@@ -1875,7 +1875,7 @@ exports['pipe'] = {
             }
         };
         dest.end = function () {
-            test.same(xs, [1,2,3,4]);
+            test.same(xs, [1, 2, 3, 4]);
             test.done();
         };
         src.pipe(dest);
@@ -1939,42 +1939,42 @@ exports['pipe'] = {
 // ignore these tests in non-node.js environments
 if (typeof process !== 'undefined' && process.stdout) {
     exports['pipe']['highland stream to stdout'] = function (test) {
-        test.expect(1)
+        test.expect(1);
         var src = _(['']);
         test.doesNotThrow(function () {
             src.pipe(process.stdout);
-        })
-        test.done()
+        });
+        test.done();
     };
 
     exports['pipe']['highland stream to stdout with {end:true}'] = function (test) {
-        test.expect(1)
+        test.expect(1);
         var src = _(['']);
         test.doesNotThrow(function () {
             src.pipe(process.stdout, {end: true});
-        })
-        test.done()
+        });
+        test.done();
     };
 }
 
 // ignore these tests in non-node.js environments
 if (typeof process !== 'undefined' && process.stderr) {
     exports['pipe']['highland stream to stderr'] = function (test) {
-        test.expect(1)
+        test.expect(1);
         var src = _(['']);
         test.doesNotThrow(function () {
             src.pipe(process.stderr);
-        })
-        test.done()
+        });
+        test.done();
     };
 
     exports['pipe']['highland stream to stderr with {end:true}'] = function (test) {
-        test.expect(1)
+        test.expect(1);
         var src = _(['']);
         test.doesNotThrow(function () {
             src.pipe(process.stderr, {end: true});
-        })
-        test.done()
+        });
+        test.done();
     };
 }
 
@@ -1984,7 +1984,7 @@ exports['wrap node stream and pipe'] = function (test) {
         return x * 2;
     }
     var xs = [];
-    var readable = streamify([1,2,3,4]);
+    var readable = streamify([1, 2, 3, 4]);
     var ys = _(readable).map(doubled);
 
     var dest = new EventEmitter();
@@ -1993,7 +1993,7 @@ exports['wrap node stream and pipe'] = function (test) {
         xs.push(x);
         if (xs.length === 2) {
             _.setImmediate(function () {
-                test.same(xs, [2,4]);
+                test.same(xs, [2, 4]);
                 test.ok(ys.source.paused);
                 test.equal(readable._readableState.readingMore, false);
                 dest.emit('drain');
@@ -2002,7 +2002,7 @@ exports['wrap node stream and pipe'] = function (test) {
         }
     };
     dest.end = function () {
-        test.same(xs, [2,4,6,8]);
+        test.same(xs, [2, 4, 6, 8]);
         test.done();
     };
     // make sure nothing starts until we pipe
@@ -2014,7 +2014,7 @@ exports['wrap node stream and pipe'] = function (test) {
 
 exports['wrap node stream with error'] = function (test) {
     test.expect(1);
-    var readable = streamify([1,2,3,4]);
+    var readable = streamify([1, 2, 3, 4]);
     var err = new Error('nope');
     var xs = _(readable);
     readable.emit('error', err);
@@ -2026,13 +2026,13 @@ exports['wrap node stream with error'] = function (test) {
 };
 
 exports['attach data event handler'] = function (test) {
-    var s = _([1,2,3,4]);
+    var s = _([1, 2, 3, 4]);
     var xs = [];
     s.on('data', function (x) {
         xs.push(x);
     });
     s.on('end', function () {
-        test.same(xs, [1,2,3,4]);
+        test.same(xs, [1, 2, 3, 4]);
         test.done();
     });
 };
@@ -2069,7 +2069,7 @@ exports['multiple pull calls on async generator'] = function (test) {
     });
     s2.id = 's2';
     s2.toArray(function (xs) {
-        test.same(xs, [3,2,1]);
+        test.same(xs, [3, 2, 1]);
         test.same(calls, 4);
         test.done();
     });
@@ -2132,7 +2132,7 @@ exports['wrap EventEmitter (or jQuery) on handler with args wrapping by array'] 
     };
     _('myevent', ee, ['one', 'two', 'three']).each(function (x) {
         test.same(x, {'one': 1, 'two': 2, 'three': 3});
-        test.done()
+        test.done();
     });
 };
 
@@ -2145,13 +2145,13 @@ exports['wrap EventEmitter default mapper discards all but first arg'] = functio
     };
     _('myevent', ee).each(function (x) {
         test.same(x, 1);
-        test.done()
+        test.done();
     });
 };
 
 exports['sequence'] = function (test) {
-    _.sequence([[1,2], [3], [[4],5]]).toArray(function (xs) {
-        test.same(xs, [1,2,3,[4],5]);
+    _.sequence([[1, 2], [3], [[4], 5]]).toArray(function (xs) {
+        test.same(xs, [1, 2, 3, [4], 5]);
     });
     test.done();
 };
@@ -2159,8 +2159,8 @@ exports['sequence'] = function (test) {
 exports['sequence - noValueOnError'] = noValueOnErrorTest(_.sequence());
 
 exports['sequence - ArrayStream'] = function (test) {
-    _([[1,2], [3], [[4],5]]).sequence().toArray(function (xs) {
-        test.same(xs, [1,2,3,[4],5]);
+    _([[1, 2], [3], [[4], 5]]).sequence().toArray(function (xs) {
+        test.same(xs, [1, 2, 3, [4], 5]);
         test.done();
     });
 };
@@ -2187,7 +2187,7 @@ exports['sequence - GeneratorStream'] = function (test) {
     var s2 = countdown('two', 3);
     var s3 = countdown('three', 3);
     _([s1, s2, s3]).sequence().take(8).toArray(function (xs) {
-        test.same(xs, [3,2,1,3,2,1,3,2]);
+        test.same(xs, [3, 2, 1, 3, 2, 1, 3, 2]);
         test.same(calls, [
             'one', 'one', 'one', 'one',
             'two', 'two', 'two', 'two',
@@ -2215,7 +2215,7 @@ exports['sequence - nested GeneratorStreams'] = function (test) {
 
 exports['sequence - series alias'] = function (test) {
     test.equal(_.sequence, _.series);
-    var s1 = _([1,2,3]);
+    var s1 = _([1, 2, 3]);
     var s2 = _(function (push, next) {});
     test.equal(s1.sequence, s1.series);
     test.equal(s2.sequence, s2.series);
@@ -2224,17 +2224,17 @@ exports['sequence - series alias'] = function (test) {
 
 exports['sequence - Streams of Streams of Arrays'] = function (test) {
     _([
-        _([1,2]),
+        _([1, 2]),
         _([3]),
-        _([[4],5])
+        _([[4], 5])
     ]).sequence().toArray(function (xs) {
-        test.same(xs, [1,2,3,[4],5]);
+        test.same(xs, [1, 2, 3, [4], 5]);
         test.done();
     });
-}
+};
 
 exports['fork'] = function (test) {
-    var s = _([1,2,3,4]);
+    var s = _([1, 2, 3, 4]);
     s.id = 's';
     var s2 = s.map(function (x) {
         return x * 2;
@@ -2259,23 +2259,23 @@ exports['fork'] = function (test) {
     s2.take(1).each(function (x) {
         s2_data.push(x);
     });
-    test.same(s2_data, [2,4]);
-    test.same(s3_data, [3,6]);
+    test.same(s2_data, [2, 4]);
+    test.same(s3_data, [3, 6]);
     s3.take(2).each(function (x) {
         s3_data.push(x);
     });
-    test.same(s2_data, [2,4]);
-    test.same(s3_data, [3,6]);
+    test.same(s2_data, [2, 4]);
+    test.same(s3_data, [3, 6]);
     s2.take(2).each(function (x) {
         s2_data.push(x);
     });
-    test.same(s2_data, [2,4,6,8]);
-    test.same(s3_data, [3,6,9,12]);
+    test.same(s2_data, [2, 4, 6, 8]);
+    test.same(s3_data, [3, 6, 9, 12]);
     test.done();
 };
 
 exports['observe'] = function (test) {
-    var s = _([1,2,3,4]);
+    var s = _([1, 2, 3, 4]);
     s.id = 's';
     var s2 = s.map(function (x) {
         return x * 2;
@@ -2301,18 +2301,18 @@ exports['observe'] = function (test) {
     s2.take(1).each(function (x) {
         s2_data.push(x);
     });
-    test.same(s2_data, [2,4]);
-    test.same(s3_data, [3,6]);
+    test.same(s2_data, [2, 4]);
+    test.same(s3_data, [3, 6]);
     s3.take(2).each(function (x) {
         s3_data.push(x);
     });
-    test.same(s2_data, [2,4]);
-    test.same(s3_data, [3,6]);
+    test.same(s2_data, [2, 4]);
+    test.same(s3_data, [3, 6]);
     s2.take(2).each(function (x) {
         s2_data.push(x);
     });
-    test.same(s2_data, [2,4,6,8]);
-    test.same(s3_data, [3,6,9,12]);
+    test.same(s2_data, [2, 4, 6, 8]);
+    test.same(s3_data, [3, 6, 9, 12]);
     test.done();
 };
 
@@ -2361,7 +2361,7 @@ exports['observe - observers should see errors.'] = function (test) {
 exports['observe - observers should be destroyed (issue #208)'] = function (test) {
     test.expect(6);
     var s = _([]),
-    o = s.observe();
+        o = s.observe();
     o2 = o.observe();
 
     test.same(o2.source, o, 'o2.source should not be null before destroy.');
@@ -2410,7 +2410,7 @@ exports['observe - observe consume before source emit should not throw'] = funct
 
 exports['flatten'] = function (test) {
     _.flatten([1, [2, [3, 4], 5], [6]]).toArray(function (xs) {
-        test.same(xs, [1,2,3,4,5,6]);
+        test.same(xs, [1, 2, 3, 4, 5, 6]);
         test.done();
     });
 };
@@ -2419,7 +2419,7 @@ exports['flatten - noValueOnError'] = noValueOnErrorTest(_.flatten());
 
 exports['flatten - ArrayStream'] = function (test) {
     _([1, [2, [3, 4], 5], [6]]).flatten().toArray(function (xs) {
-        test.same(xs, [1,2,3,4,5,6]);
+        test.same(xs, [1, 2, 3, 4, 5, 6]);
         test.done();
     });
 };
@@ -2447,7 +2447,7 @@ exports['flatten - GeneratorStream'] = function (test) {
         push(null, _.nil);
     });
     s1.flatten().toArray(function (xs) {
-        test.same(xs, [1,2,3,4,5,6]);
+        test.same(xs, [1, 2, 3, 4, 5, 6]);
         test.done();
     });
 };
@@ -2470,21 +2470,21 @@ exports['flatten - nested GeneratorStreams'] = function (test) {
 
 exports['otherwise'] = function (test) {
     test.expect(5);
-    _.otherwise(_([4,5,6]), _([1,2,3])).toArray(function (xs) {
-        test.same(xs, [1,2,3]);
+    _.otherwise(_([4, 5, 6]), _([1, 2, 3])).toArray(function (xs) {
+        test.same(xs, [1, 2, 3]);
     });
-    _.otherwise(_([4,5,6]), _([])).toArray(function (xs) {
-        test.same(xs, [4,5,6]);
+    _.otherwise(_([4, 5, 6]), _([])).toArray(function (xs) {
+        test.same(xs, [4, 5, 6]);
     });
-    _.otherwise(_([]), _([1,2,3])).toArray(function (xs) {
-        test.same(xs, [1,2,3]);
+    _.otherwise(_([]), _([1, 2, 3])).toArray(function (xs) {
+        test.same(xs, [1, 2, 3]);
     });
     _.otherwise(_([]), _([])).toArray(function (xs) {
         test.same(xs, []);
     });
     // partial application
-    _.otherwise(_([4,5,6]))(_([1,2,3])).toArray(function (xs) {
-        test.same(xs, [1,2,3]);
+    _.otherwise(_([4, 5, 6]))(_([1, 2, 3])).toArray(function (xs) {
+        test.same(xs, [1, 2, 3]);
     });
     test.done();
 };
@@ -2493,20 +2493,20 @@ exports['otherwise - noValueOnError'] = noValueOnErrorTest(_.otherwise(_([])));
 
 exports['otherwise - ArrayStream'] = function (test) {
     test.expect(5);
-    _([1,2,3]).otherwise([4,5,6]).toArray(function (xs) {
-        test.same(xs, [1,2,3]);
+    _([1, 2, 3]).otherwise([4, 5, 6]).toArray(function (xs) {
+        test.same(xs, [1, 2, 3]);
     });
-    _([]).otherwise([4,5,6]).toArray(function (xs) {
-        test.same(xs, [4,5,6]);
+    _([]).otherwise([4, 5, 6]).toArray(function (xs) {
+        test.same(xs, [4, 5, 6]);
     });
-    _([4,5,6]).otherwise([]).otherwise([]).toArray(function (xs) {
-        test.same(xs, [4,5,6]);
+    _([4, 5, 6]).otherwise([]).otherwise([]).toArray(function (xs) {
+        test.same(xs, [4, 5, 6]);
     });
-    _([]).otherwise([4,5,6]).otherwise([]).toArray(function (xs) {
-        test.same(xs, [4,5,6]);
+    _([]).otherwise([4, 5, 6]).otherwise([]).toArray(function (xs) {
+        test.same(xs, [4, 5, 6]);
     });
-    _([]).otherwise([]).otherwise([4,5,6]).toArray(function (xs) {
-        test.same(xs, [4,5,6]);
+    _([]).otherwise([]).otherwise([4, 5, 6]).toArray(function (xs) {
+        test.same(xs, [4, 5, 6]);
     });
     test.done();
 };
@@ -2514,19 +2514,19 @@ exports['otherwise - ArrayStream'] = function (test) {
 exports['otherwise - Redirect'] = function(test) {
     test.expect(3);
     _(function (push, next) {
-        next(_([1,2,3]));
+        next(_([1, 2, 3]));
     }).otherwise([]).toArray(function (xs) {
-        test.same(xs, [1,2,3]);
+        test.same(xs, [1, 2, 3]);
     });
     _(function (push, next) {
-        next(_([1,2,3]));
-    }).otherwise([4,5,6]).toArray(function (xs) {
-        test.same(xs, [1,2,3]);
+        next(_([1, 2, 3]));
+    }).otherwise([4, 5, 6]).toArray(function (xs) {
+        test.same(xs, [1, 2, 3]);
     });
     _(function (push, next) {
         next(_([]));
-    }).otherwise([4,5,6]).toArray(function (xs) {
-        test.same(xs, [4,5,6]);
+    }).otherwise([4, 5, 6]).toArray(function (xs) {
+        test.same(xs, [4, 5, 6]);
     });
     test.done();
 };
@@ -2562,21 +2562,21 @@ exports['otherwise - GeneratorStream'] = function (test) {
 exports['otherwise - function'] = function (test) {
     test.expect(4);
     var calls = 0;
-    _([1,2,3]).otherwise(function() {
+    _([1, 2, 3]).otherwise(function() {
         calls++;
-        return _([4,5,6]);
+        return _([4, 5, 6]);
     }).toArray(function (xs) {
         test.same(calls, 0);
-        test.same(xs, [1,2,3]);
+        test.same(xs, [1, 2, 3]);
     });
 
     var calls2 = 0;
     _([]).otherwise(function() {
         calls2++;
-        return _([4,5,6]);
+        return _([4, 5, 6]);
     }).toArray(function (xs) {
         test.same(calls2, 1);
-        test.same(xs, [4,5,6]);
+        test.same(xs, [4, 5, 6]);
     });
 
     test.done();
@@ -2584,12 +2584,12 @@ exports['otherwise - function'] = function (test) {
 
 exports['append'] = function (test) {
     test.expect(2);
-    _.append(4, [1,2,3]).toArray(function (xs) {
-        test.same(xs, [1,2,3,4]);
+    _.append(4, [1, 2, 3]).toArray(function (xs) {
+        test.same(xs, [1, 2, 3, 4]);
     });
     // partial application
-    _.append(4)([1,2,3]).toArray(function (xs) {
-        test.same(xs, [1,2,3,4]);
+    _.append(4)([1, 2, 3]).toArray(function (xs) {
+        test.same(xs, [1, 2, 3, 4]);
     });
     test.done();
 };
@@ -2597,8 +2597,8 @@ exports['append'] = function (test) {
 exports['append - noValueOnError'] = noValueOnErrorTest(_.append(1), [1]);
 
 exports['append - ArrayStream'] = function (test) {
-    _([1,2,3]).append(4).toArray(function (xs) {
-        test.same(xs, [1,2,3,4]);
+    _([1, 2, 3]).append(4).toArray(function (xs) {
+        test.same(xs, [1, 2, 3, 4]);
         test.done();
     });
 };
@@ -2611,7 +2611,7 @@ exports['append - GeneratorStream'] = function (test) {
         push(null, _.nil);
     });
     s.append(4).toArray(function (xs) {
-        test.same(xs, [1,2,3,4]);
+        test.same(xs, [1, 2, 3, 4]);
         test.done();
     });
 };
@@ -2621,14 +2621,14 @@ exports['reduce'] = function (test) {
     function add(a, b) {
         return a + b;
     }
-    _.reduce(10, add, [1,2,3,4]).toArray(function (xs) {
+    _.reduce(10, add, [1, 2, 3, 4]).toArray(function (xs) {
         test.same(xs, [20]);
     });
     // partial application
-    _.reduce(10, add)([1,2,3,4]).toArray(function (xs) {
+    _.reduce(10, add)([1, 2, 3, 4]).toArray(function (xs) {
         test.same(xs, [20]);
     });
-    _.reduce(10)(add)([1,2,3,4]).toArray(function (xs) {
+    _.reduce(10)(add)([1, 2, 3, 4]).toArray(function (xs) {
         test.same(xs, [20]);
     });
     test.done();
@@ -2639,7 +2639,7 @@ exports['reduce - noValueOnError'] = noValueOnErrorTest(_.reduce(0, _.add), [0])
 exports['reduce - argument function throws'] = function (test) {
     test.expect(2);
     var err = new Error('error');
-    var s = _([1,2,3,4,5]).reduce(0, function (memo, x) {
+    var s = _([1, 2, 3, 4, 5]).reduce(0, function (memo, x) {
         if (x === 3) throw err;
         return memo + x;
     });
@@ -2653,7 +2653,7 @@ exports['reduce - ArrayStream'] = function (test) {
     function add(a, b) {
         return a + b;
     }
-    _([1,2,3,4]).reduce(10, add).toArray(function (xs) {
+    _([1, 2, 3, 4]).reduce(10, add).toArray(function (xs) {
         test.same(xs, [20]);
         test.done();
     });
@@ -2683,11 +2683,11 @@ exports['reduce1'] = function (test) {
     function add(a, b) {
         return a + b;
     }
-    _.reduce1(add, [1,2,3,4]).toArray(function (xs) {
+    _.reduce1(add, [1, 2, 3, 4]).toArray(function (xs) {
         test.same(xs, [10]);
     });
     // partial application
-    _.reduce1(add)([1,2,3,4]).toArray(function (xs) {
+    _.reduce1(add)([1, 2, 3, 4]).toArray(function (xs) {
         test.same(xs, [10]);
     });
     // single argument
@@ -2703,7 +2703,7 @@ exports['reduce1 - noValueOnError'] = noValueOnErrorTest(_.reduce1(_.add));
 exports['reduce1 - argument function throws'] = function (test) {
     test.expect(2);
     var err = new Error('error');
-    var s = _([1,2,3,4,5]).reduce1(function (memo, x) {
+    var s = _([1, 2, 3, 4, 5]).reduce1(function (memo, x) {
         if (x === 3) throw err;
         return memo + x;
     });
@@ -2717,7 +2717,7 @@ exports['reduce1 - ArrayStream'] = function (test) {
     function add(a, b) {
         return a + b;
     }
-    _([1,2,3,4]).reduce1(add).toArray(function (xs) {
+    _([1, 2, 3, 4]).reduce1(add).toArray(function (xs) {
         test.same(xs, [10]);
         test.done();
     });
@@ -2748,14 +2748,14 @@ exports['scan'] = function (test) {
     function add(a, b) {
         return a + b;
     }
-    _.scan(10, add, [1,2,3,4]).toArray(function (xs) {
+    _.scan(10, add, [1, 2, 3, 4]).toArray(function (xs) {
         test.same(xs, [10, 11, 13, 16, 20]);
     });
     // partial application
-    _.scan(10, add)([1,2,3,4]).toArray(function (xs) {
+    _.scan(10, add)([1, 2, 3, 4]).toArray(function (xs) {
         test.same(xs, [10, 11, 13, 16, 20]);
     });
-    _.scan(10)(add)([1,2,3,4]).toArray(function (xs) {
+    _.scan(10)(add)([1, 2, 3, 4]).toArray(function (xs) {
         test.same(xs, [10, 11, 13, 16, 20]);
     });
     test.done();
@@ -2766,7 +2766,7 @@ exports['scan - noValueOnError'] = noValueOnErrorTest(_.scan(0, _.add), [0]);
 exports['scan - argument function throws'] = function (test) {
     test.expect(5);
     var err = new Error('error');
-    var s = _([1,2,3,4,5]).scan(0, function (memo, x) {
+    var s = _([1, 2, 3, 4, 5]).scan(0, function (memo, x) {
         if (x === 3) throw err;
         return memo + x;
     });
@@ -2783,7 +2783,7 @@ exports['scan - ArrayStream'] = function (test) {
     function add(a, b) {
         return a + b;
     }
-    _([1,2,3,4]).scan(10, add).toArray(function (xs) {
+    _([1, 2, 3, 4]).scan(10, add).toArray(function (xs) {
         test.same(xs, [10, 11, 13, 16, 20]);
         test.done();
     });
@@ -2838,11 +2838,11 @@ exports['scan1'] = function (test) {
     function add(a, b) {
         return a + b;
     }
-    _.scan1(add, [1,2,3,4]).toArray(function (xs) {
+    _.scan1(add, [1, 2, 3, 4]).toArray(function (xs) {
         test.same(xs, [1, 3, 6, 10]);
     });
     // partial application
-    _.scan1(add)([1,2,3,4]).toArray(function (xs) {
+    _.scan1(add)([1, 2, 3, 4]).toArray(function (xs) {
         test.same(xs, [1, 3, 6, 10]);
     });
     // single argument
@@ -2857,7 +2857,7 @@ exports['scan1 - noValueOnError'] = noValueOnErrorTest(_.scan1(_.add));
 exports['scan1 - argument function throws'] = function (test) {
     test.expect(4);
     var err = new Error('error');
-    var s = _([1,2,3,4,5]).scan1(function (memo, x) {
+    var s = _([1, 2, 3, 4, 5]).scan1(function (memo, x) {
         if (x === 3) throw err;
         return memo + x;
     });
@@ -2873,7 +2873,7 @@ exports['scan1 - ArrayStream'] = function (test) {
     function add(a, b) {
         return a + b;
     }
-    _([1,2,3,4]).scan1(add).toArray(function (xs) {
+    _([1, 2, 3, 4]).scan1(add).toArray(function (xs) {
         test.same(xs, [1, 3, 6, 10]);
         test.done();
     });
@@ -2924,8 +2924,8 @@ exports['scan1 - GeneratorStream lazy'] = function (test) {
 };
 
 exports['collect'] = function (test) {
-    _.collect([1,2,3,4]).toArray(function (xs) {
-        test.same(xs, [[1,2,3,4]]);
+    _.collect([1, 2, 3, 4]).toArray(function (xs) {
+        test.same(xs, [[1, 2, 3, 4]]);
         test.done();
     });
 };
@@ -2933,8 +2933,8 @@ exports['collect'] = function (test) {
 exports['collect - noValueOnError'] = noValueOnErrorTest(_.collect(), [[]]);
 
 exports['collect - ArrayStream'] = function (test) {
-    _([1,2,3,4]).collect().toArray(function (xs) {
-        test.same(xs, [[1,2,3,4]]);
+    _([1, 2, 3, 4]).collect().toArray(function (xs) {
+        test.same(xs, [[1, 2, 3, 4]]);
         test.done();
     });
 };
@@ -2950,7 +2950,7 @@ exports['collect - GeneratorStream'] = function (test) {
         }, 10);
     });
     s.collect().toArray(function (xs) {
-        test.same(xs, [[1,2,3,4]]);
+        test.same(xs, [[1, 2, 3, 4]]);
         test.done();
     });
 };
@@ -3103,12 +3103,12 @@ exports['transduce'] = {
 
 exports['concat'] = function (test) {
     test.expect(2);
-    _.concat([3,4], [1,2]).toArray(function (xs) {
-        test.same(xs, [1,2,3,4])
+    _.concat([3, 4], [1, 2]).toArray(function (xs) {
+        test.same(xs, [1, 2, 3, 4]);
     });
     // partial application
-    _.concat([3,4])([1,2]).toArray(function (xs) {
-        test.same(xs, [1,2,3,4])
+    _.concat([3, 4])([1, 2]).toArray(function (xs) {
+        test.same(xs, [1, 2, 3, 4]);
     });
     test.done();
 };
@@ -3116,22 +3116,22 @@ exports['concat'] = function (test) {
 exports['concat - noValueOnError'] = noValueOnErrorTest(_.concat([1]), [1]);
 
 exports['concat - ArrayStream'] = function (test) {
-    _([1,2]).concat([3,4]).toArray(function (xs) {
-        test.same(xs, [1,2,3,4]);
+    _([1, 2]).concat([3, 4]).toArray(function (xs) {
+        test.same(xs, [1, 2, 3, 4]);
         test.done();
     });
 };
 
 exports['concat - piped ArrayStream'] = function (test) {
-    _.concat(streamify([3,4]).pipe(through()), streamify([1,2])).toArray(function (xs) {
-        test.same(xs, [1,2,3,4]);
+    _.concat(streamify([3, 4]).pipe(through()), streamify([1, 2])).toArray(function (xs) {
+        test.same(xs, [1, 2, 3, 4]);
         test.done();
     });
 };
 
 exports['concat - piped ArrayStream - paused'] = function (test) {
-    var s1 = streamify([1,2]);
-    var s2 = streamify([3,4]);
+    var s1 = streamify([1, 2]);
+    var s2 = streamify([3, 4]);
     s2.pause();
     s1.pause();
 
@@ -3153,7 +3153,7 @@ exports['concat - piped ArrayStream - paused'] = function (test) {
     test.strictEqual(s2._readableState.reading, false);
 
     s3.toArray(function (xs) {
-        test.same(xs, [1,2,3,4]);
+        test.same(xs, [1, 2, 3, 4]);
         test.done();
     });
 };
@@ -3174,7 +3174,7 @@ exports['concat - GeneratorStream'] = function (test) {
         }, 10);
     });
     s1.concat(s2).toArray(function (xs) {
-        test.same(xs, [1,2,3,4]);
+        test.same(xs, [1, 2, 3, 4]);
         test.done();
     });
 };
@@ -3212,7 +3212,7 @@ exports['merge'] = {
             }, 50);
         });
         _.merge([s1, s2]).toArray(function (xs) {
-            test.same(xs, [1,4,2,5,3,6]);
+            test.same(xs, [1, 4, 2, 5, 3, 6]);
             test.done();
         });
         this.clock.tick(100);
@@ -3241,7 +3241,7 @@ exports['merge'] = {
             }, 50);
         });
         _([s1, s2]).merge().toArray(function (xs) {
-            test.same(xs, [1,4,2,5,3,6]);
+            test.same(xs, [1, 4, 2, 5, 3, 6]);
             test.done();
         });
         this.clock.tick(100);
@@ -3277,7 +3277,7 @@ exports['merge'] = {
             }, 5);
         });
         s.merge().toArray(function (xs) {
-            test.same(xs, [1,4,2,5,3,6]);
+            test.same(xs, [1, 4, 2, 5, 3, 6]);
             test.done();
         });
         this.clock.tick(100);
@@ -3305,7 +3305,7 @@ exports['merge'] = {
             }, 30);
         });
         _([s1, s2]).merge().toArray(function (xs) {
-            test.same(xs, [3,4,5,1,2]);
+            test.same(xs, [3, 4, 5, 1, 2]);
             test.done();
         });
         this.clock.tick(100);
@@ -3361,35 +3361,35 @@ exports['merge'] = {
         this.clock.tick(400);
     },
     'generator generating sources synchronously': function(test) {
-      var srcs = _(function (push, next) {
-          push(null, _([1, 2, 3]));
-          push(null, _([3, 4, 5]));
-          push(null, _([6, 7, 8]));
-          push(null, _([9, 10, 11]));
-          push(null, _([12, 13, 14]));
-          push(null, _.nil);
-      })
-      srcs.merge().toArray(function(xs) {
-        test.same(xs, [ 1, 3, 6, 9, 12, 2, 4, 7, 10, 13, 3, 5, 8, 11, 14 ]);
-        test.done();
-      });
+        var srcs = _(function (push, next) {
+            push(null, _([1, 2, 3]));
+            push(null, _([3, 4, 5]));
+            push(null, _([6, 7, 8]));
+            push(null, _([9, 10, 11]));
+            push(null, _([12, 13, 14]));
+            push(null, _.nil);
+        });
+        srcs.merge().toArray(function(xs) {
+            test.same(xs, [1, 3, 6, 9, 12, 2, 4, 7, 10, 13, 3, 5, 8, 11, 14]);
+            test.done();
+        });
     },
     'github issue #124: detect late end of stream': function(test) {
-      var s = _([1,2,3])
-              .map(function(x) { return _([x]) })
-              .merge()
+        var s = _([1, 2, 3])
+              .map(function(x) { return _([x]); })
+              .merge();
 
-      s.toArray(function(xs) {
-        test.same(xs, [1,2,3]);
-        test.done();
-      })
+        s.toArray(function(xs) {
+            test.same(xs, [1, 2, 3]);
+            test.done();
+        });
     },
     'handle backpressure': function (test) {
-        var s1 = _([1,2,3,4]);
-        var s2 = _([5,6,7,8]);
+        var s1 = _([1, 2, 3, 4]);
+        var s2 = _([5, 6, 7, 8]);
         var s = _.merge([s1, s2]);
         s.take(5).toArray(function (xs) {
-            test.same(xs, [1,5,2,6,3]);
+            test.same(xs, [1, 5, 2, 6, 3]);
             _.setImmediate(function () {
                 test.equal(s._outgoing.length, 0);
                 test.equal(s._incoming.length, 1);
@@ -3403,7 +3403,7 @@ exports['merge'] = {
     'fairer merge algorithm': function (test) {
         // make sure one stream with many buffered values doesn't crowd
         // out another stream being merged
-        var s1 = _([1,2,3,4]);
+        var s1 = _([1, 2, 3, 4]);
         s1.id = 's1';
         var s2 = _(function (push, next) {
             setTimeout(function () {
@@ -3423,9 +3423,9 @@ exports['merge'] = {
             test.same(xs, [1]);
             setTimeout(function () {
                 s.take(4).toArray(function (xs) {
-                    test.same(xs, [5,2,6,3]);
+                    test.same(xs, [5, 2, 6, 3]);
                     s.toArray(function (xs) {
-                        test.same(xs, [4,7,8]);
+                        test.same(xs, [4, 7, 8]);
                         test.done();
                     });
                 });
@@ -3457,43 +3457,43 @@ exports['mergeWithLimit'] = {
                 setTimeout(function () {
                     push(null, n);
                     push(null, _.nil);
-                }, n*10);
+                }, n * 10);
             });
         };
         callback();
     },
     tearDown: function (callback) {
         this.clock.restore();
-        delete this.__delay
+        delete this.__delay;
         callback();
     },
     'run three at a time': function (test) {
-        _.mergeWithLimit(3, [5,3,4,4,2].map(this.__delay)).toArray(function (xs) {
-            test.same(xs, [3,4,5,2,4]);
+        _.mergeWithLimit(3, [5, 3, 4, 4, 2].map(this.__delay)).toArray(function (xs) {
+            test.same(xs, [3, 4, 5, 2, 4]);
             test.done();
         });
         this.clock.tick(100);
     },
     'run two at a time': function (test) {
-        _.mergeWithLimit(2, [4,3,2,3,1].map(this.__delay)).toArray(function (xs) {
-            test.same(xs, [3,4,2,1,3]);
+        _.mergeWithLimit(2, [4, 3, 2, 3, 1].map(this.__delay)).toArray(function (xs) {
+            test.same(xs, [3, 4, 2, 1, 3]);
             test.done();
         });
         this.clock.tick(100);
     },
     'run one at a time': function (test) {
-        _.mergeWithLimit(1, [4,3,2,3,1].map(this.__delay)).toArray(function (xs) {
-            test.same(xs, [4,3,2,3,1]);
+        _.mergeWithLimit(1, [4, 3, 2, 3, 1].map(this.__delay)).toArray(function (xs) {
+            test.same(xs, [4, 3, 2, 3, 1]);
             test.done();
         });
         this.clock.tick(150);
     },
     'handle backpressure': function (test) {
-        var s1 = _([1,2,3,4]);
-        var s2 = _([5,6,7,8]);
+        var s1 = _([1, 2, 3, 4]);
+        var s2 = _([5, 6, 7, 8]);
         var s = _.mergeWithLimit(10, [s1, s2]);
         s.take(5).toArray(function (xs) {
-            test.same(xs, [1,5,2,6,3]);
+            test.same(xs, [1, 5, 2, 6, 3]);
             _.setImmediate(function () {
                 test.equal(s._outgoing.length, 0);
                 test.equal(s._incoming.length, 1);
@@ -3508,7 +3508,7 @@ exports['mergeWithLimit'] = {
         test.expect(2);
         var s1 = _([1, 2, 3, 4]);
         var s2 = _(function (push, next) {
-            push(new Error('error'))
+            push(new Error('error'));
             push(null, _.nil);
         });
         _([s1, s2]).mergeWithLimit(2)
@@ -3520,16 +3520,16 @@ exports['mergeWithLimit'] = {
                 test.done();
             });
     },
-    'noValueOnError': noValueOnErrorTest(_.mergeWithLimit(1)),
+    'noValueOnError': noValueOnErrorTest(_.mergeWithLimit(1))
 };
 
 exports['invoke'] = function (test) {
     test.expect(2);
-    _.invoke('toString', [], [1,2,3,4]).toArray(function (xs) {
+    _.invoke('toString', [], [1, 2, 3, 4]).toArray(function (xs) {
         test.same(xs, ['1', '2', '3', '4']);
     });
     // partial application
-    _.invoke('toString')([])([1,2,3,4]).toArray(function (xs) {
+    _.invoke('toString')([])([1, 2, 3, 4]).toArray(function (xs) {
         test.same(xs, ['1', '2', '3', '4']);
     });
     test.done();
@@ -3538,8 +3538,8 @@ exports['invoke'] = function (test) {
 exports['invoke - noValueOnError'] = noValueOnErrorTest(_.invoke('toString', []));
 
 exports['invoke - ArrayStream'] = function (test) {
-    _([1,2,3,4]).invoke('toString', []).toArray(function (xs) {
-        test.same(xs, ['1','2','3','4']);
+    _([1, 2, 3, 4]).invoke('toString', []).toArray(function (xs) {
+        test.same(xs, ['1', '2', '3', '4']);
         test.done();
     });
 };
@@ -3555,7 +3555,7 @@ exports['invoke - GeneratorStream'] = function (test) {
         }, 10);
     });
     s.invoke('toString', []).toArray(function (xs) {
-        test.same(xs, ['1','2','3','4']);
+        test.same(xs, ['1', '2', '3', '4']);
         test.done();
     });
 };
@@ -3567,7 +3567,7 @@ exports['nfcall'] = function (test) {
         return function(state, push) {
             state.val += n;
             push(null, n);
-        }
+        };
     }
 
     var state = {val: 0};
@@ -3590,7 +3590,7 @@ exports['nfcall - ArrayStream'] = function (test) {
         return function(state, push) {
             state.val += n;
             return push(null, n);
-        }
+        };
     }
 
     var state = {val: 0};
@@ -3606,7 +3606,7 @@ exports['nfcall - GeneratorStream'] = function (test) {
         return function(state, push) {
             state.val += n;
             return push(null, n);
-        }
+        };
     }
 
     var s = _(function (push, next) {
@@ -3641,7 +3641,7 @@ exports['nfcall - parallel result ordering'] = function (test) {
         test.same(xs, ['one', 'two']);
         test.done();
     });
-}
+};
 
 exports['map'] = function (test) {
     test.expect(2);
@@ -3658,12 +3658,12 @@ exports['map'] = function (test) {
     test.done();
 };
 
-exports['map - noValueOnError'] = noValueOnErrorTest(_.map(function (x) { return x }));
+exports['map - noValueOnError'] = noValueOnErrorTest(_.map(function (x) { return x; }));
 
 exports['map - argument function throws'] = function (test) {
     test.expect(6);
     var err = new Error('error');
-    var s = _([1,2,3,4,5]).map(function (x) {
+    var s = _([1, 2, 3, 4, 5]).map(function (x) {
         if (x === 3) throw err;
         return x + 1;
     });
@@ -3712,7 +3712,7 @@ exports['map to value'] = function (test) {
         test.same(xs, ['foo', 'foo']);
     });
     _([1, 2, 3]).map(1).toArray(function (xs) {
-        test.same(xs, [1,1,1]);
+        test.same(xs, [1, 1, 1]);
     });
     test.done();
 };
@@ -3740,7 +3740,7 @@ exports['doto'] = function (test) {
     test.done();
 };
 
-exports['doto - noValueOnError'] = noValueOnErrorTest(_.doto(function (x) { return x }));
+exports['doto - noValueOnError'] = noValueOnErrorTest(_.doto(function (x) { return x; }));
 
 exports['tap - doto alias'] = function (test) {
     test.expect(2);
@@ -3760,18 +3760,18 @@ exports['flatMap'] = function (test) {
             }, 10);
         });
     };
-    _.flatMap(f, [1,2,3,4]).toArray(function (xs) {
-        test.same(xs, [2,4,6,8]);
+    _.flatMap(f, [1, 2, 3, 4]).toArray(function (xs) {
+        test.same(xs, [2, 4, 6, 8]);
         test.done();
     });
 };
 
-exports['flatMap - noValueOnError'] = noValueOnErrorTest(_.flatMap(function (x) { return _() }));
+exports['flatMap - noValueOnError'] = noValueOnErrorTest(_.flatMap(function (x) { return _(); }));
 
 exports['flatMap - argument function throws'] = function (test) {
     test.expect(4);
     var err = new Error('error');
-    var s = _([1,2,3,4]).flatMap(function (x) {
+    var s = _([1, 2, 3, 4]).flatMap(function (x) {
         if (x === 1) return _([x]);
         if (x === 2) throw err;
         if (x === 3) return _([]);
@@ -3794,8 +3794,8 @@ exports['flatMap - ArrayStream'] = function (test) {
             }, 10);
         });
     };
-    _([1,2,3,4]).flatMap(f).toArray(function (xs) {
-        test.same(xs, [2,4,6,8]);
+    _([1, 2, 3, 4]).flatMap(f).toArray(function (xs) {
+        test.same(xs, [2, 4, 6, 8]);
         test.done();
     });
 };
@@ -3819,7 +3819,7 @@ exports['flatMap - GeneratorStream'] = function (test) {
         }, 10);
     });
     s.flatMap(f).toArray(function (xs) {
-        test.same(xs, [2,4,6,8]);
+        test.same(xs, [2, 4, 6, 8]);
         test.done();
     });
 };
@@ -3829,8 +3829,8 @@ exports['flatMap - map to Stream of Array'] = function (test) {
     var f = function (x) {
         return _([[x]]);
     };
-    var s = _([1,2,3,4]).flatMap(f).toArray(function (xs) {
-        test.same(xs, [[1],[2],[3],[4]]);
+    var s = _([1, 2, 3, 4]).flatMap(f).toArray(function (xs) {
+        test.same(xs, [[1], [2], [3], [4]]);
         test.done();
     });
 };
@@ -3853,7 +3853,7 @@ exports['pluck - non-object argument'] = function (test) {
     var a = _([1, {type: 'blogpost', title: 'foo'}]);
     test.throws(function () {
         a.pluck('title').toArray(function (xs) {
-            test.ok(false, "shouldn't be called");
+            test.ok(false, 'shouldn\'t be called');
         });
     },
     'Expected Object, got array');
@@ -3871,7 +3871,7 @@ exports['pick'] = function (test) {
     a.pick(['breed', 'age']).toArray(function (xs) {
         test.deepEqual(xs, [
           {breed: 'chihuahua', age: 5},
-          {breed: 'labrador',  age: 3},
+          {breed: 'labrador', age: 3},
           {breed: 'german-shepherd', age: 9}
         ]);
     });
@@ -3885,7 +3885,7 @@ exports['pick'] = function (test) {
     b.pick(['breed', 'age']).toArray(function (xs) {
         test.deepEqual(xs, [
             {breed: 'chihuahua', age: 5},
-            {breed: 'labrador',  age: 3},
+            {breed: 'labrador', age: 3},
             {breed: 'german-shepherd', age: 9}
         ]);
     });
@@ -3918,7 +3918,7 @@ exports['pick - non-existant property'] = function (test) {
     b.pick(['breed', 'age']).toArray(function (xs) {
         test.equal(xs[0].breed, 'labrador');
         test.ok(xs[0].hasOwnProperty('age'));
-        test.ok(typeof(xs[0].age) === 'undefined');
+        test.ok(typeof (xs[0].age) === 'undefined');
     });
 
     var c = _([
@@ -3938,7 +3938,7 @@ exports['pick - non-existant property'] = function (test) {
     ]);
 
     d.pick(['breed', 'age']).toArray(function (xs) {
-        test.equal(xs[0].breed, 'labrador')
+        test.equal(xs[0].breed, 'labrador');
         test.ok(Object.keys(xs[0]).length === 1);
     });
 
@@ -3947,11 +3947,11 @@ exports['pick - non-existant property'] = function (test) {
 
 exports['pick - non-enumerable properties'] = function (test) {
     test.expect(5);
-    var aObj = {breed: 'labrador', 
+    var aObj = {breed: 'labrador',
         name: 'Rocky',
         owner: 'Adrian',
         color: 'chocolate'
-    }
+    };
     Object.defineProperty(aObj, 'age', {enumerable:false, value:12});
     delete aObj.owner;
     aObj.name = undefined;
@@ -3965,9 +3965,9 @@ exports['pick - non-enumerable properties'] = function (test) {
         test.equal(xs[0].breed, 'labrador');
         test.equal(xs[0].age, 12);
         test.ok(xs[0].hasOwnProperty('name'));
-        test.ok(typeof(xs[0].name) === 'undefined');
+        test.ok(typeof (xs[0].name) === 'undefined');
         // neither owner nor color was selected
-        test.ok(Object.keys(xs[0]).length === 3);  
+        test.ok(Object.keys(xs[0]).length === 3);
     });
 
 
@@ -4058,17 +4058,17 @@ exports['pickBy - non-existant property'] = function (test) {
 };
 
 var isES5 = (function () {
-  'use strict';
-  return Function.prototype.bind && !this;
+    'use strict';
+    return Function.prototype.bind && !this;
 }());
 
 exports['pickBy - non-enumerable properties'] = function (test) {
     test.expect(5);
-    var aObj = {a: 5, 
+    var aObj = {a: 5,
         c: 5,
         d: 10,
         e: 10
-    }
+    };
     Object.defineProperty(aObj, 'b', {enumerable:false, value:15});
     delete aObj.c;
     aObj.d = undefined;
@@ -4080,18 +4080,18 @@ exports['pickBy - non-enumerable properties'] = function (test) {
 
     a.pickBy(function (key, value) {
         if (key === 'b' || value === 5 || typeof value === 'undefined') {
-            return true
+            return true;
         }
-        return false
+        return false;
     }).toArray(function (xs) {
         test.equal(xs[0].a, 5);
         if (isES5) {
             test.equal(xs[0].b, 15);
         } else {
-            test.ok(typeof(xs[0].b) === 'undefined');
+            test.ok(typeof (xs[0].b) === 'undefined');
         }
         test.ok(xs[0].hasOwnProperty('d'));
-        test.ok(typeof(xs[0].d) === 'undefined');
+        test.ok(typeof (xs[0].d) === 'undefined');
         // neither c nor e was selected, b is not selected by keys
         if (isES5) {
             test.ok(Object.keys(xs[0]).length === 3);
@@ -4106,12 +4106,12 @@ exports['pickBy - non-enumerable properties'] = function (test) {
 exports['pickBy - overridden properties'] = function (test) {
     test.expect(7);
     var aObj = {
-        a: 5, 
+        a: 5,
         c: 5,
         d: 10,
         e: 10,
         valueOf: 10
-    }
+    };
     var bObj = Object.create(aObj);
     bObj.b = 10;
     bObj.c = 10;
@@ -4124,14 +4124,14 @@ exports['pickBy - overridden properties'] = function (test) {
 
     a.pickBy(function (key, value) {
         if (value > 7) {
-            return true
+            return true;
         }
-        return false
+        return false;
     }).toArray(function (xs) {
-        test.ok(typeof(xs[0].a) === 'undefined');
+        test.ok(typeof (xs[0].a) === 'undefined');
         test.equal(xs[0].b, 10);
         test.equal(xs[0].c, 10);
-        test.ok(typeof(xs[0].d) === 'undefined');
+        test.ok(typeof (xs[0].d) === 'undefined');
         test.equal(xs[0].e, 10);
         test.equal(xs[0].valueOf, 10);
         test.ok(Object.keys(xs[0]).length === 4);
@@ -4156,12 +4156,12 @@ exports['filter'] = function (test) {
     test.done();
 };
 
-exports['filter - noValueOnError'] = noValueOnErrorTest(_.filter(function (x) { return true }));
+exports['filter - noValueOnError'] = noValueOnErrorTest(_.filter(function (x) { return true; }));
 
 exports['filter - argument function throws'] = function (test) {
     test.expect(3);
     var err = new Error('error');
-    var s = _([1,2,3]).filter(function (x) {
+    var s = _([1, 2, 3]).filter(function (x) {
         if (x === 2) throw err;
         if (x === 3) return false;
         return true;
@@ -4206,18 +4206,18 @@ exports['flatFilter'] = function (test) {
     var f = function (x) {
         return _([x % 2 === 0]);
     };
-    _.flatFilter(f, [1,2,3,4]).toArray(function (xs) {
-        test.same(xs, [2,4]);
+    _.flatFilter(f, [1, 2, 3, 4]).toArray(function (xs) {
+        test.same(xs, [2, 4]);
         test.done();
     });
 };
 
-exports['flatFilter - noValueOnError'] = noValueOnErrorTest(_.flatFilter(function (x) { return _([true]) }));
+exports['flatFilter - noValueOnError'] = noValueOnErrorTest(_.flatFilter(function (x) { return _([true]); }));
 
 exports['flatFilter - argument function throws'] = function (test) {
     test.expect(4);
     var err = new Error('error');
-    var s = _([1,2,3,4]).flatFilter(function (x) {
+    var s = _([1, 2, 3, 4]).flatFilter(function (x) {
         if (x === 1) return _([false]);
         if (x === 2) throw err;
         if (x === 3) return _([]);
@@ -4240,8 +4240,8 @@ exports['flatFilter - ArrayStream'] = function (test) {
             }, 10);
         });
     };
-    _([1,2,3,4]).flatFilter(f).toArray(function (xs) {
-        test.same(xs, [2,4]);
+    _([1, 2, 3, 4]).flatFilter(f).toArray(function (xs) {
+        test.same(xs, [2, 4]);
         test.done();
     });
 };
@@ -4265,7 +4265,7 @@ exports['flatFilter - GeneratorStream'] = function (test) {
         }, 10);
     });
     s.flatFilter(f).toArray(function (xs) {
-        test.same(xs, [2,4]);
+        test.same(xs, [2, 4]);
         test.done();
     });
 };
@@ -4285,7 +4285,7 @@ exports['reject'] = function (test) {
     test.done();
 };
 
-exports['reject - noValueOnError'] = noValueOnErrorTest(_.reject(function (x) { return false }));
+exports['reject - noValueOnError'] = noValueOnErrorTest(_.reject(function (x) { return false; }));
 
 exports['reject - ArrayStream'] = function (test) {
     function isEven(x) {
@@ -4340,12 +4340,12 @@ exports['find'] = function (test) {
     test.done();
 };
 
-exports['find - noValueOnError'] = noValueOnErrorTest(_.find(function (x) { return true }));
+exports['find - noValueOnError'] = noValueOnErrorTest(_.find(function (x) { return true; }));
 
 exports['find - argument function throws'] = function (test) {
     test.expect(4);
     var err = new Error('error');
-    var s = _([1,2,3,4,5]).find(function (x) {
+    var s = _([1, 2, 3, 4, 5]).find(function (x) {
         if (x < 3) throw err;
         return true;
     });
@@ -4424,16 +4424,16 @@ exports['find - GeneratorStream'] = function (test) {
         {type: 'baz', name: 'asdf'}
     ];
 
-    var primatives = [1,2,3,'cat'];
+    var primatives = [1, 2, 3, 'cat'];
 
     var pexpected = {1: [1], 2: [2], 3: [3], 'cat': ['cat']};
-    var pexpectedUndefined = { 'undefined': [ 1, 2, 3, 'cat' ] };
+    var pexpectedUndefined = {'undefined': [1, 2, 3, 'cat']};
 
     var f = function (x) {
         return x.type;
     };
 
-    var pf = function (o) { return o };
+    var pf = function (o) { return o; };
 
     var s = 'type';
 
@@ -4481,7 +4481,7 @@ exports['find - GeneratorStream'] = function (test) {
             test.same(xs, [pexpectedUndefined]);
         });
         test.throws(function () {
-          _.group(null, primatives).toArray(_.log);
+            _.group(null, primatives).toArray(_.log);
         });
 
         // partial application
@@ -4489,7 +4489,7 @@ exports['find - GeneratorStream'] = function (test) {
             test.same(xs, [pexpected]);
         });
         test.throws(function () {
-          _.group(null)(primatives).toArray(_.log);
+            _.group(null)(primatives).toArray(_.log);
         });
 
         test.done();
@@ -4498,8 +4498,8 @@ exports['find - GeneratorStream'] = function (test) {
     exports['group - argument function throws'] = function (test) {
         test.expect(2);
         var err = new Error('error');
-        var s = _([1,2,3,4,5]).group(function (x) {
-            if (x === 5) throw err
+        var s = _([1, 2, 3, 4, 5]).group(function (x) {
+            if (x === 5) throw err;
             return x % 2 == 0 ? 'even' : 'odd';
         });
 
@@ -4688,17 +4688,17 @@ exports['findWhere - GeneratorStream'] = function (test) {
 
 exports['uniqBy'] = function(test) {
     test.expect(1);
-    var xs = [ 'blue', 'red', 'red', 'yellow', 'blue', 'red' ]
-    _.uniqBy(function(a,b) { return a[1] === b[1] }, xs).toArray(function(xs) {
-      test.same(xs, [ 'blue', 'red' ])
+    var xs = ['blue', 'red', 'red', 'yellow', 'blue', 'red'];
+    _.uniqBy(function(a, b) { return a[1] === b[1]; }, xs).toArray(function(xs) {
+        test.same(xs, ['blue', 'red']);
     });
     test.done();
 };
 
 exports['uniqBy - compare error'] = function(test) {
     test.expect(4);
-    var xs = [ 'blue', 'red', 'red', 'yellow', 'blue', 'red' ]
-    var s = _.uniqBy(function(a,b) { if (a === "yellow") throw new Error('yellow'); return a === b; }, xs)
+    var xs = ['blue', 'red', 'red', 'yellow', 'blue', 'red'];
+    var s = _.uniqBy(function(a, b) { if (a === 'yellow') throw new Error('yellow'); return a === b; }, xs);
     s.pull(function(err, x) {
         test.equal(x, 'blue');
     });
@@ -4714,20 +4714,20 @@ exports['uniqBy - compare error'] = function(test) {
     test.done();
 };
 
-exports['uniqBy - noValueOnError'] = noValueOnErrorTest(_.uniqBy(function(a,b) { return a === b }));
+exports['uniqBy - noValueOnError'] = noValueOnErrorTest(_.uniqBy(function(a, b) { return a === b; }));
 
 exports['uniq'] = function(test) {
     test.expect(1);
-    var xs = [ 'blue', 'red', 'red', 'yellow', 'blue', 'red' ];
+    var xs = ['blue', 'red', 'red', 'yellow', 'blue', 'red'];
     _.uniq(xs).toArray(function(xs) {
-      test.same(xs, [ 'blue', 'red', 'yellow' ])
+        test.same(xs, ['blue', 'red', 'yellow']);
     });
     test.done();
 };
 
 exports['uniq - preserves Nan'] = function(test) {
     test.expect(5);
-    var xs = [ 'blue', 'red', NaN, 'red', 'yellow', 'blue', 'red', NaN ];
+    var xs = ['blue', 'red', NaN, 'red', 'yellow', 'blue', 'red', NaN];
     _.uniq(xs).toArray(function(xs) {
         test.equal(xs[0], 'blue');
         test.equal(xs[1], 'red');
@@ -4742,12 +4742,12 @@ exports['uniq - noValueOnError'] = noValueOnErrorTest(_.uniq());
 
 exports['zip'] = function (test) {
     test.expect(2);
-    _.zip([1,2,3], ['a', 'b', 'c']).toArray(function (xs) {
-        test.same(xs, [['a',1], ['b',2], ['c',3]]);
+    _.zip([1, 2, 3], ['a', 'b', 'c']).toArray(function (xs) {
+        test.same(xs, [['a', 1], ['b', 2], ['c', 3]]);
     });
     // partial application
-    _.zip([1,2,3,4,5])(['a', 'b', 'c']).toArray(function (xs) {
-        test.same(xs, [['a',1], ['b',2], ['c',3]]);
+    _.zip([1, 2, 3, 4, 5])(['a', 'b', 'c']).toArray(function (xs) {
+        test.same(xs, [['a', 1], ['b', 2], ['c', 3]]);
     });
     test.done();
 };
@@ -4757,7 +4757,7 @@ exports['zip - noValueOnError'] = noValueOnErrorTest(_.zip([1]));
 exports['zip - source emits error'] = function (test) {
     test.expect(4);
     var err = new Error('error');
-    var s1 = _([1,2]);
+    var s1 = _([1, 2]);
     var s2 = _(function (push) {
         push(null, 'a');
         push(err);
@@ -4782,8 +4782,8 @@ exports['zip - source emits error'] = function (test) {
 };
 
 exports['zip - ArrayStream'] = function (test) {
-    _(['a', 'b', 'c']).zip([1,2,3]).toArray(function (xs) {
-        test.same(xs, [['a',1], ['b',2], ['c',3]]);
+    _(['a', 'b', 'c']).zip([1, 2, 3]).toArray(function (xs) {
+        test.same(xs, [['a', 1], ['b', 2], ['c', 3]]);
         test.done();
     });
 };
@@ -4810,22 +4810,22 @@ exports['zip - GeneratorStream'] = function (test) {
         }, 50);
     });
     s1.zip(s2).toArray(function (xs) {
-        test.same(xs, [['a',1], ['b',2], ['c',3]]);
+        test.same(xs, [['a', 1], ['b', 2], ['c', 3]]);
         test.done();
     });
 };
 
 exports['zipAll'] = function (test) {
     test.expect(3);
-    _.zipAll([[4, 5, 6], [7, 8, 9], [10, 11, 12]], [1,2,3]).toArray(function (xs) {
-        test.same(xs, [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]);
+    _.zipAll([[4, 5, 6], [7, 8, 9], [10, 11, 12]], [1, 2, 3]).toArray(function (xs) {
+        test.same(xs, [[1, 4, 7, 10], [2, 5, 8, 11], [3, 6, 9, 12]]);
     });
-    _.zipAll([_([4, 5, 6]), _([7, 8, 9]), _([10, 11, 12])], [1,2,3]).toArray(function (xs) {
-        test.same(xs, [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]);
+    _.zipAll([_([4, 5, 6]), _([7, 8, 9]), _([10, 11, 12])], [1, 2, 3]).toArray(function (xs) {
+        test.same(xs, [[1, 4, 7, 10], [2, 5, 8, 11], [3, 6, 9, 12]]);
     });
     // partial application
-    _.zipAll([[4, 5, 6], [7, 8, 9], [10, 11, 12]])([1,2,3]).toArray(function (xs) {
-        test.same(xs, [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]);
+    _.zipAll([[4, 5, 6], [7, 8, 9], [10, 11, 12]])([1, 2, 3]).toArray(function (xs) {
+        test.same(xs, [[1, 4, 7, 10], [2, 5, 8, 11], [3, 6, 9, 12]]);
     });
     test.done();
 };
@@ -4834,8 +4834,8 @@ exports['zipAll - noValueOnError'] = noValueOnErrorTest(_.zipAll([1]));
 
 exports['zipAll - StreamOfStreams'] = function (test) {
     test.expect(1);
-    _.zipAll(_([[4, 5, 6], [7, 8, 9], [10, 11, 12]]), [1,2,3]).toArray(function (xs) {
-        test.same(xs, [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]);
+    _.zipAll(_([[4, 5, 6], [7, 8, 9], [10, 11, 12]]), [1, 2, 3]).toArray(function (xs) {
+        test.same(xs, [[1, 4, 7, 10], [2, 5, 8, 11], [3, 6, 9, 12]]);
     });
     test.done();
 };
@@ -4843,7 +4843,7 @@ exports['zipAll - StreamOfStreams'] = function (test) {
 exports['zipAll - source emits error'] = function (test) {
     test.expect(2);
     var err = new Error('zip all error');
-    var s1 = _([1,2,3]);
+    var s1 = _([1, 2, 3]);
     var s2 = _(function (push) {
         push(null, [4, 5, 6]);
         push(err);
@@ -4855,7 +4855,7 @@ exports['zipAll - source emits error'] = function (test) {
     s1.zipAll(s2).errors(function (err) {
         test.equal(err.message, 'zip all error');
     }).toArray(function (xs) {
-        test.same(xs, [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]);
+        test.same(xs, [[1, 4, 7, 10], [2, 5, 8, 11], [3, 6, 9, 12]]);
     });
     test.done();
 };
@@ -4883,7 +4883,7 @@ exports['zipAll - GeneratorStream'] = function (test) {
     });
 
     s1.zipAll(s2).toArray(function (xs) {
-        test.same(xs, [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]);
+        test.same(xs, [[1, 4, 7, 10], [2, 5, 8, 11], [3, 6, 9, 12]]);
         test.done();
     });
 };
@@ -4905,9 +4905,9 @@ exports['zipAll0'] = {
             _([10, 11, 12])
         ];
         this.expected = [
-            [ 1, 4, 7, 10 ],
-            [ 2, 5, 8, 11 ],
-            [ 3, 6, 9, 12 ]
+            [1, 4, 7, 10],
+            [2, 5, 8, 11],
+            [3, 6, 9, 12]
         ];
         this.tester = function (expected, test) {
             return function (xs) {
@@ -4984,10 +4984,10 @@ exports['zipAll0'] = {
             this.input[0],
             this.input[1],
             this.input[2],
-            this.input[3].take(2),
+            this.input[3].take(2)
         ]).toArray(this.tester([
             this.expected[0],
-            this.expected[1],
+            this.expected[1]
         ], test));
         test.done();
     }
@@ -4995,24 +4995,24 @@ exports['zipAll0'] = {
 
 exports['batch'] = function (test) {
     test.expect(5);
-    _.batch(3, [1,2,3,4,5,6,7,8,9,0]).toArray(function (xs) {
-        test.same(xs, [[1,2,3], [4,5,6], [7,8,9], [0]]);
+    _.batch(3, [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]).toArray(function (xs) {
+        test.same(xs, [[1, 2, 3], [4, 5, 6], [7, 8, 9], [0]]);
     });
 
-    _.batch(3, [1,2,3]).toArray(function (xs) {
-        test.same(xs, [[1,2,3]]);
+    _.batch(3, [1, 2, 3]).toArray(function (xs) {
+        test.same(xs, [[1, 2, 3]]);
     });
 
-    _.batch(2, [1,2,3]).toArray(function (xs) {
-        test.same(xs, [[1,2],[3]]);
+    _.batch(2, [1, 2, 3]).toArray(function (xs) {
+        test.same(xs, [[1, 2], [3]]);
     });
 
-    _.batch(1, [1,2,3]).toArray(function (xs) {
-        test.same(xs, [[1],[2],[3]]);
+    _.batch(1, [1, 2, 3]).toArray(function (xs) {
+        test.same(xs, [[1], [2], [3]]);
     });
 
-    _.batch(0, [1,2,3]).toArray(function (xs) {
-        test.same(xs, [[1,2,3]]);
+    _.batch(0, [1, 2, 3]).toArray(function (xs) {
+        test.same(xs, [[1, 2, 3]]);
     });
 
     test.done();
@@ -5022,24 +5022,24 @@ exports['batch - noValueOnError'] = noValueOnErrorTest(_.batch(1));
 
 exports['batch - ArrayStream'] = function (test) {
     test.expect(5);
-    _([1,2,3,4,5,6,7,8,9,0]).batch(3).toArray(function (xs) {
-        test.same(xs, [[1,2,3], [4,5,6], [7,8,9], [0]]);
+    _([1, 2, 3, 4, 5, 6, 7, 8, 9, 0]).batch(3).toArray(function (xs) {
+        test.same(xs, [[1, 2, 3], [4, 5, 6], [7, 8, 9], [0]]);
     });
 
-    _([1,2,3]).batch(4).toArray(function (xs) {
-        test.same(xs, [[1,2,3]]);
+    _([1, 2, 3]).batch(4).toArray(function (xs) {
+        test.same(xs, [[1, 2, 3]]);
     });
 
-    _([1,2,3]).batch(2).toArray(function (xs) {
-        test.same(xs, [[1,2],[3]]);
+    _([1, 2, 3]).batch(2).toArray(function (xs) {
+        test.same(xs, [[1, 2], [3]]);
     });
 
-    _([1,2,3]).batch(1).toArray(function (xs) {
-        test.same(xs, [[1],[2],[3]]);
+    _([1, 2, 3]).batch(1).toArray(function (xs) {
+        test.same(xs, [[1], [2], [3]]);
     });
 
-    _([1,2,3]).batch(0).toArray(function (xs) {
-        test.same(xs, [[1,2,3]]);
+    _([1, 2, 3]).batch(0).toArray(function (xs) {
+        test.same(xs, [[1, 2, 3]]);
     });
 
     test.done();
@@ -5091,15 +5091,15 @@ exports['batchWithTimeOrCount'] = {
             this.clock.tick(10);
             test.same(results, []);
             this.clock.tick(50);
-            test.same(results, [[1,2]]);
+            test.same(results, [[1, 2]]);
             this.clock.tick(30);
-            test.same(results, [[1,2], [3]]);
+            test.same(results, [[1, 2], [3]]);
             this.clock.tick(10);
-            test.same(results, [[1,2], [3]]);
+            test.same(results, [[1, 2], [3]]);
             this.clock.tick(25);
-            test.same(results, [[1,2], [3], [4,5]]);
+            test.same(results, [[1, 2], [3], [4, 5]]);
             this.clock.tick(10);
-            test.same(results, [[1,2], [3], [4,5], [6]]);
+            test.same(results, [[1, 2], [3], [4, 5], [6]]);
             test.done();
         };
 
@@ -5218,7 +5218,7 @@ exports['intersperse'] = function(test) {
         test.same(xs.join(''), 'banana');
     });
     test.done();
-}
+};
 
 exports['intersperse - noValueOnError'] = noValueOnErrorTest(_.intersperse(1));
 
@@ -5234,7 +5234,7 @@ exports['intersperse - ArrayStream'] = function(test) {
         test.same(xs, []);
     });
     test.done();
-}
+};
 
 exports['intersperse - GeneratorStream'] = function(test) {
     var s1 = _(function (push, next) {
@@ -5251,7 +5251,7 @@ exports['intersperse - GeneratorStream'] = function(test) {
         test.same(xs.join(''), 'banana');
         test.done();
     });
-}
+};
 
 exports['parallel'] = function (test) {
     var calls = [];
@@ -5484,9 +5484,9 @@ exports['parallel - behaviour of parallel with fork() - issue #234'] = function 
     }
 
     var arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-    var expected = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+    var expected = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
         10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-        20, 21, 22, 23, 24, 25, 26, 27, 28, 29 ];
+        20, 21, 22, 23, 24, 25, 26, 27, 28, 29];
 
     var baseRange = _(arr);
     var loRange = baseRange.fork();
@@ -5501,7 +5501,7 @@ exports['parallel - behaviour of parallel with fork() - issue #234'] = function 
         });
 };
 
-exports['parallel consumption liveness - issue #302'] = function  (test) {
+exports['parallel consumption liveness - issue #302'] = function (test) {
     test.expect(3);
     var clock = sinon.useFakeTimers(),
         s3flag = false,
@@ -5554,7 +5554,7 @@ exports['parallel - throw descriptive error on not-stream'] = function (test) {
     s.pull(errorEquals(test, 'Expected Stream, got number'));
     s.pull(valueEquals(test, _.nil));
     test.done();
-}
+};
 
 exports['parallel - parallel should not drop data if paused (issue #328)'] = function (test) {
     test.expect(1);
@@ -5883,10 +5883,10 @@ exports['latest'] = {
 
 exports['last'] = function (test) {
     test.expect(3);
-    _([1,2,3,4]).last().toArray(function (xs) {
+    _([1, 2, 3, 4]).last().toArray(function (xs) {
         test.same(xs, [4]);
     });
-    _.last([1,2,3,4]).toArray(function (xs) {
+    _.last([1, 2, 3, 4]).toArray(function (xs) {
         test.same(xs, [4]);
     });
     _.last([]).toArray(function (xs) {
@@ -5899,7 +5899,7 @@ exports['last - noValueOnError'] = noValueOnErrorTest(_.last());
 
 exports['sortBy'] = {
     setUp: function (cb) {
-        this.input   = [5, 2, 4, 1, 3];
+        this.input = [5, 2, 4, 1, 3];
         this.reversed = [5, 4, 3, 2, 1];
         this.compDesc = function (a, b) {
             return b - a;
@@ -5927,8 +5927,8 @@ exports['sortBy'] = {
 
 exports['sort'] = {
     setUp: function (cb) {
-        this.input   = ['e', 'a', 'd', 'c', 'b'];
-        this.sorted   = ['a', 'b', 'c', 'd', 'e'];
+        this.input = ['e', 'a', 'd', 'c', 'b'];
+        this.sorted = ['a', 'b', 'c', 'd', 'e'];
         this.tester = function (expected, test) {
             return function (xs) {
                 test.same(xs, expected);
@@ -5966,7 +5966,7 @@ exports['through'] = {
             }
         );
         this.numArray = [1, 2, 3, 4];
-        this.stringArray = ['1','2','3','4'];
+        this.stringArray = ['1', '2', '3', '4'];
         this.tester = function (expected, test) {
             return function (xs) {
                 test.same(xs, expected);
@@ -5999,10 +5999,10 @@ exports['through'] = {
                     return x * 2;
                 });
         }).through(function (s) {
-                return s.map(function (x) {
-                    return x + 1;
-                });
+            return s.map(function (x) {
+                return x + 1;
             });
+        });
         s.toArray(this.tester([3, 7], test));
         test.done();
     },
@@ -6027,7 +6027,7 @@ exports['through'] = {
                     return x * 2;
                 });
             });
-        s.toArray(this.tester([2,4,6,8], test));
+        s.toArray(this.tester([2, 4, 6, 8], test));
         test.done();
     },
     'inputstream - error': function (test) {
@@ -6049,7 +6049,7 @@ exports['through'] = {
         test.done();
     },
     'noValueOnError': function (test) {
-        noValueOnErrorTest(_.through(function (x) { return x }))(test);
+        noValueOnErrorTest(_.through(function (x) { return x; }))(test);
     }
 };
 
@@ -6075,12 +6075,12 @@ exports['pipeline'] = {
             setTimeout(function () { push(null, _.nil); }, 40);
         });
         s.pipe(parseDouble).toArray(function (xs) {
-            test.same(xs, [2,4,6,8]);
+            test.same(xs, [2, 4, 6, 8]);
             test.done();
         });
     },
     'single through function': function (test) {
-        var src = streamify([1,2,3,4]);
+        var src = streamify([1, 2, 3, 4]);
         var through = _.pipeline(function (s) {
             return s
                 .filter(function (x) {
@@ -6099,10 +6099,10 @@ exports['pipeline'] = {
         });
     },
     'no arguments': function (test) {
-        var src = streamify([1,2,3,4]);
+        var src = streamify([1, 2, 3, 4]);
         var through = _.pipeline();
         src.pipe(through).toArray(function (xs) {
-            test.same(xs, [1,2,3,4]);
+            test.same(xs, [1, 2, 3, 4]);
             test.done();
         });
     },
@@ -6347,7 +6347,7 @@ exports['wrapCallback - errors'] = function (test) {
     };
     test.throws(function () {
         _.wrapCallback(f)(1, 2).toArray(function () {
-            test.ok(false, "this shouldn't be called");
+            test.ok(false, 'this shouldn\'t be called');
         });
     });
     test.done();
@@ -6382,7 +6382,7 @@ exports['wrapCallback with args wrapping by array'] = function (test) {
     }
     _.wrapCallback(f, ['one', 'two', 'three'])().each(function (x) {
         test.same(x, {'one': 1, 'two': 2, 'three': 3});
-        test.done()
+        test.done();
     });
 };
 
@@ -6392,7 +6392,7 @@ exports['wrapCallback default mapper discards all but first arg'] = function (te
     }
     _.wrapCallback(f)().each(function (x) {
         test.same(x, 1);
-        test.done()
+        test.done();
     });
 };
 
@@ -6404,7 +6404,7 @@ exports['streamifyAll'] = {
         test.done();
     },
     'streamifies object methods': function (test) {
-        var plainObject = { fn: function (a, b, cb) { cb(null, a + b); } };
+        var plainObject = {fn: function (a, b, cb) { cb(null, a + b); }};
         var obj = _.streamifyAll(plainObject);
         test.equal(typeof obj.fnStream, 'function');
         obj.fnStream(1, 2).apply(function (res) {
@@ -6414,7 +6414,7 @@ exports['streamifyAll'] = {
     },
     'streamifies constructor prototype methods': function (test) {
         function ExampleClass (a) { this.a = a; }
-        ExampleClass.prototype.fn = function (b, cb) {  cb(null, this.a + b); };
+        ExampleClass.prototype.fn = function (b, cb) { cb(null, this.a + b); };
         var ExampleClass = _.streamifyAll(ExampleClass);
         var obj = new ExampleClass(1);
         test.equal(typeof obj.fnStream, 'function');
@@ -6436,13 +6436,13 @@ exports['streamifyAll'] = {
     },
     'streamifies inherited methods': function (test) {
         function Grandfather () {}
-        Grandfather.prototype.fn1 = function (b, cb) { cb(null, this.a*b); };
+        Grandfather.prototype.fn1 = function (b, cb) { cb(null, this.a * b); };
         function Father () {}
         Father.prototype = Object.create(Grandfather.prototype);
-        Father.prototype.fn2 = function (b, cb) { cb(null, this.a/b); };
+        Father.prototype.fn2 = function (b, cb) { cb(null, this.a / b); };
         function Child (a) { this.a = a; }
         Child.prototype = Object.create(Father.prototype);
-        Child.prototype.fn3 = function (b, cb) { cb(null, this.a+b); };
+        Child.prototype.fn3 = function (b, cb) { cb(null, this.a + b); };
         var Child = _.streamifyAll(Child);
         var child = new Child(3);
 
@@ -6457,7 +6457,7 @@ exports['streamifyAll'] = {
             });
     },
     'does not re-streamify functions': function (test) {
-        var plainObject = { fn: function (a, b, cb) { cb(null, a + b); } };
+        var plainObject = {fn: function (a, b, cb) { cb(null, a + b); }};
         var obj = _.streamifyAll(_.streamifyAll(plainObject));
         test.equal(typeof obj.fnStreamStream, 'undefined');
         test.done();
@@ -6480,10 +6480,10 @@ exports['streamifyAll'] = {
         test.equal(typeof obj2.keysStream, 'undefined');
         test.done();
     },
-    "doesn't break when property has custom getter": function (test) {
-        function ExampleClass (a) { this.a = { b: a }; }
+    'doesn\'t break when property has custom getter': function (test) {
+        function ExampleClass (a) { this.a = {b: a}; }
         Object.defineProperty(ExampleClass.prototype, 'c',
-            { get: function () { return this.a.b; } });
+            {get: function () { return this.a.b; }});
 
         test.doesNotThrow(function () {
             _.streamifyAll(ExampleClass);
@@ -6501,10 +6501,10 @@ exports['add'] = function (test) {
 exports['not'] = function (test) {
     test.equal(_.not(true), false);
     test.equal(_.not(123), false);
-    test.equal(_.not("asdf"), false);
+    test.equal(_.not('asdf'), false);
     test.equal(_.not(false), true);
     test.equal(_.not(0), true);
-    test.equal(_.not(""), true);
+    test.equal(_.not(''), true);
     test.equal(_.not(null), true);
     test.equal(_.not(undefined), true);
     return test.done();
