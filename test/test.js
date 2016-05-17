@@ -3961,7 +3961,7 @@ exports['pick - non-enumerable properties'] = function (test) {
         owner: 'Adrian',
         color: 'chocolate'
     };
-    Object.defineProperty(aObj, 'age', {enumerable:false, value:12});
+    Object.defineProperty(aObj, 'age', {enumerable: false, value: 12});
     delete aObj.owner;
     aObj.name = undefined;
 
@@ -4078,7 +4078,7 @@ exports['pickBy - non-enumerable properties'] = function (test) {
         d: 10,
         e: 10
     };
-    Object.defineProperty(aObj, 'b', {enumerable:false, value:15});
+    Object.defineProperty(aObj, 'b', {enumerable: false, value: 15});
     delete aObj.c;
     aObj.d = undefined;
 
