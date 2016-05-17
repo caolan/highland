@@ -460,10 +460,10 @@ exports.race = {
         function write() {
             var cont = false;
             while ((cont = stream.write(i++)) && i <= 10) {
-            }
-            if (cont) {
-                i++;
-                stream.end();
+                if (cont) {
+                    i++;
+                    stream.end();
+                }
             }
         }
 
