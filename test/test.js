@@ -638,7 +638,7 @@ exports.constructor = {
             // Wait for the rest of the close handlers to be called before
             // checking.
             _.setImmediate(function () {
-                test.equal(numTimesEndCalled, 1, 'end() should only be called once.');
+                test.equal(numTimesEndCalled, 1, 'end() should be called exactly once.');
                 test.done();
             });
         });
