@@ -657,6 +657,79 @@ exports.constructor = {
         s.pull(valueEquals(test, _.nil));
         test.done();
     },
+    'from Readable - custom onFinish handler': function (test) {
+        test.expect(2);
+        var clock = sinon.useFakeTimers();
+        var rs = new Stream.Readable();
+        rs._read = function (size) {
+            // Infinite stream!
+        };
+
+        var cleanup = sinon.spy();
+        var cleanUpCalled = false;
+        var s = _(rs, function (_rs, callback) {
+            setTimeout(callback, 1000);
+            return cleanup;
+        });
+
+        clock.tick(1000);
+        clock.restore();
+
+        s.pull(valueEquals(test, _.nil));
+
+        test.strictEqual(cleanup.callCount, 1);
+        test.done();
+    },
+    'from Readable - custom onFinish handler emits error': function (test) {
+        test.expect(2);
+        var clock = sinon.useFakeTimers();
+        var rs = new Stream.Readable();
+        rs._read = function (size) {
+            // Infinite stream!
+        };
+
+        var error = new Error('error');
+        var s = _(rs, function (_rs, callback) {
+            setTimeout(function () {
+                callback(error);
+            }, 1000);
+        });
+
+        clock.tick(1000);
+        clock.restore();
+
+        s.pull(errorEquals(test, 'error'));
+        s.pull(valueEquals(test, _.nil));
+
+        test.done();
+    },
+    'from Readable - custom onFinish handler - handle multiple callback calls': function (test) {
+        test.expect(2);
+        var clock = sinon.useFakeTimers();
+        var rs = new Stream.Readable();
+        rs._read = function (size) {
+            // Infinite stream!
+        };
+
+        var cleanup = sinon.spy();
+        var cleanUpCalled = false;
+        var error = new Error('error');
+        var s = _(rs, function (_rs, callback) {
+            setTimeout(function () {
+                callback();
+                callback(error);
+            }, 1000);
+            return cleanup;
+        });
+
+        clock.tick(1000);
+        clock.restore();
+
+        // Only the first one counts.
+        s.pull(valueEquals(test, _.nil));
+        test.strictEqual(cleanup.callCount, 1);
+        test.done();
+    },
     'throws error for unsupported object': function (test) {
         test.expect(1);
         test.throws(function () {
