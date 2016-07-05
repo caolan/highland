@@ -112,6 +112,14 @@ function takeNext(xs, times, array) {
     });
 }
 
+/*
+ * Returns the Readable pipe destination (i.e., the one that is provided to
+ * Readable#pipe). This is only relevant for streams constructed using the
+ * Readable constructor.
+ */
+function getReadablePipeDest(stream) {
+    return stream;
+}
 
 exports.ratelimit = {
     setUp: function (callback) {
@@ -574,15 +582,12 @@ exports.constructor = {
         s.pull(valueEquals(test, 1));
         s.destroy();
 
-        var writtenTo = false;
-        var write = s.write;
-        s.write = function () {
-            writtenTo = true;
-            write.call(s, arguments);
-        };
+        var rsPipeDest = getReadablePipeDest(s);
+        var write = sinon.spy(rsPipeDest, 'write');
+
         s.emit('drain');
 
-        test.ok(!writtenTo, 'Drain should not cause write to be called.');
+        test.ok(!write.called, 'Drain should not cause write to be called.');
         test.done();
     },
     'from Readable - emits \'close\' not \'end\' - issue #490': function (test) {
@@ -628,17 +633,13 @@ exports.constructor = {
             });
         });
         var s = _(rs);
-        var oldEnd = s.end;
-        var numTimesEndCalled = 0;
-        s.end = function () {
-            numTimesEndCalled++;
-            oldEnd.call(s);
-        };
+        var rsPipeDest = getReadablePipeDest(s);
+        var end = sinon.spy(rsPipeDest, 'end');
         rs.on('close', function () {
             // Wait for the rest of the close handlers to be called before
             // checking.
             _.setImmediate(function () {
-                test.equal(numTimesEndCalled, 1, 'end() should be called exactly once.');
+                test.equal(end.callCount, 1, 'end() should be called exactly once.');
                 test.done();
             });
         });
