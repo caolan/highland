@@ -657,6 +657,109 @@ exports.constructor = {
         s.pull(valueEquals(test, _.nil));
         test.done();
     },
+    'from Readable - unbind and unpipe as soon as possible': function (test) {
+        var rs = new Stream.Readable();
+        rs._read = function (size) {
+            this.push('1');
+            this.push(null);
+        };
+
+        var error = new Error('error');
+        var s = _(rs);
+        var rsPipeDest = getReadablePipeDest(s);
+        var oldWrite = rsPipeDest.write;
+
+        // We need to catch the exception here
+        // since pipe uses process.nextTick which
+        // isn't mocked by sinon.
+        rsPipeDest.write = function (x) {
+            try {
+                oldWrite.call(this, x);
+            } catch (e) {
+            }
+        };
+
+        var write = sinon.spy(rsPipeDest, 'write');
+        rs.emit('error', error);
+
+        _.setImmediate(function () {
+            test.strictEqual(write.callCount, 2);
+            test.strictEqual(write.args[0][0].error, error);
+            test.strictEqual(write.args[1][0], _.nil);
+            test.done();
+        });
+    },
+    'from Readable - custom onFinish handler': function (test) {
+        test.expect(2);
+        var clock = sinon.useFakeTimers();
+        var rs = new Stream.Readable();
+        rs._read = function (size) {
+            // Infinite stream!
+        };
+
+        var cleanup = sinon.spy();
+        var s = _(rs, function (_rs, callback) {
+            setTimeout(callback, 1000);
+            return cleanup;
+        });
+
+        clock.tick(1000);
+        clock.restore();
+
+        s.pull(valueEquals(test, _.nil));
+
+        test.strictEqual(cleanup.callCount, 1);
+        test.done();
+    },
+    'from Readable - custom onFinish handler emits error': function (test) {
+        test.expect(2);
+        var clock = sinon.useFakeTimers();
+        var rs = new Stream.Readable();
+        rs._read = function (size) {
+            // Infinite stream!
+        };
+
+        var error = new Error('error');
+        var s = _(rs, function (_rs, callback) {
+            setTimeout(function () {
+                callback(error);
+            }, 1000);
+        });
+
+        clock.tick(1000);
+        clock.restore();
+
+        s.pull(errorEquals(test, 'error'));
+        s.pull(valueEquals(test, _.nil));
+
+        test.done();
+    },
+    'from Readable - custom onFinish handler - handle multiple callback calls': function (test) {
+        test.expect(2);
+        var clock = sinon.useFakeTimers();
+        var rs = new Stream.Readable();
+        rs._read = function (size) {
+            // Infinite stream!
+        };
+
+        var cleanup = sinon.spy();
+        var error = new Error('error');
+        var s = _(rs, function (_rs, callback) {
+            setTimeout(function () {
+                callback();
+                callback(error);
+            }, 1000);
+            return cleanup;
+        });
+
+        clock.tick(1000);
+        clock.restore();
+
+        // Only the first one counts.
+        s.pull(valueEquals(test, _.nil));
+        test.strictEqual(cleanup.callCount, 1);
+        test.done();
+    },
     'throws error for unsupported object': function (test) {
         test.expect(1);
         test.throws(function () {

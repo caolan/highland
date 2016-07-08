@@ -5,6 +5,16 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
+2.9.0
+-----
+### New additions
+* It is now possible to pass an custom `onFinish` handler when constructing a
+  Highland Stream from a Node Readable Stream. This allows for special detection
+  of stream completion when necessary.
+  [#505](https://github.com/caolan/highland/pull/505).
+  See [#490](https://github.com/caolan/highland/issues/490) for a discussion on
+  why this is necessary.
+
 2.8.1
 -----
 ### Bugfix
