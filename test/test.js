@@ -675,7 +675,9 @@ exports.constructor = {
         rsPipeDest.write = function (x) {
             try {
                 oldWrite.call(this, x);
-            } catch (e) {
+            }
+            catch (e) {
+                // Ignore
             }
         };
 
