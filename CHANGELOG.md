@@ -5,6 +5,65 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
+2.9.0
+-----
+### New additions
+* It is now possible to pass an custom `onFinish` handler when constructing a
+  Highland Stream from a Node Readable Stream. This allows for special detection
+  of stream completion when necessary.
+  [#505](https://github.com/caolan/highland/pull/505).
+  See [#490](https://github.com/caolan/highland/issues/490) for a discussion on
+  why this is necessary.
+
+2.8.1
+-----
+### Bugfix
+* The `Readable` stream wrapper changes from `2.8.0` assumed that `close` would
+  never be emitted before `end` for any stream. This is not the case for
+  `Sockets`, which will `close` when the client disconnects but will `end` only
+  when it has piped all of its data. For a slow consumer, `end` may happen
+  *after* `close`, causing the Highland stream to drop all data after `close` is
+  emitted.
+
+  This release fixes the regression at the cost of restoring the old behavior of
+  never ending the Stream when only `close` is emitted. This does not affect the
+  case where `error` events are emitted without `end`. That still works fine. To
+  manually end a stream when it emits `close`, listen to the event and call
+  `stream.end()`.
+  Fixes [#490](https://github.com/caolan/highland/issues/490).
+
+2.8.0
+-----
+### Bugfix
+* A Highland Stream that wraps `Readable` now properly handles the case where
+  the `Readable` emits the `close` event but not the `end` event (this can
+  happen with an `fs` read stream when it encounters an error). It will also end
+  the wrapper stream when it encounters an error (this happens when reading from
+  a non-existent file). Before, such streams would simply never end.
+  [#479](https://github.com/caolan/highland/pull/479).
+  Fixes [#478](https://github.com/caolan/highland/issues/478).
+
+### New additions
+* `toCallback`: method for returning the result of a stream to a
+  nodejs-style callback function.
+  [#493](https://github.com/caolan/highland/pull/493).
+  Fixes [#484](https://github.com/caolan/highland/issues/484).
+
+### Improvements
+* A Highland Stream that wraps a bluebird promise can now handle bluebird
+  cancellation. When the promise is cancelled the wrapper stream is empty.
+  [#487](https://github.com/caolan/highland/pull/487).
+  Fixes [#486](https://github.com/caolan/highland/issues/486).
+
+
+2.7.4
+-----
+### Bugfix
+* `mergeWithLimit` no longer causes an `// Unhandled 'error' event` error when one
+  of its sources emits an error.
+  [#476](https://github.com/caolan/highland/pull/476).
+  Fixes [#475](https://github.com/caolan/highland/issues/475).
+
 2.7.3
 -----
 ### Bugfix
