@@ -578,14 +578,13 @@ exports.constructor = {
         var rs = streamify([1, 2, 3]);
 
         var s = _(rs);
+        var rsPipeDest = getReadablePipeDest(s);
         s.pull(valueEquals(test, 1));
         s.destroy();
 
-        var rsPipeDest = getReadablePipeDest(s);
         var write = sinon.spy(rsPipeDest, 'write');
 
         s.emit('drain');
-
         test.ok(!write.called, 'Drain should not cause write to be called.');
         test.done();
     },
