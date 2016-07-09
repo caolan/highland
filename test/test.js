@@ -222,10 +222,9 @@ exports.ratelimit = {
         this.clock.tick(1000);
         test.same(results, [1, 2, 3, 4, 5]);
         test.done();
-    }
+    },
+    'noValueOnError': noValueOnErrorTest(_.ratelimit(1, 10))
 };
-
-exports['ratelimit - noValueOnError'] = noValueOnErrorTest(_.ratelimit(1, 10));
 
 exports.curry = function (test) {
     var fn = _.curry(function (a, b, c, d) {
