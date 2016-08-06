@@ -5,6 +5,15 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
+2.10.0
+------
+### New additions
+* `of`: Creates a stream that sends a single value then ends. 
+  [#520](https://github.com/caolan/highland/pull/520).
+* `fromError`: Creates a stream that sends a single error then ends. 
+  [#520](https://github.com/caolan/highland/pull/520).  
+ 
+
 2.9.0
 -----
 ### New additions
