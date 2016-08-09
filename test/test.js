@@ -1040,6 +1040,30 @@ exports.GeneratorStream = {
         test.ok(push.called, 'The push function should have been called.');
         test.ok(!push.threw(), 'The push function call should not have thrown.');
         test.done();
+    },
+    'Cannot read property __ConsumeGenerator__ of null (#518)': function (test) {
+        var clock = sinon.useFakeTimers();
+
+        var s = _(function (push, next) {
+            setTimeout(function () {
+                push(new Error('error'));
+                _.setImmediate(next); // next2
+                next(); // next1
+            }, 0);
+        });
+
+        s.pull(function (err, x) {
+            s.pull(function () {
+            });
+
+            _.setImmediate(function () {
+                s.destroy();
+            });
+        });
+
+        clock.tick(100);
+        clock.restore();
+        test.done();
     }
 };
 
