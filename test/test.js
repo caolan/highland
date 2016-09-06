@@ -711,7 +711,7 @@ exports.constructor = {
         test.strictEqual(cleanup.callCount, 1);
         test.done();
     },
-    'from Readable - custom onFinish handler emits error': function (test) {
+    'from Readable - custom onFinish handler - emits error': function (test) {
         test.expect(2);
         var clock = sinon.useFakeTimers();
         var rs = new Stream.Readable();
@@ -758,6 +758,71 @@ exports.constructor = {
         // Only the first one counts.
         s.pull(valueEquals(test, _.nil));
         test.strictEqual(cleanup.callCount, 1);
+        test.done();
+    },
+    'from Readable - custom onFinish handler - default to end on error': function (test) {
+        test.expect(2);
+        var clock = sinon.useFakeTimers();
+        var rs = new Stream.Readable();
+        var firstTime = true;
+
+        rs._read = function (size) {
+            // Infinite stream!
+        };
+
+        var error1 = new Error('error1');
+        var error2 = new Error('error2');
+        var s = _(rs, function (_rs, callback) {
+            setTimeout(function () {
+                callback(error1);
+            }, 1000);
+            setTimeout(function () {
+                callback(error2);
+                callback();
+            }, 2000);
+        });
+
+        clock.tick(2000);
+        clock.restore();
+
+        s.pull(errorEquals(test, 'error1'));
+        s.pull(valueEquals(test, _.nil));
+
+        test.done();
+    },
+    'from Readable - custom onFinish handler - emits multiple errors': function (test) {
+        test.expect(3);
+        var clock = sinon.useFakeTimers();
+        var rs = new Stream.Readable();
+        var firstTime = true;
+
+        rs._read = function (size) {
+            // Infinite stream!
+        };
+
+        var error1 = new Error('error1');
+        var error2 = new Error('error2');
+        var s = _(rs, function (_rs, callback) {
+            setTimeout(function () {
+                callback(error1);
+            }, 1000);
+            setTimeout(function () {
+                callback(error2);
+                callback();
+            }, 2000);
+
+            return {
+                continueOnError: true
+            };
+        });
+
+        clock.tick(2000);
+        clock.restore();
+
+        s.pull(errorEquals(test, 'error1'));
+        s.pull(errorEquals(test, 'error2'));
+        s.pull(valueEquals(test, _.nil));
+
         test.done();
     },
     'throws error for unsupported object': function (test) {
