@@ -72,6 +72,7 @@ module.exports = function (grunt) {
                 commit: true,
                 commitMessage: 'Release %VERSION%',
                 commitFiles: ['package.json', 'dist/highland.js', 'dist/highland.min.js', 'docs/index.html'],
+                prereleaseName: 'beta',
                 createTag: true,
                 tagName: '%VERSION%',
                 tagMessage: 'Version %VERSION%'
