@@ -814,7 +814,7 @@ exports.constructor = {
         test.strictEqual(cleanup.callCount, 1);
         test.done();
     },
-    'from Readable - custom onFinish handler emits error': function (test) {
+    'from Readable - custom onFinish handler - emits error': function (test) {
         test.expect(2);
         var clock = sinon.useFakeTimers();
         var rs = new Stream.Readable();
@@ -861,6 +861,74 @@ exports.constructor = {
         // Only the first one counts.
         s.pull(valueEquals(test, _.nil));
         test.strictEqual(cleanup.callCount, 1);
+        test.done();
+    },
+    'from Readable - custom onFinish handler - default to end on error': function (test) {
+        test.expect(2);
+        var clock = sinon.useFakeTimers();
+        var rs = new Stream.Readable();
+        var firstTime = true;
+
+        rs._read = function (size) {
+            // Infinite stream!
+        };
+
+        var error1 = new Error('error1');
+        var error2 = new Error('error2');
+        var s = _(rs, function (_rs, callback) {
+            setTimeout(function () {
+                callback(error1);
+            }, 1000);
+            setTimeout(function () {
+                callback(error2);
+                callback();
+            }, 2000);
+        });
+
+        clock.tick(2000);
+        clock.restore();
+
+        s.pull(errorEquals(test, 'error1'));
+        s.pull(valueEquals(test, _.nil));
+
+        test.done();
+    },
+    'from Readable - custom onFinish handler - emits multiple errors': function (test) {
+        test.expect(4);
+        var clock = sinon.useFakeTimers();
+        var rs = new Stream.Readable();
+        var firstTime = true;
+
+        rs._read = function (size) {
+            // Infinite stream!
+        };
+
+        var onDestroy = sinon.spy();
+        var error1 = new Error('error1');
+        var error2 = new Error('error2');
+        var s = _(rs, function (_rs, callback) {
+            setTimeout(function () {
+                callback(error1);
+            }, 1000);
+            setTimeout(function () {
+                callback(error2);
+                callback();
+            }, 2000);
+
+            return {
+                onDestroy: onDestroy,
+                continueOnError: true
+            };
+        });
+
+        clock.tick(2000);
+        clock.restore();
+
+        s.pull(errorEquals(test, 'error1'));
+        s.pull(errorEquals(test, 'error2'));
+        s.pull(valueEquals(test, _.nil));
+
+        test.strictEqual(onDestroy.callCount, 1, 'On destroy should have been called.');
         test.done();
     },
     'throws error for unsupported object': function (test) {
@@ -1378,6 +1446,31 @@ exports['generator throws error if push called after nil'] = function (test) {
         s.resume();
     });
     test.done();
+};
+
+exports.of = {
+    'creates stream of one item': function (test) {
+        test.expect(2);
+        _.of(1)
+            .toCallback(function (err, result) {
+                test.ifError(err);
+                test.same(result, 1);
+                test.done();
+            });
+    }
+};
+
+exports.fromError = {
+    'creates stream of one error': function (test) {
+        var error = new Error('This is an error');
+        test.expect(2);
+        _.fromError(error)
+            .toCallback(function (err, result) {
+                test.strictEqual(err, error);
+                test.strictEqual(result, void 0);
+                test.done();
+            });
+    }
 };
 
 exports['consume - throws error if push called after nil'] = function (test) {

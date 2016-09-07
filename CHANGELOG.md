@@ -5,6 +5,19 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
+2.10.0
+------
+### New additions
+* `of`: Creates a stream that sends a single value then ends. 
+  [#520](https://github.com/caolan/highland/pull/520).
+* `fromError`: Creates a stream that sends a single error then ends. 
+  [#520](https://github.com/caolan/highland/pull/520).  
+* When constructing a Highland stream from a Node Readable, the `onFinish`
+  handler may now turn off the default automatic end on errors behavior by
+  returning an object with the property `continueOnError` set to `true`.
+  [#534](https://github.com/caolan/highland/pull/534).
+  Fixes [#532](https://github.com/caolan/highland/issues/532).
+
 2.9.0
 -----
 ### New additions
