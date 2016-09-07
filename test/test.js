@@ -791,7 +791,7 @@ exports.constructor = {
         test.done();
     },
     'from Readable - custom onFinish handler - emits multiple errors': function (test) {
-        test.expect(3);
+        test.expect(4);
         var clock = sinon.useFakeTimers();
         var rs = new Stream.Readable();
         var firstTime = true;
@@ -800,6 +800,7 @@ exports.constructor = {
             // Infinite stream!
         };
 
+        var onDestroy = sinon.spy();
         var error1 = new Error('error1');
         var error2 = new Error('error2');
         var s = _(rs, function (_rs, callback) {
@@ -812,6 +813,7 @@ exports.constructor = {
             }, 2000);
 
             return {
+                onDestroy: onDestroy,
                 continueOnError: true
             };
         });
@@ -823,6 +825,7 @@ exports.constructor = {
         s.pull(errorEquals(test, 'error2'));
         s.pull(valueEquals(test, _.nil));
 
+        test.strictEqual(onDestroy.callCount, 1, 'On destroy should have been called.');
         test.done();
     },
     'throws error for unsupported object': function (test) {
