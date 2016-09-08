@@ -23,6 +23,14 @@ re-write your code. Time to dive in!
 
 Made by <a href="http://twitter.com/caolan">@caolan</a>, with help and patience from friends - <a href="http://gittip.com/caolan">Leave a tip</a> or <a href="https://github.com/caolan/highland">fork this</a> :)
 
+This branch tracks the ongoing development of version 3.0, which will feature a
+rewritten Highland core implementation, extensibility support, limited stream
+lifecycle, and some breaking changes to certain transforms. See
+[#179](https://github.com/caolan/highland/issues/179) for more details. New
+features will only be added to this branch. However, until 3.0 is released, we
+will still be doing bug fixes for the 2.x releases. See the [2.x
+branch](https://github.com/caolan/highland/tree/2.x) for those files.
+
 ## Examples
 
 Usage as a Node.js module
