@@ -27,7 +27,7 @@
     "grunt-contrib-uglify": "^1.0.0",
     "grunt-contrib-watch": "~1.0.0",
     "grunt-eslint": "^18.0.0",
-    "grunt-gh-pages": "~1.1.0",
+    "grunt-gh-pages": "~1.2.0",
     "grunt-npm": "0.0.2",
     "handlebars": "~4.0.5",
     "nodeunit": "~0.10.0",
