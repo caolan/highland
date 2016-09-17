@@ -23,14 +23,26 @@ re-write your code. Time to dive in!
 
 Made by <a href="http://twitter.com/caolan">@caolan</a>, with help and patience from friends - <a href="http://gittip.com/caolan">Leave a tip</a> or <a href="https://github.com/caolan/highland">fork this</a> :)
 
-**NOTE**: This branch tracks the ongoing development of version 3.0, which
-will feature a rewritten Highland core implementation, extensibility support,
-limited stream lifecycle, and some breaking changes to certain transforms.
-See [#179](https://github.com/caolan/highland/issues/179) and the [3.x label](https://github.com/caolan/highland/issues?utf8=%E2%9C%93&q=label%3A3.x%20)
+## Highland v3
+This branch tracks the ongoing development of version 3.0, which will feature a
+rewritten Highland core implementation, extensibility support, limited stream
+lifecycle, and some breaking changes to certain transforms.  See
+[#179](https://github.com/caolan/highland/issues/179) and the [3.x
+label](https://github.com/caolan/highland/issues?utf8=%E2%9C%93&q=label%3A3.x%20)
 for more details. New features will only be added to this branch. However,
 until 3.0 is released, we will still be doing bug fixes for the 2.x releases.
 See the [2.x branch](https://github.com/caolan/highland/tree/2.x) for those
 files.
+
+Currently, the code is in a semi-stable state. The only major missing feature
+is [`onDestroy` for higher-level
+transforms](https://github.com/caolan/highland/issues/412). To try out the new
+goodness, install the `next` tag from NPM.
+
+```
+npm install --save highland@next
+```
+
 
 ## Examples
 

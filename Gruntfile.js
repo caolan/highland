@@ -84,7 +84,10 @@ module.exports = function (grunt) {
                 requires: [],
                 // if the workspace is dirty, abort publishing
                 // (to avoid publishing local changes)
-                abortIfDirty: true
+                abortIfDirty: true,
+
+		// TODO(vqvu): Remove when 3.0.0 is officially released.
+		tag: 'next'
             }
         }
 
