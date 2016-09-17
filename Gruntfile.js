@@ -86,8 +86,8 @@ module.exports = function (grunt) {
                 // (to avoid publishing local changes)
                 abortIfDirty: true,
 
-		// TODO(vqvu): Remove when 3.0.0 is officially released.
-		tag: 'next'
+                // TODO(vqvu): Remove when 3.0.0 is officially released.
+                tag: 'next'
             }
         }
 
