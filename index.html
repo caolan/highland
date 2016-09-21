@@ -200,31 +200,66 @@
 
       <h2 id="examples">Examples</h2>
       <p>Converting to/from Highland Streams</p>
-      <pre><code class="javascript">_([1,2,3,4]).toArray(function (xs) {
-    // xs is [1,2,3,4]
+      <pre><code class="javascript">_([1, 2, 3, 4]).toArray(function (xs) {
+    console.log(xs); // => [1, 2, 3, 4]
 });</code></pre>
       <p>Mapping over a Stream</p>
-      <pre><code class="javascript">var doubled = _([1,2,3,4]).map(function (x) {
+      <pre><code class="javascript">_([1, 2, 3, 4]).map(function (x) {
     return x * 2;
+}).toArray(function (xs) {
+    console.log(xs); // => [2, 4, 6, 8]
 });</code></pre>
-      <p>Reading files in parallel (4 at once)</p>
-      <pre><code class="javascript">var data = _(filenames).map(readFile).parallel(4);</code></pre>
-      <p>Handling errors</p>
-      <pre><code class="javascript">data.errors(function (err, rethrow) {
-    // handle or rethrow error
-});</code></pre>
+      <p>Reading files in parallel (4 at once). See the <a href="#async">Async section</a> or the <a href="#wrapCallback">method's docs</a> for an explanation of <code>wrapCallback</code></p>
+      <pre><code class="javascript">var readFile = _.wrapCallback(fs.readFile);
+var filenames = ['file1', 'file2', 'file3', 'file4', 'file5', 'file6']
+var data = _(filenames) // Creates a stream from an array of filenames
+    .map(readFile)      // Maps each filename into a Highland stream that reads from that file.
+    .parallel(4)        // Reads from 4 files at once and merge the results in order.
+    .each(function (fileContent) {
+        // Consumes the data.
+        // fileContent is a Buffer.
+        console.log(fileContent.toString());
+    });</code></pre>
       <p>Piping to a Node Stream</p>
-      <pre><code class="javascript">data.pipe(output);</code></pre>
-      <p>Piping in data from Node Streams</p>
-      <pre><code class="javascript">var output = fs.createWriteStream('output');
-var docs = db.createReadStream();
+      <pre><code class="javascript">var data = _([1, 2, 3, 4]).map(function (x) {
+    return x + '\n';
+});
+var output = fs.createWriteStream('output');
 
-// wrap a node stream and pipe to file
+// Writes 1, 2, 3, 4 to a file, one on each line.
+data.pipe(output);</code></pre>
+      <p>Piping in data from Node Streams</p>
+      <pre><code class="javascript">function isBlogPost(doc) {
+    return doc.type === 'blogpost';
+}
+
+var output = fs.createWriteStream('output');
+var docs = new db.createReadStream();
+
+// Wrap a node stream and pipe to file
 _(docs).filter(isBlogpost).pipe(output);
 
 // or, pipe in a node stream directly:
-var through = _.pipeline(_.filter(isBlogpost));
-docs.pipe(through).pipe(output);</code></pre>
+// useful if you need a TransformStream-like object for external APIs.
+var transformStream = _.pipeline(_.filter(isBlogpost));
+docs.pipe(transformStream).pipe(output);</code></pre>
+      <p>Handling errors</p>
+      <pre><code class="javascript">_(fs.createReadStream('I do not exist.'))
+    .errors(function (err, push) {
+        console.log('Caught error:', err.message);
+
+        // You may also rethrow the error by calling
+        // push(err);
+
+        // or replace it with another error
+        // push(new Error('oops'));
+
+        // or even replace it with a value
+        // push(null, 'We got an error.')
+    }).toArray(function (xs) {
+        // Array is empty because the stream couldn't read from the file.
+        console.log('Data:', xs); // => []
+    });</code></pre>
       <p>Handling events</p>
       <pre><code class="javascript">var clicks = _('click', btn).map(1);
 var counter = clicks.scan(0, _.add);
@@ -235,23 +270,26 @@ counter.each(function (n) {
 
       <h3 id="arrays">Arrays</h3>
       <p>To work with data in Arrays, just wrap it in <code>_()</code>. The Highland methods are then available on it:</p>
-<pre><code class="javascript">var shouty = _(['foo', 'bar', 'baz']).map(toUpperCase);</code></pre>
+<pre><code class="javascript">function toUpperCase(string) {
+    return string.toUpperCase();
+});
+var shouty = _(['foo', 'bar', 'baz']).map(toUpperCase); // => 'FOO' 'BAR' 'BAZ'</code></pre>
       <p>These methods return Stream objects, not Arrays, so you can chain together method calls:</p>
       <pre><code class="javascript">_(['foo', 'bar', 'baz']).map(toUpperCase).map(function (x) {
     return {name: x};
-});</code></pre>
+}); // => {name: 'FOO'}, {name: 'BAR'}, {name: 'BAZ'}</code></pre>
       <p>When using the Highland APIs there is little reason to turn this back into an Array, but if you're calling an outside library you may need to convert it back:</p>
       <pre><code class="javascript">_(['foo', 'bar', 'baz']).map(toUpperCase).toArray(function (xs) {
-    // xs will now be ['FOO', 'BAR', 'BAZ]
+    console.log(xs); // => ['FOO', 'BAR', 'BAZ]
 });</code></pre>
       <p>Passing a function to the <code>toArray</code> call may seem a little unfamiliar, but this enables an important trick in Highland. Now, without changing any of your existing code, you could swap out <code class="javascript">['foo', 'bar', 'baz']</code> for an asynchronous data source, and it would just work!</p>
       <p>You can also pass Arrays into the top-level functions instead of using methods on the Stream object:</p>
-      <pre><code class="javascript">_.map(doubled, [1, 2, 3, 4])  // => 2 4 6 8</code></pre>
+      <pre><code class="javascript">_.map(doubled, [1, 2, 3, 4])  // => 2, 4, 6, 8</code></pre>
       <p>Note, this still returns a Stream.</p>
 
       <h3 id="async">Async</h3>
       <p>Now, let's see how we might swap out an Array source for an asynchronous one. By passing a function to the Stream constructor we can manually push values onto the Stream:</p>
-      <pre><code class="javascript">function getData(filename) {
+      <pre><code class="javascript">function readFile(filename) {
     // create a new Stream
     return _(function (push, next) {
         // do something async when we read from the Stream
@@ -263,9 +301,9 @@ counter.each(function (n) {
 };</code></pre>
       <p>First, we return a new Stream which when read from will read a file (this is called <em>lazy evaluation</em>). When <code>fs.readFile</code> calls its callback, we push the error and data values onto the Stream. Finally, we push <code>_.nil</code> onto the Stream. This is the "end of stream" marker and will tell any consumers of this stream to stop reading.</p>
       <p>Since wrapping a callback is a fairly common thing to do, there is a convenience function:</p>
-      <pre><code class="javascript">var getData = _.wrapCallback(fs.readFile);</code></pre>
+      <pre><code class="javascript">var readFile = _.wrapCallback(fs.readFile);</code></pre>
       <p>Now we have a new asynchronous source, we can run the exact same code from the Array examples on it:</p>
-      <pre><code class="javascript">getData('myfile').map(toUpperCase).map(function (x) {
+      <pre><code class="javascript">readFile('myfile').map(toUpperCase).map(function (x) {
     return {name: x};
 });</code></pre>
       <p>With Highland, we really can have one language to work with both synchronous and asynchronous data, whether it's from a Node Stream, an EventEmitter, a callback or an Array. You can even wrap ES6 or jQuery promises:</p>
@@ -286,22 +324,26 @@ var nums = _(['1', '2', '3']).map(function (x) {
 
 // calls === 3</code></pre>
       <p>Equally, when we tell Highland to map a Stream of filenames to the `readFile` function, it doesn't actually go and read all the files at once, it let's us decide on how we want to read them:</p>
-      <pre><code class="javascript">filenames.map(readFile).series();
-filenames.map(readFile).parallel(10)</code></pre>
+      <pre><code class="javascript">var readFile = _.wrapCallback(fs.readFile);
+filenames.map(readFile).series();     // Reads one file at a time.
+filenames.map(readFile).parallel(10); // Reads 10 files at a time.</code></pre>
 
       <h3 id="backpressure">Back-pressure</h3>
       <p>Since Highland is designed to play nicely with Node Streams, it also support back-pressure. This means that a fast source will not overwhelm a slow consumer.</p>
-      <pre><code class="javascript">fastSource.map(slowThing)</code></pre>
-      <p>In the above example, <code>fastSource</code> will be paused while <code>slowThing</code> does its processing.</p>
+      <pre><code class="javascript">fastSource.map(slowTransform)</code></pre>
+      <p>In the above example, <code>fastSource</code> will be paused while <code>slowTransform</code> does its processing.</p>
       <p>Some streams (such as those based on events) cannot be paused. In these cases data is buffered until the consumer is ready to handle it. If you expect a non-pausable source to be consumed by a slow consumer, then you should use methods such as <a href="#throttle">throttle</a> or <a href="#latest">latest</a> to selectively drop data and regulate the flow.</p>
       <p>Occasionally, you'll need to split Streams in your program. At this point, Highland will force you to choose between sharing back-pressure with the new consumer, or letting the existing consumer regulate backpressure and have the new consumer simply observe values as they arrive. Attempting to add two consumers to a Stream without calling <a href="#fork">fork</a> or <a href="#observe">observe</a> will throw an error.</p>
       <pre><code class="javascript">// shared back-pressure
-source.map(output1);
-source.fork().map(output2);
+// transform1 and transform2 will operate in lock-step.
+source.map(transform1);
+source.fork().map(transform2);
 
-// let the first handle backpressure and the second simply observe
-source.map(output);
-source.observe().map(_.log);</code></pre>
+// Let the first handle backpressure and the second simply observe.
+// Only transform1 will slow down the source. If transform2 is slow,
+// data from the source will be buffered.
+source.map(transform1);
+source.observe().map(transform2);</code></pre>
 
       <h3 id="currying">Currying</h3>
       <p>As well as calling functions as methods on the Stream object, Highland also exports them at the top-level.</p>
@@ -318,6 +360,11 @@ var getBlogposts = _.filter(function (doc) {
 
 // now we can use the new function by completing its arguments
 getBlogposts(data); // => new Stream of blogposts</code></pre>
+      <p>Using <a href="#seq">seq</a>, you can even define complex transformations.</p>
+      <pre><code class="javascript">var getBlogContents = _.seq(
+    _.filter(function (doc) { return doc.type === 'blogpost'; }),
+    _.map(function (doc) { return doc.contents; })
+);</code></pre>
       <p>You can curry your own functions too:</p>
       <pre><code class="javascript">var myCurryableFn = _.curry(fn);</code></pre>
 
