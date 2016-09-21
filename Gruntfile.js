@@ -39,6 +39,11 @@ module.exports = function (grunt) {
 
         uglify: {
             main: {
+                options: {
+                    // Restore v1.x IE8 behavior to guarantee compatibility. We
+                    // may not need it.
+                    screwIE8: false
+                },
                 files: {
                     'dist/highland.min.js': ['dist/highland.js']
                 }
