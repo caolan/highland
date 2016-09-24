@@ -152,7 +152,7 @@ counter.each(function (n) {
 });</code></pre>
       <p>Passing a function to the <code>toArray</code> call may seem a little unfamiliar, but this enables an important trick in Highland. Now, without changing any of your existing code, you could swap out <code class="javascript">['foo', 'bar', 'baz']</code> for an asynchronous data source, and it would just work!</p>
       <p>You can also pass Arrays into the top-level functions instead of using methods on the Stream object:</p>
-      <pre><code class="javascript">_.map(doubled, [1, 2, 3, 4])  // => 2 4 6 8</code></pre>
+      <pre><code class="javascript">_.map(doubled, [1, 2, 3, 4])  // => 2, 4, 6, 8</code></pre>
       <p>Note, this still returns a Stream.</p>
 
       <h3 id="async">Async</h3>
