@@ -6539,6 +6539,18 @@ exports.wrapCallback = function (test) {
     });
 };
 
+exports['wrapCallback - promise'] = function (test) {
+    var f = function (a, b) {
+        return new Promise(function (resolve) {
+            resolve(a + b);
+        });
+    };
+    _.wrapCallback(f)(1, 2).toArray(function (xs) {
+        test.same(xs, [3]);
+        test.done();
+    });
+};
+
 exports['wrapCallback - context'] = function (test) {
     var o = {
         f: function (a, b, cb) {
@@ -6546,6 +6558,21 @@ exports['wrapCallback - context'] = function (test) {
             setTimeout(function () {
                 cb(null, a + b);
             }, 10);
+        }
+    };
+    o.g = _.wrapCallback(o.f);
+    o.g(1, 2).toArray(function (xs) {
+        test.same(xs, [3]);
+        test.done();
+    });
+};
+
+exports['wrapCallback - promise context'] = function (test) {
+    var o = {
+        f: function (a, b) {
+            return new Promise(function (resolve) {
+                resolve(a + b);
+            });
         }
     };
     o.g = _.wrapCallback(o.f);
@@ -6565,6 +6592,25 @@ exports['wrapCallback - errors'] = function (test) {
         });
     });
     test.done();
+};
+
+exports['wrapCallback - promise errors'] = function (test) {
+    var errs = [];
+    var f = function (a, b) {
+        return new Promise(function (resolve, reject) {
+            reject(new Error('boom'));
+        });
+    };
+    _.wrapCallback(f)(1, 2)
+        .errors(function (err) {
+            errs.push(err);
+        })
+        .toArray(function (xs) {
+            test.equal(errs[0].message, 'boom');
+            test.equal(errs.length, 1);
+            test.same(xs, []);
+            test.done();
+        });
 };
 
 exports['wrapCallback with args wrapping by function'] = function (test) {
