@@ -1133,9 +1133,9 @@ _(docs).group(f); OR _(docs).group(&#x27;type&#x27;);
                 </li>
             </ul>
 
-            <pre><code class="javascript">_([&#x27;ba&#x27;, &#x27;a&#x27;, &#x27;a&#x27;]).intersperse(&#x27;n&#x27;)  // &#x3D;&gt; ba, n, a, n, a
-_([&#x27;mississippi&#x27;]).splitBy(&#x27;ss&#x27;).intersperse(&#x27;ss&#x27;)  // &#x3D;&gt; mi, ss, i, ss, ippi
-_([&#x27;foo&#x27;]).intersperse(&#x27;bar&#x27;)  // &#x3D;&gt; foo</code></pre>
+            <pre><code class="javascript">_([&#x27;ba&#x27;, &#x27;a&#x27;, &#x27;a&#x27;]).intersperse(&#x27;n&#x27;)  // &#x3D;&gt; &#x27;ba&#x27;, &#x27;n&#x27;, &#x27;a&#x27;, &#x27;n&#x27;, &#x27;a&#x27;
+_([&#x27;mississippi&#x27;]).splitBy(&#x27;ss&#x27;).intersperse(&#x27;ss&#x27;)  // &#x3D;&gt; &#x27;mi&#x27;, &#x27;ss&#x27;, &#x27;i&#x27;, &#x27;ss&#x27;, &#x27;ippi&#x27;
+_([&#x27;foo&#x27;]).intersperse(&#x27;bar&#x27;)  // &#x3D;&gt; &#x27;foo&#x27;</code></pre>
           </div>
           <div id=invoke class="doc-item">
             <div class="doc-heading">
@@ -1163,7 +1163,7 @@ a new stream with the result of those calls.</p>
                 </li>
             </ul>
 
-            <pre><code class="javascript">_([&#x27;foo&#x27;, &#x27;bar&#x27;]).invoke(&#x27;toUpperCase&#x27;, [])  // &#x3D;&gt; FOO, BAR
+            <pre><code class="javascript">_([&#x27;foo&#x27;, &#x27;bar&#x27;]).invoke(&#x27;toUpperCase&#x27;, [])  // &#x3D;&gt; &#x27;FOO&#x27;, &#x27;BAR&#x27;
 
 var readFile &#x3D; _.wrapCallback(fs.readFile);
 filenames.flatMap(readFile).invoke(&#x27;toString&#x27;, [&#x27;utf8&#x27;]);</code></pre>
@@ -1684,8 +1684,8 @@ the resulting ordering is undefined.</p>
             <p><a href="#splitBy">splitBy</a> over newlines.</p>
 
 
-            <pre><code class="javascript">_([&#x27;a\n&#x27;, &#x27;b\nc\n&#x27;, &#x27;d&#x27;, &#x27;\ne&#x27;]).split()  // &#x3D;&gt; a, b, c, d, e
-_([&#x27;a\r\nb\nc&#x27;]]).split()  // &#x3D;&gt; a, b, c</code></pre>
+            <pre><code class="javascript">_([&#x27;a\n&#x27;, &#x27;b\nc\n&#x27;, &#x27;d&#x27;, &#x27;\ne&#x27;]).split()  // &#x3D;&gt; &#x27;a&#x27;, &#x27;b&#x27;, &#x27;c&#x27;, &#x27;d&#x27;, &#x27;e&#x27;
+_([&#x27;a\r\nb\nc&#x27;]]).split()  // &#x3D;&gt; &#x27;a&#x27;, &#x27;b&#x27;, &#x27;c&#x27;</code></pre>
           </div>
           <div id=splitBy class="doc-item">
             <div class="doc-heading">
@@ -1709,9 +1709,9 @@ _([&#x27;a\r\nb\nc&#x27;]]).split()  // &#x3D;&gt; a, b, c</code></pre>
                 </li>
             </ul>
 
-            <pre><code class="javascript">_([&#x27;mis&#x27;, &#x27;si&#x27;, &#x27;s&#x27;, &#x27;sippi&#x27;]).splitBy(&#x27;ss&#x27;)  // &#x3D;&gt; mi, i, ippi
-_([&#x27;ba&#x27;, &#x27;a&#x27;, &#x27;a&#x27;]).intersperse(&#x27;n&#x27;).splitBy(&#x27;n&#x27;)  // &#x3D;&gt; ba, a, a
-_([&#x27;foo&#x27;]).splitBy(&#x27;bar&#x27;)  // &#x3D;&gt; foo</code></pre>
+            <pre><code class="javascript">_([&#x27;mis&#x27;, &#x27;si&#x27;, &#x27;s&#x27;, &#x27;sippi&#x27;]).splitBy(&#x27;ss&#x27;)  // &#x3D;&gt; &#x27;mi&#x27;, &#x27;i&#x27;, &#x27;ippi&#x27;
+_([&#x27;ba&#x27;, &#x27;a&#x27;, &#x27;a&#x27;]).intersperse(&#x27;n&#x27;).splitBy(&#x27;n&#x27;)  // &#x3D;&gt; &#x27;ba&#x27;, &#x27;a&#x27;, &#x27;a&#x27;
+_([&#x27;foo&#x27;]).splitBy(&#x27;bar&#x27;)  // &#x3D;&gt; &#x27;foo&#x27;</code></pre>
           </div>
           <div id=stopOnError class="doc-item">
             <div class="doc-heading">
@@ -1841,7 +1841,7 @@ before the error will still be emitted.</p>
 
             <pre><code class="javascript">var xf &#x3D; require(&#x27;transducer-js&#x27;).map(_.add(1));
 _([1, 2, 3, 4]).transduce(xf);
-// &#x3D;&gt; [2, 3, 4, 5]</code></pre>
+// &#x3D;&gt; 2, 3, 4, 5</code></pre>
           </div>
           <div id=uniq class="doc-item">
             <div class="doc-heading">
@@ -2386,7 +2386,7 @@ _([&#x27;a&#x27;, &#x27;b&#x27;, &#x27;c&#x27;]).zip(_([1]))  // &#x3D;&gt; [&#x
               <pre>Stream.zipAll(ys)</pre>
             </div>
 
-            <p>Takes a stream and a <code>finite</code> stream of <code>N</code> streams
+            <p>Takes a stream and a <em>finite</em> stream of <code>N</code> streams
 and returns a stream of the corresponding <code>(N+1)</code>-tuples.</p>
 
 <p><em>Note:</em> This transform will be renamed <code>zipEach</code> in the next major version
@@ -2402,11 +2402,11 @@ release.</p>
             </ul>
 
             <pre><code class="javascript">_([1,2,3]).zipAll([[4, 5, 6], [7, 8, 9], [10, 11, 12]])
-// &#x3D;&gt; [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]
+// &#x3D;&gt; [1, 4, 7, 10], [2, 5, 8, 11], [3, 6, 9, 12]
 
 // shortest stream determines length of output stream
 _([1, 2, 3, 4]).zipAll([[5, 6, 7, 8], [9, 10, 11, 12], [13, 14]])
-// &#x3D;&gt; [ [ 1, 5, 9, 13 ], [ 2, 6, 10, 14 ] ]</code></pre>
+// &#x3D;&gt; [1, 5, 9, 13], [2, 6, 10, 14]</code></pre>
           </div>
           <div id=zipAll0 class="doc-item">
             <div class="doc-heading">
@@ -2417,7 +2417,7 @@ _([1, 2, 3, 4]).zipAll([[5, 6, 7, 8], [9, 10, 11, 12], [13, 14]])
               <pre>Stream.zipAll0()</pre>
             </div>
 
-            <p>Takes a <code>finite</code> stream of streams and returns a stream where the first
+            <p>Takes a <em>finite</em> stream of streams and returns a stream where the first
 element from each separate stream is combined into a single data event,
 followed by the second elements of each stream and so on until the shortest
 input stream is exhausted.</p>
@@ -2432,7 +2432,7 @@ release.</p>
     _([7, 8, 9]),
     _([10, 11, 12])
 ]).zipAll0()
-// &#x3D;&gt; [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]
+// &#x3D;&gt; [1, 4, 7, 10], [2, 5, 8, 11], [3, 6, 9, 12]
 
 // shortest stream determines length of output stream
 _([
@@ -2441,7 +2441,7 @@ _([
     _([9, 10, 11, 12]),
     _([13, 14])
 ]).zipAll0()
-// &#x3D;&gt; [ [ 1, 5, 9, 13 ], [ 2, 6, 10, 14 ] ]</code></pre>
+// &#x3D;&gt; [1, 5, 9, 13], [2, 6, 10, 14]</code></pre>
           </div>
         </div>
 
