@@ -5,6 +5,11 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
+2.10.1
+------
+### Bugfix
+* Improved documentation. Examples are now more standalone.
+
 2.10.0
 ------
 ### New additions
