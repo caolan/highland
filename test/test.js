@@ -7389,6 +7389,86 @@ exports['wrapCallback - default mapper discards all but first arg'] = function (
     });
 };
 
+exports.wrapAsync = {
+    'basic functionality': function (test) {
+        test.expect(1);
+        var f = function (a, b) {
+            return new Promise(function (resolve) {
+                resolve(a + b);
+            });
+        };
+        _.wrapAsync(f)(1, 2).toArray(function (xs) {
+            test.same(xs, [3]);
+            test.done();
+        });
+    },
+    context: function (test) {
+        test.expect(2);
+        var o = {
+            f: function (a, b) {
+                test.equal(this, o);
+                return new Promise(function (resolve) {
+                    resolve(a + b);
+                });
+            }
+        };
+        o.g = _.wrapAsync(o.f);
+        o.g(1, 2).toArray(function (xs) {
+            test.same(xs, [3]);
+            test.done();
+        });
+    },
+    'promise error': function (test) {
+        test.expect(3);
+        var errs = [];
+        var f = function (a, b) {
+            return new Promise(function (resolve, reject) {
+                reject(new Error('boom'));
+            });
+        };
+        _.wrapAsync(f)(1, 2)
+            .errors(function (err) {
+                errs.push(err);
+            })
+            .toArray(function (xs) {
+                test.equal(errs[0].message, 'boom');
+                test.equal(errs.length, 1);
+                test.same(xs, []);
+                test.done();
+            });
+    },
+    'wrong type error': function (test) {
+        test.expect(3);
+        var errs = [];
+        var f = function (a, b) {
+            return {};
+        };
+        _.wrapAsync(f)()
+            .errors(function (err) {
+                errs.push(err);
+            })
+            .toArray(function (xs) {
+                test.equal(errs[0].message, 'Wrapped function did not return a promise');
+                test.equal(errs.length, 1);
+                test.same(xs, []);
+                test.done();
+            });
+    },
+    substream: function (test) {
+        test.expect(1);
+        var s = _.use({
+            foo: true
+        });
+        var f = function () {
+            return new Promise(function (resolve) {
+                resolve('hello');
+            });
+        };
+        test.ok(s.wrapAsync(f)().foo);
+        test.done();
+    }
+};
+
 exports.streamifyAll = {
     'throws when passed a non-function non-object': function (test) {
         test.throws(function () {
