@@ -7418,7 +7418,7 @@ exports.wrapAsync = {
             test.done();
         });
     },
-    errors: function (test) {
+    'promise error': function (test) {
         test.expect(3);
         var errs = [];
         var f = function (a, b) {
@@ -7432,6 +7432,23 @@ exports.wrapAsync = {
             })
             .toArray(function (xs) {
                 test.equal(errs[0].message, 'boom');
+                test.equal(errs.length, 1);
+                test.same(xs, []);
+                test.done();
+            });
+    },
+    'wrong type error': function (test) {
+        test.expect(3);
+        var errs = [];
+        var f = function (a, b) {
+            return {};
+        };
+        _.wrapAsync(f)()
+            .errors(function (err) {
+                errs.push(err);
+            })
+            .toArray(function (xs) {
+                test.equal(errs[0].message, 'Wrapped function did not return a promise');
                 test.equal(errs.length, 1);
                 test.same(xs, []);
                 test.done();
