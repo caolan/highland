@@ -422,6 +422,27 @@ exports['consume - push nil async (issue #173)'] = function (test) {
     });
 };
 
+exports['consume - push nil async when x !== nil (issue #563)'] = function (test) {
+    test.expect(1);
+    _([1, 2, 3, 4]).consume(function(err, x, push, next) {
+        if (err !== null) {
+            push(err);
+            next();
+        }
+        else if (x === _.nil) {
+            push(null, _.nil);
+        }
+        else {
+            _.setImmediate(push.bind(this, null, _.nil));
+        }
+    })
+    .toArray(function (xs) {
+        test.same(xs, []);
+        test.done();
+    });
+};
+
+
 exports['consume - fork after consume should not throw (issue #366)'] = function (test) {
     test.expect(2);
     var arr1, arr2;
