@@ -8,7 +8,13 @@ this library.
 2.10.1
 ------
 ### Bugfix
-* Improved documentation. Examples are now more standalone.
+* Asynchronously pushing a `nil` in `consume` when then input value wasn't a
+  `nil` itself now no longer causes the stream to deadlock.
+  [#564](https://github.com/caolan/highland/pull/564).
+  Fixes [#563](https://github.com/caolan/highland/issues/563).
+  Related to [#558](https://github.com/caolan/highland/issues/558).
+* Much improved documentation. Examples are now more standalone, and more
+  guidance was added for certain common pitfalls.
 
 2.10.0
 ------
