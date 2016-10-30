@@ -153,8 +153,15 @@ var Decoder = require('string_decoder').StringDecoder;
  * // creating a stream from events
  * _('click', btn).each(handleEvent);
  *
- * // creating a stream from events with mapping
+ * // creating a stream from events with a mapping array
  * _('request', httpServer, ['req', 'res']).each(handleEvent);
+ * //=> { req: IncomingMessage, res: ServerResponse }
+ *
+ * // creating a stream from events with a mapping function
+ * _('request', httpServer, function(req, res) {
+ *     return res;
+ * }).each(handleEvent);
+ * //=> IncomingMessage
  *
  * // from a Promise object
  * var foo = _($.getJSON('/api/foo'));
@@ -808,9 +815,11 @@ inherits(Stream, EventEmitter);
  * Creates a stream that sends a single value then ends.
  *
  * @id of
+ * @section Utils
  * @name _.of(x)
  * @param x - the value to send
- * @section Utils
+ * @returns Stream
+ * @api public
  *
  * _.of(1).toArray(_.log); // => [1]
  */
@@ -823,9 +832,11 @@ _.of = function (x) {
  * Creates a stream that sends a single error then ends.
  *
  * @id fromError
+ * @section Utils
  * @name _.fromError(err)
  * @param error - the error to send
- * @section Utils
+ * @returns Stream
+ * @api public
  *
  * _.fromError(new Error('Single Error')).toCallback(function (err, result) {
  *     // err contains Error('Single Error') object
@@ -1163,11 +1174,11 @@ Stream.prototype.end = function () {
 };
 
 /**
- * Pipes a Highland Stream to a [Node Writable Stream](http://nodejs.org/api/stream.html#stream_class_stream_writable)
- * (Highland Streams are also Node Writable Streams). This will pull all the
- * data from the source Highland Stream and write it to the destination,
- * automatically managing flow so that the destination is not overwhelmed
- * by a fast source.
+ * Pipes a Highland Stream to a [Node Writable
+ * Stream](http://nodejs.org/api/stream.html#stream_class_stream_writable).
+ * This will pull all the data from the source Highland Stream and write it to
+ * the destination, automatically managing flow so that the destination is not
+ * overwhelmed by a fast source.
  *
  * Users may optionally pass an object that may contain any of these fields:
  *
@@ -1177,10 +1188,16 @@ Stream.prototype.end = function () {
  *
  * Like [Readable#pipe](https://nodejs.org/api/stream.html#stream_readable_pipe_destination_options),
  * this function will throw errors if there is no `error` handler installed on
- * the stream. Use [through](#through) if you are piping to another Highland
- * stream and want errors as well as values to be propagated.
+ * the stream.
  *
- * This function returns the destination so you can chain together pipe calls.
+ * This function returns the destination so you can chain together `pipe` calls.
+ *
+ * **NOTE**: While Highland streams created via `_()` and [pipeline](#pipeline)
+ * support being piped to, it is almost never appropriate to `pipe` from a
+ * Highland stream to another Highland stream. Those two cases are meant for
+ * use when piping from *Node* streams. You might be tempted to use `pipe` to
+ * construct reusable transforms. Do not do it. See [through](#through) for a
+ * better way.
  *
  * @id pipe
  * @section Consumption
@@ -1195,6 +1212,19 @@ Stream.prototype.end = function () {
  *
  * // chained call
  * source.pipe(through).pipe(dest);
+ *
+ * // DO NOT do this! It will not work. The stream returned by oddDoubler does
+ * // not support being piped to.
+ * function oddDoubler() {
+ *     return _()
+ *         return x % 2; // odd numbers only
+ *     })
+ *     .map(function (x) {
+ *         return x * 2;
+ *     });
+ * }
+ *
+ * _([1, 2, 3, 4]).pipe(oddDoubler()) // => Garbage
  */
 
 Stream.prototype.pipe = function (dest, options) {
@@ -1392,6 +1422,9 @@ Stream.prototype.consume = function (f) {
 
     // Hack. Not needed in v3.0.
     s._is_consumer = true;
+
+    var async;
+    var next_called;
     var _send = s._send;
     var push = function (err, x) {
         //console.log(['push', err, x, s.paused]);
@@ -1402,6 +1435,12 @@ Stream.prototype.consume = function (f) {
             // ended, remove consumer from source
             s._nil_pushed = true;
             self._removeConsumer(s);
+
+            // We previously paused the stream, but since a nil was pushed,
+            // next won't be called and we must manually resume.
+            if (async) {
+                s.resume();
+            }
         }
         if (s.paused) {
             if (err) {
@@ -1415,8 +1454,6 @@ Stream.prototype.consume = function (f) {
             _send.call(s, err, x);
         }
     };
-    var async;
-    var next_called;
     var next = function (s2) {
         //console.log(['next', async]);
         if (s._nil_pushed) {
@@ -1557,6 +1594,18 @@ Stream.prototype.write = function (x) {
  * Forks a stream, allowing you to add additional consumers with shared
  * back-pressure. A stream forked to multiple consumers will only pull values
  * from its source as fast as the slowest consumer can handle them.
+ *
+ * **NOTE**: Do not depend on a consistent execution order between the forks.
+ * This transform only guarantees that all forks will process a value `foo`
+ * before any will process a second value `bar`. It does *not* guarantee the
+ * order in which the forks process `foo`.
+ *
+ * **TIP**: Be careful about modifying stream values within the forks (or using
+ * a library that does so). Since the same value will be passed to every fork,
+ * changes made in one fork will be visible in any fork that executes after it.
+ * Add to that the inconsistent execution order, and you can end up with subtle
+ * data corruption bugs. If you need to modify any values, you should make a
+ * copy and modify the copy instead.
  *
  * *Deprecation warning:* It is currently possible to `fork` a stream after
  * [consuming](#consume) it (e.g., via a [transform](#Transforms)). This will
@@ -2634,7 +2683,7 @@ Stream.prototype.uniq = function () {
 exposeMethod('uniq');
 
 /**
- * Takes a `finite` stream of streams and returns a stream where the first
+ * Takes a *finite* stream of streams and returns a stream where the first
  * element from each separate stream is combined into a single data event,
  * followed by the second elements of each stream and so on until the shortest
  * input stream is exhausted.
@@ -2653,7 +2702,7 @@ exposeMethod('uniq');
  *     _([7, 8, 9]),
  *     _([10, 11, 12])
  * ]).zipAll0()
- * // => [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]
+ * // => [1, 4, 7, 10], [2, 5, 8, 11], [3, 6, 9, 12]
  *
  * // shortest stream determines length of output stream
  * _([
@@ -2662,7 +2711,7 @@ exposeMethod('uniq');
  *     _([9, 10, 11, 12]),
  *     _([13, 14])
  * ]).zipAll0()
- * // => [ [ 1, 5, 9, 13 ], [ 2, 6, 10, 14 ] ]
+ * // => [1, 5, 9, 13], [2, 6, 10, 14]
  */
 
 Stream.prototype.zipAll0 = function () {
@@ -2711,7 +2760,7 @@ Stream.prototype.zipAll0 = function () {
 exposeMethod('zipAll0');
 
 /**
- * Takes a stream and a `finite` stream of `N` streams
+ * Takes a stream and a *finite* stream of `N` streams
  * and returns a stream of the corresponding `(N+1)`-tuples.
  *
  * *Note:* This transform will be renamed `zipEach` in the next major version
@@ -2724,11 +2773,11 @@ exposeMethod('zipAll0');
  * @api public
  *
  * _([1,2,3]).zipAll([[4, 5, 6], [7, 8, 9], [10, 11, 12]])
- * // => [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]
+ * // => [1, 4, 7, 10], [2, 5, 8, 11], [3, 6, 9, 12]
  *
  * // shortest stream determines length of output stream
  * _([1, 2, 3, 4]).zipAll([[5, 6, 7, 8], [9, 10, 11, 12], [13, 14]])
- * // => [ [ 1, 5, 9, 13 ], [ 2, 6, 10, 14 ] ]
+ * // => [1, 5, 9, 13], [2, 6, 10, 14]
  */
 
 Stream.prototype.zipAll = function (ys) {
@@ -2843,9 +2892,9 @@ exposeMethod('batchWithTimeOrCount');
  * @param {String} sep - the value to intersperse between the source elements
  * @api public
  *
- * _(['ba', 'a', 'a']).intersperse('n')  // => ba, n, a, n, a
- * _(['mississippi']).splitBy('ss').intersperse('ss')  // => mi, ss, i, ss, ippi
- * _(['foo']).intersperse('bar')  // => foo
+ * _(['ba', 'a', 'a']).intersperse('n')  // => 'ba', 'n', 'a', 'n', 'a'
+ * _(['mississippi']).splitBy('ss').intersperse('ss')  // => 'mi', 'ss', 'i', 'ss', 'ippi'
+ * _(['foo']).intersperse('bar')  // => 'foo'
  */
 
 Stream.prototype.intersperse = function (separator) {
@@ -2883,9 +2932,9 @@ exposeMethod('intersperse');
  * @param {String | RegExp} sep - the separator to split on
  * @api public
  *
- * _(['mis', 'si', 's', 'sippi']).splitBy('ss')  // => mi, i, ippi
- * _(['ba', 'a', 'a']).intersperse('n').splitBy('n')  // => ba, a, a
- * _(['foo']).splitBy('bar')  // => foo
+ * _(['mis', 'si', 's', 'sippi']).splitBy('ss')  // => 'mi', 'i', 'ippi'
+ * _(['ba', 'a', 'a']).intersperse('n').splitBy('n')  // => 'ba', 'a', 'a'
+ * _(['foo']).splitBy('bar')  // => 'foo'
  */
 
 Stream.prototype.splitBy = function (sep) {
@@ -2930,8 +2979,8 @@ exposeMethod('splitBy');
  * @name Stream.split()
  * @api public
  *
- * _(['a\n', 'b\nc\n', 'd', '\ne']).split()  // => a, b, c, d, e
- * _(['a\r\nb\nc']]).split()  // => a, b, c
+ * _(['a\n', 'b\nc\n', 'd', '\ne']).split()  // => 'a', 'b', 'c', 'd', 'e'
+ * _(['a\r\nb\nc']]).split()  // => 'a', 'b', 'c'
  */
 
 Stream.prototype.split = function () {
@@ -3139,6 +3188,10 @@ exposeMethod('sort');
  * Highland Stream (instead of the piped to target directly as in
  * [pipe](#pipe)). Any errors emitted will be propagated as Highland errors.
  *
+ * **TIP**: Passing a function to `through` is a good way to implement complex
+ * reusable stream transforms. You can even construct the function dynamically
+ * based on certain inputs. See examples below.
+ *
  * @id through
  * @section Higher-order Streams
  * @name Stream.through(target)
@@ -3146,6 +3199,7 @@ exposeMethod('sort');
  * function to call.
  * @api public
  *
+ * // This is a static complex transform.
  * function oddDoubler(s) {
  *     return s.filter(function (x) {
  *         return x % 2; // odd numbers only
@@ -3155,9 +3209,21 @@ exposeMethod('sort');
  *     });
  * }
  *
- * _([1, 2, 3, 4]).through(oddDoubler).toArray(function (xs) {
- *     // xs will be [2, 6]
- * });
+ * // This is a dynamically-created complex transform.
+ * function multiplyEvens(factor) {
+ *     return function (x) {
+ *         return s.filter(function (x) {
+ *             return x % 2 === 0;
+ *         })
+ *         .map(function (x) {
+ *             return x * factor;
+ *         });
+ *     };
+ * }
+ *
+ * _([1, 2, 3, 4]).through(oddDoubler); // => 2, 6
+ *
+ * _([1, 2, 3, 4]).through(multiplyEvens(5)); // => 10, 20
  *
  * // Can also be used with Node Through Streams
  * _(filenames).through(jsonParser).map(function (obj) {
@@ -3848,7 +3914,7 @@ HighlandTransform.prototype['@@transducer/step'] = function (push, input) {
  *
  * var xf = require('transducer-js').map(_.add(1));
  * _([1, 2, 3, 4]).transduce(xf);
- * // => [2, 3, 4, 5]
+ * // => 2, 3, 4, 5
  */
 
 Stream.prototype.transduce = function transduce(xf) {
@@ -4162,7 +4228,7 @@ exposeMethod('mergeWithLimit');
  * @param {Array} args - the arguments to call the method with
  * @api public
  *
- * _(['foo', 'bar']).invoke('toUpperCase', [])  // => FOO, BAR
+ * _(['foo', 'bar']).invoke('toUpperCase', [])  // => 'FOO', 'BAR'
  *
  * var readFile = _.wrapCallback(fs.readFile);
  * filenames.flatMap(readFile).invoke('toString', ['utf8']);
@@ -4272,14 +4338,33 @@ exposeMethod('throttle');
  * data for `ms` milliseconds. Sends the last value that occurred before
  * the delay, discarding all other values.
  *
+ * **Implementation Note**: This transform will will not wait the full `ms`
+ * delay to emit a pending value (if any) once it see a `nil`, as that
+ * guarantees that there will be no more values.
+ *
  * @id debounce
  * @section Transforms
  * @name Stream.debounce(ms)
  * @param {Number} ms - the milliseconds to wait before sending data
  * @api public
  *
+ * function delay(x, ms, push) {
+ *     setTimeout(function () {
+ *         push(null, x);
+ *     }, ms);
+ * }
+ *
  * // sends last keyup event after user has stopped typing for 1 second
  * $('keyup', textbox).debounce(1000);
+ *
+ * // A nil triggers the emit immediately
+ * _(function (push, next) {
+ *     delay(0, 100, push);
+ *     delay(1, 200, push);
+ *     delay(_.nil, 250, push);
+ * }).debounce(75);
+ * // => after 175ms => 1
+ * // => after 250ms (not 275ms!) => 1 2
  */
 
 Stream.prototype.debounce = function (ms) {
@@ -4748,7 +4833,123 @@ _.not = function (x) {
 };
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":8,"events":6,"string_decoder":9,"util":11,"util-deprecate":12}],2:[function(require,module,exports){
+},{"_process":7,"events":4,"string_decoder":8,"util":12,"util-deprecate":9}],2:[function(require,module,exports){
+'use strict'
+
+exports.byteLength = byteLength
+exports.toByteArray = toByteArray
+exports.fromByteArray = fromByteArray
+
+var lookup = []
+var revLookup = []
+var Arr = typeof Uint8Array !== 'undefined' ? Uint8Array : Array
+
+var code = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+for (var i = 0, len = code.length; i < len; ++i) {
+  lookup[i] = code[i]
+  revLookup[code.charCodeAt(i)] = i
+}
+
+revLookup['-'.charCodeAt(0)] = 62
+revLookup['_'.charCodeAt(0)] = 63
+
+function placeHoldersCount (b64) {
+  var len = b64.length
+  if (len % 4 > 0) {
+    throw new Error('Invalid string. Length must be a multiple of 4')
+  }
+
+  // the number of equal signs (place holders)
+  // if there are two placeholders, than the two characters before it
+  // represent one byte
+  // if there is only one, then the three characters before it represent 2 bytes
+  // this is just a cheap hack to not do indexOf twice
+  return b64[len - 2] === '=' ? 2 : b64[len - 1] === '=' ? 1 : 0
+}
+
+function byteLength (b64) {
+  // base64 is 4/3 + up to two characters of the original data
+  return b64.length * 3 / 4 - placeHoldersCount(b64)
+}
+
+function toByteArray (b64) {
+  var i, j, l, tmp, placeHolders, arr
+  var len = b64.length
+  placeHolders = placeHoldersCount(b64)
+
+  arr = new Arr(len * 3 / 4 - placeHolders)
+
+  // if there are placeholders, only get up to the last complete 4 chars
+  l = placeHolders > 0 ? len - 4 : len
+
+  var L = 0
+
+  for (i = 0, j = 0; i < l; i += 4, j += 3) {
+    tmp = (revLookup[b64.charCodeAt(i)] << 18) | (revLookup[b64.charCodeAt(i + 1)] << 12) | (revLookup[b64.charCodeAt(i + 2)] << 6) | revLookup[b64.charCodeAt(i + 3)]
+    arr[L++] = (tmp >> 16) & 0xFF
+    arr[L++] = (tmp >> 8) & 0xFF
+    arr[L++] = tmp & 0xFF
+  }
+
+  if (placeHolders === 2) {
+    tmp = (revLookup[b64.charCodeAt(i)] << 2) | (revLookup[b64.charCodeAt(i + 1)] >> 4)
+    arr[L++] = tmp & 0xFF
+  } else if (placeHolders === 1) {
+    tmp = (revLookup[b64.charCodeAt(i)] << 10) | (revLookup[b64.charCodeAt(i + 1)] << 4) | (revLookup[b64.charCodeAt(i + 2)] >> 2)
+    arr[L++] = (tmp >> 8) & 0xFF
+    arr[L++] = tmp & 0xFF
+  }
+
+  return arr
+}
+
+function tripletToBase64 (num) {
+  return lookup[num >> 18 & 0x3F] + lookup[num >> 12 & 0x3F] + lookup[num >> 6 & 0x3F] + lookup[num & 0x3F]
+}
+
+function encodeChunk (uint8, start, end) {
+  var tmp
+  var output = []
+  for (var i = start; i < end; i += 3) {
+    tmp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
+    output.push(tripletToBase64(tmp))
+  }
+  return output.join('')
+}
+
+function fromByteArray (uint8) {
+  var tmp
+  var len = uint8.length
+  var extraBytes = len % 3 // if we have 1 byte left, pad 2 bytes
+  var output = ''
+  var parts = []
+  var maxChunkLength = 16383 // must be multiple of 3
+
+  // go through the array every three bytes, we'll deal with trailing stuff later
+  for (var i = 0, len2 = len - extraBytes; i < len2; i += maxChunkLength) {
+    parts.push(encodeChunk(uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)))
+  }
+
+  // pad the end with zeros, but make sure to not forget the extra bytes
+  if (extraBytes === 1) {
+    tmp = uint8[len - 1]
+    output += lookup[tmp >> 2]
+    output += lookup[(tmp << 4) & 0x3F]
+    output += '=='
+  } else if (extraBytes === 2) {
+    tmp = (uint8[len - 2] << 8) + (uint8[len - 1])
+    output += lookup[tmp >> 10]
+    output += lookup[(tmp >> 4) & 0x3F]
+    output += lookup[(tmp << 2) & 0x3F]
+    output += '='
+  }
+
+  parts.push(output)
+
+  return parts.join('')
+}
+
+},{}],3:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -6541,211 +6742,7 @@ function isnan (val) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":3,"ieee754":4,"isarray":5}],3:[function(require,module,exports){
-'use strict'
-
-exports.toByteArray = toByteArray
-exports.fromByteArray = fromByteArray
-
-var lookup = []
-var revLookup = []
-var Arr = typeof Uint8Array !== 'undefined' ? Uint8Array : Array
-
-function init () {
-  var code = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-  for (var i = 0, len = code.length; i < len; ++i) {
-    lookup[i] = code[i]
-    revLookup[code.charCodeAt(i)] = i
-  }
-
-  revLookup['-'.charCodeAt(0)] = 62
-  revLookup['_'.charCodeAt(0)] = 63
-}
-
-init()
-
-function toByteArray (b64) {
-  var i, j, l, tmp, placeHolders, arr
-  var len = b64.length
-
-  if (len % 4 > 0) {
-    throw new Error('Invalid string. Length must be a multiple of 4')
-  }
-
-  // the number of equal signs (place holders)
-  // if there are two placeholders, than the two characters before it
-  // represent one byte
-  // if there is only one, then the three characters before it represent 2 bytes
-  // this is just a cheap hack to not do indexOf twice
-  placeHolders = b64[len - 2] === '=' ? 2 : b64[len - 1] === '=' ? 1 : 0
-
-  // base64 is 4/3 + up to two characters of the original data
-  arr = new Arr(len * 3 / 4 - placeHolders)
-
-  // if there are placeholders, only get up to the last complete 4 chars
-  l = placeHolders > 0 ? len - 4 : len
-
-  var L = 0
-
-  for (i = 0, j = 0; i < l; i += 4, j += 3) {
-    tmp = (revLookup[b64.charCodeAt(i)] << 18) | (revLookup[b64.charCodeAt(i + 1)] << 12) | (revLookup[b64.charCodeAt(i + 2)] << 6) | revLookup[b64.charCodeAt(i + 3)]
-    arr[L++] = (tmp >> 16) & 0xFF
-    arr[L++] = (tmp >> 8) & 0xFF
-    arr[L++] = tmp & 0xFF
-  }
-
-  if (placeHolders === 2) {
-    tmp = (revLookup[b64.charCodeAt(i)] << 2) | (revLookup[b64.charCodeAt(i + 1)] >> 4)
-    arr[L++] = tmp & 0xFF
-  } else if (placeHolders === 1) {
-    tmp = (revLookup[b64.charCodeAt(i)] << 10) | (revLookup[b64.charCodeAt(i + 1)] << 4) | (revLookup[b64.charCodeAt(i + 2)] >> 2)
-    arr[L++] = (tmp >> 8) & 0xFF
-    arr[L++] = tmp & 0xFF
-  }
-
-  return arr
-}
-
-function tripletToBase64 (num) {
-  return lookup[num >> 18 & 0x3F] + lookup[num >> 12 & 0x3F] + lookup[num >> 6 & 0x3F] + lookup[num & 0x3F]
-}
-
-function encodeChunk (uint8, start, end) {
-  var tmp
-  var output = []
-  for (var i = start; i < end; i += 3) {
-    tmp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
-    output.push(tripletToBase64(tmp))
-  }
-  return output.join('')
-}
-
-function fromByteArray (uint8) {
-  var tmp
-  var len = uint8.length
-  var extraBytes = len % 3 // if we have 1 byte left, pad 2 bytes
-  var output = ''
-  var parts = []
-  var maxChunkLength = 16383 // must be multiple of 3
-
-  // go through the array every three bytes, we'll deal with trailing stuff later
-  for (var i = 0, len2 = len - extraBytes; i < len2; i += maxChunkLength) {
-    parts.push(encodeChunk(uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)))
-  }
-
-  // pad the end with zeros, but make sure to not forget the extra bytes
-  if (extraBytes === 1) {
-    tmp = uint8[len - 1]
-    output += lookup[tmp >> 2]
-    output += lookup[(tmp << 4) & 0x3F]
-    output += '=='
-  } else if (extraBytes === 2) {
-    tmp = (uint8[len - 2] << 8) + (uint8[len - 1])
-    output += lookup[tmp >> 10]
-    output += lookup[(tmp >> 4) & 0x3F]
-    output += lookup[(tmp << 2) & 0x3F]
-    output += '='
-  }
-
-  parts.push(output)
-
-  return parts.join('')
-}
-
-},{}],4:[function(require,module,exports){
-exports.read = function (buffer, offset, isLE, mLen, nBytes) {
-  var e, m
-  var eLen = nBytes * 8 - mLen - 1
-  var eMax = (1 << eLen) - 1
-  var eBias = eMax >> 1
-  var nBits = -7
-  var i = isLE ? (nBytes - 1) : 0
-  var d = isLE ? -1 : 1
-  var s = buffer[offset + i]
-
-  i += d
-
-  e = s & ((1 << (-nBits)) - 1)
-  s >>= (-nBits)
-  nBits += eLen
-  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8) {}
-
-  m = e & ((1 << (-nBits)) - 1)
-  e >>= (-nBits)
-  nBits += mLen
-  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8) {}
-
-  if (e === 0) {
-    e = 1 - eBias
-  } else if (e === eMax) {
-    return m ? NaN : ((s ? -1 : 1) * Infinity)
-  } else {
-    m = m + Math.pow(2, mLen)
-    e = e - eBias
-  }
-  return (s ? -1 : 1) * m * Math.pow(2, e - mLen)
-}
-
-exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
-  var e, m, c
-  var eLen = nBytes * 8 - mLen - 1
-  var eMax = (1 << eLen) - 1
-  var eBias = eMax >> 1
-  var rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0)
-  var i = isLE ? 0 : (nBytes - 1)
-  var d = isLE ? 1 : -1
-  var s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0
-
-  value = Math.abs(value)
-
-  if (isNaN(value) || value === Infinity) {
-    m = isNaN(value) ? 1 : 0
-    e = eMax
-  } else {
-    e = Math.floor(Math.log(value) / Math.LN2)
-    if (value * (c = Math.pow(2, -e)) < 1) {
-      e--
-      c *= 2
-    }
-    if (e + eBias >= 1) {
-      value += rt / c
-    } else {
-      value += rt * Math.pow(2, 1 - eBias)
-    }
-    if (value * c >= 2) {
-      e++
-      c /= 2
-    }
-
-    if (e + eBias >= eMax) {
-      m = 0
-      e = eMax
-    } else if (e + eBias >= 1) {
-      m = (value * c - 1) * Math.pow(2, mLen)
-      e = e + eBias
-    } else {
-      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen)
-      e = 0
-    }
-  }
-
-  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8) {}
-
-  e = (e << mLen) | m
-  eLen += mLen
-  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8) {}
-
-  buffer[offset + i - d] |= s * 128
-}
-
-},{}],5:[function(require,module,exports){
-var toString = {}.toString;
-
-module.exports = Array.isArray || function (arr) {
-  return toString.call(arr) == '[object Array]';
-};
-
-},{}],6:[function(require,module,exports){
+},{"base64-js":2,"ieee754":5,"isarray":6}],4:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7049,32 +7046,100 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],7:[function(require,module,exports){
-if (typeof Object.create === 'function') {
-  // implementation from standard node.js 'util' module
-  module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    ctor.prototype = Object.create(superCtor.prototype, {
-      constructor: {
-        value: ctor,
-        enumerable: false,
-        writable: true,
-        configurable: true
-      }
-    });
-  };
-} else {
-  // old school shim for old browsers
-  module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    var TempCtor = function () {}
-    TempCtor.prototype = superCtor.prototype
-    ctor.prototype = new TempCtor()
-    ctor.prototype.constructor = ctor
+},{}],5:[function(require,module,exports){
+exports.read = function (buffer, offset, isLE, mLen, nBytes) {
+  var e, m
+  var eLen = nBytes * 8 - mLen - 1
+  var eMax = (1 << eLen) - 1
+  var eBias = eMax >> 1
+  var nBits = -7
+  var i = isLE ? (nBytes - 1) : 0
+  var d = isLE ? -1 : 1
+  var s = buffer[offset + i]
+
+  i += d
+
+  e = s & ((1 << (-nBits)) - 1)
+  s >>= (-nBits)
+  nBits += eLen
+  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8) {}
+
+  m = e & ((1 << (-nBits)) - 1)
+  e >>= (-nBits)
+  nBits += mLen
+  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8) {}
+
+  if (e === 0) {
+    e = 1 - eBias
+  } else if (e === eMax) {
+    return m ? NaN : ((s ? -1 : 1) * Infinity)
+  } else {
+    m = m + Math.pow(2, mLen)
+    e = e - eBias
   }
+  return (s ? -1 : 1) * m * Math.pow(2, e - mLen)
 }
 
-},{}],8:[function(require,module,exports){
+exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
+  var e, m, c
+  var eLen = nBytes * 8 - mLen - 1
+  var eMax = (1 << eLen) - 1
+  var eBias = eMax >> 1
+  var rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0)
+  var i = isLE ? 0 : (nBytes - 1)
+  var d = isLE ? 1 : -1
+  var s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0
+
+  value = Math.abs(value)
+
+  if (isNaN(value) || value === Infinity) {
+    m = isNaN(value) ? 1 : 0
+    e = eMax
+  } else {
+    e = Math.floor(Math.log(value) / Math.LN2)
+    if (value * (c = Math.pow(2, -e)) < 1) {
+      e--
+      c *= 2
+    }
+    if (e + eBias >= 1) {
+      value += rt / c
+    } else {
+      value += rt * Math.pow(2, 1 - eBias)
+    }
+    if (value * c >= 2) {
+      e++
+      c /= 2
+    }
+
+    if (e + eBias >= eMax) {
+      m = 0
+      e = eMax
+    } else if (e + eBias >= 1) {
+      m = (value * c - 1) * Math.pow(2, mLen)
+      e = e + eBias
+    } else {
+      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen)
+      e = 0
+    }
+  }
+
+  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8) {}
+
+  e = (e << mLen) | m
+  eLen += mLen
+  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8) {}
+
+  buffer[offset + i - d] |= s * 128
+}
+
+},{}],6:[function(require,module,exports){
+var toString = {}.toString;
+
+module.exports = Array.isArray || function (arr) {
+  return toString.call(arr) == '[object Array]';
+};
+
+},{}],7:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -7256,7 +7321,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],9:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7479,14 +7544,110 @@ function base64DetectIncompleteChar(buffer) {
   this.charLength = this.charReceived ? 3 : 0;
 }
 
-},{"buffer":2}],10:[function(require,module,exports){
+},{"buffer":3}],9:[function(require,module,exports){
+(function (global){
+
+/**
+ * Module exports.
+ */
+
+module.exports = deprecate;
+
+/**
+ * Mark that a method should not be used.
+ * Returns a modified function which warns once by default.
+ *
+ * If `localStorage.noDeprecation = true` is set, then it is a no-op.
+ *
+ * If `localStorage.throwDeprecation = true` is set, then deprecated functions
+ * will throw an Error when invoked.
+ *
+ * If `localStorage.traceDeprecation = true` is set, then deprecated functions
+ * will invoke `console.trace()` instead of `console.error()`.
+ *
+ * @param {Function} fn - the function to deprecate
+ * @param {String} msg - the string to print to the console when `fn` is invoked
+ * @returns {Function} a new "deprecated" version of `fn`
+ * @api public
+ */
+
+function deprecate (fn, msg) {
+  if (config('noDeprecation')) {
+    return fn;
+  }
+
+  var warned = false;
+  function deprecated() {
+    if (!warned) {
+      if (config('throwDeprecation')) {
+        throw new Error(msg);
+      } else if (config('traceDeprecation')) {
+        console.trace(msg);
+      } else {
+        console.warn(msg);
+      }
+      warned = true;
+    }
+    return fn.apply(this, arguments);
+  }
+
+  return deprecated;
+}
+
+/**
+ * Checks `localStorage` for boolean values for the given `name`.
+ *
+ * @param {String} name
+ * @returns {Boolean}
+ * @api private
+ */
+
+function config (name) {
+  // accessing global.localStorage can trigger a DOMException in sandboxed iframes
+  try {
+    if (!global.localStorage) return false;
+  } catch (_) {
+    return false;
+  }
+  var val = global.localStorage[name];
+  if (null == val) return false;
+  return String(val).toLowerCase() === 'true';
+}
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],10:[function(require,module,exports){
+if (typeof Object.create === 'function') {
+  // implementation from standard node.js 'util' module
+  module.exports = function inherits(ctor, superCtor) {
+    ctor.super_ = superCtor
+    ctor.prototype = Object.create(superCtor.prototype, {
+      constructor: {
+        value: ctor,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+  };
+} else {
+  // old school shim for old browsers
+  module.exports = function inherits(ctor, superCtor) {
+    ctor.super_ = superCtor
+    var TempCtor = function () {}
+    TempCtor.prototype = superCtor.prototype
+    ctor.prototype = new TempCtor()
+    ctor.prototype.constructor = ctor
+  }
+}
+
+},{}],11:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -8076,76 +8237,5 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":10,"_process":8,"inherits":7}],12:[function(require,module,exports){
-(function (global){
-
-/**
- * Module exports.
- */
-
-module.exports = deprecate;
-
-/**
- * Mark that a method should not be used.
- * Returns a modified function which warns once by default.
- *
- * If `localStorage.noDeprecation = true` is set, then it is a no-op.
- *
- * If `localStorage.throwDeprecation = true` is set, then deprecated functions
- * will throw an Error when invoked.
- *
- * If `localStorage.traceDeprecation = true` is set, then deprecated functions
- * will invoke `console.trace()` instead of `console.error()`.
- *
- * @param {Function} fn - the function to deprecate
- * @param {String} msg - the string to print to the console when `fn` is invoked
- * @returns {Function} a new "deprecated" version of `fn`
- * @api public
- */
-
-function deprecate (fn, msg) {
-  if (config('noDeprecation')) {
-    return fn;
-  }
-
-  var warned = false;
-  function deprecated() {
-    if (!warned) {
-      if (config('throwDeprecation')) {
-        throw new Error(msg);
-      } else if (config('traceDeprecation')) {
-        console.trace(msg);
-      } else {
-        console.warn(msg);
-      }
-      warned = true;
-    }
-    return fn.apply(this, arguments);
-  }
-
-  return deprecated;
-}
-
-/**
- * Checks `localStorage` for boolean values for the given `name`.
- *
- * @param {String} name
- * @returns {Boolean}
- * @api private
- */
-
-function config (name) {
-  // accessing global.localStorage can trigger a DOMException in sandboxed iframes
-  try {
-    if (!global.localStorage) return false;
-  } catch (_) {
-    return false;
-  }
-  var val = global.localStorage[name];
-  if (null == val) return false;
-  return String(val).toLowerCase() === 'true';
-}
-
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}]},{},[1])(1)
+},{"./support/isBuffer":11,"_process":7,"inherits":10}]},{},[1])(1)
 });
