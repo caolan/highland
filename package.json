@@ -19,7 +19,7 @@
     "browserify": "^13.0.0",
     "browserify-shim": "^3.8.11",
     "concat-stream": "~1.6.0",
-    "eslint": "^2.10.0",
+    "eslint": "^3.12.1",
     "grunt": "~1.0.1",
     "grunt-browserify": "^5.0.0",
     "grunt-bump": "0.8.0",
