@@ -5,6 +5,16 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
+2.10.2
+------
+### Bugfix
+* Uncaught errors from promise-back streams weren't being correctly logged in
+  certain circumstances when using a Promise implementation that does not log
+  unhandled promise exceptions. All uncaught highland errors should now be
+  correctly logged.
+  [#591](https://github.com/caolan/highland/pull/591).
+  Fixes [#589](https://github.com/caolan/highland/issues/589).
+
 2.10.1
 ------
 ### Bugfix
