@@ -13,10 +13,31 @@ this library.
   [#548](https://github.com/caolan/highland/pull/548).
   Fixes [#517](https://github.com/caolan/highland/issues/517).
 
+2.10.2
+------
+### Bugfix
+* Uncaught errors from promise-back streams weren't being correctly logged in
+  certain circumstances when using a Promise implementation that does not log
+  unhandled promise exceptions. All uncaught highland errors should now be
+  correctly logged.
+  [#591](https://github.com/caolan/highland/pull/591).
+  Fixes [#589](https://github.com/caolan/highland/issues/589).
+* Users using bluebird as their Promise implementation may have seen an error
+  that says "a promise was created in a handler at ... but was not returned from
+  it". This is a false positive, and Highland's use of promises have been
+  updated to suppress this warning.
+  [#588](https://github.com/caolan/highland/issues/588).
+
 2.10.1
 ------
 ### Bugfix
-* Improved documentation. Examples are now more standalone.
+* Asynchronously pushing a `nil` in `consume` when then input value wasn't a
+  `nil` itself now no longer causes the stream to deadlock.
+  [#564](https://github.com/caolan/highland/pull/564).
+  Fixes [#563](https://github.com/caolan/highland/issues/563).
+  Related to [#558](https://github.com/caolan/highland/issues/558).
+* Much improved documentation. Examples are now more standalone, and more
+  guidance was added for certain common pitfalls.
 
 2.10.0
 ------

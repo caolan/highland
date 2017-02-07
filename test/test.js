@@ -160,6 +160,23 @@ function returnsSameStreamTest(transform, expected, initial) {
     };
 }
 
+function catchEventLoopError(highland, cb) {
+    var oldSetImmediate = highland.setImmediate;
+    highland.setImmediate = function (fn) {
+        oldSetImmediate(function () {
+            try {
+                fn();
+            }
+            catch (e) {
+                cb(e);
+            }
+        });
+    };
+    return function () {
+        highland.setImmediate = oldSetImmediate;
+    };
+}
+
 function generatorStream(input, timeout) {
     return _(function (push, next) {
         for (var i = 0, len = input.length; i < len; i++) {
@@ -501,6 +518,26 @@ exports['consume - push nil async (issue #173)'] = function (test) {
     })
     .toArray(function (xs) {
         test.same(xs, [1, 2, 3, 4]);
+        test.done();
+    });
+};
+
+exports['consume - push nil async when x !== nil (issue #563)'] = function (test) {
+    test.expect(1);
+    _([1, 2, 3, 4]).consume(function(err, x, push, next) {
+        if (err !== null) {
+            push(err);
+            next();
+        }
+        else if (x === _.nil) {
+            push(null, _.nil);
+        }
+        else {
+            _.setImmediate(push.bind(this, null, _.nil));
+        }
+    })
+    .toArray(function (xs) {
+        test.same(xs, []);
         test.done();
     });
 };
@@ -966,6 +1003,87 @@ exports.constructor = {
         });
         var stream = _(promise).toArray(this.tester([], test));
         promise.cancel();
+    },
+    'from promise - should not throw in promise onResolve handler (issue #589)': function (test) {
+        test.expect(1);
+
+        // Swallow the exception so the tests passes.
+        var stopCatchingEventLoopError = catchEventLoopError(_, function (e) {
+            if (e.message !== 'Error thrown when handling value.') {
+                throw e;
+            }
+        });
+
+        var promise = bluebird.Promise.resolve('value');
+        var oldThen = promise.then;
+        promise.then = function (onResolve, onReject) {
+            return oldThen.call(promise, function () {
+                var threwError = false;
+                try {
+                    onResolve.apply(this, arguments);
+                }
+                catch (e) {
+                    threwError = true;
+                }
+
+                test.ok(!threwError, 'The onResolve callback synchronously threw!');
+                test.done();
+                stopCatchingEventLoopError();
+            }, function () {
+                // Won't be called.
+                test.ok(false, 'The onReject callback was called?!');
+                test.done();
+                stopCatchingEventLoopError();
+            });
+        };
+
+        // Clear promise.finally to force the use of the vanilla promise code
+        // path.
+        promise.finally = null;
+        _(promise)
+            .map(function (x) {
+                throw new Error('Error thrown when handling value.');
+            })
+            .done(function () {});
+    },
+    'from promise - should not throw in promise onReject handler (issue #589)': function (test) {
+        test.expect(1);
+
+        // Swallow the exception so the tests passes.
+        var stopCatchingEventLoopError = catchEventLoopError(_, function (e) {
+            if (e.message !== 'Error from promise.') {
+                throw e;
+            }
+        });
+
+        var promise = bluebird.Promise.reject(new Error('Error from promise.'));
+        var oldThen = promise.then;
+        promise.then = function (onResolve, onReject) {
+            return oldThen.call(promise, function () {
+                // Won't be called.
+                test.ok(false, 'The onResolve callback was called?!');
+                test.done();
+                stopCatchingEventLoopError();
+            }, function () {
+                var threwError = false;
+                try {
+                    onReject.apply(this, arguments);
+                }
+                catch (e) {
+                    threwError = true;
+                }
+
+                test.ok(!threwError, 'The onReject callback synchronously threw!');
+                test.done();
+                stopCatchingEventLoopError();
+            });
+        };
+
+        // Clear promise.finally to force the use of the vanilla promise code
+        // path.
+        promise.finally = null;
+        _(promise).done(function () {});
+
     },
     'from iterator': function (test) {
         test.expect(1);
