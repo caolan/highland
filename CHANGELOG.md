@@ -14,6 +14,11 @@ this library.
   correctly logged.
   [#591](https://github.com/caolan/highland/pull/591).
   Fixes [#589](https://github.com/caolan/highland/issues/589).
+* Users using bluebird as their Promise implementation may have seen an error
+  that says "a promise was created in a handler at ... but was not returned from
+  it". This is a false positive, and Highland's use of promises have been
+  updated to suppress this warning.
+  [#588](https://github.com/caolan/highland/issues/588).
 
 2.10.1
 ------
