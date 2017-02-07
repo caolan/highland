@@ -512,32 +512,42 @@ function pipeReadable(xs, onFinish, stream) {
 }
 
 function promiseStream(promise) {
-    if (_.isFunction(promise['finally'])) { // eslint-disable-line dot-notation
-        // Using finally handles also bluebird promise cancellation
-        return _(function (push) {
-            promise.then(function (value) {
-                return push(null, value);
-            },
-                function (err) {
-                    return push(err);
-                })['finally'](function () { // eslint-disable-line dot-notation
-                    return push(null, nil);
-                });
-        });
-    }
-    else {
-        // Sticking to promise standard only
-        return _(function (push) {
-            promise.then(function (value) {
+    var nilScheduled = false;
+    return _(function (push) {
+        // We need to push asynchronously so that errors thrown from handling
+        // these values are not caught by the promise. Also, return null so
+        // that bluebird-based promises don't complain about handlers being
+        // created but not returned. See
+        // https://github.com/caolan/highland/issues/588.
+        promise = promise.then(function (value) {
+            nilScheduled = true;
+            _.setImmediate(function () {
                 push(null, value);
-                return push(null, nil);
-            },
-                function (err) {
-                    push(err);
-                    return push(null, nil);
-                });
+                push(null, nil);
+            });
+            return null;
+        }, function (err) {
+            nilScheduled = true;
+            _.setImmediate(function () {
+                push(err);
+                push(null, nil);
+            });
+            return null;
         });
-    }
+
+        // Using finally also handles bluebird promise cancellation, so we do
+        // it if we can.
+        if (_.isFunction(promise['finally'])) { // eslint-disable-line dot-notation
+            promise['finally'](function () { // eslint-disable-line dot-notation
+                if (!nilScheduled) {
+                    _.setImmediate(function () {
+                        push(null, nil);
+                    });
+                }
+                return null;
+            });
+        }
+    });
 }
 
 function iteratorStream(it) {
@@ -4833,7 +4843,7 @@ _.not = function (x) {
 };
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":7,"events":4,"string_decoder":8,"util":12,"util-deprecate":9}],2:[function(require,module,exports){
+},{"_process":7,"events":5,"string_decoder":8,"util":12,"util-deprecate":9}],2:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -6742,7 +6752,14 @@ function isnan (val) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":2,"ieee754":5,"isarray":6}],4:[function(require,module,exports){
+},{"base64-js":2,"ieee754":6,"isarray":4}],4:[function(require,module,exports){
+var toString = {}.toString;
+
+module.exports = Array.isArray || function (arr) {
+  return toString.call(arr) == '[object Array]';
+};
+
+},{}],5:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7046,7 +7063,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -7131,13 +7148,6 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
   buffer[offset + i - d] |= s * 128
 }
-
-},{}],6:[function(require,module,exports){
-var toString = {}.toString;
-
-module.exports = Array.isArray || function (arr) {
-  return toString.call(arr) == '[object Array]';
-};
 
 },{}],7:[function(require,module,exports){
 // shim for using process in browser
