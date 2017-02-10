@@ -7,6 +7,30 @@ this library.
 
 3.0.0
 -----
+### Breaking changes
+* `drop`
+  [#559](https://github.com/caolan/highland/pull/595)
+  Fixes [#594](https://github.com/caolan/highland/issues/594)
+  * **Old Behavior**: if `n` isn't a number or is negative, it defaults to `0`.
+  * **New Behavior**: if `n` is not a number or if it is negative, an error is
+    thrown.
+* `slice`
+  [#559](https://github.com/caolan/highland/pull/595)
+  Fixes [#594](https://github.com/caolan/highland/issues/594)
+  * **Old Behavior**: if `start` isn't a number, it defaults to `0`, and if
+    `end` isn't a number, it defaults to `Infinity`. If `start` or `end` are
+    negative, they are treated as if they are `0` instead.
+  * **New Behavior**: if `start` or `end` are not numbers or if they are
+    negative, an error is thrown. `start` and `end` are optional and default to
+    `0` and `Infinity`, respectively.
+* `take`
+  [#559](https://github.com/caolan/highland/pull/595)
+  Fixes [#594](https://github.com/caolan/highland/issues/594)
+  * **Old Behavior**: if `n` isn't a number, it defaults to `Infinity`. If `n`
+    is negative, it is treated as if it is `0`.
+  * **New Behavior**: if `n` is not a number or if it is negative, an error is
+    thrown.
+
 ### New additions
 * `wrapAsync`: Wraps a function that returns a promise, transforming it to a
   function which accepts the same arguments and returns a Highland Stream instead.

@@ -160,6 +160,16 @@ function returnsSameStreamTest(transform, expected, initial) {
     };
 }
 
+function throwsErrorTest(block, error, message) {
+    return function (test) {
+        test.expect(1);
+        test.throws(function () {
+            block(_.of(1));
+        }, error, message);
+        test.done();
+    };
+}
+
 function catchEventLoopError(highland, cb) {
     var oldSetImmediate = highland.setImmediate;
     highland.setImmediate = function (fn) {
@@ -1895,24 +1905,65 @@ exports['apply - GeneratorStream'] = function (test) {
     });
 };
 
-exports.take = function (test) {
-    test.expect(3);
-    var s = _([1, 2, 3, 4]).take(2);
-    s.pull(function (err, x) {
-        test.equal(x, 1);
-    });
-    s.pull(function (err, x) {
-        test.equal(x, 2);
-    });
-    s.pull(function (err, x) {
-        test.equal(x, _.nil);
-    });
-    test.done();
+exports.take = {
+    'arrayStream': function (test) {
+        test.expect(3);
+        var s = _([1, 2, 3, 4]).take(2);
+        s.pull(function (err, x) {
+            test.equal(x, 1);
+        });
+        s.pull(function (err, x) {
+            test.equal(x, 2);
+        });
+        s.pull(function (err, x) {
+            test.equal(x, _.nil);
+        });
+        test.done();
+    },
+    'errors': function (test) {
+        test.expect(4);
+        var s = _(function (push, next) {
+            push(null, 1);
+            push(new Error('error'), 2);
+            push(null, 3);
+            push(null, 4);
+            push(null, _.nil);
+        });
+        var f = s.take(2);
+        f.pull(function (err, x) {
+            test.equal(x, 1);
+        });
+        f.pull(function (err, x) {
+            test.equal(err.message, 'error');
+        });
+        f.pull(function (err, x) {
+            test.equal(x, 3);
+        });
+        f.pull(function (err, x) {
+            test.equal(x, _.nil);
+        });
+        test.done();
+    },
+    'take 1': function (test) {
+        test.expect(2);
+        var s = _([1]).take(1);
+        s.pull(function (err, x) {
+            test.equal(x, 1);
+        });
+        s.pull(function (err, x) {
+            test.equal(x, _.nil);
+        });
+        test.done();
+    },
+    'negative argument throws RangeError':
+        throwsErrorTest(_.take(-1), RangeError),
+    'non-number argument throws TypeError':
+        throwsErrorTest(_.take('1'), TypeError),
+    'returnsSameStream': returnsSameStreamTest(function(s) {
+        return s.take(1);
+    }, [1]),
+    'noValueOnError': noValueOnErrorTest(_.take(1))
 };
-
-exports['take - returnsSameStream'] = returnsSameStreamTest(function(s) {
-    return s.take(1);
-}, [1]);
 
 exports.slice = {
     setUp: function (cb) {
@@ -1926,11 +1977,10 @@ exports.slice = {
         cb();
     },
     'arrayStream': function (test) {
-        test.expect(5);
+        test.expect(4);
         _(this.input).slice(2, 6).toArray(this.tester(this.expected, test));
         _(this.input).slice(2).toArray(this.tester(this.expected, test));
         _(this.input).slice().toArray(this.tester(this.input, test));
-        _(this.input).slice(-1, 6).toArray(this.tester(this.input, test));
         _(this.input).slice(0).toArray(this.tester(this.input, test));
         test.done();
     },
@@ -1938,11 +1988,6 @@ exports.slice = {
         test.expect(1);
         var s = _(this.input);
         _.slice(1, 4)(s).toArray(this.tester([2, 3, 4], test));
-        test.done();
-    },
-    'negative indicies': function(test) {
-        test.expect(1);
-        _.slice(-5, Infinity)(this.input).toArray(this.tester(this.input, test));
         test.done();
     },
     'error': function (test) {
@@ -1960,50 +2005,19 @@ exports.slice = {
             .toArray(this.tester([3, 4], test));
         test.done();
     },
+    'negative start throws RangeError':
+        throwsErrorTest(_.slice(-1, 1), RangeError),
+    'negative end throws RangeError':
+        throwsErrorTest(_.slice(1, -1), RangeError),
+    'non-number start throws TypeError':
+        throwsErrorTest(_.slice('1', 1), TypeError),
+    'non-number end throws TypeError':
+        throwsErrorTest(_.slice(1, '1'), TypeError),
     'noValueOnError': noValueOnErrorTest(_.slice(2, 3)),
     'onDestroyTest': onDestroyTest(_.slice(0, 1), 1),
     'returnsSameStream': returnsSameStreamTest(function(s) {
         return s.slice(0, 1);
     }, [1])
-};
-
-exports['take - noValueOnError'] = noValueOnErrorTest(_.take(1));
-
-exports['take - errors'] = function (test) {
-    test.expect(4);
-    var s = _(function (push, next) {
-        push(null, 1);
-        push(new Error('error'), 2);
-        push(null, 3);
-        push(null, 4);
-        push(null, _.nil);
-    });
-    var f = s.take(2);
-    f.pull(function (err, x) {
-        test.equal(x, 1);
-    });
-    f.pull(function (err, x) {
-        test.equal(err.message, 'error');
-    });
-    f.pull(function (err, x) {
-        test.equal(x, 3);
-    });
-    f.pull(function (err, x) {
-        test.equal(x, _.nil);
-    });
-    test.done();
-};
-
-exports['take 1'] = function (test) {
-    test.expect(2);
-    var s = _([1]).take(1);
-    s.pull(function (err, x) {
-        test.equal(x, 1);
-    });
-    s.pull(function (err, x) {
-        test.equal(x, _.nil);
-    });
-    test.done();
 };
 
 exports.drop = {
@@ -2028,11 +2042,6 @@ exports.drop = {
         _.drop(2)(s).toArray(this.tester(this.expected, test));
         test.done();
     },
-    'negative indicies': function(test) {
-        test.expect(1);
-        _.drop(-1)(this.input).toArray(this.tester(this.input, test));
-        test.done();
-    },
     'error': function (test) {
         test.expect(2);
         var s = _(function (push, next) {
@@ -2048,6 +2057,10 @@ exports.drop = {
             .toArray(this.tester(this.expected, test));
         test.done();
     },
+    'negative argument throws RangeError':
+        throwsErrorTest(_.drop(-1), RangeError),
+    'non-number argument throws TypeError':
+        throwsErrorTest(_.drop('1'), TypeError),
     'noValueOnError': noValueOnErrorTest(_.drop(2))
 };
 
