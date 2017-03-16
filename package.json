@@ -32,7 +32,7 @@
     "handlebars": "~4.0.5",
     "nodeunit": "~0.11.0",
     "orchestrator": "^0.3.7",
-    "rsvp": "~3.3.1",
+    "rsvp": "~3.5.0",
     "scrawl": "0.0.5",
     "showdown": "^1.6.4",
     "sinon": "~1.17.3",
