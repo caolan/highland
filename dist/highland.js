@@ -706,6 +706,12 @@ function Stream(/*optional*/xs, /*optional*/secondArg, /*optional*/mappingHint) 
     this._is_observer = false;
     this._in_consume_cb = false;
     this._repeat_resume = false;
+
+    // Used by consume() to signal that next() hasn't been called, so resume()
+    // shouldn't ask for more data. Backpressure handling is getting fairly
+    // complicated, and this is very much a hack to get consume() backpressure
+    // to work correctly.
+    this._consume_waiting_for_next = false;
     this.source = null;
 
     // Old-style node Stream.pipe() checks for this
@@ -761,14 +767,14 @@ function Stream(/*optional*/xs, /*optional*/secondArg, /*optional*/mappingHint) 
                 }
                 self.write(new StreamRedirect(s));
                 if (!_paused) {
-                    self.resume();
+                    self._resume(false);
                 }
             }
             else {
                 self._generator_running = false;
             }
             if (!self.paused) {
-                self.resume();
+                self._resume(false);
             }
         };
 
@@ -1038,15 +1044,20 @@ Stream.prototype.pause = function () {
 Stream.prototype._checkBackPressure = function () {
     if (!this._consumers.length) {
         this._repeat_resume = false;
-        return this.pause();
+        this.pause();
+        return;
     }
     for (var i = 0, len = this._consumers.length; i < len; i++) {
         if (this._consumers[i].paused) {
             this._repeat_resume = false;
-            return this.pause();
+            this.pause();
+            return;
         }
     }
-    return this.resume();
+
+    if (this.paused) {
+        this._resume(false);
+    }
 };
 
 /**
@@ -1101,22 +1112,7 @@ Stream.prototype._sendOutgoing = function () {
     this._outgoing.splice(0, i);
 };
 
-/**
- * Resumes a paused Stream. This will either read from the Stream's incoming
- * buffer or request more data from an upstream source. Never call this method
- * on a stream that has been consumed (via a call to [consume](#consume) or any
- * other transform).
- *
- * @id resume
- * @section Stream Objects
- * @name Stream.resume()
- * @api public
- *
- * var xs = _(generator);
- * xs.resume();
- */
-
-Stream.prototype.resume = function () {
+Stream.prototype._resume = function (forceResumeSource) {
     //console.log(['resume', this.id]);
     if (this._resume_running || this._in_consume_cb) {
         //console.log(['resume already processing _incoming buffer, ignore resume call']);
@@ -1140,8 +1136,10 @@ Stream.prototype.resume = function () {
         if (!this.paused && !this._is_observer) {
             // ask parent for more data
             if (this.source) {
-                //console.log(['ask parent for more data']);
-                this.source._checkBackPressure();
+                if (!this._consume_waiting_for_next || forceResumeSource) {
+                    //console.log(['ask parent for more data']);
+                    this.source._checkBackPressure();
+                }
             }
             // run _generator to fill up _incoming buffer
             else if (this._generator) {
@@ -1155,6 +1153,25 @@ Stream.prototype.resume = function () {
         }
     } while (this._repeat_resume);
     this._resume_running = false;
+};
+
+/**
+ * Resumes a paused Stream. This will either read from the Stream's incoming
+ * buffer or request more data from an upstream source. Never call this method
+ * on a stream that has been consumed (via a call to [consume](#consume) or any
+ * other transform).
+ *
+ * @id resume
+ * @section Stream Objects
+ * @name Stream.resume()
+ * @api public
+ *
+ * var xs = _(generator);
+ * xs.resume();
+ */
+
+Stream.prototype.resume = function () {
+    this._resume(true);
 };
 
 /**
@@ -1353,7 +1370,10 @@ Stream.prototype._addConsumer = function (s) {
     }
     s.source = this;
     this._consumers.push(s);
-    this._checkBackPressure();
+
+    if (this.paused && !this._consume_waiting_for_next) {
+        this._checkBackPressure();
+    }
 };
 
 /**
@@ -1444,12 +1464,13 @@ Stream.prototype.consume = function (f) {
         if (x === nil) {
             // ended, remove consumer from source
             s._nil_pushed = true;
+            s._consume_waiting_for_next = false;
             self._removeConsumer(s);
 
             // We previously paused the stream, but since a nil was pushed,
             // next won't be called and we must manually resume.
             if (async) {
-                s.resume();
+                s._resume(false);
             }
         }
         if (s.paused) {
@@ -1466,6 +1487,7 @@ Stream.prototype.consume = function (f) {
     };
     var next = function (s2) {
         //console.log(['next', async]);
+        s._consume_waiting_for_next = false;
         if (s._nil_pushed) {
             throw new Error('Cannot call next after nil');
         }
@@ -1479,11 +1501,11 @@ Stream.prototype.consume = function (f) {
             }
             s.write(new StreamRedirect(s2));
             if (!_paused) {
-                s.resume();
+                s._resume(false);
             }
         }
         else if (async) {
-            s.resume();
+            s._resume(false);
         }
         else {
             next_called = true;
@@ -1501,12 +1523,13 @@ Stream.prototype.consume = function (f) {
 
         // Don't pause if x is nil -- as next will never be called after
         if (!next_called && x !== nil) {
+            s._consume_waiting_for_next = true;
             s.pause();
         }
 
         if (s._repeat_resume) {
             s._repeat_resume = false;
-            s.resume();
+            s._resume(false);
         }
     };
     self._addConsumer(s);
