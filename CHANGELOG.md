@@ -5,6 +5,12 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
+2.10.4
+------
+### Bugfix
+* Same as `2.10.3` but with a more conservative fix to minimize the risk of
+  regressions.
+
 2.10.3
 ------
 ### Bugfix
