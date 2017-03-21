@@ -1330,6 +1330,41 @@ exports['consume - throws error if next called after nil'] = function (test) {
     test.done();
 };
 
+exports['consume - call handler once without next() (issue #570)'] = function (test) {
+    test.expect(1);
+    var clock = sinon.useFakeTimers();
+    var consumedCalledNum = 0;
+    _([1, 2, 3])
+        .consume(function (err, x, push, next) {
+            consumedCalledNum++;
+        })
+        .resume();
+    clock.tick(10000);
+    clock.restore();
+    test.equal(consumedCalledNum, 1);
+    test.done();
+};
+
+exports['consume - consume resumed stream - call handler once without next() (issue #570)'] = function (test) {
+    test.expect(1);
+    var clock = sinon.useFakeTimers();
+    var consumedCalledNum = 0;
+    var s = _([1, 2, 3])
+        .consume(function (err, x, push, next) {
+            consumedCalledNum++;
+        });
+    s.resume();
+    s.consume(function (err, x, push, next) {
+        if (x !== _.nil) {
+            next();
+        }
+    }).resume();
+    clock.tick(10000);
+    clock.restore();
+    test.equal(consumedCalledNum, 1);
+    test.done();
+};
+
 exports.errors = function (test) {
     var errs = [];
     var err1 = new Error('one');
