@@ -37,6 +37,15 @@ this library.
   [#548](https://github.com/caolan/highland/pull/548).
   Fixes [#517](https://github.com/caolan/highland/issues/517).
 
+2.10.3
+------
+### Bugfix
+* In certain cases, consuming a stream that has been resumed may cause a stream
+  generator/consume handler to be called twice without next() ever being called.
+  This is mostly relevant for .each(...).done(...) use cases.
+  Noticed in [#570 (comment)](https://github.com/caolan/highland/issues/570#issuecomment-287980514).
+  [#608](https://github.com/caolan/highland/issues/608).
+
 2.10.2
 ------
 ### Bugfix
