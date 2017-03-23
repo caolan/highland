@@ -168,8 +168,15 @@ else if (typeof window !== 'undefined') {
  * // creating a stream from events
  * _('click', btn).each(handleEvent);
  *
- * // creating a stream from events with mapping
+ * // creating a stream from events with a mapping array
  * _('request', httpServer, ['req', 'res']).each(handleEvent);
+ * //=> { req: IncomingMessage, res: ServerResponse }
+ *
+ * // creating a stream from events with a mapping function
+ * _('request', httpServer, function(req, res) {
+ *     return res;
+ * }).each(handleEvent);
+ * //=> IncomingMessage
  *
  * // from a Promise object
  * var foo = _($.getJSON('/api/foo'));
@@ -251,10 +258,21 @@ function __(StreamCtor) {
             var mapper = hintMapper(mappingHint);
 
             s = new StreamCtor();
-            secondArg.on(xs, function () {
+
+            var callback_func = function () {
                 var ctx = mapper.apply(this, arguments);
                 s.write(ctx);
-            });
+            };
+
+            secondArg.on(xs, callback_func);
+            var removeMethod = secondArg.removeListener // EventEmitter
+                               || secondArg.unbind;     // jQuery
+
+            if (removeMethod) {
+                s._destructors.push(function() {
+                    removeMethod.call(secondArg, xs, callback_func);
+                });
+            }
         }
         else {
             throw new Error(
@@ -273,6 +291,17 @@ var isES5 = (function () {
     return Function.prototype.bind && !this;
 }());
 
+function checkIsNumber(parameter, paramName) {
+    if (typeof parameter != 'number') {
+        throw new TypeError('Parameter "' + paramName + '" is not a number.');
+    }
+}
+
+function checkRange(predicate, message) {
+    if (!predicate) {
+        throw new RangeError(message);
+    }
+}
 
 _.isUndefined = function (x) {
     return typeof x === 'undefined';
@@ -608,32 +637,42 @@ function newDelegateGenerator(pull) {
 }
 
 function promiseStream(StreamCtor, promise) {
-    if (_.isFunction(promise['finally'])) { // eslint-disable-line dot-notation
-        // Using finally handles also bluebird promise cancellation
-        return new StreamCtor(function (push) {
-            promise.then(function (value) {
-                return push(null, value);
-            },
-                function (err) {
-                    return push(err);
-                })['finally'](function () { // eslint-disable-line dot-notation
-                    return push(null, nil);
-                });
-        });
-    }
-    else {
-        // Sticking to promise standard only
-        return new StreamCtor(function (push) {
-            promise.then(function (value) {
+    var nilScheduled = false;
+    return new StreamCtor(function (push) {
+        // We need to push asynchronously so that errors thrown from handling
+        // these values are not caught by the promise. Also, return null so
+        // that bluebird-based promises don't complain about handlers being
+        // created but not returned. See
+        // https://github.com/caolan/highland/issues/588.
+        promise = promise.then(function (value) {
+            nilScheduled = true;
+            _.setImmediate(function () {
                 push(null, value);
-                return push(null, nil);
-            },
-            function (err) {
-                push(err);
-                return push(null, nil);
+                push(null, nil);
             });
+            return null;
+        }, function (err) {
+            nilScheduled = true;
+            _.setImmediate(function () {
+                push(err);
+                push(null, nil);
+            });
+            return null;
         });
-    }
+
+        // Using finally also handles bluebird promise cancellation, so we do
+        // it if we can.
+        if (_.isFunction(promise['finally'])) { // eslint-disable-line dot-notation
+            promise['finally'](function () { // eslint-disable-line dot-notation
+                if (!nilScheduled) {
+                    _.setImmediate(function () {
+                        push(null, nil);
+                    });
+                }
+                return null;
+            });
+        }
+    });
 }
 
 function iteratorStream(StreamCtor, it) {
@@ -939,9 +978,11 @@ _.use = use(Stream, _);
  * Creates a stream that sends a single value then ends.
  *
  * @id of
+ * @section Utils
  * @name _.of(x)
  * @param x - the value to send
- * @section Utils
+ * @returns Stream
+ * @api public
  *
  * _.of(1).toArray(_.log); // => [1]
  */
@@ -954,9 +995,11 @@ addToplevelMethod('of', function (x) {
  * Creates a stream that sends a single error then ends.
  *
  * @id fromError
+ * @section Utils
  * @name _.fromError(err)
  * @param error - the error to send
- * @section Utils
+ * @returns Stream
+ * @api public
  *
  * _.fromError(new Error('Single Error')).toCallback(function (err, result) {
  *     // err contains Error('Single Error') object
@@ -1216,11 +1259,11 @@ addMethod('end', function () {
 });
 
 /**
- * Pipes a Highland Stream to a [Node Writable Stream](http://nodejs.org/api/stream.html#stream_class_stream_writable)
- * (Highland Streams are also Node Writable Streams). This will pull all the
- * data from the source Highland Stream and write it to the destination,
- * automatically managing flow so that the destination is not overwhelmed
- * by a fast source.
+ * Pipes a Highland Stream to a [Node Writable
+ * Stream](http://nodejs.org/api/stream.html#stream_class_stream_writable).
+ * This will pull all the data from the source Highland Stream and write it to
+ * the destination, automatically managing flow so that the destination is not
+ * overwhelmed by a fast source.
  *
  * Users may optionally pass an object that may contain any of these fields:
  *
@@ -1230,10 +1273,16 @@ addMethod('end', function () {
  *
  * Like [Readable#pipe](https://nodejs.org/api/stream.html#stream_readable_pipe_destination_options),
  * this function will throw errors if there is no `error` handler installed on
- * the stream. Use [through](#through) if you are piping to another Highland
- * stream and want errors as well as values to be propagated.
+ * the stream.
  *
- * This function returns the destination so you can chain together pipe calls.
+ * This function returns the destination so you can chain together `pipe` calls.
+ *
+ * **NOTE**: While Highland streams created via `_()` and [pipeline](#pipeline)
+ * support being piped to, it is almost never appropriate to `pipe` from a
+ * Highland stream to another Highland stream. Those two cases are meant for
+ * use when piping from *Node* streams. You might be tempted to use `pipe` to
+ * construct reusable transforms. Do not do it. See [through](#through) for a
+ * better way.
  *
  * @id pipe
  * @section Consumption
@@ -1248,6 +1297,19 @@ addMethod('end', function () {
  *
  * // chained call
  * source.pipe(through).pipe(dest);
+ *
+ * // DO NOT do this! It will not work. The stream returned by oddDoubler does
+ * // not support being piped to.
+ * function oddDoubler() {
+ *     return _()
+ *         return x % 2; // odd numbers only
+ *     })
+ *     .map(function (x) {
+ *         return x * 2;
+ *     });
+ * }
+ *
+ * _([1, 2, 3, 4]).pipe(oddDoubler()) // => Garbage
  */
 
 addMethod('pipe', function (dest, options) {
@@ -1554,6 +1616,18 @@ addMethod('write', function (x) {
  * Forks a stream, allowing you to add additional consumers with shared
  * back-pressure. A stream forked to multiple consumers will only pull values
  * from its source as fast as the slowest consumer can handle them.
+ *
+ * **NOTE**: Do not depend on a consistent execution order between the forks.
+ * This transform only guarantees that all forks will process a value `foo`
+ * before any will process a second value `bar`. It does *not* guarantee the
+ * order in which the forks process `foo`.
+ *
+ * **TIP**: Be careful about modifying stream values within the forks (or using
+ * a library that does so). Since the same value will be passed to every fork,
+ * changes made in one fork will be visible in any fork that executes after it.
+ * Add to that the inconsistent execution order, and you can end up with subtle
+ * data corruption bugs. If you need to modify any values, you should make a
+ * copy and modify the copy instead.
  *
  * @id fork
  * @section Higher-order Streams
@@ -2618,7 +2692,7 @@ addMethod('uniq', function () {
 });
 
 /**
- * Takes a `finite` stream of streams and returns a stream where the first
+ * Takes a *finite* stream of streams and returns a stream where the first
  * element from each separate stream is combined into a single data event,
  * followed by the second elements of each stream and so on until the shortest
  * input stream is exhausted.
@@ -2634,7 +2708,7 @@ addMethod('uniq', function () {
  *     _([7, 8, 9]),
  *     _([10, 11, 12])
  * ]).zipAll()
- * // => [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]
+ * // => [1, 4, 7, 10], [2, 5, 8, 11], [3, 6, 9, 12]
  *
  * // shortest stream determines length of output stream
  * _([
@@ -2643,7 +2717,7 @@ addMethod('uniq', function () {
  *     _([9, 10, 11, 12]),
  *     _([13, 14])
  * ]).zipAll()
- * // => [ [ 1, 5, 9, 13 ], [ 2, 6, 10, 14 ] ]
+ * // => [1, 5, 9, 13], [2, 6, 10, 14]
  */
 
 addMethod('zipAll', function () {
@@ -2691,7 +2765,7 @@ addMethod('zipAll', function () {
 });
 
 /**
- * Takes a stream and a `finite` stream of `N` streams
+ * Takes a stream and a *finite* stream of `N` streams
  * and returns a stream of the corresponding `(N+1)`-tuples.
  *
  * @id zipEach
@@ -2701,11 +2775,11 @@ addMethod('zipAll', function () {
  * @api public
  *
  * _([1,2,3]).zipEach([[4, 5, 6], [7, 8, 9], [10, 11, 12]])
- * // => [ [ 1, 4, 7, 10 ], [ 2, 5, 8, 11 ], [ 3, 6, 9, 12 ] ]
+ * // => [1, 4, 7, 10], [2, 5, 8, 11], [3, 6, 9, 12]
  *
  * // shortest stream determines length of output stream
  * _([1, 2, 3, 4]).zipEach([[5, 6, 7, 8], [9, 10, 11, 12], [13, 14]])
- * // => [ [ 1, 5, 9, 13 ], [ 2, 6, 10, 14 ] ]
+ * // => [1, 5, 9, 13], [2, 6, 10, 14]
  */
 
 addMethod('zipEach', function (ys) {
@@ -2816,9 +2890,9 @@ addMethod('batchWithTimeOrCount', function (ms, n) {
  * @param {String} sep - the value to intersperse between the source elements
  * @api public
  *
- * _(['ba', 'a', 'a']).intersperse('n')  // => ba, n, a, n, a
- * _(['mississippi']).splitBy('ss').intersperse('ss')  // => mi, ss, i, ss, ippi
- * _(['foo']).intersperse('bar')  // => foo
+ * _(['ba', 'a', 'a']).intersperse('n')  // => 'ba', 'n', 'a', 'n', 'a'
+ * _(['mississippi']).splitBy('ss').intersperse('ss')  // => 'mi', 'ss', 'i', 'ss', 'ippi'
+ * _(['foo']).intersperse('bar')  // => 'foo'
  */
 
 addMethod('intersperse', function (separator) {
@@ -2855,9 +2929,9 @@ addMethod('intersperse', function (separator) {
  * @param {String | RegExp} sep - the separator to split on
  * @api public
  *
- * _(['mis', 'si', 's', 'sippi']).splitBy('ss')  // => mi, i, ippi
- * _(['ba', 'a', 'a']).intersperse('n').splitBy('n')  // => ba, a, a
- * _(['foo']).splitBy('bar')  // => foo
+ * _(['mis', 'si', 's', 'sippi']).splitBy('ss')  // => 'mi', 'i', 'ippi'
+ * _(['ba', 'a', 'a']).intersperse('n').splitBy('n')  // => 'ba', 'a', 'a'
+ * _(['foo']).splitBy('bar')  // => 'foo'
  */
 
 addMethod('splitBy', function (sep) {
@@ -2901,8 +2975,8 @@ addMethod('splitBy', function (sep) {
  * @name Stream.split()
  * @api public
  *
- * _(['a\n', 'b\nc\n', 'd', '\ne']).split()  // => a, b, c, d, e
- * _(['a\r\nb\nc']]).split()  // => a, b, c
+ * _(['a\n', 'b\nc\n', 'd', '\ne']).split()  // => 'a', 'b', 'c', 'd', 'e'
+ * _(['a\r\nb\nc']]).split()  // => 'a', 'b', 'c'
  */
 
 addMethod('split', function () {
@@ -2910,25 +2984,39 @@ addMethod('split', function () {
 });
 
 /**
- * Creates a new Stream with the values from the source in the range of `start` (inclusive) to `end` (exclusive).
- * `start` and `end` must be of type `Number`, if `start` is not a `Number` it will default to `0`
- * and, likewise, `end` will default to `Infinity`: this could result in the whole stream being be
- * returned.
+ * Creates a new Stream with the values from the source in the range of `start`
+ * (inclusive) to `end` (exclusive).
  *
  * @id slice
  * @section Transforms
  * @name Stream.slice(start, end)
- * @param {Number} start - integer representing index to start reading from source (inclusive)
- * @param {Number} stop - integer representing index to stop reading from source (exclusive)
+ * @param {Number} start - (optional) integer representing index to start
+ *     reading from source (inclusive). Defaults to `0` if not specified.
+ * @param {Number} stop - (optional) integer representing index to stop
+ *     reading from source (exclusive). Defaults to `Infinity` if not
+ *     specified.
+ * @throws {TypeError} if either parameters are not numbers.
+ * @throws {RangeError} if either parameters are negative.
  * @api public
  *
  * _([1, 2, 3, 4]).slice(1, 3) // => 2, 3
  */
 
 addMethod('slice', function(start, end) {
+    if (start == null) {
+        start = 0;
+    }
+
+    if (end == null) {
+        end = Infinity;
+    }
+
+    checkIsNumber(start, 'start');
+    checkIsNumber(end, 'end');
+    checkRange(start >= 0, 'start cannot be negative.');
+    checkRange(end >= 0, 'end cannot be negative.');
+
     var index = 0;
-    start = typeof start != 'number' || start < 0 ? 0 : start;
-    end = typeof end != 'number' ? Infinity : end;
 
     if (start === 0 && end === Infinity) {
         return this;
@@ -2957,13 +3045,14 @@ addMethod('slice', function(start, end) {
 });
 
 /**
- * Creates a new Stream with the first `n` values from the source. `n` must be of type `Number`,
- * if not the whole stream will be returned.
+ * Creates a new Stream with the first `n` values from the source.
  *
  * @id take
  * @section Transforms
  * @name Stream.take(n)
  * @param {Number} n - integer representing number of values to read from source
+ * @throws {TypeError} if `n` is not a number.
+ * @throws {RangeError} if `n` is negative.
  * @api public
  *
  * _([1, 2, 3, 4]).take(2) // => 1, 2
@@ -2976,14 +3065,16 @@ addMethod('take', function (n) {
 });
 
 /**
- * Acts as the inverse of [`take(n)`](#take) - instead of returning the first `n` values, it ignores the
- * first `n` values and then emits the rest. `n` must be of type `Number`, if not the whole stream will
- * be returned. All errors (even ones emitted before the nth value) will be emitted.
+ * Acts as the inverse of [`take(n)`](#take) - instead of returning the first
+ * `n` values, it ignores the first `n` values and then emits the rest. All
+ * errors (even ones emitted before the nth value) will be emitted.
  *
  * @id drop
  * @section Transforms
  * @name Stream.drop(n)
  * @param {Number} n - integer representing number of values to read from source
+ * @throws {TypeError} if `n` is not a number.
+ * @throws {RangeError} if `n` is negative.
  * @api public
  *
  * _([1, 2, 3, 4]).drop(2) // => 3, 4
@@ -3102,6 +3193,10 @@ addMethod('sort', function () {
  * Highland Stream (instead of the piped to target directly as in
  * [pipe](#pipe)). Any errors emitted will be propagated as Highland errors.
  *
+ * **TIP**: Passing a function to `through` is a good way to implement complex
+ * reusable stream transforms. You can even construct the function dynamically
+ * based on certain inputs. See examples below.
+ *
  * @id through
  * @section Higher-order Streams
  * @name Stream.through(target)
@@ -3109,6 +3204,7 @@ addMethod('sort', function () {
  * function to call.
  * @api public
  *
+ * // This is a static complex transform.
  * function oddDoubler(s) {
  *     return s.filter(function (x) {
  *         return x % 2; // odd numbers only
@@ -3118,9 +3214,21 @@ addMethod('sort', function () {
  *     });
  * }
  *
- * _([1, 2, 3, 4]).through(oddDoubler).toArray(function (xs) {
- *     // xs will be [2, 6]
- * });
+ * // This is a dynamically-created complex transform.
+ * function multiplyEvens(factor) {
+ *     return function (x) {
+ *         return s.filter(function (x) {
+ *             return x % 2 === 0;
+ *         })
+ *         .map(function (x) {
+ *             return x * factor;
+ *         });
+ *     };
+ * }
+ *
+ * _([1, 2, 3, 4]).through(oddDoubler); // => 2, 6
+ *
+ * _([1, 2, 3, 4]).through(multiplyEvens(5)); // => 10, 20
  *
  * // Can also be used with Node Through Streams
  * _(filenames).through(jsonParser).map(function (obj) {
@@ -3797,7 +3905,7 @@ HighlandTransform.prototype['@@transducer/step'] = function (push, input) {
  *
  * var xf = require('transducer-js').map(_.add(1));
  * _([1, 2, 3, 4]).transduce(xf);
- * // => [2, 3, 4, 5]
+ * // => 2, 3, 4, 5
  */
 
 addMethod('transduce', function transduce(xf) {
@@ -4105,7 +4213,7 @@ addMethod('mergeWithLimit', function mergeWithLimit(n){
  * @param {Array} args - the arguments to call the method with
  * @api public
  *
- * _(['foo', 'bar']).invoke('toUpperCase', [])  // => FOO, BAR
+ * _(['foo', 'bar']).invoke('toUpperCase', [])  // => 'FOO', 'BAR'
  *
  * var readFile = _.wrapCallback(fs.readFile);
  * filenames.flatMap(readFile).invoke('toString', ['utf8']);
@@ -4213,14 +4321,33 @@ addMethod('throttle', function (ms) {
  * data for `ms` milliseconds. Sends the last value that occurred before
  * the delay, discarding all other values.
  *
+ * **Implementation Note**: This transform will will not wait the full `ms`
+ * delay to emit a pending value (if any) once it see a `nil`, as that
+ * guarantees that there will be no more values.
+ *
  * @id debounce
  * @section Transforms
  * @name Stream.debounce(ms)
  * @param {Number} ms - the milliseconds to wait before sending data
  * @api public
  *
+ * function delay(x, ms, push) {
+ *     setTimeout(function () {
+ *         push(null, x);
+ *     }, ms);
+ * }
+ *
  * // sends last keyup event after user has stopped typing for 1 second
  * $('keyup', textbox).debounce(1000);
+ *
+ * // A nil triggers the emit immediately
+ * _(function (push, next) {
+ *     delay(0, 100, push);
+ *     delay(1, 200, push);
+ *     delay(_.nil, 250, push);
+ * }).debounce(75);
+ * // => after 175ms => 1
+ * // => after 250ms (not 275ms!) => 1 2
  */
 
 addMethod('debounce', function (ms) {
@@ -4681,6 +4808,49 @@ addToplevelMethod('wrapCallback', function (f, /*optional*/mappingHint) {
 });
 
 /**
+ * Wraps a function that returns a promise, transforming it to a function
+ * which accepts the same arguments and returns a Highland Stream instead.
+ * The wrapped function keeps its context, so you can safely use it as a
+ * method without binding.
+ *
+ * @id wrapAsync
+ * @section Utils
+ * @name _.wrapAsync(f)
+ * @param {Function} f - the function that returns a promise
+ * @api public
+ *
+ * var resolve = _.wrapAsync(Promise.resolve);
+ * var reject = _.wrapAsync(Promise.reject);
+ *
+ * resolve([1, 2, 3]).apply(function (a, b, c) {
+ *  // a === 1
+ *  // b === 2
+ *  // c === 3
+ * });
+ *
+ * reject('boom').errors(function (err) {
+ *   // err === 'boom'
+ * });
+ */
+
+addToplevelMethod('wrapAsync', function (f) {
+    var stream = this;
+    return function () {
+        var promise;
+        try {
+            promise = f.apply(this, arguments);
+            if (!_.isObject(promise) || !_.isFunction(promise.then)) {
+                return _.fromError(new Error('Wrapped function did not return a promise'));
+            }
+            return stream(promise);
+        }
+        catch (e) {
+            return _.fromError(e);
+        }
+    };
+});
+
+/**
  * Takes an object or a constructor function and returns that object or
  * constructor with streamified versions of its function properties.
  * Passed constructors will also have their prototype functions
@@ -4799,7 +4969,7 @@ _.not = function (x) {
 };
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./intMap":2,"./queue":3,"_process":10,"events":8,"string_decoder":11,"util":13}],2:[function(require,module,exports){
+},{"./intMap":2,"./queue":3,"_process":9,"events":5,"string_decoder":10,"util":13}],2:[function(require,module,exports){
 (function (global){
 var hasOwn = Object.prototype.hasOwnProperty;
 
@@ -4912,6 +5082,426 @@ Queue.prototype.toString = function toString() {
 module.exports = Queue;
 
 },{}],4:[function(require,module,exports){
+'use strict'
+
+exports.byteLength = byteLength
+exports.toByteArray = toByteArray
+exports.fromByteArray = fromByteArray
+
+var lookup = []
+var revLookup = []
+var Arr = typeof Uint8Array !== 'undefined' ? Uint8Array : Array
+
+var code = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+for (var i = 0, len = code.length; i < len; ++i) {
+  lookup[i] = code[i]
+  revLookup[code.charCodeAt(i)] = i
+}
+
+revLookup['-'.charCodeAt(0)] = 62
+revLookup['_'.charCodeAt(0)] = 63
+
+function placeHoldersCount (b64) {
+  var len = b64.length
+  if (len % 4 > 0) {
+    throw new Error('Invalid string. Length must be a multiple of 4')
+  }
+
+  // the number of equal signs (place holders)
+  // if there are two placeholders, than the two characters before it
+  // represent one byte
+  // if there is only one, then the three characters before it represent 2 bytes
+  // this is just a cheap hack to not do indexOf twice
+  return b64[len - 2] === '=' ? 2 : b64[len - 1] === '=' ? 1 : 0
+}
+
+function byteLength (b64) {
+  // base64 is 4/3 + up to two characters of the original data
+  return b64.length * 3 / 4 - placeHoldersCount(b64)
+}
+
+function toByteArray (b64) {
+  var i, j, l, tmp, placeHolders, arr
+  var len = b64.length
+  placeHolders = placeHoldersCount(b64)
+
+  arr = new Arr(len * 3 / 4 - placeHolders)
+
+  // if there are placeholders, only get up to the last complete 4 chars
+  l = placeHolders > 0 ? len - 4 : len
+
+  var L = 0
+
+  for (i = 0, j = 0; i < l; i += 4, j += 3) {
+    tmp = (revLookup[b64.charCodeAt(i)] << 18) | (revLookup[b64.charCodeAt(i + 1)] << 12) | (revLookup[b64.charCodeAt(i + 2)] << 6) | revLookup[b64.charCodeAt(i + 3)]
+    arr[L++] = (tmp >> 16) & 0xFF
+    arr[L++] = (tmp >> 8) & 0xFF
+    arr[L++] = tmp & 0xFF
+  }
+
+  if (placeHolders === 2) {
+    tmp = (revLookup[b64.charCodeAt(i)] << 2) | (revLookup[b64.charCodeAt(i + 1)] >> 4)
+    arr[L++] = tmp & 0xFF
+  } else if (placeHolders === 1) {
+    tmp = (revLookup[b64.charCodeAt(i)] << 10) | (revLookup[b64.charCodeAt(i + 1)] << 4) | (revLookup[b64.charCodeAt(i + 2)] >> 2)
+    arr[L++] = (tmp >> 8) & 0xFF
+    arr[L++] = tmp & 0xFF
+  }
+
+  return arr
+}
+
+function tripletToBase64 (num) {
+  return lookup[num >> 18 & 0x3F] + lookup[num >> 12 & 0x3F] + lookup[num >> 6 & 0x3F] + lookup[num & 0x3F]
+}
+
+function encodeChunk (uint8, start, end) {
+  var tmp
+  var output = []
+  for (var i = start; i < end; i += 3) {
+    tmp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
+    output.push(tripletToBase64(tmp))
+  }
+  return output.join('')
+}
+
+function fromByteArray (uint8) {
+  var tmp
+  var len = uint8.length
+  var extraBytes = len % 3 // if we have 1 byte left, pad 2 bytes
+  var output = ''
+  var parts = []
+  var maxChunkLength = 16383 // must be multiple of 3
+
+  // go through the array every three bytes, we'll deal with trailing stuff later
+  for (var i = 0, len2 = len - extraBytes; i < len2; i += maxChunkLength) {
+    parts.push(encodeChunk(uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)))
+  }
+
+  // pad the end with zeros, but make sure to not forget the extra bytes
+  if (extraBytes === 1) {
+    tmp = uint8[len - 1]
+    output += lookup[tmp >> 2]
+    output += lookup[(tmp << 4) & 0x3F]
+    output += '=='
+  } else if (extraBytes === 2) {
+    tmp = (uint8[len - 2] << 8) + (uint8[len - 1])
+    output += lookup[tmp >> 10]
+    output += lookup[(tmp >> 4) & 0x3F]
+    output += lookup[(tmp << 2) & 0x3F]
+    output += '='
+  }
+
+  parts.push(output)
+
+  return parts.join('')
+}
+
+},{}],5:[function(require,module,exports){
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+function EventEmitter() {
+  this._events = this._events || {};
+  this._maxListeners = this._maxListeners || undefined;
+}
+module.exports = EventEmitter;
+
+// Backwards-compat with node 0.10.x
+EventEmitter.EventEmitter = EventEmitter;
+
+EventEmitter.prototype._events = undefined;
+EventEmitter.prototype._maxListeners = undefined;
+
+// By default EventEmitters will print a warning if more than 10 listeners are
+// added to it. This is a useful default which helps finding memory leaks.
+EventEmitter.defaultMaxListeners = 10;
+
+// Obviously not all Emitters should be limited to 10. This function allows
+// that to be increased. Set to zero for unlimited.
+EventEmitter.prototype.setMaxListeners = function(n) {
+  if (!isNumber(n) || n < 0 || isNaN(n))
+    throw TypeError('n must be a positive number');
+  this._maxListeners = n;
+  return this;
+};
+
+EventEmitter.prototype.emit = function(type) {
+  var er, handler, len, args, i, listeners;
+
+  if (!this._events)
+    this._events = {};
+
+  // If there is no 'error' event listener then throw.
+  if (type === 'error') {
+    if (!this._events.error ||
+        (isObject(this._events.error) && !this._events.error.length)) {
+      er = arguments[1];
+      if (er instanceof Error) {
+        throw er; // Unhandled 'error' event
+      } else {
+        // At least give some kind of context to the user
+        var err = new Error('Uncaught, unspecified "error" event. (' + er + ')');
+        err.context = er;
+        throw err;
+      }
+    }
+  }
+
+  handler = this._events[type];
+
+  if (isUndefined(handler))
+    return false;
+
+  if (isFunction(handler)) {
+    switch (arguments.length) {
+      // fast cases
+      case 1:
+        handler.call(this);
+        break;
+      case 2:
+        handler.call(this, arguments[1]);
+        break;
+      case 3:
+        handler.call(this, arguments[1], arguments[2]);
+        break;
+      // slower
+      default:
+        args = Array.prototype.slice.call(arguments, 1);
+        handler.apply(this, args);
+    }
+  } else if (isObject(handler)) {
+    args = Array.prototype.slice.call(arguments, 1);
+    listeners = handler.slice();
+    len = listeners.length;
+    for (i = 0; i < len; i++)
+      listeners[i].apply(this, args);
+  }
+
+  return true;
+};
+
+EventEmitter.prototype.addListener = function(type, listener) {
+  var m;
+
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  if (!this._events)
+    this._events = {};
+
+  // To avoid recursion in the case that type === "newListener"! Before
+  // adding it to the listeners, first emit "newListener".
+  if (this._events.newListener)
+    this.emit('newListener', type,
+              isFunction(listener.listener) ?
+              listener.listener : listener);
+
+  if (!this._events[type])
+    // Optimize the case of one listener. Don't need the extra array object.
+    this._events[type] = listener;
+  else if (isObject(this._events[type]))
+    // If we've already got an array, just append.
+    this._events[type].push(listener);
+  else
+    // Adding the second element, need to change to array.
+    this._events[type] = [this._events[type], listener];
+
+  // Check for listener leak
+  if (isObject(this._events[type]) && !this._events[type].warned) {
+    if (!isUndefined(this._maxListeners)) {
+      m = this._maxListeners;
+    } else {
+      m = EventEmitter.defaultMaxListeners;
+    }
+
+    if (m && m > 0 && this._events[type].length > m) {
+      this._events[type].warned = true;
+      console.error('(node) warning: possible EventEmitter memory ' +
+                    'leak detected. %d listeners added. ' +
+                    'Use emitter.setMaxListeners() to increase limit.',
+                    this._events[type].length);
+      if (typeof console.trace === 'function') {
+        // not supported in IE 10
+        console.trace();
+      }
+    }
+  }
+
+  return this;
+};
+
+EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+
+EventEmitter.prototype.once = function(type, listener) {
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  var fired = false;
+
+  function g() {
+    this.removeListener(type, g);
+
+    if (!fired) {
+      fired = true;
+      listener.apply(this, arguments);
+    }
+  }
+
+  g.listener = listener;
+  this.on(type, g);
+
+  return this;
+};
+
+// emits a 'removeListener' event iff the listener was removed
+EventEmitter.prototype.removeListener = function(type, listener) {
+  var list, position, length, i;
+
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  if (!this._events || !this._events[type])
+    return this;
+
+  list = this._events[type];
+  length = list.length;
+  position = -1;
+
+  if (list === listener ||
+      (isFunction(list.listener) && list.listener === listener)) {
+    delete this._events[type];
+    if (this._events.removeListener)
+      this.emit('removeListener', type, listener);
+
+  } else if (isObject(list)) {
+    for (i = length; i-- > 0;) {
+      if (list[i] === listener ||
+          (list[i].listener && list[i].listener === listener)) {
+        position = i;
+        break;
+      }
+    }
+
+    if (position < 0)
+      return this;
+
+    if (list.length === 1) {
+      list.length = 0;
+      delete this._events[type];
+    } else {
+      list.splice(position, 1);
+    }
+
+    if (this._events.removeListener)
+      this.emit('removeListener', type, listener);
+  }
+
+  return this;
+};
+
+EventEmitter.prototype.removeAllListeners = function(type) {
+  var key, listeners;
+
+  if (!this._events)
+    return this;
+
+  // not listening for removeListener, no need to emit
+  if (!this._events.removeListener) {
+    if (arguments.length === 0)
+      this._events = {};
+    else if (this._events[type])
+      delete this._events[type];
+    return this;
+  }
+
+  // emit removeListener for all listeners on all events
+  if (arguments.length === 0) {
+    for (key in this._events) {
+      if (key === 'removeListener') continue;
+      this.removeAllListeners(key);
+    }
+    this.removeAllListeners('removeListener');
+    this._events = {};
+    return this;
+  }
+
+  listeners = this._events[type];
+
+  if (isFunction(listeners)) {
+    this.removeListener(type, listeners);
+  } else if (listeners) {
+    // LIFO order
+    while (listeners.length)
+      this.removeListener(type, listeners[listeners.length - 1]);
+  }
+  delete this._events[type];
+
+  return this;
+};
+
+EventEmitter.prototype.listeners = function(type) {
+  var ret;
+  if (!this._events || !this._events[type])
+    ret = [];
+  else if (isFunction(this._events[type]))
+    ret = [this._events[type]];
+  else
+    ret = this._events[type].slice();
+  return ret;
+};
+
+EventEmitter.prototype.listenerCount = function(type) {
+  if (this._events) {
+    var evlistener = this._events[type];
+
+    if (isFunction(evlistener))
+      return 1;
+    else if (evlistener)
+      return evlistener.length;
+  }
+  return 0;
+};
+
+EventEmitter.listenerCount = function(emitter, type) {
+  return emitter.listenerCount(type);
+};
+
+function isFunction(arg) {
+  return typeof arg === 'function';
+}
+
+function isNumber(arg) {
+  return typeof arg === 'number';
+}
+
+function isObject(arg) {
+  return typeof arg === 'object' && arg !== null;
+}
+
+function isUndefined(arg) {
+  return arg === void 0;
+}
+
+},{}],6:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -6704,118 +7294,7 @@ function isnan (val) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":5,"ieee754":6,"isarray":7}],5:[function(require,module,exports){
-'use strict'
-
-exports.toByteArray = toByteArray
-exports.fromByteArray = fromByteArray
-
-var lookup = []
-var revLookup = []
-var Arr = typeof Uint8Array !== 'undefined' ? Uint8Array : Array
-
-function init () {
-  var code = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-  for (var i = 0, len = code.length; i < len; ++i) {
-    lookup[i] = code[i]
-    revLookup[code.charCodeAt(i)] = i
-  }
-
-  revLookup['-'.charCodeAt(0)] = 62
-  revLookup['_'.charCodeAt(0)] = 63
-}
-
-init()
-
-function toByteArray (b64) {
-  var i, j, l, tmp, placeHolders, arr
-  var len = b64.length
-
-  if (len % 4 > 0) {
-    throw new Error('Invalid string. Length must be a multiple of 4')
-  }
-
-  // the number of equal signs (place holders)
-  // if there are two placeholders, than the two characters before it
-  // represent one byte
-  // if there is only one, then the three characters before it represent 2 bytes
-  // this is just a cheap hack to not do indexOf twice
-  placeHolders = b64[len - 2] === '=' ? 2 : b64[len - 1] === '=' ? 1 : 0
-
-  // base64 is 4/3 + up to two characters of the original data
-  arr = new Arr(len * 3 / 4 - placeHolders)
-
-  // if there are placeholders, only get up to the last complete 4 chars
-  l = placeHolders > 0 ? len - 4 : len
-
-  var L = 0
-
-  for (i = 0, j = 0; i < l; i += 4, j += 3) {
-    tmp = (revLookup[b64.charCodeAt(i)] << 18) | (revLookup[b64.charCodeAt(i + 1)] << 12) | (revLookup[b64.charCodeAt(i + 2)] << 6) | revLookup[b64.charCodeAt(i + 3)]
-    arr[L++] = (tmp >> 16) & 0xFF
-    arr[L++] = (tmp >> 8) & 0xFF
-    arr[L++] = tmp & 0xFF
-  }
-
-  if (placeHolders === 2) {
-    tmp = (revLookup[b64.charCodeAt(i)] << 2) | (revLookup[b64.charCodeAt(i + 1)] >> 4)
-    arr[L++] = tmp & 0xFF
-  } else if (placeHolders === 1) {
-    tmp = (revLookup[b64.charCodeAt(i)] << 10) | (revLookup[b64.charCodeAt(i + 1)] << 4) | (revLookup[b64.charCodeAt(i + 2)] >> 2)
-    arr[L++] = (tmp >> 8) & 0xFF
-    arr[L++] = tmp & 0xFF
-  }
-
-  return arr
-}
-
-function tripletToBase64 (num) {
-  return lookup[num >> 18 & 0x3F] + lookup[num >> 12 & 0x3F] + lookup[num >> 6 & 0x3F] + lookup[num & 0x3F]
-}
-
-function encodeChunk (uint8, start, end) {
-  var tmp
-  var output = []
-  for (var i = start; i < end; i += 3) {
-    tmp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
-    output.push(tripletToBase64(tmp))
-  }
-  return output.join('')
-}
-
-function fromByteArray (uint8) {
-  var tmp
-  var len = uint8.length
-  var extraBytes = len % 3 // if we have 1 byte left, pad 2 bytes
-  var output = ''
-  var parts = []
-  var maxChunkLength = 16383 // must be multiple of 3
-
-  // go through the array every three bytes, we'll deal with trailing stuff later
-  for (var i = 0, len2 = len - extraBytes; i < len2; i += maxChunkLength) {
-    parts.push(encodeChunk(uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)))
-  }
-
-  // pad the end with zeros, but make sure to not forget the extra bytes
-  if (extraBytes === 1) {
-    tmp = uint8[len - 1]
-    output += lookup[tmp >> 2]
-    output += lookup[(tmp << 4) & 0x3F]
-    output += '=='
-  } else if (extraBytes === 2) {
-    tmp = (uint8[len - 2] << 8) + (uint8[len - 1])
-    output += lookup[tmp >> 10]
-    output += lookup[(tmp >> 4) & 0x3F]
-    output += lookup[(tmp << 2) & 0x3F]
-    output += '='
-  }
-
-  parts.push(output)
-
-  return parts.join('')
-}
-
-},{}],6:[function(require,module,exports){
+},{"base64-js":4,"ieee754":7,"isarray":8}],7:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -6901,343 +7380,14 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],8:[function(require,module,exports){
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-function EventEmitter() {
-  this._events = this._events || {};
-  this._maxListeners = this._maxListeners || undefined;
-}
-module.exports = EventEmitter;
-
-// Backwards-compat with node 0.10.x
-EventEmitter.EventEmitter = EventEmitter;
-
-EventEmitter.prototype._events = undefined;
-EventEmitter.prototype._maxListeners = undefined;
-
-// By default EventEmitters will print a warning if more than 10 listeners are
-// added to it. This is a useful default which helps finding memory leaks.
-EventEmitter.defaultMaxListeners = 10;
-
-// Obviously not all Emitters should be limited to 10. This function allows
-// that to be increased. Set to zero for unlimited.
-EventEmitter.prototype.setMaxListeners = function(n) {
-  if (!isNumber(n) || n < 0 || isNaN(n))
-    throw TypeError('n must be a positive number');
-  this._maxListeners = n;
-  return this;
-};
-
-EventEmitter.prototype.emit = function(type) {
-  var er, handler, len, args, i, listeners;
-
-  if (!this._events)
-    this._events = {};
-
-  // If there is no 'error' event listener then throw.
-  if (type === 'error') {
-    if (!this._events.error ||
-        (isObject(this._events.error) && !this._events.error.length)) {
-      er = arguments[1];
-      if (er instanceof Error) {
-        throw er; // Unhandled 'error' event
-      } else {
-        // At least give some kind of context to the user
-        var err = new Error('Uncaught, unspecified "error" event. (' + er + ')');
-        err.context = er;
-        throw err;
-      }
-    }
-  }
-
-  handler = this._events[type];
-
-  if (isUndefined(handler))
-    return false;
-
-  if (isFunction(handler)) {
-    switch (arguments.length) {
-      // fast cases
-      case 1:
-        handler.call(this);
-        break;
-      case 2:
-        handler.call(this, arguments[1]);
-        break;
-      case 3:
-        handler.call(this, arguments[1], arguments[2]);
-        break;
-      // slower
-      default:
-        args = Array.prototype.slice.call(arguments, 1);
-        handler.apply(this, args);
-    }
-  } else if (isObject(handler)) {
-    args = Array.prototype.slice.call(arguments, 1);
-    listeners = handler.slice();
-    len = listeners.length;
-    for (i = 0; i < len; i++)
-      listeners[i].apply(this, args);
-  }
-
-  return true;
-};
-
-EventEmitter.prototype.addListener = function(type, listener) {
-  var m;
-
-  if (!isFunction(listener))
-    throw TypeError('listener must be a function');
-
-  if (!this._events)
-    this._events = {};
-
-  // To avoid recursion in the case that type === "newListener"! Before
-  // adding it to the listeners, first emit "newListener".
-  if (this._events.newListener)
-    this.emit('newListener', type,
-              isFunction(listener.listener) ?
-              listener.listener : listener);
-
-  if (!this._events[type])
-    // Optimize the case of one listener. Don't need the extra array object.
-    this._events[type] = listener;
-  else if (isObject(this._events[type]))
-    // If we've already got an array, just append.
-    this._events[type].push(listener);
-  else
-    // Adding the second element, need to change to array.
-    this._events[type] = [this._events[type], listener];
-
-  // Check for listener leak
-  if (isObject(this._events[type]) && !this._events[type].warned) {
-    if (!isUndefined(this._maxListeners)) {
-      m = this._maxListeners;
-    } else {
-      m = EventEmitter.defaultMaxListeners;
-    }
-
-    if (m && m > 0 && this._events[type].length > m) {
-      this._events[type].warned = true;
-      console.error('(node) warning: possible EventEmitter memory ' +
-                    'leak detected. %d listeners added. ' +
-                    'Use emitter.setMaxListeners() to increase limit.',
-                    this._events[type].length);
-      if (typeof console.trace === 'function') {
-        // not supported in IE 10
-        console.trace();
-      }
-    }
-  }
-
-  return this;
-};
-
-EventEmitter.prototype.on = EventEmitter.prototype.addListener;
-
-EventEmitter.prototype.once = function(type, listener) {
-  if (!isFunction(listener))
-    throw TypeError('listener must be a function');
-
-  var fired = false;
-
-  function g() {
-    this.removeListener(type, g);
-
-    if (!fired) {
-      fired = true;
-      listener.apply(this, arguments);
-    }
-  }
-
-  g.listener = listener;
-  this.on(type, g);
-
-  return this;
-};
-
-// emits a 'removeListener' event iff the listener was removed
-EventEmitter.prototype.removeListener = function(type, listener) {
-  var list, position, length, i;
-
-  if (!isFunction(listener))
-    throw TypeError('listener must be a function');
-
-  if (!this._events || !this._events[type])
-    return this;
-
-  list = this._events[type];
-  length = list.length;
-  position = -1;
-
-  if (list === listener ||
-      (isFunction(list.listener) && list.listener === listener)) {
-    delete this._events[type];
-    if (this._events.removeListener)
-      this.emit('removeListener', type, listener);
-
-  } else if (isObject(list)) {
-    for (i = length; i-- > 0;) {
-      if (list[i] === listener ||
-          (list[i].listener && list[i].listener === listener)) {
-        position = i;
-        break;
-      }
-    }
-
-    if (position < 0)
-      return this;
-
-    if (list.length === 1) {
-      list.length = 0;
-      delete this._events[type];
-    } else {
-      list.splice(position, 1);
-    }
-
-    if (this._events.removeListener)
-      this.emit('removeListener', type, listener);
-  }
-
-  return this;
-};
-
-EventEmitter.prototype.removeAllListeners = function(type) {
-  var key, listeners;
-
-  if (!this._events)
-    return this;
-
-  // not listening for removeListener, no need to emit
-  if (!this._events.removeListener) {
-    if (arguments.length === 0)
-      this._events = {};
-    else if (this._events[type])
-      delete this._events[type];
-    return this;
-  }
-
-  // emit removeListener for all listeners on all events
-  if (arguments.length === 0) {
-    for (key in this._events) {
-      if (key === 'removeListener') continue;
-      this.removeAllListeners(key);
-    }
-    this.removeAllListeners('removeListener');
-    this._events = {};
-    return this;
-  }
-
-  listeners = this._events[type];
-
-  if (isFunction(listeners)) {
-    this.removeListener(type, listeners);
-  } else if (listeners) {
-    // LIFO order
-    while (listeners.length)
-      this.removeListener(type, listeners[listeners.length - 1]);
-  }
-  delete this._events[type];
-
-  return this;
-};
-
-EventEmitter.prototype.listeners = function(type) {
-  var ret;
-  if (!this._events || !this._events[type])
-    ret = [];
-  else if (isFunction(this._events[type]))
-    ret = [this._events[type]];
-  else
-    ret = this._events[type].slice();
-  return ret;
-};
-
-EventEmitter.prototype.listenerCount = function(type) {
-  if (this._events) {
-    var evlistener = this._events[type];
-
-    if (isFunction(evlistener))
-      return 1;
-    else if (evlistener)
-      return evlistener.length;
-  }
-  return 0;
-};
-
-EventEmitter.listenerCount = function(emitter, type) {
-  return emitter.listenerCount(type);
-};
-
-function isFunction(arg) {
-  return typeof arg === 'function';
-}
-
-function isNumber(arg) {
-  return typeof arg === 'number';
-}
-
-function isObject(arg) {
-  return typeof arg === 'object' && arg !== null;
-}
-
-function isUndefined(arg) {
-  return arg === void 0;
-}
-
 },{}],9:[function(require,module,exports){
-if (typeof Object.create === 'function') {
-  // implementation from standard node.js 'util' module
-  module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    ctor.prototype = Object.create(superCtor.prototype, {
-      constructor: {
-        value: ctor,
-        enumerable: false,
-        writable: true,
-        configurable: true
-      }
-    });
-  };
-} else {
-  // old school shim for old browsers
-  module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    var TempCtor = function () {}
-    TempCtor.prototype = superCtor.prototype
-    ctor.prototype = new TempCtor()
-    ctor.prototype.constructor = ctor
-  }
-}
-
-},{}],10:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -7419,7 +7569,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],11:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7642,7 +7792,32 @@ function base64DetectIncompleteChar(buffer) {
   this.charLength = this.charReceived ? 3 : 0;
 }
 
-},{"buffer":4}],12:[function(require,module,exports){
+},{"buffer":6}],11:[function(require,module,exports){
+if (typeof Object.create === 'function') {
+  // implementation from standard node.js 'util' module
+  module.exports = function inherits(ctor, superCtor) {
+    ctor.super_ = superCtor
+    ctor.prototype = Object.create(superCtor.prototype, {
+      constructor: {
+        value: ctor,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+  };
+} else {
+  // old school shim for old browsers
+  module.exports = function inherits(ctor, superCtor) {
+    ctor.super_ = superCtor
+    var TempCtor = function () {}
+    TempCtor.prototype = superCtor.prototype
+    ctor.prototype = new TempCtor()
+    ctor.prototype.constructor = ctor
+  }
+}
+
+},{}],12:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
@@ -8239,5 +8414,5 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":12,"_process":10,"inherits":9}]},{},[1])(1)
+},{"./support/isBuffer":12,"_process":9,"inherits":11}]},{},[1])(1)
 });
