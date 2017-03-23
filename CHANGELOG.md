@@ -37,6 +37,20 @@ this library.
   [#548](https://github.com/caolan/highland/pull/548).
   Fixes [#517](https://github.com/caolan/highland/issues/517).
 
+2.10.5
+------
+### Bugfix
+* Streams constructed from an `EventEmitter` or `jQuery` element will now remove
+  itself when the stream is destroyed.
+  Fixes [#500](https://github.com/caolan/highland/issues/500).
+  [#609](https://github.com/caolan/highland/pull/609).
+
+2.10.4
+------
+### Bugfix
+* Same as `2.10.3` but with a more conservative fix to minimize the risk of
+  regressions.
+
 2.10.3
 ------
 ### Bugfix
