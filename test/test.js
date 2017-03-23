@@ -2864,6 +2864,21 @@ exports['wrap EventEmitter (or jQuery) on handler'] = function (test) {
     });
 };
 
+exports['removing EventEmitter (or jQuery) listener on destruction (issue #500)'] = function(test) {
+    var ee = new EventEmitter();
+    var s = _('myevent', ee);
+
+    var removed = false;
+
+    ee.on('removeListener', function() {
+        removed = true;
+    });
+
+    s.destroy();
+    test.ok(removed);
+    test.done();
+};
+
 exports['wrap EventEmitter (or jQuery) on handler with args wrapping by function'] = function (test) {
     var ee = {
         on: function (name, f) {
