@@ -5,6 +5,14 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
+2.10.5
+------
+### Bugfix
+* Streams constructed from an `EventEmitter` or `jQuery` element will now remove
+  itself when the stream is destroyed.
+  Fixes [#500](https://github.com/caolan/highland/issues/500).
+  [#609](https://github.com/caolan/highland/pull/609).
+
 2.10.4
 ------
 ### Bugfix
