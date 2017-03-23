@@ -1,9 +1,10 @@
 module.exports = function (grunt) {
+    var pkg = grunt.file.readJSON('package.json');
 
     // Project configuration.
     grunt.initConfig({
 
-        pkg: grunt.file.readJSON('package.json'),
+        pkg: pkg,
 
         eslint: {
             options: {
@@ -91,8 +92,14 @@ module.exports = function (grunt) {
                 // (to avoid publishing local changes)
                 abortIfDirty: true,
 
-                // TODO(vqvu): Remove when 3.0.0 is officially released.
-                tag: 'next'
+                tag: function () {
+                    if (pkg.version.indexOf('beta') < 0) {
+                        return 'latest';
+                    }
+                    else {
+                        return 'next';
+                    }
+                }
             }
         }
 
@@ -109,6 +116,13 @@ module.exports = function (grunt) {
 
     // custom tasks
     grunt.loadTasks('./tasks');
+
+    grunt.registerTask('pre-release:beta', [
+        'test',
+        'bump-only:prerelease',
+        'build',
+        'bump-commit'
+    ]);
 
     grunt.registerTask('pre-release:patch', [
         'test',
@@ -129,6 +143,11 @@ module.exports = function (grunt) {
         'bump-only:major',
         'build',
         'bump-commit'
+    ]);
+
+    grunt.registerTask('release:beta', [
+        'pre-release:beta',
+        'npm-publish'
     ]);
 
     grunt.registerTask('release:patch', [
