@@ -39,7 +39,7 @@
     "stream-array": "~1.1.2",
     "through": "~2.3.4",
     "transducers-js": "~0.4.174",
-    "uglify-js": "^2.6.1"
+    "uglify-js": "^3.0.4"
   },
   "scripts": {
     "test": "eslint Gruntfile.js lib test/test.js && nodeunit test/test.js"
