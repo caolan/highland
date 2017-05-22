@@ -16,7 +16,7 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "bluebird": "^3.3.5",
-    "browserify": "^14.1.0",
+    "browserify": "^14.3.0",
     "browserify-shim": "^3.8.11",
     "concat-stream": "~1.6.0",
     "eslint": "^3.19.0",
