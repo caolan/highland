@@ -1935,6 +1935,50 @@ Stream.prototype.onDestroy = function onDestroy(f) {
 };
 
 /**
+ *
+ * @id toCallbackHandler
+ * @param {string} transformName Description to compose user-friendly error messages
+ * @param {function} cb Node.js style callback
+ * @return {function} Function passed to .consume
+ * @private
+ */
+function toCallbackHandler(transformName, cb) {
+    var value;
+    var hasValue = false; // In case an emitted value === null or === undefined.
+    return function (err, x, push, next) {
+        if (err) {
+            push(null, nil);
+            if (hasValue) {
+                cb(new Error(transformName + ' called on stream emitting multiple values'));
+            }
+            else {
+                cb(err);
+            }
+        }
+        else if (x === nil) {
+            if (hasValue) {
+                cb(null, value);
+            }
+            else {
+                cb();
+            }
+        }
+        else {
+            if (hasValue) {
+                push(null, nil);
+                cb(new Error(transformName + ' called on stream emitting multiple values'));
+            }
+            else {
+                value = x;
+                hasValue = true;
+                next();
+            }
+        }
+    };
+}
+
+
+/**
  * Returns the result of a stream to a nodejs-style callback function.
  *
  * If the stream contains a single value, it will call `cb`
@@ -1958,40 +2002,46 @@ Stream.prototype.onDestroy = function onDestroy(f) {
  */
 
 addMethod('toCallback', function (cb) {
-    var value;
-    var hasValue = false; // In case an emitted value === null or === undefined.
-
-    this.consume(function (err, x, push, next) {
-        if (err) {
-            push(null, nil);
-            if (hasValue) {
-                cb(new Error('toCallback called on stream emitting multiple values'));
-            }
-            else {
-                cb(err);
-            }
-        }
-        else if (x === nil) {
-            if (hasValue) {
-                cb(null, value);
-            }
-            else {
-                cb();
-            }
-        }
-        else {
-            if (hasValue) {
-                push(null, nil);
-                cb(new Error('toCallback called on stream emitting multiple values'));
-            }
-            else {
-                value = x;
-                hasValue = true;
-                next();
-            }
-        }
-    }).resume();
+    this.consume(toCallbackHandler('toCallback', cb)).resume();
 });
+
+
+/**
+ * Converts the result of a stream to Promise.
+ *
+ * If the stream contains a single value, it will return
+ * with the single item emitted by the stream (if present).
+ * If the stream is empty, `undefined` will be returned.
+ * If an error is encountered in the stream, this function will stop
+ * consumption and call `cb` with the error.
+ * If the stream contains more than one item, it will stop consumption
+ * and reject with an error.
+ *
+ * @id toPromise
+ * @section Consumption
+ * @name Stream.toPromise(PromiseCtor)
+ * @param {Function} PromiseCtor - Promises/A+ compliant constructor
+ * @api public
+ *
+ * _([1, 2, 3, 4]).collect().toPromise(Promise).then(function (result) {
+ *     // parameter result will be [1,2,3,4]
+ * });
+ */
+
+addMethod('toPromise', function (PromiseCtor) {
+    var self = this;
+    return new PromiseCtor(function(resolve, reject) {
+        self.consume(toCallbackHandler('toPromise', function(err, res) {
+            if (err) {
+                reject(err);
+            }
+            else {
+                resolve(res);
+            }
+        })).resume();
+    });
+});
+
 
 /**
  * Creates a new Stream of transformed values by applying a function to each
@@ -3216,7 +3266,7 @@ addMethod('sort', function () {
  *
  * // This is a dynamically-created complex transform.
  * function multiplyEvens(factor) {
- *     return function (x) {
+ *     return function (s) {
  *         return s.filter(function (x) {
  *             return x % 2 === 0;
  *         })
