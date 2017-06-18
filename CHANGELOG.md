@@ -5,6 +5,14 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
+2.11.0
+------
+### New additions
+* `toPromise`: Converts a one-element or zero-element stream to a Promise given
+  a Promise/A+ compliant promise constructor.
+  [#628](https://github.com/caolan/highland/pull/628).
+  Fixes [#627](https://github.com/caolan/highland/issues/627).
+
 2.10.5
 ------
 ### Bugfix
