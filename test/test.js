@@ -2444,6 +2444,14 @@ exports['toPromise - error handling edge cases'] = function (test) {
     });
 };
 
+exports['toPromise - Promise is default constructor'] = function(test) {
+    test.expect(1);
+    _([1, 2, 3, 4]).collect().toPromise().then(function(result) {
+        test.same(result, [1, 2, 3, 4]);
+        test.done();
+    });
+};
+
 
 exports['calls generator on read'] = function (test) {
     test.expect(5);
