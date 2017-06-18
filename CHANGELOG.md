@@ -37,6 +37,14 @@ this library.
   [#548](https://github.com/caolan/highland/pull/548).
   Fixes [#517](https://github.com/caolan/highland/issues/517).
 
+2.11.0
+------
+### New additions
+* `toPromise`: Converts a one-element or zero-element stream to a Promise given
+  a Promise/A+ compliant promise constructor.
+  [#628](https://github.com/caolan/highland/pull/628).
+  Fixes [#627](https://github.com/caolan/highland/issues/627).
+
 2.10.5
 ------
 ### Bugfix

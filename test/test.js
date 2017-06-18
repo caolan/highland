@@ -2375,73 +2375,71 @@ exports['toCallback - error handling edge cases'] = function (test) {
 };
 
 
-exports['toPromise - ArrayStream'] = function(test) {
-    test.expect(1);
-    _([1, 2, 3, 4]).collect().toPromise(Promise).then(function(result) {
-        test.same(result, [1, 2, 3, 4]);
-        test.done();
-    });
-};
-
-exports['toPromise - GeneratorStream'] = function (test) {
-    test.expect(1);
-    _(function(push, next) {
-        push(null, 1);
-        push(null, 2);
-        setTimeout(function() {
-            push(null, 3);
-            push(null, _.nil);
-        }, 40);
-    }).collect().toPromise(Promise).then(function(result){
-        test.same(result, [1, 2, 3]);
-        test.done();
-    });
-};
-
-exports['toPromise - returns error for streams with multiple values'] = function (test) {
-    test.expect(1);
-    _([1, 2]).toPromise(Promise).catch(function(err) {
-        test.same(err.message, 'toPromise called on stream emitting multiple values');
-        test.done();
-    });
-};
-
-exports['toPromise - returns error when stream emits error'] = function (test) {
-    test.expect(1);
-    _(function(push, next) {
-        push(null, 1);
-        push(null, 2);
-        setTimeout(function() {
-            push(new Error('Test error'));
-            push(null, 3);
-            push(null, _.nil);
-        }, 40);
-    }).collect().toPromise(Promise).catch(function(err){
-        test.same(err.message, 'Test error');
-        test.done();
-    });
-};
-
-exports['toPromise - error handling edge cases'] = function (test) {
-    test.expect(2);
-    _(function(push, next) {
-        push(null, 1);
-        push(new Error('Test error'));
-        push(null, _.nil);
-    }).toPromise(Promise).catch(function(err){
-        test.same(err.message, 'toPromise called on stream emitting multiple values');
-    }).then(function() {
-        return _(function(push, next) {
+exports.toPromise = {
+    'ArrayStream': function(test) {
+        test.expect(1);
+        _([1, 2, 3, 4]).collect().toPromise(Promise).then(function(result) {
+            test.same(result, [1, 2, 3, 4]);
+            test.done();
+        });
+    },
+    'GeneratorStream': function (test) {
+        test.expect(1);
+        _(function(push, next) {
             push(null, 1);
             push(null, 2);
+            setTimeout(function() {
+                push(null, 3);
+                push(null, _.nil);
+            }, 40);
+        }).collect().toPromise(Promise).then(function(result){
+            test.same(result, [1, 2, 3]);
+            test.done();
+        });
+    },
+    'returns error for streams with multiple values': function (test) {
+        test.expect(1);
+        _([1, 2]).toPromise(Promise).catch(function(err) {
+            test.same(err.message, 'toPromise called on stream emitting multiple values');
+            test.done();
+        });
+    },
+    'returns error when stream emits error': function (test) {
+        test.expect(1);
+        _(function(push, next) {
+            push(null, 1);
+            push(null, 2);
+            setTimeout(function() {
+                push(new Error('Test error'));
+                push(null, 3);
+                push(null, _.nil);
+            }, 40);
+        }).collect().toPromise(Promise).catch(function(err){
+            test.same(err.message, 'Test error');
+            test.done();
+        });
+    },
+    'error handling edge cases': function (test) {
+        test.expect(2);
+        _(function(push, next) {
+            push(null, 1);
             push(new Error('Test error'));
             push(null, _.nil);
         }).toPromise(Promise).catch(function(err){
             test.same(err.message, 'toPromise called on stream emitting multiple values');
+        }).then(function() {
+            return _(function(push, next) {
+                push(null, 1);
+                push(null, 2);
+                push(new Error('Test error'));
+                push(null, _.nil);
+            }).toPromise(Promise).catch(function(err){
+                test.same(err.message, 'toPromise called on stream emitting multiple values');
+            });
+        }).then(function() {
+            test.done();
         });
-    }).then(function() {
-        test.done();
-    });
+    }
 };
 
 
