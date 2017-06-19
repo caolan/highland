@@ -8,12 +8,58 @@ this library.
 3.0.0
 -----
 ### Breaking changes
+* `stream.source` - The (undocumented) `source` property on a stream no longer
+  exists.
+* `consume` - It is no longer possible to `consume` the same stream multiple
+  times, even after the original `consume` has pushed `nil`. Attempting to do
+  so will result in an error. This affects all transforms that are implemented
+  via `consume`.
+  * **Old Behavior**: Code like this used to work
+    ```javascript
+    const stream = _([1, 2, 3]);
+    stream.take(1)
+      .toArray(array => {
+        console.log(array); // => [1]
+        stream.take(1).toArray(array2 => {
+          console.log(array2); // => [2]
+          stream.take(1).toArray(array3 => {
+            console.log(array3); // => [3]
+          });
+        });
+      });
+    ```
+  * **New Behavior**:
+    ```javascript
+    const stream = _([1, 2, 3]);
+    stream.take(1)
+      .toArray(array => {
+        console.log(array); // => [1]
+        stream.take(1); // The call to take(1) will fail.
+      });
+    ```
 * `drop`
   [#559](https://github.com/caolan/highland/pull/595)
   Fixes [#594](https://github.com/caolan/highland/issues/594)
   * **Old Behavior**: if `n` isn't a number or is negative, it defaults to `0`.
   * **New Behavior**: if `n` is not a number or if it is negative, an error is
     thrown.
+* `fork` - It is no longer possible to call `fork` after a call to consume.
+  Attempting to do so will result in an error.
+  * **Old Behavior**: Code like this used to work:
+    ```javascript
+    const fork1 = stream.map(x => x * 2);
+    const fork2 = stream.fork().map(x => x * 3);
+    // fork1 and fork2 share backpressure.
+    ```
+* `map` - Passing a non-function value to `map` now throws an error.
+  * **Old Behavior** - Passing a non-function value to `map` caused it to
+    map all stream values to the passed in value.
+* `reduce` - The order of the arguments to `reduce` has been swapped.
+  * **Old Behavior**: `stream.reduce(memo, reducer)`
+  * **New Behavior**: `stream.reduce(reducer, memo)`
+* `scan` - The order of the arguments to `scan` has been swapped.
+  * **Old Behavior**: `stream.scan(memo, reducer)`
+  * **New Behavior**: `stream.scan(reducer, memo)`
 * `slice`
   [#559](https://github.com/caolan/highland/pull/595)
   Fixes [#594](https://github.com/caolan/highland/issues/594)
@@ -30,6 +76,8 @@ this library.
     is negative, it is treated as if it is `0`.
   * **New Behavior**: if `n` is not a number or if it is negative, an error is
     thrown.
+* `zipAll` - `zipAll` has been renamed `zipEach`.
+* `zipAll0` - `zipAll0` has been renamed `zipAll`.
 
 ### New additions
 * `wrapAsync`: Wraps a function that returns a promise, transforming it to a
