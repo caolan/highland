@@ -10,6 +10,7 @@ this library.
 ### Bugfix
 * Remove usages of `Function.prototype.bind`. We support IE8.
   [#632](https://github.com/caolan/highland/issues/632).
+* Add a section about supported JS engines to the documentation.
 
 2.11.0
 ------
