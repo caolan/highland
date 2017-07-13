@@ -195,6 +195,16 @@ var isES5 = (function () {
     return Function.prototype.bind && !this;
 }());
 
+function bindContext(fn, context) {
+    if (isES5) {
+        return fn.bind(context);
+    }
+    else {
+        return function () {
+            return fn.apply(context, arguments);
+        };
+    }
+}
 
 _.isUndefined = function (x) {
     return typeof x === 'undefined';
@@ -720,7 +730,7 @@ function Stream(/*optional*/xs, /*optional*/secondArg, /*optional*/mappingHint) 
     self.on('newListener', function (ev) {
         if (ev === 'data') {
             self._send_events = true;
-            _.setImmediate(self.resume.bind(self));
+            _.setImmediate(bindContext(self.resume, self));
         }
         else if (ev === 'end') {
             // this property avoids us checking the length of the
@@ -3302,7 +3312,7 @@ exposeMethod('sort');
  *
  * // This is a dynamically-created complex transform.
  * function multiplyEvens(factor) {
- *     return function (x) {
+ *     return function (s) {
  *         return s.filter(function (x) {
  *             return x % 2 === 0;
  *         })
@@ -4483,7 +4493,9 @@ Stream.prototype.debounce = function (ms) {
             if (t) {
                 clearTimeout(t);
             }
-            t = setTimeout(push.bind(this, null, x), ms);
+            t = setTimeout(function () {
+                push(null, x);
+            }, ms);
             next();
         }
     });
