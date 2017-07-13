@@ -5,6 +5,12 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
+2.11.1
+------
+### Bugfix
+* Remove usages of `Function.prototype.bind`. We support IE8.
+  [#632](https://github.com/caolan/highland/issues/632).
+
 2.11.0
 ------
 ### New additions
