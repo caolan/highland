@@ -45,11 +45,16 @@ this library.
     thrown.
 * `fork` - It is no longer possible to call `fork` after a call to consume.
   Attempting to do so will result in an error.
-  * **Old Behavior**: Code like this used to work:
+  * Code like this used to work:
     ```javascript
     const fork1 = stream.map(x => x * 2);
     const fork2 = stream.fork().map(x => x * 3);
     // fork1 and fork2 share backpressure.
+    ```
+    In 3.0.0, this code should be written as
+    ```javascript
+    const fork1 = stream.fork().map(x => x * 2);
+    const fork2 = stream.fork().map(x => x * 3);
     ```
 * `map` - Passing a non-function value to `map` now throws an error.
   * **Old Behavior** - Passing a non-function value to `map` caused it to
