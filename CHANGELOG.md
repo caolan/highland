@@ -43,19 +43,21 @@ this library.
   * **Old Behavior**: if `n` isn't a number or is negative, it defaults to `0`.
   * **New Behavior**: if `n` is not a number or if it is negative, an error is
     thrown.
-* `fork` - It is no longer possible to call `fork` after a call to consume on
-  the same stream. Attempting to do so will result in an error.
+* `fork` - It is no longer possible to call `fork` after a call to `consume` on
+  the same stream. Attempting to do so will result in an error. This also applies
+  to all transforms. Note that each transform returns a new stream, so it is still
+  possible to fork a stream that has been transformed.
   * Code like this used to work:
     ```javascript
     const stream = _([1, 2, 3]).map(x => x + 1);
-    const fork1 = stream.map(x => x * 2);
-    const fork2 = stream.fork().map(x => x * 3);
+    const fork1 = stream.map(x => x * 2);        // stream is consumed.
+    const fork2 = stream.fork().map(x => x * 3); // then forked.
     // fork1 and fork2 share backpressure.
     ```
     In 3.0.0, this code should be written as
     ```javascript
     const stream = _([1, 2, 3]).map(x => x + 1);
-    const fork1 = stream.fork().map(x => x * 2);
+    const fork1 = stream.fork().map(x => x * 2); // stream must be explicitly forked
     const fork2 = stream.fork().map(x => x * 3);
     ```
 * `map` - Passing a non-function value to `map` now throws an error.
