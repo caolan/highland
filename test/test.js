@@ -332,6 +332,41 @@ exports.ratelimit = {
         test.same(results, [1, 2, 3, 4, 5]);
         test.done();
     },
+    'with pause (issue #642)': function (test) {
+        test.expect(6);
+        var results = [];
+        var stream = _([1, 2, 3, 4]).ratelimit(1, 1000);
+
+        setTimeout(function () {
+            stream.pause();
+        }, 2000);
+        setTimeout(function () {
+            stream.resume();
+        }, 6000);
+
+        stream.each(function (x) {
+            results.push(x);
+        });
+
+        test.same(results, [1]);
+
+        this.clock.tick(1000);
+        test.same(results, [1, 2]);
+
+        this.clock.tick(1000);
+        test.same(results, [1, 2]);
+
+        this.clock.tick(3000);
+        test.same(results, [1, 2]);
+
+        this.clock.tick(1000);
+        test.same(results, [1, 2, 3]);
+
+        this.clock.tick(1000);
+        test.same(results, [1, 2, 3, 4]);
+
+        test.done();
+    },
     'noValueOnError': noValueOnErrorTest(_.ratelimit(1, 10)),
     'onDestroy': onDestroyTest(_.ratelimit(1, 1), 1)
 };
