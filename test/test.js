@@ -4938,6 +4938,16 @@ exports['flatMap - map to Stream of Array'] = function (test) {
     });
 };
 
+exports.ap = function (test) {
+    function doubled(x) {
+        return x * 2;
+    }
+    _.ap(_([1, 2, 3, 4]), _.of(doubled)).toArray(function (xs) {
+        test.same(xs, [2, 4, 6, 8]);
+        test.done();
+    });
+};
+
 exports.pluck = function (test) {
     var a = _([
         {type: 'blogpost', title: 'foo'},
