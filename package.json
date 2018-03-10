@@ -43,6 +43,7 @@
     "test": "eslint Gruntfile.js lib test/test.js && nodeunit test/test.js"
   },
   "dependencies": {
+    "stream-browserify": "^2.0.1",
     "util-deprecate": "^1.0.2"
   }
 }
