@@ -2046,7 +2046,8 @@ exports.toPromise = {
 
 exports.toNodeStream = {
     'non-object stream of buffer': function (test) {
-        var buf = Buffer.from('aaa', 'utf8');
+        var buf = Buffer.from ? Buffer.from('aaa', 'utf8')
+                              : new Buffer('aaa', 'utf8');
         var s = _.of(buf).toNodeStream();
         s.on('data', function(val) {
             test.same(val, buf);
