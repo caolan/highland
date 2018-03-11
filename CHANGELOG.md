@@ -5,6 +5,12 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
+2.12.0
+------
+### New additions
+* `toNodeStream`: Returns a native node Readable
+  [#644](https://github.com/caolan/highland/pull/644)
+
 2.11.1
 ------
 ### Bugfix
