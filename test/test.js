@@ -2044,6 +2044,53 @@ exports.toPromise = {
     }
 };
 
+exports.toNodeStream = {
+    'non-object stream of buffer': function (test) {
+        var buf = Buffer.from('aaa', 'utf8');
+        var s = _.of(buf).toNodeStream();
+        s.on('data', function(val) {
+            test.same(val, buf);
+        });
+        s.on('end', function() {
+            test.done();
+        });
+    },
+    'non-object stream of string': function (test) {
+        var s = _.of('aaa').toNodeStream({objectMode: true});
+        s.on('data', function(val) {
+            test.same(val, 'aaa');
+        });
+        s.on('end', function() {
+            test.done();
+        });
+    },
+    'object stream': function (test) {
+        var s = _.of({a: 1}).toNodeStream({objectMode: true});
+        s.on('data', function(val) {
+            test.same(val, {a: 1});
+        });
+        s.on('end', function(val) {
+            test.done();
+        });
+    },
+    'object stream no objectmode': function (test) {
+        var s = _.of({a: 1}).toNodeStream();
+        s.on('data', function(val) {
+            test.ok(false, 'data event should not be fired');
+        });
+        s.on('end', function(val) {
+            test.done();
+        });
+    },
+    'object stream but stream error': function (test) {
+        var err = new Error('ohno');
+        var s = _.fromError(err).toNodeStream({objectMode: true});
+        s.on('error', function (e) {
+            test.same(e, err);
+            test.done();
+        });
+    }
+};
 
 exports['calls generator on read'] = function (test) {
     var gen_calls = 0;
