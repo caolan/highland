@@ -1,5 +1,6 @@
 language: node_js
 node_js:
+  - "0.10"
   - "4"
   - "6"
   - "8"
@@ -13,3 +14,10 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - g++-4.8
+script:
+  - |
+    if [[ "${TRAVIS_NODE_VERSION}" == "0.10" ]]; then
+      npm run test-0.10
+    else
+      npm test
+    fi

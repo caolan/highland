@@ -42,6 +42,8 @@
     "uglify-js": "^3.0.5"
   },
   "scripts": {
-    "test": "eslint Gruntfile.js lib test/test.js && nodeunit test/test.js"
+    "test": "eslint Gruntfile.js lib test/test.js && npm run nodeunit",
+    "test-0.10": "npm run nodeunit",
+    "nodeunit": "nodeunit test/test.js"
   }
 }
