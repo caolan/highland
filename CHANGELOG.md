@@ -5,7 +5,11 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
-3.0.0
+3.0.0-beta.6
+-----
+This release contains all changes from [2.12.0](#2120).
+
+3.0.0-beta.5
 -----
 ### Breaking changes
 * `stream.source` - The (undocumented) `source` property on a stream no longer
