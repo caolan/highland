@@ -261,6 +261,11 @@ source.observe().map(transform2);</code></pre>
 _.map(doubled, mystream)</code></pre>
       <p>By convention, all top-level functions are "curryable", meaning you can partially apply their arguments. In the above example, this could be called as:</p>
       <pre><code class="javascript">_.map(doubled)(mystream);</code></pre>
+      <p><b>Warning:</b> curried transforms do not respect optional arguments.
+      You must pass every declared argument to the function, using
+      <code>null</code> for arguments that you don't want to provide. For
+      example, <code>stream.slice(1)</code> is equivalent to <code>_.slice(1,
+      null)(stream)</code> and not <code>_.slice(1)(stream)</code>.</p>
       <p>In real-world use, this means you can define the behaviour you'd like before knowing what stream you'd like to perform it on:</p>
       <pre><code class="javascript">// partially apply the filter() function to create a new function
 var getBlogposts = _.filter(function (doc) {
@@ -320,8 +325,20 @@ results.each(function (result) {
                 <li>
                   <code>{{name}}</code>
                   {{#if type}} - <em>{{type}}</em>{{/if}}
-                  {{#if description}} - {{description}}{{/if}}
+                  {{#if description_html}} - {{{description_html}}}{{/if}}
                 </li>
+              {{/each}}
+            </ul>
+            {{/if}}
+
+            {{#if throws}}
+            <div class="doc-params-heading">Throws</div>
+            <ul>
+              {{#each throws}}
+              <li>
+                <code>{{type}}</code>
+                {{#if description}} - {{{description_html}}}{{/if}}
+              </li>
               {{/each}}
             </ul>
             {{/if}}
