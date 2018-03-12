@@ -1,7 +1,8 @@
 var handlebars = require('handlebars'),
     scrawl = require('scrawl'),
     path = require('path'),
-    fs = require('fs');
+    fs = require('fs'),
+    showdown = require('showdown');
 
 
 var src_file = path.resolve(__dirname, '../lib/index.js');
@@ -32,6 +33,40 @@ function groupBySectionsInSectionsOrder(c1, c2){
   }
 
   return ( idx1 - idx2 );
+}
+
+function renderMarkdown(markdown, stripPTags) {
+    var converter = new showdown.Converter();
+    var html = converter.makeHtml(markdown);
+
+    if (stripPTags) {
+        html = html
+            .replace(/^<p>/, '')
+            .replace(/<\/p>$/, '');
+    }
+
+    return html;
+}
+
+function parseThrowsTag(throwsTag) {
+    // Looks like @throws {Type} my comment.
+    if (!Array.isArray(throwsTag)) {
+        throwsTag = [throwsTag];
+    }
+
+    var throwsTagRegex = /^\{([^\}]+)\}(.*)/;
+    return throwsTag.map(function (tag) {
+        var match = throwsTagRegex.exec(tag);
+        var description = match[2];
+        var descriptionHtml = renderMarkdown(description, true);
+
+        // Strip starting and ending tags.
+        return {
+            type: match[1],
+            description: description,
+            description_html: descriptionHtml
+        };
+    });
 }
 
 module.exports = function (grunt) {
@@ -66,6 +101,20 @@ module.exports = function (grunt) {
                     throw new Error('Duplicate id:' + c.id);
                 }
                 c.tag = grunt.config.get('pkg.version')
+
+                if (c.throws) {
+                    c.throws = parseThrowsTag(c.throws);
+                }
+
+                if (c.params) {
+                    c.params.forEach(function (param) {
+                        if (param.description) {
+                            param.description_html =
+                                renderMarkdown(param.description, true);
+                        }
+                    });
+                }
+
                 items.push(c);
             });
 
