@@ -9,6 +9,16 @@ this library.
 -----
 This release contains all changes from [2.12.0](#2120).
 
+### Breaking changes
+* `toNodeStream` - In 2.x, if you call `toNodeStream` on a Highland stream that
+  emits objects without setting `{objectMode: true}`, the resulting `Readable`
+  may simply ignore any objects that are emitted (depending on the
+  implementation of `StringDecoder`). In 3.x, the `Readable` will always emit an
+  error.
+
+  Also, in 2.x, calling `toNodeStream` will immediately consume the source. In
+  3.x, the source stream will only be consumed when the `Readable` is consumed.
+
 3.0.0-beta.5
 -----
 ### Breaking changes

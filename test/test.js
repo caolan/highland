@@ -2479,6 +2479,7 @@ exports.toPromise = {
 
 exports.toNodeStream = {
     'non-object stream of buffer': function (test) {
+        test.expect(1);
         var buf = new Buffer('aaa', 'utf8');
         var s = _.of(buf).toNodeStream();
         s.on('data', function(val) {
@@ -2489,6 +2490,7 @@ exports.toNodeStream = {
         });
     },
     'non-object stream of string': function (test) {
+        test.expect(1);
         var s = _.of('aaa').toNodeStream({objectMode: true});
         s.on('data', function(val) {
             test.same(val, 'aaa');
@@ -2498,6 +2500,7 @@ exports.toNodeStream = {
         });
     },
     'object stream': function (test) {
+        test.expect(1);
         var s = _.of({a: 1}).toNodeStream({objectMode: true});
         s.on('data', function(val) {
             test.same(val, {a: 1});
@@ -2507,19 +2510,28 @@ exports.toNodeStream = {
         });
     },
     'object stream no objectmode': function (test) {
+        test.expect(1);
         var s = _.of({a: 1}).toNodeStream();
         s.on('data', function(val) {
             test.ok(false, 'data event should not be fired');
+        });
+        s.on('error', function (error) {
+            test.ok(true);
         });
         s.on('end', function(val) {
             test.done();
         });
     },
     'object stream but stream error': function (test) {
+        test.expect(1);
         var err = new Error('ohno');
         var s = _.fromError(err).toNodeStream({objectMode: true});
         s.on('error', function (e) {
             test.same(e, err);
+            test.done();
+        });
+        s.on('data', function (x) {
+            test.ok(false, 'data event should not be fired.');
             test.done();
         });
     }
