@@ -94,6 +94,12 @@ this library.
   [#548](https://github.com/caolan/highland/pull/548).
   Fixes [#517](https://github.com/caolan/highland/issues/517).
 
+2.12.0
+------
+### New additions
+* `toNodeStream`: Returns a native node Readable
+  [#644](https://github.com/caolan/highland/pull/644)
+
 2.11.1
 ------
 ### Bugfix

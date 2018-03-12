@@ -3,3 +3,4 @@
 /.grunt
 test/bundle.js
 *.swp
+package-lock.json
