@@ -324,6 +324,19 @@ exports.seq = function (test) {
     test.done();
 };
 
+exports.isNilTest = function (test) {
+    test.ok(_.isNil(_.nil));
+    test.ok(!_.isNil());
+    test.ok(!_.isNil(undefined));
+    test.ok(!_.isNil(null));
+    test.ok(!_.isNil(123));
+    test.ok(!_.isNil({}));
+    test.ok(!_.isNil([]));
+    test.ok(!_.isNil('foo'));
+    test.ok(!_.isNil(_()));
+    test.done();
+};
+
 exports.isStream = function (test) {
     test.ok(!_.isStream());
     test.ok(!_.isStream(undefined));
