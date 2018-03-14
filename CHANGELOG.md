@@ -5,6 +5,13 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
+2.13.0
+------
+### New additions
+* `isNil`: Returns `true` if the argument is the end of stream marker. This can
+  be useful as a user-defined type guard in Typescript.
+  [#645](https://github.com/caolan/highland/pull/645)
+
 2.12.0
 ------
 ### New additions
