@@ -4930,7 +4930,7 @@ exports.flatTap = function (test) {
 exports['flatTap - noValueOnError'] = noValueOnErrorTest(_.doto(function (x) { return x; }));
 
 exports['flatTap - returnsSameStream'] = returnsSameStreamTest(function(s) {
-    return s.doto(function (x) { return x; });
+    return s.flatTap(function (x) { return _([x]); });
 });
 
 exports.flatMap = function (test) {
