@@ -4909,6 +4909,30 @@ exports['tap - doto alias'] = function (test) {
     test.done();
 };
 
+exports.flatTap = function (test) {
+    test.expect(2);
+
+    var seen;
+    function record(x) {
+        var y = x * 2;
+        seen.push(y);
+        return _([y]);
+    }
+
+    seen = [];
+    _.flatTap(record, [1, 2, 3, 4]).toArray(function (xs) {
+        test.same(xs, [1, 2, 3, 4]);
+        test.same(seen, [2, 4, 6, 8]);
+    });
+    test.done();
+};
+
+exports['flatTap - noValueOnError'] = noValueOnErrorTest(_.doto(function (x) { return x; }));
+
+exports['flatTap - returnsSameStream'] = returnsSameStreamTest(function(s) {
+    return s.doto(function (x) { return x; });
+});
+
 exports.flatMap = function (test) {
     var f = function (x) {
         return _(function (push, next) {
