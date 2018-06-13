@@ -19,6 +19,10 @@ This release contains all changes from [2.12.0](#2120).
   Also, in 2.x, calling `toNodeStream` will immediately consume the source. In
   3.x, the source stream will only be consumed when the `Readable` is consumed.
 
+### Other
+* `stopOnError` - update `stopOnError` documentation to include `push`
+  [#650](https://github.com/caolan/highland/pull/650).
+
 3.0.0-beta.5
 -----
 ### Breaking changes
