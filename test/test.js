@@ -4933,6 +4933,62 @@ exports['flatTap - returnsSameStream'] = returnsSameStreamTest(function(s) {
     return s.flatTap(function (x) { return _([x]); });
 });
 
+exports['flatTap - argument function throws'] = function (test) {
+    test.expect(4);
+    var err = new Error('error');
+    var s = _([1, 2, 3, 4]).flatTap(function (x) {
+        if (x === 1) { throw err; }
+        if (x === 2) { _(['hello']); }
+        if (x === 3) { throw err; }
+        return _(['world']);
+    });
+
+    s.pull(errorEquals(test, 'error'));
+    s.pull(valueEquals(test, 2));
+    s.pull(anyError(test));
+    s.pull(valueEquals(test, 4));
+    test.done();
+};
+
+exports['flatTap - ArrayStream'] = function (test) {
+    var f = function (x) {
+        return _(function (push, next) {
+            setTimeout(function () {
+                push(null, x * 2);
+                push(null, _.nil);
+            }, 10);
+        });
+    };
+    _([1, 2, 3, 4]).flatTap(f).toArray(function (xs) {
+        test.same(xs, [1, 2, 3, 4]);
+        test.done();
+    });
+};
+
+exports['flatTap - GeneratorStream'] = function (test) {
+    var f = function (x) {
+        return _(function (push, next) {
+            setTimeout(function () {
+                push(null, x * 2);
+                push(null, _.nil);
+            }, 10);
+        });
+    };
+    var s = _(function (push, next) {
+        push(null, 1);
+        setTimeout(function () {
+            push(null, 2);
+            push(null, 3);
+            push(null, 4);
+            push(null, _.nil);
+        }, 10);
+    });
+    s.flatTap(f).toArray(function (xs) {
+        test.same(xs, [1, 2, 3, 4]);
+        test.done();
+    });
+};
+
 exports.flatMap = function (test) {
     var f = function (x) {
         return _(function (push, next) {
