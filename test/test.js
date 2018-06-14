@@ -4927,7 +4927,7 @@ exports.flatTap = function (test) {
     test.done();
 };
 
-exports['flatTap - noValueOnError'] = noValueOnErrorTest(_.doto(function (x) { return x; }));
+exports['flatTap - noValueOnError'] = noValueOnErrorTest(_.flatTap(function (x) { return _(); }));
 
 exports['flatTap - returnsSameStream'] = returnsSameStreamTest(function(s) {
     return s.flatTap(function (x) { return _([x]); });
