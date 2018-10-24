@@ -4939,6 +4939,14 @@ exports['flatMap - map to Stream of Array'] = function (test) {
 };
 
 exports.ap = {
+    setUp: function (callback) {
+        this.clock = sinon.useFakeTimers();
+        callback();
+    },
+    tearDown: function (callback) {
+        this.clock.restore();
+        callback();
+    },
     'applies values to functions': function (test) {
         var s = _([1, 2, 3, 4]);
         var f = _.of(function doubled(x) {
@@ -4952,6 +4960,7 @@ exports.ap = {
     },
     'noValueOnError': noValueOnErrorTest(_.ap(_.of(1))),
     'ArrayStream': function (test) {
+        test.expect(1);
         var f = _.of(function (x) {
             return _(function (push, next) {
                 setTimeout(function () {
@@ -4962,26 +4971,24 @@ exports.ap = {
         });
         _([1, 2, 3, 4]).ap(f).merge().toArray(function (xs) {
             test.same(xs, [2, 4, 6, 8]);
-            test.done();
         });
+        this.clock.tick(20);
+        test.done();
     },
     'GeneratorStream': function (test) {
+        test.expect(1);
         var f = _.of(function (x) {
             return _(function (push, next) {
-                setTimeout(function () {
-                    push(null, x * 2);
-                    push(null, _.nil);
-                }, 10);
+                push(null, x * 2);
+                push(null, _.nil);
             });
         });
         var s = _(function (push, next) {
             push(null, 1);
             push(null, 2);
-            setTimeout(function () {
-                push(null, 3);
-                push(null, 4);
-                push(null, _.nil);
-            }, 10);
+            push(null, 3);
+            push(null, 4);
+            push(null, _.nil);
         });
         s.ap(f).merge().toArray(function (xs) {
             test.same(xs, [2, 4, 6, 8]);
@@ -4999,7 +5006,7 @@ exports.ap = {
         });
     },
     'reflect timing of value and function arrival': function (test) {
-        test.expect(1);
+        test.expect(4);
         var f = _(function (push, next) {
             setTimeout(function () {
                 push(null, function (x) { return 'g1(' + x + ')'; });
@@ -5022,10 +5029,19 @@ exports.ap = {
             }, 70);
         });
 
-        s.ap(f).toArray(function (xs) {
-            test.same(xs, ['g1(1)', 'g1(2)', 'g2(2)', 'g2(3)']);
-            test.done();
+        var results = [];
+        s.ap(f).each(function (x) {
+            results.push(x);
         });
+        this.clock.tick(20);
+        test.same(results, ['g1(1)']);
+        this.clock.tick(30);
+        test.same(results, ['g1(1)', 'g1(2)']);
+        this.clock.tick(10);
+        test.same(results, ['g1(1)', 'g1(2)', 'g2(2)']);
+        this.clock.tick(10);
+        test.same(results, ['g1(1)', 'g1(2)', 'g2(2)', 'g2(3)']);
+        test.done();
     },
 };
 
