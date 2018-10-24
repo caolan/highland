@@ -30,7 +30,7 @@
     "grunt-gh-pages": "~2.0.0",
     "grunt-npm": "0.0.2",
     "handlebars": "~4.0.5",
-    "nodeunit": "~0.11.0",
+    "nodeunit": "0.11.2",
     "orchestrator": "^0.3.7",
     "rsvp": "~3.5.0",
     "scrawl": "0.0.5",
