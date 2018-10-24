@@ -4911,10 +4911,37 @@ exports['tap - doto alias'] = function (test) {
 
 
 exports.flatTap = {
-    'flatTap - noValueOnError': noValueOnErrorTest(_.flatTap(function (x) { return _([x]); })),
+    'flatTap - noValueOnError': noValueOnErrorTest(_.flatTap(function (x) { return _(); })),
     'flatTap - returnsSameStream': returnsSameStreamTest(function (s) {
         return s.flatTap(function (x) { return _([2]); });
     }, [1], [1]),
+    'flatTap - On a empty stream': function (test) {
+        test.expect(1);
+        var s = _([]).flatTap(function (x) {
+            return _([6]);
+        });
+
+        s.pull(valueEquals(test, _.nil));
+        test.done();
+    },
+    'flatTap - Returns an Empty stream': function (test) {
+        test.expect(1);
+        var s = _([3]).flatTap(function (x) {
+            return _([]);
+        });
+
+        s.pull(valueEquals(test, 3));
+        test.done();
+    },
+    'flatTap - Emits an multiple values': function (test) {
+        test.expect(1);
+        var s = _([3]).flatTap(function (x) {
+            return _([5, 6, 7, 8]);
+        });
+
+        s.pull(valueEquals(test, 3));
+        test.done();
+    },
     'flatTap - argument function throws': function (test) {
         test.expect(4);
         var err = new Error('error');
@@ -4932,24 +4959,31 @@ exports.flatTap = {
         test.done();
     },
     'flatTap - ArrayStream': function (test) {
+        var seen = [];
         var f = function (x) {
             return _(function (push, next) {
                 setTimeout(function () {
-                    push(null, x * 2);
+                    var y = x * 2;
+                    seen.push(y);
+                    push(null, y);
                     push(null, _.nil);
                 }, 10);
             });
         };
         _([1, 2, 3, 4]).flatTap(f).toArray(function (xs) {
             test.same(xs, [1, 2, 3, 4]);
+            test.same(seen, [2, 4, 6, 8]);
             test.done();
         });
     },
     'flatTap - GeneratorStream': function (test) {
+        var seen = [];
         var f = function (x) {
             return _(function (push, next) {
                 setTimeout(function () {
-                    push(null, x * 2);
+                    var y = x * 2;
+                    seen.push(y);
+                    push(null, y);
                     push(null, _.nil);
                 }, 10);
             });
@@ -4965,6 +4999,7 @@ exports.flatTap = {
         });
         s.flatTap(f).toArray(function (xs) {
             test.same(xs, [1, 2, 3, 4]);
+            test.same(seen, [2, 4, 6, 8]);
             test.done();
         });
     }
