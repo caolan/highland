@@ -5,7 +5,25 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
-3.0.0
+3.0.0-beta.6
+-----
+This release contains all changes from [2.12.0](#2120).
+
+### Breaking changes
+* `toNodeStream` - In 2.x, if you call `toNodeStream` on a Highland stream that
+  emits objects without setting `{objectMode: true}`, the resulting `Readable`
+  may simply ignore any objects that are emitted (depending on the
+  implementation of `StringDecoder`). In 3.x, the `Readable` will always emit an
+  error.
+
+  Also, in 2.x, calling `toNodeStream` will immediately consume the source. In
+  3.x, the source stream will only be consumed when the `Readable` is consumed.
+
+### Other
+* `stopOnError` - update `stopOnError` documentation to include `push`
+  [#650](https://github.com/caolan/highland/pull/650).
+
+3.0.0-beta.5
 -----
 ### Breaking changes
 * `stream.source` - The (undocumented) `source` property on a stream no longer
@@ -93,6 +111,12 @@ this library.
   function which accepts the same arguments and returns a Highland Stream instead.
   [#548](https://github.com/caolan/highland/pull/548).
   Fixes [#517](https://github.com/caolan/highland/issues/517).
+
+2.12.0
+------
+### New additions
+* `toNodeStream`: Returns a native node Readable
+  [#644](https://github.com/caolan/highland/pull/644)
 
 2.11.1
 ------

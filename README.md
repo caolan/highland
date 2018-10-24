@@ -21,7 +21,7 @@ focus on the important things. With Highland, you can switch between
 synchronous and asynchronous data sources at will, without having to
 re-write your code. Time to dive in!
 
-Made by <a href="http://twitter.com/caolan">@caolan</a>, with help and patience from friends - <a href="http://gittip.com/caolan">Leave a tip</a> or <a href="https://github.com/caolan/highland">fork this</a> :)
+Made by <a href="http://twitter.com/caolan">@caolan</a>, with help and patience from friends :)
 
 ## Highland v3
 This branch tracks the ongoing development of version 3.0, which will feature a
