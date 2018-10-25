@@ -3555,6 +3555,54 @@ exports.otherwise = function (test) {
     test.done();
 };
 
+exports['otherwise - alt'] = {
+    'associativity': {
+        'a.alt(b).alt(c) is equivalent to a.alt(b.alt(c))': function (test) {
+            test.expect(3);
+
+            var a = _([]);
+            var b = _([]);
+            var c = _([1]);
+
+            _([
+                a.fork()[fl.alt](b.fork())[fl.alt](c.fork()).collect(),
+                a.observe()[fl.alt](b.observe()[fl.alt](c.observe())).collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, [1]);
+                    test.same(rights, [1]);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
+        }
+    },
+    'distributivity': {
+        'a.alt(b).map(f) is equivalent to a.map(f).alt(b.map(f))': function (test) {
+            test.expect(3);
+
+            var a = _([]);
+            var b = _([1]);
+            var f = function (x) {
+                return 'f(' + x + ')';
+            };
+
+            _([
+                a.fork()[fl.alt](b.fork())[fl.map](f).collect(),
+                a.observe()[fl.map](f)[fl.alt](b.observe()[fl.map](f)).collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, ['f(1)']);
+                    test.same(rights, ['f(1)']);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
+        }
+    },
+};
 
 exports['otherwise - noValueOnError'] = noValueOnErrorTest(_.otherwise(_([])));
 
