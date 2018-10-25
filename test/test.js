@@ -1621,6 +1621,76 @@ exports.of = {
                 test.same(result, 1);
                 test.done();
             });
+    },
+    'applicative': {
+        'identity': {
+            'v.ap(A.of(x => x)) is equivalent to v': function (test) {
+                test.expect(3);
+                var v = _([1]);
+                var f = function (x) {
+                    return x;
+                };
+
+                _([
+                    v.fork()[fl.ap](_[fl.of](f)),
+                    v.observe(),
+                ])
+                    .sequence()
+                    .apply(function (lefts, rights) {
+                        test.same(lefts, [1]);
+                        test.same(rights, [1]);
+                        test.same(lefts, rights);
+                    });
+
+                test.done();
+            }
+        },
+        'homomorphism': {
+            'A.of(x).ap(A.of(f)) is equivalent to A.of(f(x))': function (test) {
+                test.expect(3);
+                var f = function (x) {
+                    return 'f(' + x + ')';
+                };
+
+                _([
+                    _[fl.of](1)[fl.ap](_[fl.of](f)).collect(),
+                    _[fl.of](f(1)).collect(),
+                ])
+                    .sequence()
+                    .apply(function (lefts, rights) {
+                        test.same(lefts, ['f(1)']);
+                        test.same(rights, ['f(1)']);
+                        test.same(lefts, rights);
+                    });
+
+                test.done();
+            }
+        },
+        'interchange': {
+            'A.of(y).ap(u) is equivalent to u.ap(A.of(f => f(y)))': function (test) {
+                test.expect(3);
+                var y = _([1]);
+                var u = function (x) {
+                    return 'f(' + x + ')';
+                };
+                var f = function (x) {
+                    return 'f(' + x + ')';
+                };
+
+                _([
+                    _[fl.of](y)[fl.ap](u).collect(),
+                    u[fl.ap](_[fl.of](f)).collect(),
+                ])
+                    .sequence()
+                    .apply(function (lefts, rights) {
+                        test.same(lefts, ['f(1)']);
+                        test.same(rights, ['f(1)']);
+                        test.same(lefts, rights);
+                    });
+
+                test.done();
+            }
+        },
     }
 };
 
