@@ -45,5 +45,8 @@
     "test": "eslint Gruntfile.js lib test/test.js && npm run nodeunit",
     "test-0.10": "npm run nodeunit",
     "nodeunit": "nodeunit test/test.js"
+  },
+  "dependencies": {
+    "fantasy-land": "^3.5.0"
   }
 }
