@@ -4942,6 +4942,21 @@ exports.flatTap = {
         s.pull(valueEquals(test, 3));
         test.done();
     },
+    'flatTap - Emits an error values': function (test) {
+        test.expect(4);
+        var s = _([1, 2, 3, 4]).flatTap(function (x) {
+            return _(function (push) {
+                push({errorMessage: 'error'});
+                push(null, _.nil);
+            });
+        });
+
+        s.pull(anyError(test));
+        s.pull(anyError(test));
+        s.pull(anyError(test));
+        s.pull(anyError(test));
+        test.done();
+    },
     'flatTap - argument function throws': function (test) {
         test.expect(4);
         var err = new Error('error');
