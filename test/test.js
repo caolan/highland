@@ -1623,6 +1623,18 @@ exports.of = {
     }
 };
 
+exports.empty = {
+    'creates stream with no values': function (test) {
+        test.expect(2);
+        _.empty()
+            .toCallback(function (err, result) {
+                test.ifError(err);
+                test.same(result, undefined);
+                test.done();
+            });
+    }
+};
+
 exports.fromError = {
     'creates stream of one error': function (test) {
         var error = new Error('This is an error');
