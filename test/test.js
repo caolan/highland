@@ -4926,70 +4926,69 @@ exports['nfcall - parallel result ordering'] = function (test) {
     });
 };
 
-exports.map = {
-    'map': function (test) {
-        test.expect(2);
-        function doubled(x) {
-            return x * 2;
+exports.map = function (test) {
+    test.expect(2);
+    function doubled(x) {
+        return x * 2;
+    }
+    _.map(doubled, [1, 2, 3, 4]).toArray(function (xs) {
+        test.same(xs, [2, 4, 6, 8]);
+    });
+    // partial application
+    _.map(doubled)([1, 2, 3, 4]).toArray(function (xs) {
+        test.same(xs, [2, 4, 6, 8]);
+    });
+    test.done();
+};
+
+exports['map - functor'] = {
+    'identity': {
+        'u.map(a => a) is equivalent to u': function (test) {
+            test.expect(3);
+            var u = _([1]);
+            var f = function (x) {
+                return x;
+            };
+
+            _([
+                u.fork()[fl.map](f).collect(),
+                u.observe().collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, [1]);
+                    test.same(rights, [1]);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
         }
-        _.map(doubled, [1, 2, 3, 4]).toArray(function (xs) {
-            test.same(xs, [2, 4, 6, 8]);
-        });
-        // partial application
-        _.map(doubled)([1, 2, 3, 4]).toArray(function (xs) {
-            test.same(xs, [2, 4, 6, 8]);
-        });
-        test.done();
     },
-    'functor': {
-        'identity': {
-            'u.map(a => a) is equivalent to u': function (test) {
-                test.expect(3);
-                var u = _([1]);
-                var f = function (x) {
-                    return x;
-                };
+    'composition': {
+        'u.map(x => f(g(x))) is equivalent to u.map(g).map(f)': function (test) {
+            test.expect(3);
+            var u = _([1]);
+            var f = function (x) {
+                return 'f(' + x + ')';
+            };
+            var g = function (x) {
+                return 'g(' + x + ')';
+            };
 
-                _([
-                    u.fork()[fl.map](f).collect(),
-                    u.observe().collect(),
-                ])
-                    .sequence()
-                    .apply(function (lefts, rights) {
-                        test.same(lefts, [1]);
-                        test.same(rights, [1]);
-                        test.same(lefts, rights);
-                    });
+            _([
+                u.fork()[fl.map](function (x) {
+                    return f(g(x));
+                }).collect(),
+                u.observe()[fl.map](g)[fl.map](f).collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, ['f(g(1))']);
+                    test.same(rights, ['f(g(1))']);
+                    test.same(lefts, rights);
+                });
 
-                test.done();
-            }
-        },
-        'composition': {
-            'u.map(x => f(g(x))) is equivalent to u.map(g).map(f)': function (test) {
-                test.expect(3);
-                var u = _([1]);
-                var f = function (x) {
-                    return 'f(' + x + ')';
-                };
-                var g = function (x) {
-                    return 'g(' + x + ')';
-                };
-
-                _([
-                    u.fork()[fl.map](function (x) {
-                        return f(g(x));
-                    }).collect(),
-                    u.observe()[fl.map](g)[fl.map](f).collect(),
-                ])
-                    .sequence()
-                    .apply(function (lefts, rights) {
-                        test.same(lefts, ['f(g(1))']);
-                        test.same(rights, ['f(g(1))']);
-                        test.same(lefts, rights);
-                    });
-
-                test.done();
-            }
+            test.done();
         }
     }
 };
