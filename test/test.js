@@ -5051,6 +5051,37 @@ exports['flatMap - map to Stream of Array'] = function (test) {
     });
 };
 
+exports['flatMap - chain'] = {
+    'associativity': {
+        'm.chain(f).chain(g) is equivalent to m.chain(x => f(x).chain(g))': function (test) {
+            test.expect(3);
+
+            var m = _([1]);
+            var f = function (x) {
+                return _(['f(' + x + ')']);
+            };
+            var g = function (x) {
+                return _(['g(' + x + ')']);
+            };
+
+            _([
+                m.fork()[fl.chain](f)[fl.chain](g).collect(),
+                m.observe()[fl.chain](function (x) {
+                    return f(x)[fl.chain](g);
+                }).collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, ['g(f(1))']);
+                    test.same(rights, ['g(f(1))']);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
+        }
+    }
+};
+
 exports.pluck = function (test) {
     var a = _([
         {type: 'blogpost', title: 'foo'},
