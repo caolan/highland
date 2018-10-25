@@ -5102,40 +5102,33 @@ exports.ap = {
         test.same(results, ['g1(1)', 'g1(2)', 'g2(2)', 'g2(3)']);
         test.done();
     },
-    // v.ap(u.ap(a.map(f => g => x => f(g(x))))) is equivalent to v.ap(u).ap(a) (composition)
     'composition': {
-        'left': function (test) {
-            test.expect(1);
-            var v = _.of('a');
+        'v.ap(u.ap(a.map(f => g => x => f(g(x))))) is equivalent to v.ap(u).ap(a)': function (test) {
+            test.expect(3);
+            var v = _([1, 2, 3]);
             var u = _.of(function (x) {
-                return x + 'b';
+                return 'u(' + x + ')';
             });
             var a = _.of(function (x) {
-                return x + 'c';
+                return 'a(' + x + ')';
             });
-            v.fork().ap(u.fork().ap(a.fork().map(function (f) {
+            var left = v.fork().ap(u.fork().ap(a.fork().map(function (f) {
                 return function (g) {
                     return function (x) {
                         return f(g(x));
                     };
                 };
-            }))).toArray(function (x) {
-                test.same(x, ['abc']);
-            });
-            test.done();
-        },
-        'right': function (test) {
-            test.expect(1);
-            var v = _.of('a');
-            var u = _.of(function (x) {
-                return x + 'b';
-            });
-            var a = _.of(function (x) {
-                return x + 'c';
-            });
-            v.ap(u).ap(a).toArray(function (x) {
-                test.same(x, ['abc']);
-            });
+            })));
+            var right = v.observe().ap(u.observe()).ap(a.observe());
+
+            _([left.collect(), right.collect()])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, ['a(u(1))', 'a(u(2))', 'a(u(3))']);
+                    test.same(rights, ['a(u(1))', 'a(u(2))', 'a(u(3))']);
+                    test.same(lefts, rights);
+                });
+
             test.done();
         },
     },
