@@ -5420,6 +5420,84 @@ exports.filter = function (test) {
     test.done();
 };
 
+exports['filter - filterable'] = {
+    'distributivity': {
+        'v.filter(x => p(x) && q(x)) is equivalent to v.filter(p).filter(q)': function (test) {
+            test.expect(3);
+
+            var v = _([1, 2]);
+            var p = function (x) {
+                return x > 0;
+            };
+            var q = function (x) {
+                return x < 2;
+            };
+
+            _([
+                v.fork()[fl.filter](function (x) {
+                    return p(x) && q(x);
+                }).collect(),
+                v.observe()[fl.filter](p)[fl.filter](q).collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, [1]);
+                    test.same(rights, [1]);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
+        }
+    },
+    'identity': {
+        'v.filter(x => true) is equivalent to v': function (test) {
+            test.expect(3);
+
+            var v = _([1, 2]);
+            var p = function (x) {
+                return true;
+            };
+
+            _([
+                v.fork()[fl.filter](p).collect(),
+                v.observe().collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, [1, 2]);
+                    test.same(rights, [1, 2]);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
+        }
+    },
+    'annihilation': {
+        'v.filter(x => false) is equivalent to w.filter(x => false) if v and w are values of the same Filterable': function (test) {
+            test.expect(3);
+
+            var v = _([1, 2]);
+            var w = _([1, 2]);
+            var p = function (x) {
+                return false;
+            };
+
+            _([
+                v[fl.filter](p).collect(),
+                w[fl.filter](p).collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, []);
+                    test.same(rights, []);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
+        }
+    },
+};
+
 exports['filter - noValueOnError'] = noValueOnErrorTest(_.filter(function (x) { return true; }));
 
 exports['filter - onDestroy'] = onDestroyTest(_.filter(function (x) { return true; }), 1);
