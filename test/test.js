@@ -4269,6 +4269,31 @@ exports.concat = function (test) {
     test.done();
 };
 
+exports['concat - semigroup'] = {
+    'associativity': {
+        'a.concat(b).concat(c) is equivalent to a.concat(b.concat(c))': function (test) {
+            test.expect(3);
+
+            var a = _([1]);
+            var b = _([2]);
+            var c = _([3]);
+
+            _([
+                a.fork()[fl.concat](b.fork())[fl.concat](c.fork()).collect(),
+                a.observe()[fl.concat](b.observe()[fl.concat](c.observe())).collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, [1, 2, 3]);
+                    test.same(rights, [1, 2, 3]);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
+        }
+    }
+};
+
 exports['concat - noValueOnError'] = noValueOnErrorTest(_.concat([1]), [1]);
 
 exports['concat - ArrayStream'] = function (test) {
