@@ -20,6 +20,7 @@
     "browserify-shim": "^3.8.11",
     "concat-stream": "~1.6.0",
     "eslint": "^3.19.0",
+    "fantasy-land": "^3.5.0",
     "grunt": "~1.0.1",
     "grunt-browserify": "^5.0.0",
     "grunt-bump": "0.8.0",
@@ -45,8 +46,5 @@
     "test": "eslint Gruntfile.js lib test/test.js && npm run nodeunit",
     "test-0.10": "npm run nodeunit",
     "nodeunit": "nodeunit test/test.js"
-  },
-  "dependencies": {
-    "fantasy-land": "^3.5.0"
   }
 }
