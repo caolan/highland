@@ -1744,6 +1744,68 @@ exports.empty = {
     }
 };
 
+exports.zero = {
+    'right identity': {
+        'x.alt(A.zero()) is equivalent to x': function (test) {
+            test.expect(3);
+            var x = _[fl.of](1);
+
+            _([
+                x.fork()[fl.alt](_[fl.zero]()).collect(),
+                x.observe().collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, [1]);
+                    test.same(rights, [1]);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
+        }
+    },
+    'left identity': {
+        'A.zero().alt(x) is equivalent to x': function (test) {
+            test.expect(3);
+            var x = _[fl.of](1);
+
+            _([
+                _[fl.zero]()[fl.alt](x.fork()).collect(),
+                x.observe().collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, [1]);
+                    test.same(rights, [1]);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
+        }
+    },
+    'annihilation': {
+        'A.zero().map(f) is equivalent to A.zero()': function (test) {
+            test.expect(3);
+            var f = function (x) {
+                return 'f(' + x + ')';
+            };
+
+            _([
+                _[fl.zero]().map(f).collect(),
+                _[fl.zero]().collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, []);
+                    test.same(rights, []);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
+        }
+    }
+};
+
 exports.fromError = {
     'creates stream of one error': function (test) {
         var error = new Error('This is an error');
