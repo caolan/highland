@@ -1707,11 +1707,11 @@ exports.empty = {
     'right identity': {
         'm.concat(M.empty()) is equivalent to m': function (test) {
             test.expect(3);
-            var m = _.of(1);
+            var m = _[fl.of](1);
 
             _([
                 m.fork().collect(),
-                m.observe().concat(_.empty()).collect(),
+                m.observe().concat(_[fl.empty]()).collect(),
             ])
                 .sequence()
                 .apply(function (lefts, rights) {
@@ -1726,11 +1726,11 @@ exports.empty = {
     'left identity': {
         'M.empty().concat(m) is equivalent to m': function (test) {
             test.expect(3);
-            var m = _.of(1);
+            var m = _[fl.of](1);
 
             _([
                 m.fork().collect(),
-                _.empty().concat(m.observe()).collect(),
+                _[fl.empty]().concat(m.observe()).collect(),
             ])
                 .sequence()
                 .apply(function (lefts, rights) {
