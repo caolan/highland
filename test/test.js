@@ -1623,6 +1623,56 @@ exports.of = {
     }
 };
 
+exports.empty = {
+    'creates a stream with no values': function (test) {
+        test.expect(2);
+        _.empty()
+            .toCallback(function (err, result) {
+                test.ifError(err);
+                test.same(result, undefined);
+                test.done();
+            });
+    },
+    'right identity': {
+        'm.concat(M.empty()) is equivalent to m': function (test) {
+            test.expect(3);
+            var m = _.of(1);
+
+            _([
+                m.fork().collect(),
+                m.observe().concat(_.empty()).collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, [1]);
+                    test.same(rights, [1]);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
+        }
+    },
+    'left identity': {
+        'M.empty().concat(m) is equivalent to m': function (test) {
+            test.expect(3);
+            var m = _.of(1);
+
+            _([
+                m.fork().collect(),
+                _.empty().concat(m.observe()).collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, [1]);
+                    test.same(rights, [1]);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
+        }
+    }
+};
+
 exports.fromError = {
     'creates stream of one error': function (test) {
         var error = new Error('This is an error');
