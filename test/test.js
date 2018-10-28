@@ -5347,19 +5347,23 @@ exports.ap = {
     },
     'applies values to functions': function (test) {
         var s = _([1, 2, 3, 4]);
-        var f = _.of(function doubled(x) {
+        var f = _[fl.of](function doubled(x) {
             return x * 2;
         });
 
-        _.ap(f, s).toArray(function (xs) {
+        s[fl.ap](f).toArray(function (xs) {
             test.same(xs, [2, 4, 6, 8]);
             test.done();
         });
     },
-    'noValueOnError': noValueOnErrorTest(_.ap(_.of(1))),
+    'noValueOnError': noValueOnErrorTest(function (s) {
+        return s[fl.ap](_[fl.of](function (x) {
+            return x;
+        }));
+    }),
     'ArrayStream': function (test) {
         test.expect(1);
-        var f = _.of(function (x) {
+        var f = _[fl.of](function (x) {
             return _(function (push, next) {
                 setTimeout(function () {
                     push(null, x * 2);
@@ -5367,7 +5371,7 @@ exports.ap = {
                 }, 10);
             });
         });
-        _([1, 2, 3, 4]).ap(f).merge().toArray(function (xs) {
+        _([1, 2, 3, 4])[fl.ap](f).merge().toArray(function (xs) {
             test.same(xs, [2, 4, 6, 8]);
         });
         this.clock.tick(20);
@@ -5375,7 +5379,7 @@ exports.ap = {
     },
     'GeneratorStream': function (test) {
         test.expect(1);
-        var f = _.of(function (x) {
+        var f = _[fl.of](function (x) {
             return _(function (push, next) {
                 push(null, x * 2);
                 push(null, _.nil);
@@ -5388,17 +5392,17 @@ exports.ap = {
             push(null, 4);
             push(null, _.nil);
         });
-        s.ap(f).merge().toArray(function (xs) {
+        s[fl.ap](f).merge().toArray(function (xs) {
             test.same(xs, [2, 4, 6, 8]);
             test.done();
         });
     },
     'map to Stream of Array': function (test) {
         test.expect(1);
-        var f = _.of(function (x) {
+        var f = _[fl.of](function (x) {
             return _([[x]]);
         });
-        var s = _([1, 2, 3, 4]).ap(f).merge().toArray(function (xs) {
+        var s = _([1, 2, 3, 4])[fl.ap](f).merge().toArray(function (xs) {
             test.same(xs, [[1], [2], [3], [4]]);
             test.done();
         });
@@ -5445,10 +5449,10 @@ exports.ap = {
         'v.ap(u.ap(a.map(f => g => x => f(g(x))))) is equivalent to v.ap(u).ap(a)': function (test) {
             test.expect(3);
             var v = _([1, 2, 3]);
-            var u = _.of(function (x) {
+            var u = _[fl.of](function (x) {
                 return 'u(' + x + ')';
             });
-            var a = _.of(function (x) {
+            var a = _[fl.of](function (x) {
                 return 'a(' + x + ')';
             });
             var left = v.fork().ap(u.fork().ap(a.fork().map(function (f) {
