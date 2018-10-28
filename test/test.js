@@ -5336,6 +5336,143 @@ exports['flatMap - chain'] = {
     }
 };
 
+exports.ap = {
+    setUp: function (callback) {
+        this.clock = sinon.useFakeTimers();
+        callback();
+    },
+    tearDown: function (callback) {
+        this.clock.restore();
+        callback();
+    },
+    'applies values to functions': function (test) {
+        var s = _([1, 2, 3, 4]);
+        var f = _.of(function doubled(x) {
+            return x * 2;
+        });
+
+        _.ap(f, s).toArray(function (xs) {
+            test.same(xs, [2, 4, 6, 8]);
+            test.done();
+        });
+    },
+    'noValueOnError': noValueOnErrorTest(_.ap(_.of(1))),
+    'ArrayStream': function (test) {
+        test.expect(1);
+        var f = _.of(function (x) {
+            return _(function (push, next) {
+                setTimeout(function () {
+                    push(null, x * 2);
+                    push(null, _.nil);
+                }, 10);
+            });
+        });
+        _([1, 2, 3, 4]).ap(f).merge().toArray(function (xs) {
+            test.same(xs, [2, 4, 6, 8]);
+        });
+        this.clock.tick(20);
+        test.done();
+    },
+    'GeneratorStream': function (test) {
+        test.expect(1);
+        var f = _.of(function (x) {
+            return _(function (push, next) {
+                push(null, x * 2);
+                push(null, _.nil);
+            });
+        });
+        var s = _(function (push, next) {
+            push(null, 1);
+            push(null, 2);
+            push(null, 3);
+            push(null, 4);
+            push(null, _.nil);
+        });
+        s.ap(f).merge().toArray(function (xs) {
+            test.same(xs, [2, 4, 6, 8]);
+            test.done();
+        });
+    },
+    'map to Stream of Array': function (test) {
+        test.expect(1);
+        var f = _.of(function (x) {
+            return _([[x]]);
+        });
+        var s = _([1, 2, 3, 4]).ap(f).merge().toArray(function (xs) {
+            test.same(xs, [[1], [2], [3], [4]]);
+            test.done();
+        });
+    },
+    'reflect timing of value and function arrival': function (test) {
+        test.expect(4);
+        var f = _(function (push, next) {
+            setTimeout(function () {
+                push(null, function (x) { return 'g1(' + x + ')'; });
+            }, 20);
+            setTimeout(function () {
+                push(null, function (x) { return 'g2(' + x + ')'; });
+                push(null, _.nil);
+            }, 60);
+        });
+        var s = _(function (push, next) {
+            setTimeout(function () {
+                push(null, 1);
+            }, 10);
+            setTimeout(function () {
+                push(null, 2);
+            }, 50);
+            setTimeout(function () {
+                push(null, 3);
+                push(null, _.nil);
+            }, 70);
+        });
+
+        var results = [];
+        s.ap(f).each(function (x) {
+            results.push(x);
+        });
+        this.clock.tick(20);
+        test.same(results, ['g1(1)']);
+        this.clock.tick(30);
+        test.same(results, ['g1(1)', 'g1(2)']);
+        this.clock.tick(10);
+        test.same(results, ['g1(1)', 'g1(2)', 'g2(2)']);
+        this.clock.tick(10);
+        test.same(results, ['g1(1)', 'g1(2)', 'g2(2)', 'g2(3)']);
+        test.done();
+    },
+    'composition': {
+        'v.ap(u.ap(a.map(f => g => x => f(g(x))))) is equivalent to v.ap(u).ap(a)': function (test) {
+            test.expect(3);
+            var v = _([1, 2, 3]);
+            var u = _.of(function (x) {
+                return 'u(' + x + ')';
+            });
+            var a = _.of(function (x) {
+                return 'a(' + x + ')';
+            });
+            var left = v.fork().ap(u.fork().ap(a.fork().map(function (f) {
+                return function (g) {
+                    return function (x) {
+                        return f(g(x));
+                    };
+                };
+            })));
+            var right = v.observe().ap(u.observe()).ap(a.observe());
+
+            _([left.collect(), right.collect()])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, ['a(u(1))', 'a(u(2))', 'a(u(3))']);
+                    test.same(rights, ['a(u(1))', 'a(u(2))', 'a(u(3))']);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
+        }
+    }
+};
+
 exports.pluck = function (test) {
     var a = _([
         {type: 'blogpost', title: 'foo'},
