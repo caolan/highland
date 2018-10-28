@@ -1637,8 +1637,8 @@ exports.of = {
                 ])
                     .sequence()
                     .apply(function (lefts, rights) {
-                        test.same(lefts, [1]);
-                        test.same(rights, [1]);
+                        test.same(lefts, 1);
+                        test.same(rights, 1);
                         test.same(lefts, rights);
                     });
 
@@ -1648,18 +1648,19 @@ exports.of = {
         'homomorphism': {
             'A.of(x).ap(A.of(f)) is equivalent to A.of(f(x))': function (test) {
                 test.expect(3);
+                var x = 1;
                 var f = function (x) {
                     return 'f(' + x + ')';
                 };
 
                 _([
-                    _[fl.of](1)[fl.ap](_[fl.of](f)).collect(),
-                    _[fl.of](f(1)).collect(),
+                    _[fl.of](x)[fl.ap](_[fl.of](f)).collect(),
+                    _[fl.of](f(x)).collect(),
                 ])
                     .sequence()
                     .apply(function (lefts, rights) {
-                        test.same(lefts, ['f(1)']);
-                        test.same(rights, ['f(1)']);
+                        test.same(lefts, ['f(' + x + ')']);
+                        test.same(rights, ['f(' + x + ')']);
                         test.same(lefts, rights);
                     });
 
@@ -1669,22 +1670,21 @@ exports.of = {
         'interchange': {
             'A.of(y).ap(u) is equivalent to u.ap(A.of(f => f(y)))': function (test) {
                 test.expect(3);
-                var y = _([1]);
-                var u = function (x) {
+                var y = 1;
+                var u = _([function (x) {
                     return 'f(' + x + ')';
-                };
-                var f = function (x) {
-                    return 'f(' + x + ')';
-                };
+                }]);
 
                 _([
-                    _[fl.of](y)[fl.ap](u).collect(),
-                    u[fl.ap](_[fl.of](f)).collect(),
+                    _[fl.of](y)[fl.ap](u.fork()).collect(),
+                    u.observe()[fl.ap](_[fl.of](function (f) {
+                        return f(y);
+                    })).collect(),
                 ])
                     .sequence()
                     .apply(function (lefts, rights) {
-                        test.same(lefts, ['f(1)']);
-                        test.same(rights, ['f(1)']);
+                        test.same(lefts, ['f(' + y + ')']);
+                        test.same(rights, ['f(' + y + ')']);
                         test.same(lefts, rights);
                     });
 
