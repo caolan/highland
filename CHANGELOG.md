@@ -5,6 +5,13 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
+3.0.0-beta.7
+-----
+
+### New additions
+* `ap` - Applies a stream of function(s) to the stream of value(s).
+  [#643](https://github.com/caolan/highland/pull/643).
+
 3.0.0-beta.6
 -----
 This release contains all changes from [2.12.0](#2120).
