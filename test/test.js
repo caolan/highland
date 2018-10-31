@@ -9,7 +9,8 @@ var _, EventEmitter = require('events').EventEmitter,
     Promise = RSVP.Promise,
     transducers = require('transducers-js'),
     bluebird = require('bluebird'),
-    runTask = require('orchestrator/lib/runTask');
+    runTask = require('orchestrator/lib/runTask'),
+    fl = require('fantasy-land');
 
 if (global.highland != null) {
     _ = global.highland;
@@ -1620,6 +1621,76 @@ exports.of = {
                 test.same(result, 1);
                 test.done();
             });
+    },
+    'applicative': {
+        'identity': {
+            'v.ap(A.of(x => x)) is equivalent to v': function (test) {
+                test.expect(3);
+                var v = _([1]);
+                var f = function (x) {
+                    return x;
+                };
+
+                _([
+                    v.fork()[fl.ap](_[fl.of](f)),
+                    v.observe(),
+                ])
+                    .sequence()
+                    .apply(function (lefts, rights) {
+                        test.same(lefts, 1);
+                        test.same(rights, 1);
+                        test.same(lefts, rights);
+                    });
+
+                test.done();
+            }
+        },
+        'homomorphism': {
+            'A.of(x).ap(A.of(f)) is equivalent to A.of(f(x))': function (test) {
+                test.expect(3);
+                var x = 1;
+                var f = function (x) {
+                    return 'f(' + x + ')';
+                };
+
+                _([
+                    _[fl.of](x)[fl.ap](_[fl.of](f)).collect(),
+                    _[fl.of](f(x)).collect(),
+                ])
+                    .sequence()
+                    .apply(function (lefts, rights) {
+                        test.same(lefts, ['f(' + x + ')']);
+                        test.same(rights, ['f(' + x + ')']);
+                        test.same(lefts, rights);
+                    });
+
+                test.done();
+            }
+        },
+        'interchange': {
+            'A.of(y).ap(u) is equivalent to u.ap(A.of(f => f(y)))': function (test) {
+                test.expect(3);
+                var y = 1;
+                var u = _([function (x) {
+                    return 'f(' + x + ')';
+                }]);
+
+                _([
+                    _[fl.of](y)[fl.ap](u.fork()).collect(),
+                    u.observe()[fl.ap](_[fl.of](function (f) {
+                        return f(y);
+                    })).collect(),
+                ])
+                    .sequence()
+                    .apply(function (lefts, rights) {
+                        test.same(lefts, ['f(' + y + ')']);
+                        test.same(rights, ['f(' + y + ')']);
+                        test.same(lefts, rights);
+                    });
+
+                test.done();
+            }
+        },
     }
 };
 
@@ -1636,11 +1707,11 @@ exports.empty = {
     'right identity': {
         'm.concat(M.empty()) is equivalent to m': function (test) {
             test.expect(3);
-            var m = _.of(1);
+            var m = _[fl.of](1);
 
             _([
                 m.fork().collect(),
-                m.observe().concat(_.empty()).collect(),
+                m.observe().concat(_[fl.empty]()).collect(),
             ])
                 .sequence()
                 .apply(function (lefts, rights) {
@@ -1655,16 +1726,78 @@ exports.empty = {
     'left identity': {
         'M.empty().concat(m) is equivalent to m': function (test) {
             test.expect(3);
-            var m = _.of(1);
+            var m = _[fl.of](1);
 
             _([
                 m.fork().collect(),
-                _.empty().concat(m.observe()).collect(),
+                _[fl.empty]().concat(m.observe()).collect(),
             ])
                 .sequence()
                 .apply(function (lefts, rights) {
                     test.same(lefts, [1]);
                     test.same(rights, [1]);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
+        }
+    }
+};
+
+exports.zero = {
+    'right identity': {
+        'x.alt(A.zero()) is equivalent to x': function (test) {
+            test.expect(3);
+            var x = _[fl.of](1);
+
+            _([
+                x.fork()[fl.alt](_[fl.zero]()).collect(),
+                x.observe().collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, [1]);
+                    test.same(rights, [1]);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
+        }
+    },
+    'left identity': {
+        'A.zero().alt(x) is equivalent to x': function (test) {
+            test.expect(3);
+            var x = _[fl.of](1);
+
+            _([
+                _[fl.zero]()[fl.alt](x.fork()).collect(),
+                x.observe().collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, [1]);
+                    test.same(rights, [1]);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
+        }
+    },
+    'annihilation': {
+        'A.zero().map(f) is equivalent to A.zero()': function (test) {
+            test.expect(3);
+            var f = function (x) {
+                return 'f(' + x + ')';
+            };
+
+            _([
+                _[fl.zero]().map(f).collect(),
+                _[fl.zero]().collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, []);
+                    test.same(rights, []);
                     test.same(lefts, rights);
                 });
 
@@ -3604,6 +3737,54 @@ exports.otherwise = function (test) {
     test.done();
 };
 
+exports['otherwise - alt'] = {
+    'associativity': {
+        'a.alt(b).alt(c) is equivalent to a.alt(b.alt(c))': function (test) {
+            test.expect(3);
+
+            var a = _([]);
+            var b = _([]);
+            var c = _([1]);
+
+            _([
+                a.fork()[fl.alt](b.fork())[fl.alt](c.fork()).collect(),
+                a.observe()[fl.alt](b.observe()[fl.alt](c.observe())).collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, [1]);
+                    test.same(rights, [1]);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
+        }
+    },
+    'distributivity': {
+        'a.alt(b).map(f) is equivalent to a.map(f).alt(b.map(f))': function (test) {
+            test.expect(3);
+
+            var a = _([]);
+            var b = _([1]);
+            var f = function (x) {
+                return 'f(' + x + ')';
+            };
+
+            _([
+                a.fork()[fl.alt](b.fork())[fl.map](f).collect(),
+                a.observe()[fl.map](f)[fl.alt](b.observe()[fl.map](f)).collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, ['f(1)']);
+                    test.same(rights, ['f(1)']);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
+        }
+    },
+};
 
 exports['otherwise - noValueOnError'] = noValueOnErrorTest(_.otherwise(_([])));
 
@@ -4270,6 +4451,31 @@ exports.concat = function (test) {
     test.done();
 };
 
+exports['concat - semigroup'] = {
+    'associativity': {
+        'a.concat(b).concat(c) is equivalent to a.concat(b.concat(c))': function (test) {
+            test.expect(3);
+
+            var a = _([1]);
+            var b = _([2]);
+            var c = _([3]);
+
+            _([
+                a.fork()[fl.concat](b.fork())[fl.concat](c.fork()).collect(),
+                a.observe()[fl.concat](b.observe()[fl.concat](c.observe())).collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, [1, 2, 3]);
+                    test.same(rights, [1, 2, 3]);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
+        }
+    }
+};
+
 exports['concat - noValueOnError'] = noValueOnErrorTest(_.concat([1]), [1]);
 
 exports['concat - ArrayStream'] = function (test) {
@@ -4847,6 +5053,58 @@ exports.map = function (test) {
     test.done();
 };
 
+exports['map - functor'] = {
+    'identity': {
+        'u.map(a => a) is equivalent to u': function (test) {
+            test.expect(3);
+            var u = _([1]);
+            var f = function (x) {
+                return x;
+            };
+
+            _([
+                u.fork()[fl.map](f).collect(),
+                u.observe().collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, [1]);
+                    test.same(rights, [1]);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
+        }
+    },
+    'composition': {
+        'u.map(x => f(g(x))) is equivalent to u.map(g).map(f)': function (test) {
+            test.expect(3);
+            var u = _([1]);
+            var f = function (x) {
+                return 'f(' + x + ')';
+            };
+            var g = function (x) {
+                return 'g(' + x + ')';
+            };
+
+            _([
+                u.fork()[fl.map](function (x) {
+                    return f(g(x));
+                }).collect(),
+                u.observe()[fl.map](g)[fl.map](f).collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, ['f(g(1))']);
+                    test.same(rights, ['f(g(1))']);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
+        }
+    }
+};
+
 exports['map - noValueOnError'] = noValueOnErrorTest(_.map(function (x) { return x; }));
 
 exports['map - onDestroyTest'] = onDestroyTest(_.map(function (x) { return x; }), 1);
@@ -5047,6 +5305,37 @@ exports['flatMap - map to Stream of Array'] = function (test) {
     });
 };
 
+exports['flatMap - chain'] = {
+    'associativity': {
+        'm.chain(f).chain(g) is equivalent to m.chain(x => f(x).chain(g))': function (test) {
+            test.expect(3);
+
+            var m = _([1]);
+            var f = function (x) {
+                return _(['f(' + x + ')']);
+            };
+            var g = function (x) {
+                return _(['g(' + x + ')']);
+            };
+
+            _([
+                m.fork()[fl.chain](f)[fl.chain](g).collect(),
+                m.observe()[fl.chain](function (x) {
+                    return f(x)[fl.chain](g);
+                }).collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, ['g(f(1))']);
+                    test.same(rights, ['g(f(1))']);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
+        }
+    }
+};
+
 exports.ap = {
     setUp: function (callback) {
         this.clock = sinon.useFakeTimers();
@@ -5058,19 +5347,23 @@ exports.ap = {
     },
     'applies values to functions': function (test) {
         var s = _([1, 2, 3, 4]);
-        var f = _.of(function doubled(x) {
+        var f = _[fl.of](function doubled(x) {
             return x * 2;
         });
 
-        _.ap(f, s).toArray(function (xs) {
+        s[fl.ap](f).toArray(function (xs) {
             test.same(xs, [2, 4, 6, 8]);
             test.done();
         });
     },
-    'noValueOnError': noValueOnErrorTest(_.ap(_.of(1))),
+    'noValueOnError': noValueOnErrorTest(function (s) {
+        return s[fl.ap](_[fl.of](function (x) {
+            return x;
+        }));
+    }),
     'ArrayStream': function (test) {
         test.expect(1);
-        var f = _.of(function (x) {
+        var f = _[fl.of](function (x) {
             return _(function (push, next) {
                 setTimeout(function () {
                     push(null, x * 2);
@@ -5078,7 +5371,7 @@ exports.ap = {
                 }, 10);
             });
         });
-        _([1, 2, 3, 4]).ap(f).merge().toArray(function (xs) {
+        _([1, 2, 3, 4])[fl.ap](f).merge().toArray(function (xs) {
             test.same(xs, [2, 4, 6, 8]);
         });
         this.clock.tick(20);
@@ -5086,7 +5379,7 @@ exports.ap = {
     },
     'GeneratorStream': function (test) {
         test.expect(1);
-        var f = _.of(function (x) {
+        var f = _[fl.of](function (x) {
             return _(function (push, next) {
                 push(null, x * 2);
                 push(null, _.nil);
@@ -5099,17 +5392,17 @@ exports.ap = {
             push(null, 4);
             push(null, _.nil);
         });
-        s.ap(f).merge().toArray(function (xs) {
+        s[fl.ap](f).merge().toArray(function (xs) {
             test.same(xs, [2, 4, 6, 8]);
             test.done();
         });
     },
     'map to Stream of Array': function (test) {
         test.expect(1);
-        var f = _.of(function (x) {
+        var f = _[fl.of](function (x) {
             return _([[x]]);
         });
-        var s = _([1, 2, 3, 4]).ap(f).merge().toArray(function (xs) {
+        var s = _([1, 2, 3, 4])[fl.ap](f).merge().toArray(function (xs) {
             test.same(xs, [[1], [2], [3], [4]]);
             test.done();
         });
@@ -5156,10 +5449,10 @@ exports.ap = {
         'v.ap(u.ap(a.map(f => g => x => f(g(x))))) is equivalent to v.ap(u).ap(a)': function (test) {
             test.expect(3);
             var v = _([1, 2, 3]);
-            var u = _.of(function (x) {
+            var u = _[fl.of](function (x) {
                 return 'u(' + x + ')';
             });
-            var a = _.of(function (x) {
+            var a = _[fl.of](function (x) {
                 return 'a(' + x + ')';
             });
             var left = v.fork().ap(u.fork().ap(a.fork().map(function (f) {
@@ -5180,8 +5473,8 @@ exports.ap = {
                 });
 
             test.done();
-        },
-    },
+        }
+    }
 };
 
 exports.pluck = function (test) {
@@ -5520,6 +5813,84 @@ exports.filter = function (test) {
         test.same(xs, [2, 4]);
     });
     test.done();
+};
+
+exports['filter - filterable'] = {
+    'distributivity': {
+        'v.filter(x => p(x) && q(x)) is equivalent to v.filter(p).filter(q)': function (test) {
+            test.expect(3);
+
+            var v = _([1, 2]);
+            var p = function (x) {
+                return x > 0;
+            };
+            var q = function (x) {
+                return x < 2;
+            };
+
+            _([
+                v.fork()[fl.filter](function (x) {
+                    return p(x) && q(x);
+                }).collect(),
+                v.observe()[fl.filter](p)[fl.filter](q).collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, [1]);
+                    test.same(rights, [1]);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
+        }
+    },
+    'identity': {
+        'v.filter(x => true) is equivalent to v': function (test) {
+            test.expect(3);
+
+            var v = _([1, 2]);
+            var p = function (x) {
+                return true;
+            };
+
+            _([
+                v.fork()[fl.filter](p).collect(),
+                v.observe().collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, [1, 2]);
+                    test.same(rights, [1, 2]);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
+        }
+    },
+    'annihilation': {
+        'v.filter(x => false) is equivalent to w.filter(x => false) if v and w are values of the same Filterable': function (test) {
+            test.expect(3);
+
+            var v = _([1, 2]);
+            var w = _([1, 2]);
+            var p = function (x) {
+                return false;
+            };
+
+            _([
+                v[fl.filter](p).collect(),
+                w[fl.filter](p).collect(),
+            ])
+                .sequence()
+                .apply(function (lefts, rights) {
+                    test.same(lefts, []);
+                    test.same(rights, []);
+                    test.same(lefts, rights);
+                });
+
+            test.done();
+        }
+    },
 };
 
 exports['filter - noValueOnError'] = noValueOnErrorTest(_.filter(function (x) { return true; }));
