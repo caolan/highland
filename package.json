@@ -18,6 +18,7 @@
     "bluebird": "^3.3.5",
     "browserify": "^14.1.0",
     "browserify-shim": "^3.8.11",
+    "buffer-from": "^1.1.1",
     "concat-stream": "~1.6.0",
     "eslint": "^3.19.0",
     "fantasy-land": "^3.5.0",

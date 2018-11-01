@@ -10,7 +10,8 @@ var _, EventEmitter = require('events').EventEmitter,
     transducers = require('transducers-js'),
     bluebird = require('bluebird'),
     runTask = require('orchestrator/lib/runTask'),
-    fl = require('fantasy-land');
+    fl = require('fantasy-land'),
+    bufferFrom = require('buffer-from');
 
 if (global.highland != null) {
     _ = global.highland;
@@ -2682,7 +2683,7 @@ exports.toPromise = {
 exports.toNodeStream = {
     'non-object stream of buffer': function (test) {
         test.expect(1);
-        var buf = new Buffer('aaa', 'utf8');
+        var buf = bufferFrom('aaa', 'utf8');
         var s = _.of(buf).toNodeStream();
         s.on('end', function() {
             test.done();
@@ -6977,7 +6978,7 @@ exports['splitBy - returnsSameStreamTest'] = returnsSameStreamTest(function(s) {
 
 exports['splitBy - unicode'] = function (test) {
     // test case borrowed from 'split' by dominictarr
-    var unicode = new Buffer('テスト試験今日とても,よい天気で');
+    var unicode = bufferFrom('テスト試験今日とても,よい天気で');
     var parts = [unicode.slice(0, 20), unicode.slice(20)];
     _(parts).splitBy(/,/g).toArray(function (xs) {
         test.same(xs, ['テスト試験今日とても', 'よい天気で']);
