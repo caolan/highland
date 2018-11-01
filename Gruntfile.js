@@ -8,34 +8,34 @@ module.exports = function (grunt) {
 
         eslint: {
             options: {
-                config: '.eslintrc'
+                config: '.eslintrc',
             },
             all: [
                 'Gruntfile.js',
                 'lib/**/*.js',
-                'test/test.js'
-            ]
+                'test/test.js',
+            ],
         },
 
         browserify: {
             main: {
                 files: {
-                    'dist/highland.js': ['lib/index.js']
+                    'dist/highland.js': ['lib/index.js'],
                 },
                 options: {
                     browserifyOptions: {
-                        standalone: 'highland'
-                    }
-                }
+                        standalone: 'highland',
+                    },
+                },
             },
             'test-browser': {
                 files: {
-                    'test/bundle.js': ['test/browser.js']
+                    'test/bundle.js': ['test/browser.js'],
                 },
                 options: {
-                    exclude: 'lib/**'
-                }
-            }
+                    exclude: 'lib/**',
+                },
+            },
         },
 
         uglify: {
@@ -43,30 +43,30 @@ module.exports = function (grunt) {
                 options: {
                     // Restore v1.x IE8 behavior to guarantee compatibility. We
                     // may not need it.
-                    screwIE8: false
+                    screwIE8: false,
                 },
                 files: {
-                    'dist/highland.min.js': ['dist/highland.js']
-                }
-            }
+                    'dist/highland.min.js': ['dist/highland.js'],
+                },
+            },
         },
 
         nodeunit: {
-            all: ['test/test.js']
+            all: ['test/test.js'],
         },
 
         watch: {
             all: {
                 files: ['lib/index.js'],
-                tasks: ['test']
-            }
+                tasks: ['test'],
+            },
         },
 
         'gh-pages': {
             options: {
-                base: 'docs'
+                base: 'docs',
             },
-            src: ['**']
+            src: ['**'],
         },
 
         bump: {
@@ -81,8 +81,8 @@ module.exports = function (grunt) {
                 prereleaseName: 'beta',
                 createTag: true,
                 tagName: '%VERSION%',
-                tagMessage: 'Version %VERSION%'
-            }
+                tagMessage: 'Version %VERSION%',
+            },
         },
         'npm-publish': {
             options: {
@@ -99,9 +99,9 @@ module.exports = function (grunt) {
                     else {
                         return 'next';
                     }
-                }
-            }
-        }
+                },
+            },
+        },
 
     });
 
@@ -121,51 +121,51 @@ module.exports = function (grunt) {
         'test',
         'bump-only:prerelease',
         'build',
-        'bump-commit'
+        'bump-commit',
     ]);
 
     grunt.registerTask('pre-release:patch', [
         'test',
         'bump-only:patch',
         'build',
-        'bump-commit'
+        'bump-commit',
     ]);
 
     grunt.registerTask('pre-release:minor', [
         'test',
         'bump-only:minor',
         'build',
-        'bump-commit'
+        'bump-commit',
     ]);
 
     grunt.registerTask('pre-release:major', [
         'test',
         'bump-only:major',
         'build',
-        'bump-commit'
+        'bump-commit',
     ]);
 
     grunt.registerTask('release:beta', [
         'pre-release:beta',
-        'npm-publish'
+        'npm-publish',
     ]);
 
     grunt.registerTask('release:patch', [
         'pre-release:patch',
         'npm-publish',
-        'gh-pages'
+        'gh-pages',
     ]);
 
     grunt.registerTask('release:minor', [
         'pre-release:minor',
         'npm-publish',
-        'gh-pages'
+        'gh-pages',
     ]);
 
     grunt.registerTask('release:major', [
         'pre-release:major',
         'npm-publish',
-        'gh-pages'
+        'gh-pages',
     ]);
 
     grunt.registerTask('build-browser-tests', ['build', 'browserify:test-browser']);
