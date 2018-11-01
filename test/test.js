@@ -171,6 +171,19 @@ function throwsErrorTest(block, error, message) {
     };
 }
 
+function respectsUseTest(createStreamBlock) {
+    return function (test) {
+        test.expect(1);
+
+        var spy = sinon.spy();
+        var newTopLevel = _.use({fn: spy});
+        createStreamBlock(newTopLevel).fn();
+
+        test.strictEqual(spy.callCount, 1);
+        test.done();
+    };
+}
+
 function catchEventLoopError(highland, cb) {
     var oldSetImmediate = highland.setImmediate;
     highland.setImmediate = function (fn) {
@@ -1622,6 +1635,9 @@ exports.of = {
                 test.done();
             });
     },
+    'respects use': respectsUseTest(function (newTopLevel) {
+        return newTopLevel.of(1);
+    }),
     'applicative': {
         'identity': {
             'v.ap(A.of(x => x)) is equivalent to v': function (test) {
@@ -1704,6 +1720,9 @@ exports.empty = {
                 test.done();
             });
     },
+    'respects use': respectsUseTest(function (newTopLevel) {
+        return newTopLevel.empty();
+    }),
     'right identity': {
         'm.concat(M.empty()) is equivalent to m': function (test) {
             test.expect(3);
