@@ -11,6 +11,14 @@ this library.
 ### New additions
 * `ap` - Applies a stream of function(s) to the stream of value(s).
   [#643](https://github.com/caolan/highland/pull/643).
+* `empty` - Creates an empty stream.
+  [#657](https://github.com/caolan/highland/pull/657).
+* Implements the [Fantasy Land](https://github.com/fantasyland/fantasy-land)
+  [Alternative](https://github.com/fantasyland/fantasy-land#alternative),
+  [Filterable](https://github.com/fantasyland/fantasy-land#filterable), and
+  [Monad](https://github.com/fantasyland/fantasy-land#monad)
+  specifications.
+  [#658](https://github.com/caolan/highland/pull/658).
 
 ### Bugfix
 * `of` - Streams created with `of` didn't contain extentions added by `use`.
