@@ -15,7 +15,7 @@ this library.
 ### Bugfix
 * `of` - Streams created with `of` didn't contain extentions added by `use`.
   [#662](https://github.com/caolan/highland/pull/662)
-  Fixes [#659](https://github.com/caolan/highland/issues/659)
+  Fixes [#659](https://github.com/caolan/highland/issues/659).
 
 3.0.0-beta.6
 -----
