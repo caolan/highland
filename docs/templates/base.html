@@ -53,6 +53,7 @@
         <li><a href="#backpressure">Back-pressure</a></li>
         <li><a href="#currying">Currying</a></li>
         <li><a href="#events">Events</a></li>
+        <li><a href="#interoperability">Interoperability</a></li>
         {{#each sections}}
         <li class="heading"><a href="#{{name}}">{{name}}</a></li>
         {{#each items}}
@@ -301,6 +302,34 @@ var results = searches.map(searchRequest);
 results.each(function (result) {
     // display result
 });</code></pre>
+
+
+      <h3 id="interoperability">Interoperability</h3>
+      <p>Highland streams interoperates with the following specifications:</p>
+      <ul>
+	<li><a href="https://github.com/fantasyland/fantasy-land">Fantasy
+Land</a> -
+        streams implement the
+          <a href="https://github.com/fantasyland/fantasy-land">Fantasy Land</a>
+          <a href="https://github.com/fantasyland/fantasy-land#alternative">Alternative</a>,
+          <a href="https://github.com/fantasyland/fantasy-land#filterable">Filterable</a>, and
+          <a href="https://github.com/fantasyland/fantasy-land#monad">Monad</a>
+          specifications.
+        </li>
+        <li><a href="https://github.com/cognitect-labs/transducers-js">Transducers</a> -
+	  streams can be transformed with transducers via the <a
+          href="#transduce"><code>transduce</code> transform</a>.
+        </li>
+        <li><a href="https://promisesaplus.com/">Promises</a> -
+          streams can <a href="#_(source)">consume</a> and
+          <a href="#toPromise">produce</a> promises.
+        </li>
+        <li><a href="https://nodejs.org/api/stream.html#stream_readable_streams">Node <code>Readables</code></a> -
+          streams can <a href="#_(source)">consume</a> and
+          <a href="#toNodeStream">produce</a> <code>Readables</code>.
+        </li>
+      </ul>
+
 
       {{#each sections}}
         <h2 id="{{name}}">{{name}}</h2>

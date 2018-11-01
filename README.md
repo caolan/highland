@@ -43,6 +43,18 @@ goodness, install the `next` tag from NPM.
 npm install --save highland@next
 ```
 
+## Interoperability
+
+Highland implements the [Fantasy
+Land](https://github.com/fantasyland/fantasy-land)
+[Alternative](https://github.com/fantasyland/fantasy-land#alternative),
+[Filterable](https://github.com/fantasyland/fantasy-land#filterable), and
+[Monad](https://github.com/fantasyland/fantasy-land#monad)
+specifications.
+
+Highland supports
+[Transducers](https://github.com/cognitect-labs/transducers-js) via the
+`transduce` transform.
 
 ## Examples
 
