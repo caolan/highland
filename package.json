@@ -36,7 +36,6 @@
     "showdown": "^1.6.4",
     "sinon": "~1.17.3",
     "stream-array": "~1.1.2",
-    "through": "~2.3.4",
     "transducers-js": "~0.4.174",
     "uglify-js": "^2.6.1"
   },

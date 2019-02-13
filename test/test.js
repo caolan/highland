@@ -1,6 +1,5 @@
 /* eslint-disable no-unused-vars, no-shadow, no-redeclare */
 var _, EventEmitter = require('events').EventEmitter,
-    through = require('through'),
     sinon = require('sinon'),
     Stream = require('stream'),
     streamify = require('stream-array'),
@@ -519,10 +518,11 @@ exports.race = {
         function write() {
             var cont = false;
             while ((cont = stream.write(i++)) && i <= 10) {
-                if (cont) {
-                    i++;
-                    stream.end();
-                }
+                // Do nothing.
+            }
+            if (cont) {
+                i++;
+                stream.end();
             }
         }
 
@@ -566,6 +566,10 @@ exports.race = {
             .done(function () {
                 done = true;
             });
+
+        // Manually drain the stream. This starts the whole process.
+        stream.emit('drain');
+
         this.clock.tick(1000);
         test.ok(done, 'The stream never completed.');
         test.done();
@@ -630,14 +634,19 @@ exports.constructor = {
 
         var s = _(rs);
         var rsPipeDest = getReadablePipeDest(s);
-        s.pull(valueEquals(test, 1));
-        s.destroy();
+        s.pull(function (err, x) {
+            valueEquals(test, 1)(err, x);
 
-        var write = sinon.spy(rsPipeDest, 'write');
+            _.setImmediate(function () {
+                s.destroy();
 
-        s.emit('drain');
-        test.ok(!write.called, 'Drain should not cause write to be called.');
-        test.done();
+                var write = sinon.spy(rsPipeDest, 'write');
+
+                s.emit('drain');
+                test.ok(!write.called, 'Drain should not cause write to be called.');
+                test.done();
+            }, 0);
+        });
     },
     'from Readable - emits \'close\' not \'end\' - issue #490': function (test) {
         test.expect(1);
@@ -878,6 +887,56 @@ exports.constructor = {
 
         test.strictEqual(onDestroy.callCount, 1, 'On destroy should have been called.');
         test.done();
+    },
+    'from Readable - does not emit drain prematurely (issue #670)': function (test) {
+        test.expect(1);
+
+        var readable = new Stream.Readable({objectMode: true});
+        readable._max = 6;
+        readable._index = 1;
+        readable._firstTime = true;
+
+        readable._emitNext = function () {
+            var i = this._index++;
+            if (i > this._max) {
+                this.push(null);
+            }
+            else {
+                this.push(i);
+            }
+        };
+
+        readable._read = function () {
+            var self = this;
+            if (this._firstTime) {
+                // Delay the first item so that when it's emitted, Highland isn't in a
+                // generator loop. This allows 'drain' to be emitted within write().
+                this._firstTime = false;
+                setTimeout(function () {
+                    self._emitNext();
+                }, 0);
+            }
+            else {
+                this._emitNext();
+            }
+        };
+
+        _(readable)
+            .batch(2)
+            .consume(function (err, x, push, next) {
+                // Delay the batch so that the write() -> emit('drain') -> write() stack
+                // can unwind, causing multiple increments of awaitDrain.
+                setTimeout(function () {
+                    if (x !== null) {
+                        next();
+                    }
+                    push(err, x);
+                }, 0);
+            })
+            .toArray(function (result) {
+                test.same(result, [[1, 2], [3, 4], [5, 6]]);
+                test.done();
+            });
     },
     'throws error for unsupported object': function (test) {
         test.expect(1);
@@ -3638,10 +3697,14 @@ exports['concat - ArrayStream'] = function (test) {
 };
 
 exports['concat - piped ArrayStream'] = function (test) {
-    _.concat(streamify([3, 4]).pipe(through()), streamify([1, 2])).toArray(function (xs) {
-        test.same(xs, [1, 2, 3, 4]);
-        test.done();
-    });
+    _.concat(
+            streamify([3, 4])
+                .pipe(new Stream.PassThrough({objectMode: true})),
+            streamify([1, 2]))
+        .toArray(function (xs) {
+            test.same(xs, [1, 2, 3, 4]);
+            test.done();
+        });
 };
 
 exports['concat - piped ArrayStream - paused'] = function (test) {
@@ -6474,24 +6537,22 @@ exports.sort = {
 
 exports.through = {
     setUp: function (cb) {
-        this.parser = through(
-            function (data) {
-                try {
-                    this.queue(JSON.parse(data));
-                }
-                catch (err) {
-                    this.emit('error', err);
-                }
-            },
-            function () {
-                this.queue(null);
+        this.parser = new Stream.Transform({objectMode: true});
+        this.parser._transform = function (data, encoding, callback) {
+            try {
+                callback(null, JSON.parse(data));
             }
-        );
+            catch (err) {
+                callback(err);
+            }
+        };
+
         this.numArray = [1, 2, 3, 4];
         this.stringArray = ['1', '2', '3', '4'];
         this.tester = function (expected, test) {
             return function (xs) {
                 test.same(xs, expected);
+                test.done();
             };
         };
         cb();
@@ -6508,7 +6569,6 @@ exports.through = {
                 });
         }, this.numArray);
         s.toArray(this.tester([2, 6], test));
-        test.done();
     },
     'function - ArrayStream': function (test) {
         test.expect(1);
@@ -6526,19 +6586,16 @@ exports.through = {
             });
         });
         s.toArray(this.tester([3, 7], test));
-        test.done();
     },
     'stream': function (test) {
         test.expect(1);
         var s = _.through(this.parser, this.stringArray);
         s.toArray(this.tester(this.numArray, test));
-        test.done();
     },
     'stream - ArrayStream': function (test) {
         test.expect(1);
         var s = _(this.stringArray).through(this.parser);
         s.toArray(this.tester(this.numArray, test));
-        test.done();
     },
     'stream and function': function (test) {
         test.expect(1);
@@ -6550,7 +6607,6 @@ exports.through = {
                 });
             });
         s.toArray(this.tester([2, 4, 6, 8], test));
-        test.done();
     },
     'inputstream - error': function (test) {
         test.expect(2);
@@ -6561,14 +6617,12 @@ exports.through = {
 
         s.errors(errorEquals(test, 'Input error'))
             .toArray(this.tester([], test));
-        test.done();
     },
     'throughstream - error': function (test) {
         test.expect(2);
         var s = _(['zz{"a": 1}']).through(this.parser);
         s.errors(anyError(test))
             .toArray(this.tester([], test));
-        test.done();
     },
     'noValueOnError': function (test) {
         noValueOnErrorTest(_.through(function (x) { return x; }))(test);
@@ -6577,14 +6631,11 @@ exports.through = {
 
 exports.pipeline = {
     'usage test': function (test) {
-        var parser = through(
-            function (data) {
-                this.queue(JSON.parse(data));
-            },
-            function () {
-                this.queue(null);
-            }
-        );
+        var parser = new Stream.Transform({objectMode: true});
+        parser._transform = function (data, encoding, callback) {
+            callback(null, JSON.parse(data));
+        };
+
         var doubler = _.map(function (x) {
             return x * 2;
         });

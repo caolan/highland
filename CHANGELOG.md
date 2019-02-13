@@ -5,6 +5,12 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
+2.13.1
+------
+### Bugfix
+* Fixes a potential deadlock when wrapping node `Readables` in node 10+.
+  [#670](https://github.com/caolan/highland/issues/670).
+
 2.13.0
 ------
 ### New additions
