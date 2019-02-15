@@ -1,6 +1,5 @@
 /* eslint-disable no-unused-vars, no-shadow, no-redeclare */
 var _, EventEmitter = require('events').EventEmitter,
-    through = require('through'),
     sinon = require('sinon'),
     Stream = require('stream'),
     streamify = require('stream-array'),
@@ -467,6 +466,19 @@ exports.seq = function (test) {
     test.done();
 };
 
+exports.isNilTest = function (test) {
+    test.ok(_.isNil(_.nil));
+    test.ok(!_.isNil());
+    test.ok(!_.isNil(undefined));
+    test.ok(!_.isNil(null));
+    test.ok(!_.isNil(123));
+    test.ok(!_.isNil({}));
+    test.ok(!_.isNil([]));
+    test.ok(!_.isNil('foo'));
+    test.ok(!_.isNil(_()));
+    test.done();
+};
+
 exports.isStream = function (test) {
     test.ok(!_.isStream());
     test.ok(!_.isStream(undefined));
@@ -713,6 +725,10 @@ exports.race = {
             .done(function () {
                 done = true;
             });
+
+        // Manually drain the stream. This starts the whole process.
+        stream.emit('drain');
+
         this.clock.tick(1000);
         test.ok(done, 'The stream never completed.');
         test.done();
@@ -777,14 +793,19 @@ exports.constructor = {
 
         var s = _(rs);
         var rsPipeDest = getReadablePipeDest(s);
-        s.pull(valueEquals(test, 1));
-        s.destroy();
+        s.pull(function (err, x) {
+            valueEquals(test, 1)(err, x);
 
-        var write = sinon.spy(rsPipeDest, 'write');
+            _.setImmediate(function () {
+                s.destroy();
 
-        s.emit('drain');
-        test.ok(!write.called, 'Drain should not cause write to be called.');
-        test.done();
+                var write = sinon.spy(rsPipeDest, 'write');
+
+                s.emit('drain');
+                test.ok(!write.called, 'Drain should not cause write to be called.');
+                test.done();
+            }, 0);
+        });
     },
     'from Readable - emits \'close\' not \'end\' - issue #490': function (test) {
         test.expect(1);
@@ -1028,6 +1049,56 @@ exports.constructor = {
         test.strictEqual(onDestroy.callCount, 1, 'On destroy should have been called.');
         test.done();
     },
+    'from Readable - does not emit drain prematurely (issue #670)': function (test) {
+        test.expect(1);
+
+        var readable = new Stream.Readable({objectMode: true});
+        readable._max = 6;
+        readable._index = 1;
+        readable._firstTime = true;
+
+        readable._emitNext = function () {
+            var i = this._index++;
+            if (i > this._max) {
+                this.push(null);
+            }
+            else {
+                this.push(i);
+            }
+        };
+
+        readable._read = function () {
+            var self = this;
+            if (this._firstTime) {
+                // Delay the first item so that when it's emitted, Highland isn't in a
+                // generator loop. This allows 'drain' to be emitted within write().
+                this._firstTime = false;
+                setTimeout(function () {
+                    self._emitNext();
+                }, 0);
+            }
+            else {
+                this._emitNext();
+            }
+        };
+
+        _(readable)
+            .batch(2)
+            .consume(function (err, x, push, next) {
+                // Delay the batch so that the write() -> emit('drain') -> write() stack
+                // can unwind, causing multiple increments of awaitDrain.
+                setTimeout(function () {
+                    if (x !== null) {
+                        next();
+                    }
+                    push(err, x);
+                }, 0);
+            })
+            .toArray(function (result) {
+                test.same(result, [[1, 2], [3, 4], [5, 6]]);
+                test.done();
+            });
+    },
     'throws error for unsupported object': function (test) {
         test.expect(1);
         test.throws(function () {
@@ -1169,7 +1240,7 @@ exports.constructor = {
 
         test.ok(!_([]).writable, 'empty stream should not be writable');
         test.ok(!_([1, 2, 3]).writable, 'non-empty stream should not be writable');
-        test.ok(!_(through()).writable, 'wrapped stream should not be writable');
+        test.ok(!_(new Stream.PassThrough({objectMode: true})).writable, 'wrapped stream should not be writable');
         test.ok(!_(function (push, next) {}).writable, 'generator stream should not be writable');
         test.ok(!_('event', new EventEmitter()).writable, 'event stream should not be writable');
         test.ok(!_(new Promise(function (res, rej) {})).writable, 'promise stream should not be writable');
@@ -4506,10 +4577,14 @@ exports['concat - ArrayStream'] = function (test) {
 };
 
 exports['concat - piped ArrayStream'] = function (test) {
-    _.concat(streamify([3, 4]).pipe(through()), streamify([1, 2])).toArray(function (xs) {
-        test.same(xs, [1, 2, 3, 4]);
-        test.done();
-    });
+    _.concat(
+            streamify([3, 4])
+                .pipe(new Stream.PassThrough({objectMode: true})),
+            streamify([1, 2]))
+        .toArray(function (xs) {
+            test.same(xs, [1, 2, 3, 4]);
+            test.done();
+        });
 };
 
 exports['concat - piped ArrayStream - paused'] = function (test) {
@@ -7820,19 +7895,16 @@ exports.sort = {
 
 exports.through = {
     setUp: function (cb) {
-        this.parser = through(
-            function (data) {
-                try {
-                    this.queue(JSON.parse(data));
-                }
-                catch (err) {
-                    this.emit('error', err);
-                }
-            },
-            function () {
-                this.queue(null);
+        this.parser = new Stream.Transform({objectMode: true});
+        this.parser._transform = function (data, encoding, callback) {
+            try {
+                callback(null, JSON.parse(data));
             }
-        );
+            catch (err) {
+                callback(err);
+            }
+        };
+
         this.numArray = [1, 2, 3, 4];
         this.stringArray = ['1', '2', '3', '4'];
         this.tester = function (expected, test) {
@@ -7929,14 +8001,11 @@ exports.through = {
 
 exports.pipeline = {
     'usage test': function (test) {
-        var parser = through(
-            function (data) {
-                this.queue(JSON.parse(data));
-            },
-            function () {
-                this.queue(null);
-            }
-        );
+        var parser = new Stream.Transform({objectMode: true});
+        parser._transform = function (data, encoding, callback) {
+            callback(null, JSON.parse(data));
+        };
+
         var doubler = _.map(function (x) {
             return x * 2;
         });

@@ -7,6 +7,10 @@ this library.
 
 3.0.0-beta.7
 -----
+This release contains all changes from [2.13.1](#2131).
+
+3.0.0-beta.7
+-----
 
 ### New additions
 * `ap` - Applies a stream of function(s) to the stream of value(s).
@@ -131,6 +135,19 @@ This release contains all changes from [2.12.0](#2120).
   function which accepts the same arguments and returns a Highland Stream instead.
   [#548](https://github.com/caolan/highland/pull/548).
   Fixes [#517](https://github.com/caolan/highland/issues/517).
+
+2.13.1
+------
+### Bugfix
+* Fixes a potential deadlock when wrapping node `Readables` in node 10+.
+  [#670](https://github.com/caolan/highland/issues/670).
+
+2.13.0
+------
+### New additions
+* `isNil`: Returns `true` if the argument is the end of stream marker. This can
+  be useful as a user-defined type guard in Typescript.
+  [#645](https://github.com/caolan/highland/pull/645)
 
 2.12.0
 ------
