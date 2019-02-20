@@ -5,6 +5,18 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
+2.13.2
+------
+### Bugfix
+* Fixes a regression in the `through` transform. If it is called with an
+  un-paused through stream *and* the source Highland stream has buffered data
+  (or generates data synchronously), then that data may be lost.
+  [#671](https://github.com/caolan/highland/issues/671).
+* Fix `pipe` so that it does not emit data synchronously. This allows for
+  chained pipes to work properly even if a stream in the middle of the pipe is
+  unpaused.
+  [#671](https://github.com/caolan/highland/issues/671).
+
 2.13.1
 ------
 ### Bugfix
