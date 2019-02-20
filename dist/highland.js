@@ -749,6 +749,10 @@ function hintMapper(mappingHint) {
 
 function pipeStream(src, dest, write, end, passAlongErrors) {
     var resume = null;
+    if (!passAlongErrors) {
+        src._send_events = true;
+    }
+
     var s = src.consume(function (err, x, push, next) {
         var canContinue;
         if (err) {
@@ -756,7 +760,6 @@ function pipeStream(src, dest, write, end, passAlongErrors) {
                 canContinue = write.call(dest, new StreamError(err));
             }
             else {
-                src.emit('error', err);
                 canContinue = true;
             }
         }
@@ -786,7 +789,13 @@ function pipeStream(src, dest, write, end, passAlongErrors) {
 
     dest.emit('pipe', src);
 
-    s.resume();
+    // Calling resume() may cause data to be synchronously pushed.
+    // That can cause data loss if the destination is a through stream and it
+    // is unpaused. That is, this chain won't work correctly:
+    //   stream.pipe(unpaused).pipe(otherDest);
+    _.setImmediate(function () {
+        s.resume();
+    });
     return dest;
 
     function onConsumerDrain() {
@@ -3436,7 +3445,11 @@ addMethod('through', function (target) {
         output = this.createChild();
         this.on('error', writeErr);
         target.on('error', writeErr);
-        return this.pipe(target).pipe(output);
+
+        // Intentionally bypass this.pipe so that through() and pipe() can
+        // evolve independently of each other.
+        return pipeStream(this, target, target.write, target.end, false)
+            .pipe(output);
     }
 
     function writeErr(err) {
@@ -5286,7 +5299,7 @@ function ReadableProxy(stream, options, nil) {
 
 inherits(ReadableProxy, Readable);
 
-ReadableProxy.prototype._readOnce = function (state) {
+ReadableProxy.prototype._readOnce = function () {
     if (this._is_reading) {
         return;
     }
@@ -5298,21 +5311,21 @@ ReadableProxy.prototype._readOnce = function (state) {
         self._is_reading = false;
         if (err) {
             self.emit('error', err);
-            self._readOnce(state);
+            self._readOnce();
         }
         else if (x === self._nil) {
             self.push(null);
         }
         else {
             if (self.push(x)) {
-                self._readOnce(state);
+                self._readOnce();
             }
         }
     });
 };
 
 ReadableProxy.prototype._read = function (ignore) {
-    this._readOnce(this._readableState);
+    this._readOnce();
 };
 
 module.exports = ReadableProxy;
