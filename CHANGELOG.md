@@ -5,7 +5,11 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
-3.0.0-beta.7
+3.0.0-beta.9
+-----
+This release contains all changes from [2.13.3](#2133).
+
+3.0.0-beta.8
 -----
 This release contains all changes from [2.13.1](#2131).
 
