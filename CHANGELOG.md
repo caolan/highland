@@ -136,6 +136,23 @@ This release contains all changes from [2.12.0](#2120).
   [#548](https://github.com/caolan/highland/pull/548).
   Fixes [#517](https://github.com/caolan/highland/issues/517).
 
+2.13.3
+------
+### Bugfix
+* Fixes a bug in `pipe` where errors would be emitted twice.
+
+2.13.2
+------
+### Bugfix
+* Fixes a regression in the `through` transform. If it is called with an
+  un-paused through stream *and* the source Highland stream has buffered data
+  (or generates data synchronously), then that data may be lost.
+  [#671](https://github.com/caolan/highland/issues/671).
+* Fix `pipe` so that it does not emit data synchronously. This allows for
+  chained pipes to work properly even if a stream in the middle of the pipe is
+  unpaused.
+  [#671](https://github.com/caolan/highland/issues/671).
+
 2.13.1
 ------
 ### Bugfix

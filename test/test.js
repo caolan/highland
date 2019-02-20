@@ -3081,6 +3081,31 @@ exports.pipe = {
         };
         src.pipe(dest);
     },
+    'emits "error" events on error': function (test) {
+        test.expect(3);
+        var src = _(function (push, next) {
+            push(new Error('1'));
+            push(new Error('2'));
+            push(null, _.nil);
+        });
+
+        var dest = new Stream.Writable({objectMode: true});
+        dest._write = function (chunk, encoding, cb) {
+            cb();
+        };
+
+        var numErrors = 0;
+        src.on('error', function (error) {
+            numErrors++;
+            test.same(error.message, String(numErrors));
+        });
+        src.on('end', function () {
+            test.same(numErrors, 2);
+            test.done();
+        });
+
+        src.pipe(dest);
+    },
     'emits "pipe" event when piping (issue #449)': function (test) {
         test.expect(1);
 
@@ -3138,6 +3163,20 @@ exports.pipe = {
         });
 
         dest.resume();
+    },
+    'does not emit data synchronously (issue #671)': function (test) {
+        test.expect(1);
+
+        var dest = new Stream.Writable({objectMode: true});
+        dest._write = function (chunk, encoding, callback) {
+            callback();
+        };
+
+        var writeSpy = sinon.spy(dest, 'write');
+        _([1, 2, 3, 4]).pipe(dest);
+
+        test.ok(writeSpy.notCalled, 'pipe() should not synchronously write to the destination stream.');
+        test.done();
     },
 };
 
@@ -7967,7 +8006,7 @@ exports.through = {
             });
         s.toArray(this.tester([2, 4, 6, 8], test));
     },
-    'inputstream - error': function (test) {
+    'source stream throws error': function (test) {
         test.expect(2);
         var s = _(function (push) {
             push(new Error('Input error'));
@@ -7977,11 +8016,25 @@ exports.through = {
         s.errors(errorEquals(test, 'Input error'))
             .toArray(this.tester([], test));
     },
-    'throughstream - error': function (test) {
+    'through stream throws error': function (test) {
         test.expect(2);
         var s = _(['zz{"a": 1}']).through(this.parser);
         s.errors(anyError(test))
             .toArray(this.tester([], test));
+    },
+    'through stream not paused (issue #671)': function (test) {
+        test.expect(1);
+        var otherDest = new Stream.Writable({objectMode: true});
+        otherDest._write = function (chunk, encoding, cb) {
+            cb();
+        };
+
+        var throughStream = new Stream.PassThrough({objectMode: true});
+
+        // Pipe to another stream to unpause it.
+        throughStream.pipe(otherDest);
+        _([1, 2, 3]).through(throughStream)
+            .toArray(this.tester([1, 2, 3], test));
     },
     'noValueOnError': function (test) {
         noValueOnErrorTest(_.through(function (x) { return x; }))(test);
