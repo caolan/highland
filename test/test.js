@@ -2437,6 +2437,31 @@ exports.pipe = {
         };
         src.pipe(dest);
     },
+    'emits "error" events on error': function (test) {
+        test.expect(3);
+        var src = _(function (push, next) {
+            push(new Error('1'));
+            push(new Error('2'));
+            push(null, _.nil);
+        });
+
+        var dest = new Stream.Writable({objectMode: true});
+        dest._write = function (chunk, encoding, cb) {
+            cb();
+        };
+
+        var numErrors = 0;
+        src.on('error', function (error) {
+            numErrors++;
+            test.same(error.message, String(numErrors));
+        });
+        src.on('end', function () {
+            test.same(numErrors, 2);
+            test.done();
+        });
+
+        src.pipe(dest);
+    },
     'emits "pipe" event when piping (issue #449)': function (test) {
         test.expect(1);
 
