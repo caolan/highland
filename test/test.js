@@ -2811,6 +2811,83 @@ exports.toNodeStream = {
     },
 };
 
+exports.subscribe = {
+    'subscribe method exists and is a function': function (test) {
+        test.expect(1);
+        test.ok(_.isFunction(_.of(1).subscribe));
+        test.done();
+    },
+    'calls onNext handler with a single-value stream': function (test) {
+        test.expect(1);
+        _.of(1).subscribe(function (x) {
+            test.equal(x, 1);
+            test.done();
+        });
+    },
+    'calls onNext handler for an array stream': function (test) {
+        test.expect(3);
+        _([1, 2, 3]).subscribe(function (x) {
+            test.ok(x);
+
+            if (x === 3) {
+                test.done();
+            }
+        });
+    },
+    'calls onError handler for a single-error stream': function (test) {
+        test.expect(2);
+        _.fromError(new Error('test error')).subscribe(null, function (err) {
+            test.ok(err instanceof Error);
+            test.equal(err.message, 'test error');
+            test.done();
+        });
+    },
+    'calls onError once for a multi-error stream': function (test) {
+        test.expect(2);
+        var count = 0;
+        _([new Error('err1'), new Error('err2')])
+            .flatMap(_.fromError)
+            .subscribe(null, function (err) {
+                count++;
+                test.ok(err instanceof Error);
+                test.equal(err.message, 'err1');
+                test.done();
+            });
+    },
+    'calls onComplete handler for a single-value stream': function (test) {
+        test.expect(1);
+        _.of(1).subscribe(null, null, function (x) {
+            test.ok(typeof x === 'undefined');
+            test.done();
+        });
+    },
+    'calls onComplete handler once for a multi-value stream': function (test) {
+        test.expect(1);
+        _.of([1, 2, 3]).subscribe(null, null, function (x) {
+            test.ok(typeof x === 'undefined');
+            test.done();
+        });
+    },
+    'calls onComplete handler for an empty, complete stream': function (test) {
+        test.expect(1);
+        _.of([]).subscribe(null, null, function (x) {
+            test.ok(typeof x === 'undefined');
+            test.done();
+        });
+    },
+    'consumes the stream without any handlers': function (test) {
+        test.expect(3);
+        _([1, 2, 3])
+            .tap(function (x) {
+                test.ok(x);
+                if (x === 3) {
+                    test.done();
+                }
+            })
+            .subscribe();
+    },
+};
+
 exports['calls generator on read'] = function (test) {
     test.expect(5);
     var gen_calls = 0;
