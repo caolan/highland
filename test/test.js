@@ -2834,6 +2834,15 @@ exports.subscribe = {
             }
         });
     },
+    'calls next when provided in observer object': function (test) {
+        test.expect(1);
+        _.of(1).subscribe({
+            next: function (x) {
+                test.equal(x, 1);
+                test.done();
+            },
+        });
+    },
     'calls onError handler for a single-error stream': function (test) {
         test.expect(2);
         _.fromError(new Error('test error')).subscribe(null, function (err) {
@@ -2854,6 +2863,16 @@ exports.subscribe = {
                 test.done();
             });
     },
+    'calls error when provided in observer object': function (test) {
+        test.expect(2);
+        _.fromError(new Error('test error')).subscribe({
+            error: function (err) {
+                test.ok(err instanceof Error);
+                test.equal(err.message, 'test error');
+                test.done();
+            },
+        });
+    },
     'calls onComplete handler for a single-value stream': function (test) {
         test.expect(1);
         _.of(1).subscribe(null, null, function (x) {
@@ -2870,9 +2889,18 @@ exports.subscribe = {
     },
     'calls onComplete handler for an empty, complete stream': function (test) {
         test.expect(1);
-        _.of([]).subscribe(null, null, function (x) {
+        _([]).subscribe(null, null, function (x) {
             test.ok(typeof x === 'undefined');
             test.done();
+        });
+    },
+    'calls complete when provided in observer object': function (test) {
+        test.expect(1);
+        _.of(1).subscribe({
+            complete: function (x) {
+                test.ok(typeof x === 'undefined');
+                test.done();
+            },
         });
     },
     'consumes the stream without any handlers': function (test) {
@@ -2885,6 +2913,45 @@ exports.subscribe = {
                 }
             })
             .subscribe();
+    },
+    'a subscription can be unsubscribed': function (test) {
+        test.expect(1);
+        var stream = _();
+        var sub1 = stream.subscribe(function (x) {
+            test.ok(x);
+        });
+        stream.write(1);
+        sub1.unsubscribe();
+        stream.write(1);
+        stream.end();
+        test.done();
+    },
+    'a stream can be subscribed to multiple times': function (test) {
+        test.expect(3);
+        var stream = _();
+        var sub1 = stream.subscribe(function (x) {
+            test.ok(x === 1 || x === 2);
+        });
+        var sub2 = stream.subscribe(function (x) {
+            test.ok(x === 1);
+        });
+        stream.write(1);
+        sub2.unsubscribe();
+        stream.write(2);
+        stream.end();
+        test.done();
+    },
+    'completed streams will throw an error': function (test) {
+        test.expect(1);
+        var stream = _();
+
+        stream.end();
+        test.throws(function () {
+            stream.subscribe(function (x) {
+                test.ok(x);
+            });
+        });
+        test.done();
     },
 };
 
