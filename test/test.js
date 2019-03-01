@@ -2953,6 +2953,19 @@ exports.subscribe = {
         });
         test.done();
     },
+    'supports Symbol.observable or @@observable': function (test) {
+        test.expect(1);
+        /* eslint-disable no-undef */
+        var observable = typeof Symbol === 'function'
+            && Symbol.observable
+            || '@@observable';
+        /* eslint-enable no-undef */
+        _([1])[observable]()
+            .subscribe(function (x) {
+                test.equals(x, 1);
+                test.done();
+            });
+    },
 };
 
 exports['calls generator on read'] = function (test) {
