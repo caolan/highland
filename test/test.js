@@ -2941,11 +2941,20 @@ exports.subscribe = {
         stream.end();
         test.done();
     },
-    'completed streams will throw an error': function (test) {
-        test.expect(1);
-        var stream = _();
+    'completed streams will not throw an error': function (test) {
+        test.expect(0);
+        var stream = _.empty();
 
-        stream.end();
+        stream.subscribe(function (x) {
+            throw new Error('I should not fire');
+        }, null, test.done);
+    },
+    'consumed streams will throw an error': function (test) {
+        test.expect(1);
+        var stream = _.empty();
+
+        stream.done(function () {});
+
         test.throws(function () {
             stream.subscribe(function (x) {
                 test.ok(x);
