@@ -2947,6 +2947,7 @@ exports.subscribe = {
             test.ok(true);
         });
         test.equal(sub.closed, true);
+        test.done();
     },
     'subscription is closed after error': function (test) {
         test.expect(2);
@@ -2954,15 +2955,19 @@ exports.subscribe = {
             test.ok(true);
         });
         test.equal(sub.closed, true);
+        test.done();
     },
     'subscription is closed after unsubscribe': function (test) {
         test.expect(3);
-        var sub = _([1]).subscribe(function (x) {
+        var stream = _();
+        var sub = stream.subscribe(function (x) {
             test.equal(x, 1);
         });
+        stream.write(1);
         test.equal(sub.closed, false);
         sub.unsubscribe();
         test.equal(sub.closed, true);
+        test.done();
     },
     'completed streams will not throw an error': function (test) {
         test.expect(0);
@@ -2978,7 +2983,7 @@ exports.subscribe = {
 
         stream.done(function () {});
 
-        stream.subscribe(null, null, function (err) {
+        stream.subscribe(null, function (err) {
             test.ok(err instanceof Error);
             test.done();
         });
