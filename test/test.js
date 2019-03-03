@@ -2955,12 +2955,10 @@ exports.subscribe = {
 
         stream.done(function () {});
 
-        test.throws(function () {
-            stream.subscribe(function (x) {
-                test.ok(x);
-            });
+        stream.subscribe(null, function (err) {
+            test.ok(err instanceof Error);
+            test.done();
         });
-        test.done();
     },
     'supports Symbol.observable or @@observable': function (test) {
         test.expect(1);
