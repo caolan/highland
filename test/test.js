@@ -2811,6 +2811,198 @@ exports.toNodeStream = {
     },
 };
 
+exports.subscribe = {
+    'subscribe method exists and is a function': function (test) {
+        test.expect(1);
+        test.ok(_.isFunction(_.of(1).subscribe));
+        test.done();
+    },
+    'calls onNext handler with a single-value stream': function (test) {
+        test.expect(1);
+        _.of(1).subscribe(function (x) {
+            test.equal(x, 1);
+            test.done();
+        });
+    },
+    'calls onNext handler for an array stream': function (test) {
+        test.expect(3);
+        _([1, 2, 3]).subscribe(function (x) {
+            test.ok(x);
+
+            if (x === 3) {
+                test.done();
+            }
+        });
+    },
+    'calls next when provided in observer object': function (test) {
+        test.expect(1);
+        _.of(1).subscribe({
+            next: function (x) {
+                test.equal(x, 1);
+                test.done();
+            },
+        });
+    },
+    'calls onError handler for a single-error stream': function (test) {
+        test.expect(2);
+        _.fromError(new Error('test error')).subscribe(null, function (err) {
+            test.ok(err instanceof Error);
+            test.equal(err.message, 'test error');
+            test.done();
+        });
+    },
+    'calls onError once for a multi-error stream': function (test) {
+        test.expect(2);
+        var count = 0;
+        _([new Error('err1'), new Error('err2')])
+            .flatMap(_.fromError)
+            .subscribe(null, function (err) {
+                count++;
+                test.ok(err instanceof Error);
+                test.equal(err.message, 'err1');
+                test.done();
+            });
+    },
+    'calls error when provided in observer object': function (test) {
+        test.expect(2);
+        _.fromError(new Error('test error')).subscribe({
+            error: function (err) {
+                test.ok(err instanceof Error);
+                test.equal(err.message, 'test error');
+                test.done();
+            },
+        });
+    },
+    'calls onComplete handler for a single-value stream': function (test) {
+        test.expect(1);
+        _.of(1).subscribe(null, null, function (x) {
+            test.ok(typeof x === 'undefined');
+            test.done();
+        });
+    },
+    'calls onComplete handler once for a multi-value stream': function (test) {
+        test.expect(1);
+        _.of([1, 2, 3]).subscribe(null, null, function (x) {
+            test.ok(typeof x === 'undefined');
+            test.done();
+        });
+    },
+    'calls onComplete handler for an empty, complete stream': function (test) {
+        test.expect(1);
+        _([]).subscribe(null, null, function (x) {
+            test.ok(typeof x === 'undefined');
+            test.done();
+        });
+    },
+    'calls complete when provided in observer object': function (test) {
+        test.expect(1);
+        _.of(1).subscribe({
+            complete: function (x) {
+                test.ok(typeof x === 'undefined');
+                test.done();
+            },
+        });
+    },
+    'consumes the stream without any handlers': function (test) {
+        test.expect(3);
+        _([1, 2, 3])
+            .tap(function (x) {
+                test.ok(x);
+                if (x === 3) {
+                    test.done();
+                }
+            })
+            .subscribe();
+    },
+    'a subscription can be unsubscribed': function (test) {
+        test.expect(1);
+        var stream = _();
+        var sub1 = stream.subscribe(function (x) {
+            test.ok(x);
+        });
+        stream.write(1);
+        sub1.unsubscribe();
+        stream.write(1);
+        stream.end();
+        test.done();
+    },
+    'a stream can be subscribed to multiple times': function (test) {
+        test.expect(3);
+        var stream = _();
+        var sub1 = stream.subscribe(function (x) {
+            test.ok(x === 1 || x === 2);
+        });
+        var sub2 = stream.subscribe(function (x) {
+            test.ok(x === 1);
+        });
+        stream.write(1);
+        sub2.unsubscribe();
+        stream.write(2);
+        stream.end();
+        test.done();
+    },
+    'subscription is closed after complete': function (test) {
+        test.expect(2);
+        var sub = _([1]).subscribe(null, null, function (x) {
+            test.ok(true);
+        });
+        test.equal(sub.closed, true);
+        test.done();
+    },
+    'subscription is closed after error': function (test) {
+        test.expect(2);
+        var sub = _.fromError(new Error('test error')).subscribe(null, function (x) {
+            test.ok(true);
+        });
+        test.equal(sub.closed, true);
+        test.done();
+    },
+    'subscription is closed after unsubscribe': function (test) {
+        test.expect(3);
+        var stream = _();
+        var sub = stream.subscribe(function (x) {
+            test.equal(x, 1);
+        });
+        stream.write(1);
+        test.equal(sub.closed, false);
+        sub.unsubscribe();
+        test.equal(sub.closed, true);
+        test.done();
+    },
+    'completed streams will not throw an error': function (test) {
+        test.expect(0);
+        var stream = _.empty();
+
+        stream.subscribe(function (x) {
+            throw new Error('I should not fire');
+        }, null, test.done);
+    },
+    'consumed streams will throw an error': function (test) {
+        test.expect(1);
+        var stream = _.empty();
+
+        stream.done(function () {});
+
+        stream.subscribe(null, function (err) {
+            test.ok(err instanceof Error);
+            test.done();
+        });
+    },
+    'supports Symbol.observable or @@observable': function (test) {
+        test.expect(1);
+        /* eslint-disable no-undef */
+        var observable = typeof Symbol === 'function'
+            && Symbol.observable
+            || '@@observable';
+        /* eslint-enable no-undef */
+        _([1])[observable]()
+            .subscribe(function (x) {
+                test.equals(x, 1);
+                test.done();
+            });
+    },
+};
+
 exports['calls generator on read'] = function (test) {
     test.expect(5);
     var gen_calls = 0;
