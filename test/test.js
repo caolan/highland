@@ -5528,6 +5528,23 @@ exports.doto = function (test) {
     test.done();
 };
 
+exports['map - return nil ends stream'] = function (test) {
+    test.expect(2);
+    _([0, 1, 2, 3, 4, 5])
+    .map(function (e) { return e < 4 ? e : _.nil; })
+    .toArray(function (xs) {
+        test.same(xs, [0, 1, 2, 3]);
+    });
+
+    _([0, 1, 2, 3, 4, 5])
+    .map(function (e) { return _.nil; })
+    .toArray(function (xs) {
+        test.same(xs, []);
+    });
+
+    test.done();
+};
+
 exports['doto - noValueOnError'] = noValueOnErrorTest(_.doto(function (x) { return x; }));
 
 exports['doto - returnsSameStream'] = returnsSameStreamTest(function(s) {
