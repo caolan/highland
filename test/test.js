@@ -2309,6 +2309,87 @@ exports.take = {
     'noValueOnError': noValueOnErrorTest(_.take(1)),
 };
 
+exports.takeWhile = {
+    'arrayStream': function (test) {
+        test.expect(3);
+        var s = _([1, 2, 3, 4]).takeWhile(function (x) { return x < 3; });
+        s.pull(function (err, x) {
+            test.equal(x, 1);
+        });
+        s.pull(function (err, x) {
+            test.equal(x, 2);
+        });
+        s.pull(function (err, x) {
+            test.equal(x, _.nil);
+        });
+        test.done();
+    },
+    'make sure that the source stream isn\'t fully consumed': function (test) {
+        var i = 0;
+        _(function (push, next) {
+            push(null, i++);
+            if (i > 10) {
+                push(null, _.nil);
+            }
+            else {
+                next();
+            }
+        })
+        .takeWhile(function (x) { return x < 3; })
+        .done(function () {
+            test.equal(i, 4);
+            test.done();
+        });
+    },
+    'errors': function (test) {
+        test.expect(4);
+        var s = _(function (push, next) {
+            push(null, 1);
+            push(new Error('error'), 2);
+            push(null, 3);
+            push(null, 4);
+            push(null, _.nil);
+        });
+        var f = s.takeWhile(function (x) { return x < 4; });
+        f.pull(function (err, x) {
+            test.equal(x, 1);
+        });
+        f.pull(function (err, x) {
+            test.equal(err.message, 'error');
+        });
+        f.pull(function (err, x) {
+            test.equal(x, 3);
+        });
+        f.pull(function (err, x) {
+            test.equal(x, _.nil);
+        });
+        test.done();
+    },
+    'non-function argument throws TypeError': function (test) {
+        test.expect(2);
+
+        test.throws(function () {
+            _.takeWhile('foo', [1, 2]).toArray(function (xs) {
+                test.ok(false, 'shouldn\'t be called');
+            });
+        },
+        'takeWhile expects a function as its only argument.');
+
+        test.throws(function () {
+            _([1, 2, 3]).takeWhile(1).toArray(function (xs) {
+                test.ok(false, 'shouldn\'t be called');
+            });
+        },
+        'takeWhile expects a function as its only argument.');
+
+        test.done();
+    },
+    'returnsSameStream': returnsSameStreamTest(function(s) {
+        return s.takeWhile(function () { return true; });
+    }, [1, 2, 3, 4], [1, 2, 3, 4]),
+    'noValueOnError': noValueOnErrorTest(_.takeWhile(function (x) { return x < 3; })),
+};
+
 exports.slice = {
     setUp: function (cb) {
         this.input = [1, 2, 3, 4, 5];
