@@ -2324,6 +2324,23 @@ exports.takeWhile = {
         });
         test.done();
     },
+    'make sure that the source stream isn\'t fully consumed': function (test) {
+        var i = 0;
+        _(function (push, next) {
+            push(null, i++);
+            if (i > 10) {
+                push(null, _.nil);
+            }
+            else {
+                next();
+            }
+        })
+        .takeWhile(function (x) { return x < 3; })
+        .done(function () {
+            test.equal(i, 4);
+            test.done();
+        });
+    },
     'errors': function (test) {
         test.expect(4);
         var s = _(function (push, next) {
