@@ -99,6 +99,7 @@
         <li><a href="#stopOnError">stopOnError</a></li>
         <li><a href="#take">take</a></li>
         <li><a href="#tap">tap</a></li>
+        <li><a href="#tapCollect">tapCollect</a></li>
         <li><a href="#throttle">throttle</a></li>
         <li><a href="#transduce">transduce</a></li>
         <li><a href="#uniq">uniq</a></li>
@@ -1886,6 +1887,29 @@ an Error is encountered.</p>
             </div>
 
             <p>An alias for the <a href="#doto">doto</a> method.</p>
+
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+                <li>
+                  <code>f</code>
+                   - <em>Function</em>
+                   - the function to apply
+                </li>
+            </ul>
+
+
+            <pre><code class="javascript">_([1, 2, 3]).tap(console.log)</code></pre>
+          </div>
+          <div id=tapCollect class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2290"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#tap"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.tapCollect(f)</pre>
+            </div>
+
+            <p>Similar to the <a href="#doto">doto</a> method with the exception that it consumes the stream and collects all values to be passed in to the function <cod>x</cod>.</p>
 
             <div class="doc-params-heading">Parameters</div>
             <ul>

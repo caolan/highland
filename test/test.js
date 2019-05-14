@@ -2995,6 +2995,17 @@ exports.subscribe = {
             })
             .subscribe();
     },
+    'consumes and collects the stream without any handlers': function (test) {
+        test.expect(1);
+        _([1, 2, 3])
+            .tapCollect(function (x) {
+                test.ok(x.length);
+                if (x.length === 3) {
+                    test.done();
+                }
+            })
+            .subscribe();
+    },
     'a subscription can be unsubscribed': function (test) {
         test.expect(1);
         var stream = _();
