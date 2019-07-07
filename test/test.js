@@ -1333,6 +1333,16 @@ exports.constructor = {
     },
 };
 
+// Async iterable tests
+if (global.Symbol && global.Symbol.asyncIterator) {
+    exports.constructor['from async iterable'] = function (test) {
+        var asyncIterable = {};
+        asyncIterable[global.Symbol.asyncIterator] =
+            this.createTestAsyncIterator.bind(this, [1, 2, 3]);
+        _(asyncIterable).toArray(this.tester([1, 2, 3], test));
+    };
+}
+
 exports.GeneratorStream = {
     'sync next does not re-enter generator': function (test) {
         test.expect(2);
