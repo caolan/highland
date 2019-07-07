@@ -11,9 +11,8 @@ this library.
 ### New additions
 * `takeWhile` - returns a new stream that ends when the function passed as a parameter stops returning true.
   [#677](https://github.com/caolan/highland/pull/677).
-* Async Iterator/Iterable support - Taks an object that is a async iterator or
-  iterable as defined by the [Async Iteration
-  specs](https://tc39.es/proposal-async-iteration/).
+* Async Iterator/Iterable support - Async iterators and iterables (as defined by the [Async Iteration
+  specs](https://tc39.es/proposal-async-iteration/)), can now be passed to the Highland constructor function.
   [#682](https://github.com/caolan/highland/pull/682).
 
 3.0.0-beta.9
