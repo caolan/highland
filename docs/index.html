@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="css/highland.css">
     <link rel="stylesheet" href="css/highlight.github.css">
     <script src="js/vendor/modernizr.js"></script>
-    <script src="https://cdn.rawgit.com/caolan/highland/3.0.0-beta.9/dist/highland.js" type="text/javascript"></script>
+    <script src="https://cdn.rawgit.com/caolan/highland/3.0.0-beta.10/dist/highland.js" type="text/javascript"></script>
 
   </head>
   <body>
@@ -30,13 +30,13 @@
       <p>The high-level streams library for Node.js and the browser.</p>
       <pre class="npm-install">$ npm install highland</pre>
       <p class="show-for-small-only">
-        <a class="button small" href="https://cdn.rawgit.com/caolan/highland/3.0.0-beta.9/dist/highland.js">Download</a>
-        <a class="button small" href="https://cdn.rawgit.com/caolan/highland/3.0.0-beta.9/dist/highland.min.js">Download (minified)</a>
+        <a class="button small" href="https://cdn.rawgit.com/caolan/highland/3.0.0-beta.10/dist/highland.js">Download</a>
+        <a class="button small" href="https://cdn.rawgit.com/caolan/highland/3.0.0-beta.10/dist/highland.min.js">Download (minified)</a>
         <a class="button small" href="https://github.com/caolan/highland"><i style="margin-right: 3px" class="fi-social-github"></i> Source code</a>
       </p>
       <p class="show-for-medium-up">
-        <a class="button" href="https://cdn.rawgit.com/caolan/highland/3.0.0-beta.9/dist/highland.js">Download</a>
-        <a class="button" href="https://cdn.rawgit.com/caolan/highland/3.0.0-beta.9/dist/highland.min.js">Download (minified)</a>
+        <a class="button" href="https://cdn.rawgit.com/caolan/highland/3.0.0-beta.10/dist/highland.js">Download</a>
+        <a class="button" href="https://cdn.rawgit.com/caolan/highland/3.0.0-beta.10/dist/highland.min.js">Download (minified)</a>
         <a class="button" href="https://github.com/caolan/highland"><i style="margin-right: 3px" class="fi-social-github"></i> Source code</a>
       </p>
     </div>
@@ -98,6 +98,7 @@
         <li><a href="#splitBy">splitBy</a></li>
         <li><a href="#stopOnError">stopOnError</a></li>
         <li><a href="#take">take</a></li>
+        <li><a href="#takeWhile">takeWhile</a></li>
         <li><a href="#tap">tap</a></li>
         <li><a href="#throttle">throttle</a></li>
         <li><a href="#transduce">transduce</a></li>
@@ -124,12 +125,14 @@
         <li><a href="#zipAll">zipAll</a></li>
         <li><a href="#zipEach">zipEach</a></li>
         <li class="heading"><a href="#Consumption">Consumption</a></li>
+        <li><a href="#Symbol.observable">Symbol.observable</a></li>
         <li><a href="#apply">apply</a></li>
         <li><a href="#done">done</a></li>
         <li><a href="#each">each</a></li>
         <li><a href="#onDestroy">onDestroy</a></li>
         <li><a href="#pipe">pipe</a></li>
         <li><a href="#pull">pull</a></li>
+        <li><a href="#subscribe">subscribe</a></li>
         <li><a href="#toArray">toArray</a></li>
         <li><a href="#toCallback">toCallback</a></li>
         <li><a href="#toNodeStream">toNodeStream</a></li>
@@ -439,7 +442,7 @@ Land</a> -
           <div id=_(source) class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L49"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L46"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#_(source)"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_(source)</pre>
@@ -529,6 +532,17 @@ and the stream will be ended with no further calls to <code>next()</code>.</p>
 i.e., contains a method that returns an object that conforms to the iterator protocol. The stream will use the
 iterator defined in the <code>Symbol.iterator</code> property of the iterable object to generate emitted values.</p>
 
+<p><strong>Asynchronous Iterator -</strong> Accepts an iterator produced by an ES8 <a href="https://github.com/tc39/proposal-async-iteration#async-generator-functions">async generator function</a>,
+yields all the values from the iterator by resolving its <code>next()</code> method and terminates when the
+iterator's done value returns true. If the iterator's <code>next()</code> method throws or rejects, the exception will be emitted as an error,
+and the stream will be ended with no further calls to <code>next()</code>.</p>
+
+<p><strong>Asynchronous Iterable -</strong> Accepts an object with a <code>Symbol.asyncIterator</code>
+property that conforms to the <a href="https://github.com/tc39/proposal-async-iteration#async-iterators-and-async-iterables">async iteration
+spec</a>.
+The constructor will create a async iterator and use it to generator emitted
+values.</p>
+
             <div class="doc-params-heading">Parameters</div>
             <ul>
                 <li>
@@ -612,20 +626,35 @@ _(&#x27;request&#x27;, httpServer, function(req, res) {
 // from a Promise object
 var foo &#x3D; _($.getJSON(&#x27;/api/foo&#x27;));
 
-//from an iterator
+// from an iterator
 var map &#x3D; new Map([[&#x27;a&#x27;, 1], [&#x27;b&#x27;, 2]]);
 var bar &#x3D; _(map.values()).toArray(_.log);
 //&#x3D;&gt; [1, 2]
 
-//from an iterable
+// from an iterable
 var set &#x3D; new Set([1, 2, 2, 3, 4]);
 var bar &#x3D; _(set).toArray(_.log);
-//&#x3D;&gt; [ 1, 2, 3, 4]</code></pre>
+//&#x3D;&gt; [1, 2, 3, 4]
+
+// from an async iterator
+async function* generator() {
+  yield 1;
+  yield 2;
+}
+var stream &#x3D; _(generator()).toArray(_.log);
+//&#x3D;&gt; [1, 2]
+
+// from an async iterable
+var asyncIterable &#x3D; {
+  [Symbol.asyncIterable]: generator
+};
+var stream &#x3D; _(asyncIterable).toArray(_.log);
+//&#x3D;&gt; [1, 2]</code></pre>
           </div>
           <div id=destroy class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L1387"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L1418"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#destroy"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.destroy()</pre>
@@ -643,7 +672,7 @@ stream as a consumer of any source stream.</p>
           <div id=pause class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L1211"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L1242"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pause"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.pause()</pre>
@@ -661,7 +690,7 @@ xs.pause();</code></pre>
           <div id=resume class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L1246"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L1277"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#resume"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.resume()</pre>
@@ -680,7 +709,7 @@ xs.resume();</code></pre>
           <div id=write class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L1632"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L1663"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#write"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.write(x)</pre>
@@ -728,7 +757,7 @@ xs2.write(1); // This call is illegal.</code></pre>
           <div id=append class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L3844"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L4016"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#append"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.append(y)</pre>
@@ -751,7 +780,7 @@ xs2.write(1); // This call is illegal.</code></pre>
           <div id=batch class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L3000"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L3123"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#batch"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.batch(n)</pre>
@@ -774,7 +803,7 @@ xs2.write(1); // This call is illegal.</code></pre>
           <div id=batchWithTimeOrCount class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L3016"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L3139"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#batchWithTimeOrCount"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.batchWithTimeOrCount(ms, n)</pre>
@@ -810,7 +839,7 @@ into arrays of a maximum length.</p>
           <div id=collect class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L3951"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L4123"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#collect"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.collect()</pre>
@@ -829,7 +858,7 @@ of accepting a callback and consuming the stream, it passes the value on.</p>
           <div id=compact class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2707"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L2830"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#compact"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.compact()</pre>
@@ -845,7 +874,7 @@ of accepting a callback and consuming the stream, it passes the value on.</p>
           <div id=consume class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L1509"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L1540"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#consume"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.consume(f)</pre>
@@ -892,7 +921,7 @@ like a 'through' stream, handling values as they are read.</p>
           <div id=debounce class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L4516"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L4688"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#debounce"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.debounce(ms)</pre>
@@ -937,7 +966,7 @@ _(function (push, next) {
           <div id=doto class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2177"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L2300"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#doto"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.doto(f)</pre>
@@ -970,7 +999,7 @@ _([1, 2, 3]).doto(console.log)
           <div id=drop class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L3259"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L3431"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#drop"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.drop(n)</pre>
@@ -1006,7 +1035,7 @@ errors (even ones emitted before the nth value) will be emitted.</p>
           <div id=errors class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L1761"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L1792"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#errors"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.errors(f)</pre>
@@ -1041,7 +1070,7 @@ transformed and put back onto the Stream as values.</p>
           <div id=filter class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2508"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L2631"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#filter"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.filter(f)</pre>
@@ -1066,7 +1095,7 @@ transformed and put back onto the Stream as values.</p>
           <div id=find class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2604"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L2727"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#find"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.find(f)</pre>
@@ -1107,7 +1136,7 @@ firstBlogpost(docs)
           <div id=findWhere class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2638"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L2761"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#findWhere"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.findWhere(props)</pre>
@@ -1144,7 +1173,7 @@ firstBlogpost(docs)
           <div id=group class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2669"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L2792"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#group"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.group(f)</pre>
@@ -1181,7 +1210,7 @@ _(docs).group(f); OR _(docs).group(&#x27;type&#x27;);
           <div id=head class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L3279"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L3451"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#head"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.head()</pre>
@@ -1196,7 +1225,7 @@ _(docs).group(f); OR _(docs).group(&#x27;type&#x27;);
           <div id=intersperse class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L3074"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L3197"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#intersperse"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.intersperse(sep)</pre>
@@ -1223,7 +1252,7 @@ _([&#x27;foo&#x27;]).intersperse(&#x27;bar&#x27;)  // &#x3D;&gt; &#x27;foo&#x27;
           <div id=invoke class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L4402"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L4574"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#invoke"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.invoke(method, args)</pre>
@@ -1255,7 +1284,7 @@ filenames.flatMap(readFile).invoke(&#x27;toString&#x27;, [&#x27;utf8&#x27;]);</c
           <div id=last class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L3294"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L3466"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#last"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.last()</pre>
@@ -1270,7 +1299,7 @@ filenames.flatMap(readFile).invoke(&#x27;toString&#x27;, [&#x27;utf8&#x27;]);</c
           <div id=latest class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L4583"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L4755"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#latest"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.latest()</pre>
@@ -1290,7 +1319,7 @@ mousePosition.latest().map(slowThing)</code></pre>
           <div id=map class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2135"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L2258"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#map"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.map(f)</pre>
@@ -1316,7 +1345,7 @@ value from the source.</p>
           <div id=nfcall class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L4425"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L4597"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#nfcall"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.nfcall(args)</pre>
@@ -1377,7 +1406,7 @@ _([
           <div id=pick class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2459"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L2582"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pick"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.pick(properties)</pre>
@@ -1424,7 +1453,7 @@ _(dogs).pick([&#x27;owner&#x27;]).toArray(function (xs) {
           <div id=pickBy class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2400"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L2523"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pickBy"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.pickBy(f)</pre>
@@ -1465,7 +1494,7 @@ and non-enumerable elements are selected when using ES5.</p>
           <div id=pluck class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2340"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L2463"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pluck"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.pluck(property)</pre>
@@ -1497,7 +1526,7 @@ _(docs).pluck(&#x27;title&#x27;).toArray(function (xs) {
           <div id=ratelimit class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2221"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L2344"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#ratelimit"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.ratelimit(num, ms)</pre>
@@ -1531,7 +1560,7 @@ they are read from the source.</p>
           <div id=reduce class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L3869"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L4041"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#reduce"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.reduce(iterator, memo)</pre>
@@ -1569,7 +1598,7 @@ _([1, 2, 3, 4]).reduce(add, 0)  // &#x3D;&gt; 10</code></pre>
           <div id=reduce1 class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L3920"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L4092"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#reduce1"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.reduce1(iterator)</pre>
@@ -1593,7 +1622,7 @@ state instead of passing in a <code>memo</code> value.</p>
           <div id=reject class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2586"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L2709"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#reject"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.reject(f)</pre>
@@ -1618,7 +1647,7 @@ state instead of passing in a <code>memo</code> value.</p>
           <div id=scan class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L3984"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L4156"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#scan"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.scan(iterator, memo)</pre>
@@ -1651,7 +1680,7 @@ error will still be emitted.</p>
           <div id=scan1 class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L4030"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L4202"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#scan1"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.scan1(iterator)</pre>
@@ -1675,7 +1704,7 @@ state instead of passing in a <code>memo</code> value.</p>
           <div id=slice class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L3178"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L3301"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#slice"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.slice(start, end)</pre>
@@ -1715,7 +1744,7 @@ state instead of passing in a <code>memo</code> value.</p>
           <div id=sort class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L3358"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L3530"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#sort"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.sort()</pre>
@@ -1732,7 +1761,7 @@ The method for sorting the elements is ascending lexical.</p>
           <div id=sortBy class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L3326"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L3498"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#sortBy"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.sortBy(f)</pre>
@@ -1773,7 +1802,7 @@ the resulting ordering is undefined.</p>
           <div id=split class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L3162"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L3285"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#split"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.split()</pre>
@@ -1789,7 +1818,7 @@ _([&#x27;a\r\nb\nc&#x27;]]).split()  // &#x3D;&gt; &#x27;a&#x27;, &#x27;b&#x27;,
           <div id=splitBy class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L3113"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L3236"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#splitBy"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.splitBy(sep)</pre>
@@ -1816,7 +1845,7 @@ _([&#x27;foo&#x27;]).splitBy(&#x27;bar&#x27;)  // &#x3D;&gt; &#x27;foo&#x27;</co
           <div id=stopOnError class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L1801"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L1832"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#stopOnError"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.stopOnError(f)</pre>
@@ -1845,7 +1874,7 @@ an Error is encountered.</p>
           <div id=take class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L3239"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L3362"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#take"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.take(n)</pre>
@@ -1876,10 +1905,41 @@ an Error is encountered.</p>
 
             <pre><code class="javascript">_([1, 2, 3, 4]).take(2) // &#x3D;&gt; 1, 2</code></pre>
           </div>
+          <div id=takeWhile class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L3382"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#takeWhile"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.takeWhile(f)</pre>
+            </div>
+
+            <p>Creates a new Stream with the first values from the source as long as the function
+returns true.</p>
+
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+                <li>
+                  <code>f</code>
+                   - <em>Function</em>
+                   - the filter function
+                </li>
+            </ul>
+
+            <div class="doc-params-heading">Throws</div>
+            <ul>
+              <li>
+                <code>TypeError</code>
+                 - if <code>f</code> is not a function.
+              </li>
+            </ul>
+
+            <pre><code class="javascript">_([1, 2, 3, 4]).takeWhile(x &#x3D;&gt; x &lt; 3) // &#x3D;&gt; 1, 2</code></pre>
+          </div>
           <div id=tap class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2206"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L2329"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#tap"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.tap(f)</pre>
@@ -1902,7 +1962,7 @@ an Error is encountered.</p>
           <div id=throttle class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L4481"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L4653"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#throttle"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.throttle(ms)</pre>
@@ -1926,7 +1986,7 @@ every <code>ms</code> milliseconds, any other values are dropped.</p>
           <div id=transduce class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L4080"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L4252"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#transduce"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.transduce(xf)</pre>
@@ -1964,7 +2024,7 @@ _([1, 2, 3, 4]).transduce(xf);
           <div id=uniq class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2829"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L2952"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#uniq"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.uniq()</pre>
@@ -1989,7 +2049,7 @@ _(colors).uniq()
           <div id=uniqBy class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2764"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L2887"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#uniqBy"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.uniqBy(compare)</pre>
@@ -2029,7 +2089,7 @@ _(colors).uniqBy(function(a, b) { return a[1] &#x3D;&#x3D;&#x3D; b[1]; })
           <div id=where class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2725"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L2848"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#where"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.where(props)</pre>
@@ -2073,7 +2133,7 @@ getBlogposts(docs)
           <div id=ap class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2292"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L2415"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#ap"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.ap(m)</pre>
@@ -2106,7 +2166,7 @@ _(&#x27;change&#x27;, input)
           <div id=concat class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L4166"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L4338"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#concat"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.concat(ys)</pre>
@@ -2134,7 +2194,7 @@ _.concat([3, 4], [1, 2])  // &#x3D;&gt; 1, 2, 3, 4</code></pre>
           <div id=flatFilter class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2552"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L2675"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#flatFilter"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.flatFilter(f)</pre>
@@ -2163,7 +2223,7 @@ filenames.flatFilter(checkExists)</code></pre>
           <div id=flatMap class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2270"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L2393"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#flatMap"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.flatMap(f)</pre>
@@ -2191,7 +2251,7 @@ filenames.flatMap(readFile)</code></pre>
           <div id=flatten class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L3640"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L3812"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#flatten"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.flatten()</pre>
@@ -2215,7 +2275,7 @@ nums.flatten();  // &#x3D;&gt; 1, 2, 3, 4, 5, 6</code></pre>
           <div id=fork class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L1675"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L1706"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#fork"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.fork()</pre>
@@ -2252,7 +2312,7 @@ zs.resume();</code></pre>
           <div id=merge class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L4197"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L4369"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#merge"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.merge()</pre>
@@ -2280,7 +2340,7 @@ _([txt, md]).merge();
           <div id=mergeWithLimit class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L4327"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L4499"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#mergeWithLimit"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.mergeWithLimit(n)</pre>
@@ -2319,7 +2379,7 @@ _([txt, md, js]).mergeWithLimit(2);
           <div id=observe class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L1726"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L1757"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#observe"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.observe()</pre>
@@ -2343,7 +2403,7 @@ ys.resume();</code></pre>
           <div id=otherwise class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L3802"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L3974"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#otherwise"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.otherwise(ys)</pre>
@@ -2370,7 +2430,7 @@ _.otherwise(_([&#x27;foo&#x27;]), _([]))         // &#x3D;&gt; &#x27;foo&#x27;</
           <div id=parallel class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L3695"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L3867"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#parallel"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.parallel(n)</pre>
@@ -2399,7 +2459,7 @@ filenames.map(readFile).parallel(10);</code></pre>
           <div id=pipeline class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L3458"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L3630"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pipeline"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.pipeline(...)</pre>
@@ -2434,7 +2494,7 @@ var through2 &#x3D; _.pipeline(function (s) {
           <div id=sequence class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L3537"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L3709"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#sequence"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.sequence()</pre>
@@ -2461,7 +2521,7 @@ filenames.map(readFile).sequence()</code></pre>
           <div id=series class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L3625"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L3797"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#series"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.series()</pre>
@@ -2477,7 +2537,7 @@ filenames.map(readFile).series()</code></pre>
           <div id=through class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L3376"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L3548"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#through"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.through(target)</pre>
@@ -2547,7 +2607,7 @@ _([&#x27;zz{&quot;a&quot;: 1}&#x27;]).through(jsonParser).errors(function (err) 
           <div id=zip class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2981"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L3104"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#zip"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.zip(ys)</pre>
@@ -2573,7 +2633,7 @@ _([&#x27;a&#x27;, &#x27;b&#x27;, &#x27;c&#x27;]).zip(_([1]))  // &#x3D;&gt; [&#x
           <div id=zipAll class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2884"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L3007"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#zipAll"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.zipAll()</pre>
@@ -2606,7 +2666,7 @@ _([
           <div id=zipEach class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2957"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L3080"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#zipEach"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.zipEach(ys)</pre>
@@ -2637,10 +2697,32 @@ _([1, 2, 3, 4]).zipEach([[5, 6, 7, 8], [9, 10, 11, 12], [13, 14]])
         <h2 id="Consumption">Consumption</h2>
 
         <div class="doc-items">
+          <div id=Symbol.observable class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L2213"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#Symbol.observable"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Symbol.observable</pre>
+            </div>
+
+            <p>Returns an Observable spec-compliant instance (itself) that has a subscribe
+method and a Symbol.observable method. If Symbol is not available in the
+current environment it defaults to '@@observable'. Used by other tools and
+libraries that want to get an observable spec compliant stream interface.</p>
+
+<p>https://tc39.github.io/proposal-observable/#observable-prototype-@@observable</p>
+
+
+
+            <pre><code class="javascript">_([1, 2, 3])[Symbol.observable || &quot;@@observable&quot;]().subscribe(x &#x3D;&gt; {
+    console.log(&quot;Received value&quot;, x);
+});</code></pre>
+          </div>
           <div id=apply class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L1875"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L1906"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#apply"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.apply(f)</pre>
@@ -2673,7 +2755,7 @@ _([1, 2, 3]).apply(function (a) {
           <div id=done class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L1934"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L1965"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#done"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.done(f)</pre>
@@ -2709,7 +2791,7 @@ _([1, 2, 3, 4]).each(function (x) {
           <div id=each class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L1835"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L1866"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#each"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.each(f)</pre>
@@ -2742,7 +2824,7 @@ event will cause an error to be thrown if unhandled.</p>
           <div id=onDestroy class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L1978"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L2009"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#onDestroy"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.onDestroy(f)</pre>
@@ -2773,7 +2855,7 @@ creating the stream.</p>
           <div id=pipe class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L1316"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L1347"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pipe"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.pipe(dest, options)</pre>
@@ -2844,7 +2926,7 @@ _([1, 2, 3, 4]).pipe(oddDoubler()) // &#x3D;&gt; Garbage</code></pre>
           <div id=pull class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L1597"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L1628"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pull"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.pull(f)</pre>
@@ -2871,10 +2953,77 @@ some functions in the Highland library.</p>
     // do something
 });</code></pre>
           </div>
+          <div id=subscribe class="doc-item">
+            <div class="doc-heading">
+              <ul class="links">
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L2143"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="#subscribe"><i class="fi-link"></i> Link</a></li>
+              </ul>
+              <pre>Stream.subscribe(onNext, onError, onComplete)</pre>
+            </div>
+
+            <p>Consumes values using the Observable subscribe signature. Unlike other
+consumption methods, subscribe can be called multiple times. Each
+subscription will receive the current value before receiving the next value.
+Subscribing to an already consumed stream will result in an error.</p>
+
+<p>Implements the Observable subscribe functionality as defined by the spec:
+https://tc39.github.io/proposal-observable/#observable-prototype-subscribe</p>
+
+            <div class="doc-params-heading">Parameters</div>
+            <ul>
+                <li>
+                  <code>onNext</code>
+                   - <em>Function|object|null</em>
+                   - Handler for next value or observer
+                </li>
+                <li>
+                  <code>onError</code>
+                   - <em>Function|null</em>
+                   - Handler function for errors.
+                </li>
+                <li>
+                  <code>onCompleted</code>
+                   - <em>Function|null</em>
+                   - Handler Function when stream is done.
+                </li>
+            </ul>
+
+
+            <pre><code class="javascript">// with callbacks
+_([1, 2, 3, 4]).subscribe(
+    function onNext (x) {
+        // Called for each value that comes downstream
+        console.log(&#x27;Received onNext value&#x27;, x);
+    },
+    function onError (err) {
+        // Called one time with error or zero if no errors occur upstream
+        console.error(&#x27;Single highland stream error&#x27;, err);
+    },
+    function onComplete () {
+        // Receives no arguments
+        // Called only once when stream is completed.
+        console.log(&#x27;Completed!&#x27;);
+    }
+);
+
+// with an observer
+_([1, 2, 3, 4]).subscribe({
+    next (x) {
+        console.log(&#x27;Received next value&#x27;, x);
+    },
+    error (err) {
+        console.error(&#x27;An error occurred upstream&#x27;, err);
+    },
+    complete () {
+        console.log(&#x27;Completed!&#x27;)
+    }
+});</code></pre>
+          </div>
           <div id=toArray class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L1903"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L1934"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#toArray"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.toArray(f)</pre>
@@ -2904,7 +3053,7 @@ event will cause an error to be thrown if unhandled.</p>
           <div id=toCallback class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2047"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L2078"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#toCallback"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.toCallback(cb)</pre>
@@ -2938,7 +3087,7 @@ and call <code>cb</code> with an error.</p>
           <div id=toNodeStream class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2112"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L2235"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#toNodeStream"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.toNodeStream(options)</pre>
@@ -2967,7 +3116,7 @@ _([{a: 1}]).toNodeStream({objectMode: true})</code></pre>
           <div id=toPromise class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L2075"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L2106"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#toPromise"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>Stream.toPromise(PromiseCtor)</pre>
@@ -3005,7 +3154,7 @@ and reject with an error.</p>
           <div id=empty class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L1019"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L1050"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#empty"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.empty()</pre>
@@ -3020,7 +3169,7 @@ and reject with an error.</p>
           <div id=fromError class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L1039"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L1070"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#fromError"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.fromError(err)</pre>
@@ -3045,7 +3194,7 @@ and reject with an error.</p>
           <div id=isNil class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L1080"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L1111"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#isNil"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.isNil(x)</pre>
@@ -3067,7 +3216,7 @@ and reject with an error.</p>
           <div id=isStream class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L1094"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L1125"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#isStream"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.isStream(x)</pre>
@@ -3091,7 +3240,7 @@ _.isStream(_([1,2,3]))  // &#x3D;&gt; true</code></pre>
           <div id=log class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L4923"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L5095"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#log"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.log(args..)</pre>
@@ -3110,7 +3259,7 @@ _([1, 2, 3, 4]).each(_.log);</code></pre>
           <div id=nil class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L351"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L376"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#nil"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.nil</pre>
@@ -3146,7 +3295,7 @@ useful for NPM where you may have many different Highland versions installed.</p
           <div id=of class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L1000"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L1031"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#of"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.of(x)</pre>
@@ -3169,7 +3318,7 @@ useful for NPM where you may have many different Highland versions installed.</p
           <div id=streamifyAll class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L5055"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L5227"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#streamifyAll"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.streamifyAll(source)</pre>
@@ -3200,7 +3349,7 @@ fs.readFileStream(&#x27;example.txt&#x27;).apply(function (data) {
           <div id=wrapAsync class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L5012"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L5184"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#wrapAsync"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.wrapAsync(f)</pre>
@@ -3237,7 +3386,7 @@ reject(&#x27;boom&#x27;).errors(function (err) {
           <div id=wrapCallback class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L4942"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L5114"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#wrapCallback"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.wrapCallback(f)</pre>
@@ -3300,7 +3449,7 @@ Reader.prototype.readStream &#x3D; _.wrapCallback(Reader.prototype.read);</code>
           <div id=extend class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L4839"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L5011"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#extend"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.extend(a, b)</pre>
@@ -3338,7 +3487,7 @@ publish({title: &#x27;test post&#x27;})
           <div id=get class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L4871"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L5043"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#get"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.get(prop, obj)</pre>
@@ -3376,7 +3525,7 @@ _(posts).map(_.get(&#x27;title&#x27;))  // &#x3D;&gt; &#x27;one&#x27;, &#x27;two
           <div id=keys class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L4792"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L4964"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#keys"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.keys(obj)</pre>
@@ -3399,7 +3548,7 @@ _(posts).map(_.get(&#x27;title&#x27;))  // &#x3D;&gt; &#x27;one&#x27;, &#x27;two
           <div id=pairs class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L4818"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L4990"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#pairs"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.pairs(obj)</pre>
@@ -3425,7 +3574,7 @@ are used).</p>
           <div id=set class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L4898"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L5070"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#set"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.set(prop, value, obj)</pre>
@@ -3464,7 +3613,7 @@ publish({title: &#x27;example&#x27;})  // &#x3D;&gt; {title: &#x27;example&#x27;
           <div id=values class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L4771"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L4943"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#values"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.values(obj)</pre>
@@ -3495,7 +3644,7 @@ are used).</p>
           <div id=compose class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L498"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L520"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#compose"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.compose(fn1, fn2, ...)</pre>
@@ -3517,7 +3666,7 @@ add1mul3(2) &#x3D;&#x3D; 9</code></pre>
           <div id=curry class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L390"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L412"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#curry"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.curry(fn, [*arguments])</pre>
@@ -3555,7 +3704,7 @@ fn(1)(2, 3) &#x3D;&#x3D; fn(1, 2, 3)</code></pre>
           <div id=flip class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L479"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L501"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#flip"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.flip(fn, [x, y])</pre>
@@ -3591,7 +3740,7 @@ flip(div)(2, 4) &#x3D;&#x3D; 2</code></pre>
           <div id=ncurry class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L419"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L441"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#ncurry"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.ncurry(n, fn, [args...])</pre>
@@ -3633,7 +3782,7 @@ fn(1)(2)(3) &#x3D;&#x3D; &#x27;1.2.3&#x27;;</code></pre>
           <div id=partial class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L452"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L474"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#partial"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.partial(fn, args...)</pre>
@@ -3668,7 +3817,7 @@ f(3, 4) &#x3D;&#x3D; 10</code></pre>
           <div id=seq class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L521"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L543"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#seq"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.seq(fn1, fn2, ...)</pre>
@@ -3693,7 +3842,7 @@ add1mul3(2) &#x3D;&#x3D; 9</code></pre>
           <div id=add class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L5139"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L5311"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#add"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.add(a, b)</pre>
@@ -3709,7 +3858,7 @@ _.add(1)(5) &#x3D;&#x3D;&#x3D; 6</code></pre>
           <div id=not class="doc-item">
             <div class="doc-heading">
               <ul class="links">
-                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.9/lib/index.js#L5155"><i class="fi-pencil"></i> Source</a></li>
+                <li><a href="https://github.com/caolan/highland/blob/3.0.0-beta.10/lib/index.js#L5327"><i class="fi-pencil"></i> Source</a></li>
                 <li><a href="#not"><i class="fi-link"></i> Link</a></li>
               </ul>
               <pre>_.not(x)</pre>
