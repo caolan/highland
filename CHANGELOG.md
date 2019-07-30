@@ -5,6 +5,13 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
+2.13.5
+-----
+
+### Bugfix
+* Fixes typo in documentation for `fork` and `observe`.
+  [#684](https://github.com/caolan/highland/issues/684).
+
 2.13.4
 -----
 ### Bugfix
