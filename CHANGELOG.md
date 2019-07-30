@@ -5,6 +5,13 @@ This file does not aim to be comprehensive (you have git history for that),
 rather it lists changes that might impact your own code as a consumer of
 this library.
 
+3.0.0-beta.11
+-----
+
+### Bugfix
+* `fork` - Updates the documentation for `fork` to match the better version
+  from 2.x.
+
 3.0.0-beta.10
 -----
 
