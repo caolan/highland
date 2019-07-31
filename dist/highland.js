@@ -1715,10 +1715,10 @@ Stream.prototype.write = function (x) {
  * const fork1 = source.fork().flatMap((x) => delay(x, 1000));
  * const fork2 = source.fork().flatMap((x) => delay(x, 2000));
  *
- * // No values will be pulled from xs until zs also starts consuming.
+ * // No values will be pulled from source until fork2 also starts consuming.
  * fork1.each((x) => console.log(`fork1 : ${x} (${Date.now() - then})`));
  *
- * // Now both ys and zs will get values from xs as fast as they both
+ * // Now both fork1 and fork2 will get values from source as fast as they both
  * // can process them.
  * fork2.each((x) => console.log(`fork2 : ${x} (${Date.now() - then})`));
  *
@@ -1792,8 +1792,8 @@ Stream.prototype.fork = function () {
  * // observer.
  * obs.each((x) => console.log(`obs   : ${x} (${Date.now() - then})`));
  *
- * // Now both ys and zs will receive data as fast as zs can handle it.
- * // Even though since ys is very slow, zs will still receive all of the
+ * // Now both obs and main will receive data as fast as main can handle it.
+ * // Even though since obs is very slow, main will still receive all of the
  * // source's data.
  * main.each((x) => console.log(`main  : ${x} (${Date.now() - then})`));
  *
