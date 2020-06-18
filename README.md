@@ -1,7 +1,7 @@
 # Highland
 
 The high-level streams library for Node.js and the browser.
-View the [Highland website](http://highlandjs.org) for more in-depth
+View the [Highland website](https://caolan.github.io/highland) for more in-depth
 documentation.
 
 [![build status](https://secure.travis-ci.org/caolan/highland.png)](http://travis-ci.org/caolan/highland)
@@ -125,4 +125,4 @@ counter.each(function (n) {
 });
 ```
 
-Learn more at [highlandjs.org](http://highlandjs.org)
+Learn more at [https://caolan.github.io/highland/](https://caolan.github.io/highland/)
