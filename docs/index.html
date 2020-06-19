@@ -287,7 +287,7 @@ counter.each(function (n) {
       <p>To work with data in Arrays, just wrap it in <code>_()</code>. The Highland methods are then available on it:</p>
 <pre><code class="javascript">function toUpperCase(string) {
     return string.toUpperCase();
-});
+};
 var shouty = _(['foo', 'bar', 'baz']).map(toUpperCase); // => 'FOO' 'BAR' 'BAZ'</code></pre>
       <p>These methods return Stream objects, not Arrays, so you can chain together method calls:</p>
       <pre><code class="javascript">_(['foo', 'bar', 'baz']).map(toUpperCase).map(function (x) {
